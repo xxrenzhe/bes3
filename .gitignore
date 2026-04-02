@@ -1,4 +1,26 @@
 
-# Dolt database files (added by bd init)
+# Local issue tracking
+.beads/
 .dolt/
 *.db
+
+# OS files
+.DS_Store
+
+# Environment and secrets
+.env
+.env.*
+!.env.example
+secrets/
+
+# Local docs and drafts that must not be pushed
+docs/
+oldcode/
+front/
+
+# Build outputs and dependencies
+node_modules/
+dist/
+build/
+coverage/
+.cache/
