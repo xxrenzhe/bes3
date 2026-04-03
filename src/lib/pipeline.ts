@@ -11,11 +11,28 @@ import { slugify } from '@/lib/slug'
 
 export interface PipelineRunListItem {
   id: number
+  product_id: number | null
+  affiliate_product_id: number | null
   status: PipelineStatus
   current_stage: PipelineStage | null
+  error_message: string | null
   source_link: string
+  created_at: string
+  updated_at: string
   product_name: string | null
   slug: string | null
+}
+
+export interface PipelineRunDetailItem extends PipelineRunListItem {
+  jobs: Array<{
+    id: number
+    stage: PipelineStage
+    status: string
+    message: string | null
+    payload_json: string | null
+    started_at: string | null
+    finished_at: string | null
+  }>
 }
 
 export interface AdminDashboardSummary {
@@ -278,7 +295,8 @@ export async function listPipelineRuns(): Promise<PipelineRunListItem[]> {
   const db = await getDatabase()
   return db.query<PipelineRunListItem>(
     `
-      SELECT r.*, p.product_name, p.slug
+      SELECT r.id, r.product_id, r.affiliate_product_id, r.status, r.current_stage, r.error_message, r.source_link,
+        r.created_at, r.updated_at, p.product_name, p.slug
       FROM content_pipeline_runs r
       LEFT JOIN products p ON p.id = r.product_id
       ORDER BY r.updated_at DESC, r.id DESC
@@ -286,11 +304,32 @@ export async function listPipelineRuns(): Promise<PipelineRunListItem[]> {
   )
 }
 
-export async function getPipelineRun(runId: number) {
+export async function getPipelineRun(runId: number): Promise<PipelineRunDetailItem | null> {
   const db = await getDatabase()
-  const run = await db.queryOne('SELECT * FROM content_pipeline_runs WHERE id = ? LIMIT 1', [runId])
-  const jobs = await db.query('SELECT * FROM content_pipeline_jobs WHERE run_id = ? ORDER BY id ASC', [runId])
-  return { run, jobs }
+  const run = await db.queryOne<PipelineRunListItem>(
+    `
+      SELECT r.id, r.product_id, r.affiliate_product_id, r.status, r.current_stage, r.error_message, r.source_link,
+        r.created_at, r.updated_at, p.product_name, p.slug
+      FROM content_pipeline_runs r
+      LEFT JOIN products p ON p.id = r.product_id
+      WHERE r.id = ?
+      LIMIT 1
+    `,
+    [runId]
+  )
+
+  if (!run) return null
+
+  const jobs = await db.query<PipelineRunDetailItem['jobs'][number]>(
+    `
+      SELECT id, stage, status, message, payload_json, started_at, finished_at
+      FROM content_pipeline_jobs
+      WHERE run_id = ?
+      ORDER BY id ASC
+    `,
+    [runId]
+  )
+  return { ...run, jobs }
 }
 
 export async function runPipelineForAffiliateProduct(affiliateProductId: number): Promise<number> {
