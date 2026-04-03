@@ -1,0 +1,20 @@
+-- Migration: 001_noop.sql
+-- Date: 2026-04-03
+-- Description: 占位迁移，验证迁移系统正常工作
+--
+-- Bes3 迁移系统使用说明：
+-- 1. 所有迁移文件放在 migrations/ (SQLite) 或 pg-migrations/ (PostgreSQL) 目录
+-- 2. 文件命名规范：{NNN}_{描述}.sql（SQLite）或 {NNN}_{描述}.pg.sql（PostgreSQL）
+-- 3. NNN 为三位数字序号，从 001 开始，逐次递增
+-- 4. 每个迁移在事务中执行，出错自动回滚
+-- 5. 已在应用的迁移会被跳过（通过 migration_history 表追踪）
+-- 6. 幂等性：迁移应能安全地重复执行（重复字段/索引/表会优雅跳过）
+--
+-- 添加新迁移步骤：
+-- 1. 在 migrations/ 或 pg-migrations/ 创建新文件，序号递增
+-- 2. 编写 DDL/DML 语句
+-- 3. 测试通过后提交代码
+-- 4. 部署时运行 npm run db:migrate
+
+-- 示例：添加一个索引（仅 SQLite 版本）
+-- CREATE INDEX IF NOT EXISTS idx_example ON products (brand);

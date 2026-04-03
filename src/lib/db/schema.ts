@@ -1,5 +1,9 @@
 import type { DatabaseAdapter } from '@/lib/types'
 
+type DatabaseError = Error & {
+  code?: string
+}
+
 const SQLITE_SCHEMA = [
   `
     CREATE TABLE IF NOT EXISTS users (
@@ -257,28 +261,41 @@ async function listColumns(db: DatabaseAdapter, tableName: string): Promise<Set<
   return new Set(rows.map((row) => row.column_name))
 }
 
+function isAlreadyExistsError(db: DatabaseAdapter, error: unknown, kind: 'column' | 'index'): boolean {
+  const databaseError = error as DatabaseError
+  const message = databaseError.message?.toLowerCase() || ''
+
+  if (db.type === 'sqlite') {
+    return kind === 'column' ? message.includes('duplicate column name') : message.includes('already exists')
+  }
+
+  if (kind === 'column') {
+    return databaseError.code === '42701' || message.includes('already exists')
+  }
+
+  return databaseError.code === '42P07' || message.includes('already exists')
+}
+
 async function ensureColumn(db: DatabaseAdapter, tableName: string, columnName: string, definition: string): Promise<void> {
   const columns = await listColumns(db, tableName)
   if (columns.has(columnName)) return
-  await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`)
+  try {
+    await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`)
+  } catch (error) {
+    if (isAlreadyExistsError(db, error, 'column')) return
+    throw error
+  }
 }
 
 async function ensureIndex(db: DatabaseAdapter, indexName: string, statement: string): Promise<void> {
-  if (db.type === 'sqlite') {
-    const existing = await db.queryOne<{ name: string }>(
-      `SELECT name FROM sqlite_master WHERE type = 'index' AND name = ? LIMIT 1`,
-      [indexName]
-    )
-    if (existing?.name) return
-  } else {
-    const existing = await db.queryOne<{ indexname: string }>(
-      `SELECT indexname FROM pg_indexes WHERE schemaname = ANY (current_schemas(false)) AND indexname = ? LIMIT 1`,
-      [indexName]
-    )
-    if (existing?.indexname) return
+  // Use IF NOT EXISTS to avoid race conditions between concurrent workers/processes
+  const createSql = statement.replace(/^CREATE INDEX\s+/i, 'CREATE INDEX IF NOT EXISTS ')
+  try {
+    await db.exec(createSql)
+  } catch (error) {
+    if (isAlreadyExistsError(db, error, 'index')) return
+    throw error
   }
-
-  await db.exec(statement)
 }
 
 async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {

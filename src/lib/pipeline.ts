@@ -99,8 +99,6 @@ type QueuedRunRecord = {
 const PIPELINE_WORKER_RECOVERY_MESSAGE = 'Recovered after worker restart'
 const PIPELINE_CANCELLED_MESSAGE = 'Cancelled by admin'
 const PIPELINE_CANCEL_REQUESTED_MESSAGE = 'Cancellation requested by admin'
-const DEFAULT_PIPELINE_WORKER_POLL_MS = 2500
-const DEFAULT_PIPELINE_WORKER_CONCURRENCY = 1
 const MAX_PIPELINE_WORKER_CONCURRENCY = 4
 
 type PipelineWorkerState = {
@@ -110,6 +108,12 @@ type PipelineWorkerState = {
   workerId: string
   activeRuns: number
   nextRunToken: number
+  configCache: {
+    enabled: boolean | null
+    pollMs: number | null
+    concurrency: number | null
+  }
+  configLoaded: boolean
 }
 
 function getPipelineWorkerState(): PipelineWorkerState {
@@ -121,10 +125,58 @@ function getPipelineWorkerState(): PipelineWorkerState {
       isTicking: false,
       workerId: `bes3-worker-${process.pid}`,
       activeRuns: 0,
-      nextRunToken: 0
+      nextRunToken: 0,
+      configCache: { enabled: null, pollMs: null, concurrency: null },
+      configLoaded: false
     }
   }
   return scope.__bes3PipelineWorkerState
+}
+
+async function loadPipelineConfig(): Promise<void> {
+  const state = getPipelineWorkerState()
+  if (state.configLoaded) return
+
+  const [enabledStr, pollMsStr, concurrencyStr] = await Promise.all([
+    getSettingValueOrEnv('pipeline', 'workerEnabled', 'PIPELINE_WORKER_ENABLED', 'true'),
+    getSettingValueOrEnv('pipeline', 'workerPollMs', 'PIPELINE_WORKER_POLL_MS', '2500'),
+    getSettingValueOrEnv('pipeline', 'workerConcurrency', 'PIPELINE_WORKER_CONCURRENCY', '1')
+  ])
+
+  state.configCache.enabled = enabledStr !== 'false'
+  state.configCache.pollMs = Math.max(500, Number.parseInt(pollMsStr, 10) || 2500)
+  state.configCache.concurrency = Math.min(Math.max(1, Number.parseInt(concurrencyStr, 10) || 1), MAX_PIPELINE_WORKER_CONCURRENCY)
+  state.configLoaded = true
+}
+
+function isPipelineWorkerEnabled(): boolean {
+  const state = getPipelineWorkerState()
+  if (!state.configLoaded) {
+    // Sync fallback: only use env var until config is loaded
+    return (process.env.PIPELINE_WORKER_ENABLED || 'true') !== 'false'
+  }
+  return state.configCache.enabled !== false
+}
+
+function getPipelineWorkerPollMs(): number {
+  const state = getPipelineWorkerState()
+  if (state.configCache.pollMs !== null) return state.configCache.pollMs
+  return Math.max(500, Number.parseInt(process.env.PIPELINE_WORKER_POLL_MS || '2500', 10) || 2500)
+}
+
+function getPipelineWorkerConcurrency(): number {
+  const state = getPipelineWorkerState()
+  if (state.configCache.concurrency !== null) return state.configCache.concurrency
+  return Math.min(Math.max(1, Number.parseInt(process.env.PIPELINE_WORKER_CONCURRENCY || '1', 10) || 1), MAX_PIPELINE_WORKER_CONCURRENCY)
+}
+
+export function getPipelineWorkerRuntimeConfig() {
+  const state = getPipelineWorkerState()
+  return {
+    enabled: isPipelineWorkerEnabled(),
+    pollMs: getPipelineWorkerPollMs(),
+    concurrency: getPipelineWorkerConcurrency()
+  }
 }
 
 class PipelineCancelledError extends Error {
@@ -143,26 +195,6 @@ function parsePositiveInt(value: string | undefined, fallback: number, max?: num
   if (!Number.isFinite(parsed) || parsed <= 0) return fallback
   if (typeof max === 'number') return Math.min(parsed, max)
   return parsed
-}
-
-function isPipelineWorkerEnabled(): boolean {
-  return (process.env.PIPELINE_WORKER_ENABLED || 'true') !== 'false'
-}
-
-function getPipelineWorkerPollMs(): number {
-  return parsePositiveInt(process.env.PIPELINE_WORKER_POLL_MS, DEFAULT_PIPELINE_WORKER_POLL_MS)
-}
-
-function getPipelineWorkerConcurrency(): number {
-  return parsePositiveInt(process.env.PIPELINE_WORKER_CONCURRENCY, DEFAULT_PIPELINE_WORKER_CONCURRENCY, MAX_PIPELINE_WORKER_CONCURRENCY)
-}
-
-export function getPipelineWorkerRuntimeConfig() {
-  return {
-    enabled: isPipelineWorkerEnabled(),
-    pollMs: getPipelineWorkerPollMs(),
-    concurrency: getPipelineWorkerConcurrency()
-  }
 }
 
 async function createRun(input: {
@@ -466,6 +498,7 @@ async function runPipelineWorkerTick() {
 export async function ensurePipelineWorker(): Promise<void> {
   const state = getPipelineWorkerState()
   if (state.started) return
+  await loadPipelineConfig()
   state.started = true
   if (!isPipelineWorkerEnabled()) {
     return
