@@ -2,11 +2,9 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { getDatabase } from '@/lib/db'
 import { listAffiliateProducts } from '@/lib/partnerboost'
-import { ensurePipelineWorker } from '@/lib/pipeline'
 
 export async function GET() {
   await requireAdmin()
-  void ensurePipelineWorker()
   const db = await getDatabase()
   const products = await db.query(
     `
