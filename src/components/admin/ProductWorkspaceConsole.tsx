@@ -3,7 +3,7 @@
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 import { ArrowLeft, ExternalLink, FileText, RefreshCw, Scan, Search, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminProductWorkspace } from '@/lib/admin-products'
@@ -53,6 +53,7 @@ export function ProductWorkspaceConsole({
   const reviewMedia = workspace.mediaAssets.filter((item) => item.assetRole === 'review')
   const reviewArticle = workspace.articles.find((item) => item.articleType === 'review') || null
   const comparisonArticle = workspace.articles.find((item) => item.articleType === 'comparison') || null
+  const hasActiveRuns = workspace.recentRuns.some((run) => run.status === 'queued' || run.status === 'running')
   const workflowActions: Array<{
     id: WorkspaceActionId
     title: string
@@ -70,8 +71,8 @@ export function ProductWorkspaceConsole({
       description: 'Reuse the current product facts and media to regenerate keyword opportunities, the review page, and the comparison page without re-scraping the landing page.',
       badge: `${workspace.keywords.length} keywords · ${workspace.articles.length} articles`,
       accentClassName: 'bg-[#f7f1e4] text-primary',
-      cta: 'Run Content Pack',
-      successMessage: 'Content pack regenerated and workspace refreshed',
+      cta: 'Queue Content Pack',
+      successMessage: 'Content pack queued and workspace refreshed',
       icon: Wand2,
       spanClassName: 'lg:col-span-2'
     },
@@ -81,8 +82,8 @@ export function ProductWorkspaceConsole({
       description: 'Refresh high-intent long-tail opportunities from the normalized product facts currently stored in the database.',
       badge: workspace.keywords.length > 0 ? `${workspace.keywords.length} saved` : 'Not generated',
       accentClassName: 'bg-sky-100 text-sky-800',
-      cta: 'Run Keyword Mining',
-      successMessage: 'Keyword mining completed and workspace refreshed',
+      cta: 'Queue Keyword Mining',
+      successMessage: 'Keyword mining queued and workspace refreshed',
       icon: Search
     },
     {
@@ -91,8 +92,8 @@ export function ProductWorkspaceConsole({
       description: 'Rebuild the product review article, regenerate its SEO payload, and republish the public review path.',
       badge: reviewArticle ? `Updated ${formatDate(reviewArticle.updatedAt)}` : 'Not generated',
       accentClassName: 'bg-rose-100 text-rose-800',
-      cta: 'Regenerate Review',
-      successMessage: 'Review article regenerated and workspace refreshed',
+      cta: 'Queue Review',
+      successMessage: 'Review article queued and workspace refreshed',
       icon: FileText
     },
     {
@@ -101,8 +102,8 @@ export function ProductWorkspaceConsole({
       description: 'Rebuild the alternatives article from the current product database and republish the comparison page.',
       badge: comparisonArticle ? `Updated ${formatDate(comparisonArticle.updatedAt)}` : 'Not generated',
       accentClassName: 'bg-indigo-100 text-indigo-800',
-      cta: 'Regenerate Comparison',
-      successMessage: 'Comparison article regenerated and workspace refreshed',
+      cta: 'Queue Comparison',
+      successMessage: 'Comparison article queued and workspace refreshed',
       icon: FileText
     },
     {
@@ -111,8 +112,8 @@ export function ProductWorkspaceConsole({
       description: 'Recompute SEO title, meta description, and schema for all current product articles, then sync the linked SEO pages.',
       badge: workspace.seoPages.length > 0 ? `${workspace.seoPages.length} SEO pages` : 'No SEO pages yet',
       accentClassName: 'bg-emerald-100 text-emerald-800',
-      cta: 'Refresh SEO Pages',
-      successMessage: 'SEO metadata refreshed and workspace synchronized',
+      cta: 'Queue SEO Refresh',
+      successMessage: 'SEO refresh queued and workspace synchronized',
       icon: RefreshCw
     }
   ]
@@ -148,6 +149,22 @@ export function ProductWorkspaceConsole({
     })
   }
 
+  useEffect(() => {
+    if (!hasActiveRuns) return
+    const intervalId = window.setInterval(() => {
+      startTransition(async () => {
+        try {
+          await refreshWorkspace()
+          router.refresh()
+        } catch {
+          // Keep polling silent until the next successful refresh.
+        }
+      })
+    }, 4000)
+    return () => window.clearInterval(intervalId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveRuns, workspace.product.id])
+
   return (
     <div className="space-y-8 p-6 lg:p-10">
       <section className="rounded-[36px] border border-border bg-white p-8 shadow-panel">
@@ -180,12 +197,12 @@ export function ProductWorkspaceConsole({
                 onClick={() =>
                   triggerAction({
                     path: `/api/admin/products/${workspace.affiliateSource?.id}/run-pipeline`,
-                    successMessage: 'Pipeline completed and workspace refreshed'
+                    successMessage: 'Pipeline queued and workspace refreshed'
                   })
                 }
               >
                 <Wand2 className="mr-2 h-4 w-4" />
-                Run Full Pipeline
+                Queue Full Pipeline
               </Button>
             ) : null}
             <Button

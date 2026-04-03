@@ -23,5 +23,5 @@ export async function POST(
   }
 
   const runId = await runProductWorkspaceAction(Number((await params).id), action)
-  return NextResponse.json({ success: true, runId })
+  return NextResponse.json({ success: true, queued: true, runId, status: 'queued' })
 }

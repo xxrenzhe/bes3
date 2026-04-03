@@ -143,6 +143,13 @@ const SQLITE_SCHEMA = [
       product_id INTEGER,
       affiliate_product_id INTEGER,
       source_link TEXT NOT NULL,
+      run_type TEXT NOT NULL DEFAULT 'fullPipeline',
+      requested_action TEXT,
+      worker_id TEXT,
+      locked_at TEXT,
+      started_at TEXT,
+      finished_at TEXT,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
       status TEXT NOT NULL DEFAULT 'queued',
       current_stage TEXT,
       error_message TEXT,
@@ -233,9 +240,71 @@ const POSTGRES_SCHEMA = SQLITE_SCHEMA.map((statement) =>
     .replace(/TEXT NOT NULL DEFAULT 'site'/g, "TEXT NOT NULL DEFAULT 'site'")
 )
 
+async function listColumns(db: DatabaseAdapter, tableName: string): Promise<Set<string>> {
+  if (db.type === 'sqlite') {
+    const rows = await db.query<{ name: string }>(`PRAGMA table_info(${tableName})`)
+    return new Set(rows.map((row) => row.name))
+  }
+
+  const rows = await db.query<{ column_name: string }>(
+    `
+      SELECT column_name
+      FROM information_schema.columns
+      WHERE table_name = ? AND table_schema = ANY (current_schemas(false))
+    `,
+    [tableName]
+  )
+  return new Set(rows.map((row) => row.column_name))
+}
+
+async function ensureColumn(db: DatabaseAdapter, tableName: string, columnName: string, definition: string): Promise<void> {
+  const columns = await listColumns(db, tableName)
+  if (columns.has(columnName)) return
+  await db.exec(`ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${definition}`)
+}
+
+async function ensureIndex(db: DatabaseAdapter, indexName: string, statement: string): Promise<void> {
+  if (db.type === 'sqlite') {
+    const existing = await db.queryOne<{ name: string }>(
+      `SELECT name FROM sqlite_master WHERE type = 'index' AND name = ? LIMIT 1`,
+      [indexName]
+    )
+    if (existing?.name) return
+  } else {
+    const existing = await db.queryOne<{ indexname: string }>(
+      `SELECT indexname FROM pg_indexes WHERE schemaname = ANY (current_schemas(false)) AND indexname = ? LIMIT 1`,
+      [indexName]
+    )
+    if (existing?.indexname) return
+  }
+
+  await db.exec(statement)
+}
+
+async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'content_pipeline_runs', 'run_type', "TEXT NOT NULL DEFAULT 'fullPipeline'")
+  await ensureColumn(db, 'content_pipeline_runs', 'requested_action', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'worker_id', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'locked_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'started_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'finished_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'attempt_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureIndex(
+    db,
+    'idx_content_pipeline_runs_status_created_at',
+    'CREATE INDEX idx_content_pipeline_runs_status_created_at ON content_pipeline_runs (status, created_at, id)'
+  )
+  await ensureIndex(
+    db,
+    'idx_content_pipeline_runs_product_status',
+    'CREATE INDEX idx_content_pipeline_runs_product_status ON content_pipeline_runs (product_id, status, updated_at)'
+  )
+}
+
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   const statements = db.type === 'postgres' ? POSTGRES_SCHEMA : SQLITE_SCHEMA
   for (const statement of statements) {
     await db.exec(statement)
   }
+  await ensurePipelineRunSchema(db)
 }

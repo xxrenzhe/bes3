@@ -11,10 +11,16 @@ type PipelineRun = {
   id: number
   product_id: number | null
   affiliate_product_id: number | null
+  run_type: 'fullPipeline' | 'workspaceAction'
+  requested_action: string | null
   status: string
   current_stage: string | null
   error_message: string | null
   source_link: string
+  worker_id: string | null
+  started_at: string | null
+  finished_at: string | null
+  attempt_count: number
   created_at: string
   updated_at: string
   product_name: string | null
@@ -86,6 +92,19 @@ export function PipelineRunsConsole() {
     })()
   }, [])
 
+  const hasActiveRuns = runs.some((run) => run.status === 'queued' || run.status === 'running')
+
+  useEffect(() => {
+    if (!hasActiveRuns) return
+    const intervalId = window.setInterval(() => {
+      startTransition(async () => {
+        await loadRuns(selectedRunId)
+      })
+    }, 4000)
+    return () => window.clearInterval(intervalId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveRuns, selectedRunId])
+
   return (
     <div className="space-y-6 p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
@@ -134,7 +153,7 @@ export function PipelineRunsConsole() {
                   >
                     <td className="py-4 pr-3">
                       <div className="font-medium">{run.product_name || run.source_link}</div>
-                      <div className="text-muted-foreground">Run #{run.id}</div>
+                      <div className="text-muted-foreground">Run #{run.id} · {run.run_type === 'workspaceAction' ? (run.requested_action || 'workspace action') : 'full pipeline'}</div>
                     </td>
                     <td className="py-4 pr-3 text-muted-foreground">{run.current_stage || '-'}</td>
                     <td className="py-4 pr-3">
@@ -158,6 +177,11 @@ export function PipelineRunsConsole() {
                     {selectedRun.product_name || `Run #${selectedRun.id}`}
                   </h2>
                   <p className="mt-2 text-sm text-muted-foreground">Created {formatDate(selectedRun.created_at)}</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {selectedRun.run_type === 'workspaceAction'
+                      ? `Queued workspace action: ${selectedRun.requested_action || 'unknown'}`
+                      : 'Queued full pipeline run'}
+                  </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
                   <StatusBadge value={selectedRun.status} />
@@ -196,6 +220,18 @@ export function PipelineRunsConsole() {
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Updated</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.updated_at)}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Started</span>
+                    <span className="text-right font-medium">{formatDate(selectedRun.started_at)}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Finished</span>
+                    <span className="text-right font-medium">{formatDate(selectedRun.finished_at)}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Attempts</span>
+                    <span className="text-right font-medium">{selectedRun.attempt_count}</span>
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Affiliate Product</span>

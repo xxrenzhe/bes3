@@ -15,5 +15,5 @@ export async function POST(request: Request) {
   }
 
   const runIds = await batchRunPipelines(ids)
-  return NextResponse.json({ success: true, runIds })
+  return NextResponse.json({ success: true, queued: true, runIds })
 }

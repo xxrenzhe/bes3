@@ -59,6 +59,16 @@ export function ProductsConsole() {
       productIdByAffiliateId.set(product.affiliate_product_id, product.id)
     }
   }
+  const hasActiveRuns = products.some((product) => product.last_run_status === 'queued' || product.last_run_status === 'running')
+
+  useEffect(() => {
+    if (!hasActiveRuns) return
+    const intervalId = window.setInterval(() => {
+      void load()
+    }, 4000)
+    return () => window.clearInterval(intervalId)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hasActiveRuns])
 
   const trigger = (path: string, options?: {
     body?: unknown
@@ -109,12 +119,12 @@ export function ProductsConsole() {
               onClick={() =>
                 trigger('/api/admin/products/import-from-link', {
                   body: { link: importLink },
-                  successMessage: 'Link imported and pipeline completed',
+                  successMessage: 'Link imported and pipeline queued',
                   navigateToProduct: true
                 })
               }
             >
-              Import and Run Pipeline
+              Import and Queue Pipeline
             </Button>
           </div>
         </div>
@@ -128,9 +138,9 @@ export function ProductsConsole() {
           </div>
           <Button
             disabled={selectedIds.length === 0 || isPending}
-            onClick={() => trigger('/api/admin/products/batch-run-pipeline', { body: { ids: selectedIds }, successMessage: 'Batch pipeline completed' })}
+            onClick={() => trigger('/api/admin/products/batch-run-pipeline', { body: { ids: selectedIds }, successMessage: 'Batch pipeline queued' })}
           >
-            Batch Run Pipeline
+            Batch Queue Pipeline
           </Button>
         </div>
         <div className="mt-6 overflow-x-auto">
@@ -178,12 +188,12 @@ export function ProductsConsole() {
                           size="sm"
                           onClick={() =>
                             trigger(`/api/admin/products/${item.id}/run-pipeline`, {
-                              successMessage: 'Pipeline completed',
+                              successMessage: 'Pipeline queued',
                               navigateToProduct: true
                             })
                           }
                         >
-                          Run Pipeline
+                          Queue Pipeline
                         </Button>
                       </div>
                     </td>
