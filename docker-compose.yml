@@ -3,7 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    image: bes3:latest
+    image: ${BES3_IMAGE:-bes3:latest}
     restart: unless-stopped
     env_file:
       - .env.production
