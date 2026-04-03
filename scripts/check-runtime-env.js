@@ -60,6 +60,9 @@ function buildConfig() {
     amazonToken: read('PARTNERBOOST_AMAZON_TOKEN'),
     dtcToken: read('PARTNERBOOST_DTC_TOKEN'),
     geminiApiKey: read('GEMINI_API_KEY'),
+    pipelineWorkerEnabled: read('PIPELINE_WORKER_ENABLED', 'true'),
+    pipelineWorkerPollMs: read('PIPELINE_WORKER_POLL_MS', '2500'),
+    pipelineWorkerConcurrency: read('PIPELINE_WORKER_CONCURRENCY', '1'),
     allowInsecureDefaults: read('BES3_ALLOW_INSECURE_DEFAULTS', 'false') === 'true'
   }
 }
@@ -70,6 +73,10 @@ function isLocalUrl(value) {
 
 function addResult(collection, level, message) {
   collection.push({ level, message })
+}
+
+function isPositiveInteger(value) {
+  return /^\d+$/.test(String(value)) && Number.parseInt(String(value), 10) > 0
 }
 
 function validate() {
@@ -154,6 +161,26 @@ function validate() {
 
   if (!['true', 'false'].includes(String(config.s3ForcePathStyle))) {
     warnings.push('S3_FORCE_PATH_STYLE should be "true" or "false"')
+  }
+
+  if (!['true', 'false'].includes(String(config.pipelineWorkerEnabled))) {
+    errors.push('PIPELINE_WORKER_ENABLED should be "true" or "false"')
+  } else {
+    addResult(
+      results,
+      'info',
+      `Pipeline worker: ${config.pipelineWorkerEnabled === 'true' ? 'enabled' : 'disabled'} · poll ${config.pipelineWorkerPollMs}ms · concurrency ${config.pipelineWorkerConcurrency}`
+    )
+  }
+
+  if (!isPositiveInteger(config.pipelineWorkerPollMs)) {
+    errors.push('PIPELINE_WORKER_POLL_MS must be a positive integer')
+  }
+
+  if (!isPositiveInteger(config.pipelineWorkerConcurrency)) {
+    errors.push('PIPELINE_WORKER_CONCURRENCY must be a positive integer')
+  } else if (Number.parseInt(String(config.pipelineWorkerConcurrency), 10) > 4) {
+    warnings.push('PIPELINE_WORKER_CONCURRENCY above 4 is discouraged in the current single-container baseline')
   }
 
   if (!config.amazonToken) {

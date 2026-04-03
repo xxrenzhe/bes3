@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { ExternalLink, RefreshCw, TerminalSquare } from 'lucide-react'
+import { ExternalLink, RefreshCw, RotateCcw, TerminalSquare, XCircle } from 'lucide-react'
+import { toast } from 'sonner'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { buttonVariants, Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
@@ -93,6 +94,10 @@ export function PipelineRunsConsole() {
   }, [])
 
   const hasActiveRuns = runs.some((run) => run.status === 'queued' || run.status === 'running')
+  const canCancel = selectedRun ? ['queued', 'running'].includes(selectedRun.status) : false
+  const canRetry = selectedRun
+    ? selectedRun.status === 'failed' || (selectedRun.status === 'cancelled' && Boolean(selectedRun.finished_at))
+    : false
 
   useEffect(() => {
     if (!hasActiveRuns) return
@@ -104,6 +109,19 @@ export function PipelineRunsConsole() {
     return () => window.clearInterval(intervalId)
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActiveRuns, selectedRunId])
+
+  const triggerRunAction = (path: string, successMessage: string) => {
+    startTransition(async () => {
+      const response = await fetch(path, { method: 'POST' })
+      const body = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        toast.error(body.error || 'Run action failed')
+        return
+      }
+      await loadRuns(body.runId || selectedRunId)
+      toast.success(successMessage)
+    })
+  }
 
   return (
     <div className="space-y-6 p-6 lg:p-10">
@@ -206,6 +224,27 @@ export function PipelineRunsConsole() {
                   <ExternalLink className="mr-2 h-4 w-4" />
                   Open Source Link
                 </Link>
+                {canCancel ? (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    disabled={isPending}
+                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/cancel`, 'Pipeline cancellation requested')}
+                  >
+                    <XCircle className="mr-2 h-4 w-4" />
+                    Cancel Run
+                  </Button>
+                ) : null}
+                {canRetry ? (
+                  <Button
+                    size="sm"
+                    disabled={isPending}
+                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/retry`, 'Pipeline retry queued')}
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Retry Run
+                  </Button>
+                ) : null}
               </div>
 
               {selectedRun.error_message ? (
@@ -232,6 +271,10 @@ export function PipelineRunsConsole() {
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Attempts</span>
                     <span className="text-right font-medium">{selectedRun.attempt_count}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Worker</span>
+                    <span className="text-right font-medium">{selectedRun.worker_id || 'N/A'}</span>
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Affiliate Product</span>
