@@ -9,7 +9,7 @@ import { getDatabase } from '@/lib/db'
 import { scrapeProductPage } from '@/lib/scraper'
 import type { ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
-import type { PipelineStage, PipelineStatus } from '@/lib/types'
+import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { resolveAffiliateLink } from '@/lib/url-resolver'
 import { slugify } from '@/lib/slug'
 
@@ -17,10 +17,16 @@ export interface PipelineRunListItem {
   id: number
   product_id: number | null
   affiliate_product_id: number | null
+  run_type: PipelineRunType
+  requested_action: ProductWorkspaceAction | null
   status: PipelineStatus
   current_stage: PipelineStage | null
   error_message: string | null
   source_link: string
+  worker_id: string | null
+  started_at: string | null
+  finished_at: string | null
+  attempt_count: number
   created_at: string
   updated_at: string
   product_name: string | null
@@ -79,31 +85,127 @@ type GeneratedArticleDraft = {
   contentHtml: string
 }
 
+type QueuedRunRecord = {
+  id: number
+  product_id: number | null
+  affiliate_product_id: number | null
+  run_type: PipelineRunType
+  requested_action: ProductWorkspaceAction | null
+  source_link: string
+}
+
+const PIPELINE_WORKER_POLL_MS = 2500
+const PIPELINE_WORKER_RECOVERY_MESSAGE = 'Recovered after worker restart'
+
+type PipelineWorkerState = {
+  started: boolean
+  scheduled: boolean
+  isTicking: boolean
+  workerId: string
+}
+
+function getPipelineWorkerState(): PipelineWorkerState {
+  const scope = globalThis as typeof globalThis & { __bes3PipelineWorkerState?: PipelineWorkerState }
+  if (!scope.__bes3PipelineWorkerState) {
+    scope.__bes3PipelineWorkerState = {
+      started: false,
+      scheduled: false,
+      isTicking: false,
+      workerId: `bes3-worker-${process.pid}`
+    }
+  }
+  return scope.__bes3PipelineWorkerState
+}
+
 async function createRun(input: {
   sourceLink: string
   affiliateProductId?: number | null
   productId?: number | null
+  runType: PipelineRunType
+  requestedAction?: ProductWorkspaceAction | null
 }) {
   const db = await getDatabase()
+  const existing = await db.queryOne<{ id: number }>(
+    `
+      SELECT id
+      FROM content_pipeline_runs
+      WHERE status IN ('queued', 'running')
+        AND run_type = ?
+        AND COALESCE(product_id, 0) = COALESCE(?, 0)
+        AND COALESCE(affiliate_product_id, 0) = COALESCE(?, 0)
+        AND source_link = ?
+        AND COALESCE(requested_action, '') = COALESCE(?, '')
+      ORDER BY created_at DESC, id DESC
+      LIMIT 1
+    `,
+    [input.runType, input.productId || null, input.affiliateProductId || null, input.sourceLink, input.requestedAction || null]
+  )
+  if (existing?.id) {
+    return existing.id
+  }
+
   const result = await db.exec(
     `
-      INSERT INTO content_pipeline_runs (product_id, affiliate_product_id, source_link, status, current_stage)
-      VALUES (?, ?, ?, 'queued', NULL)
+      INSERT INTO content_pipeline_runs (
+        product_id, affiliate_product_id, source_link, run_type, requested_action, status, current_stage, worker_id, locked_at, started_at, finished_at, attempt_count
+      )
+      VALUES (?, ?, ?, ?, ?, 'queued', NULL, NULL, NULL, NULL, NULL, 0)
     `,
-    [input.productId || null, input.affiliateProductId || null, input.sourceLink]
+    [input.productId || null, input.affiliateProductId || null, input.sourceLink, input.runType, input.requestedAction || null]
   )
   return Number(result.lastInsertRowid)
 }
 
-async function markRun(runId: number, status: PipelineStatus, currentStage?: PipelineStage | null, errorMessage?: string | null) {
+async function markRun(
+  runId: number,
+  status: PipelineStatus,
+  currentStage?: PipelineStage | null,
+  errorMessage?: string | null,
+  metadata?: {
+    workerId?: string | null
+    started?: boolean
+    finished?: boolean
+  }
+) {
   const db = await getDatabase()
+  const hasWorkerId = metadata ? Object.prototype.hasOwnProperty.call(metadata, 'workerId') : false
   await db.exec(
     `
       UPDATE content_pipeline_runs
-      SET status = ?, current_stage = ?, error_message = ?, updated_at = CURRENT_TIMESTAMP
+      SET status = ?,
+          current_stage = ?,
+          error_message = ?,
+          worker_id = CASE WHEN ? = 1 THEN ? ELSE worker_id END,
+          locked_at = CASE
+            WHEN ? = 1 THEN CURRENT_TIMESTAMP
+            WHEN ? = 1 THEN NULL
+            ELSE locked_at
+          END,
+          started_at = CASE
+            WHEN ? = 1 THEN COALESCE(started_at, CURRENT_TIMESTAMP)
+            ELSE started_at
+          END,
+          finished_at = CASE
+            WHEN ? = 1 THEN CURRENT_TIMESTAMP
+            ELSE NULL
+          END,
+          attempt_count = CASE WHEN ? = 1 THEN attempt_count + 1 ELSE attempt_count END,
+          updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
-    [status, currentStage || null, errorMessage || null, runId]
+    [
+      status,
+      currentStage || null,
+      errorMessage || null,
+      hasWorkerId ? 1 : 0,
+      metadata?.workerId ?? null,
+      metadata?.started ? 1 : 0,
+      metadata?.finished ? 1 : 0,
+      metadata?.started ? 1 : 0,
+      metadata?.finished ? 1 : 0,
+      metadata?.started ? 1 : 0,
+      runId
+    ]
   )
 }
 
@@ -126,6 +228,130 @@ async function finishJob(jobId: number, status: string, message?: string, payloa
     `,
     [status, message || null, payload ? JSON.stringify(payload) : null, jobId]
   )
+}
+
+async function getQueuedRun(runId: number): Promise<QueuedRunRecord | null> {
+  const db = await getDatabase()
+  const run = await db.queryOne<QueuedRunRecord>(
+    `
+      SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link
+      FROM content_pipeline_runs
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [runId]
+  )
+  return run || null
+}
+
+async function recoverInterruptedRuns(): Promise<void> {
+  const db = await getDatabase()
+  const interruptedRuns = await db.query<{ id: number }>(
+    `
+      SELECT id
+      FROM content_pipeline_runs
+      WHERE status = 'running' AND finished_at IS NULL
+      ORDER BY id ASC
+    `
+  )
+
+  for (const run of interruptedRuns) {
+    await db.exec(
+      `
+        UPDATE content_pipeline_runs
+        SET status = 'queued',
+            current_stage = NULL,
+            error_message = ?,
+            worker_id = NULL,
+            locked_at = NULL,
+            started_at = NULL,
+            finished_at = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [PIPELINE_WORKER_RECOVERY_MESSAGE, run.id]
+    )
+    await db.exec(
+      `
+        UPDATE content_pipeline_jobs
+        SET status = 'failed',
+            message = ?,
+            finished_at = CURRENT_TIMESTAMP
+        WHERE run_id = ? AND status = 'running' AND finished_at IS NULL
+      `,
+      [PIPELINE_WORKER_RECOVERY_MESSAGE, run.id]
+    )
+  }
+}
+
+async function claimNextRun(workerId: string): Promise<QueuedRunRecord | null> {
+  const db = await getDatabase()
+  const candidate = await db.queryOne<QueuedRunRecord>(
+    `
+      SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link
+      FROM content_pipeline_runs
+      WHERE status = 'queued'
+      ORDER BY created_at ASC, id ASC
+      LIMIT 1
+    `
+  )
+
+  if (!candidate) return null
+
+  await markRun(candidate.id, 'running', null, null, { workerId, started: true })
+  return candidate
+}
+
+function schedulePipelineWorkerTick(delayMs: number) {
+  const state = getPipelineWorkerState()
+  if (state.scheduled) return
+  state.scheduled = true
+  setTimeout(() => {
+    state.scheduled = false
+    void runPipelineWorkerTick()
+  }, delayMs)
+}
+
+async function runPipelineWorkerTick() {
+  const state = getPipelineWorkerState()
+  if (state.isTicking) return
+  state.isTicking = true
+
+  try {
+    const run = await claimNextRun(state.workerId)
+    if (!run) {
+      schedulePipelineWorkerTick(PIPELINE_WORKER_POLL_MS)
+      return
+    }
+
+    try {
+      if (run.run_type === 'workspaceAction') {
+        if (!run.product_id || !run.requested_action) {
+          throw new Error('Queued workspace action is missing product_id or requested_action')
+        }
+        await executeProductWorkspaceActionRun(run.id, run.product_id, run.requested_action, state.workerId)
+      } else {
+        await executeFullPipelineRun(run.id, run.source_link, run.affiliate_product_id, state.workerId)
+      }
+    } catch (error) {
+      console.error('[bes3-pipeline-worker] run failed', error)
+    }
+
+    schedulePipelineWorkerTick(0)
+  } catch (error) {
+    console.error('[bes3-pipeline-worker] tick failed', error)
+    schedulePipelineWorkerTick(PIPELINE_WORKER_POLL_MS)
+  } finally {
+    state.isTicking = false
+  }
+}
+
+export async function ensurePipelineWorker(): Promise<void> {
+  const state = getPipelineWorkerState()
+  if (state.started) return
+  state.started = true
+  await recoverInterruptedRuns()
+  schedulePipelineWorkerTick(250)
 }
 
 async function ensureProductShell(input: {
@@ -162,6 +388,16 @@ async function ensureProductShell(input: {
   )
 
   return Number(result.lastInsertRowid)
+}
+
+async function findProductIdByAffiliateProductId(affiliateProductId: number | null): Promise<number | null> {
+  if (!affiliateProductId) return null
+  const db = await getDatabase()
+  const row = await db.queryOne<{ id: number }>(
+    'SELECT id FROM products WHERE affiliate_product_id = ? LIMIT 1',
+    [affiliateProductId]
+  )
+  return row?.id || null
 }
 
 async function updateProductFromScrape(productId: number, scraped: ReturnType<typeof scrapeProductPage>) {
@@ -491,15 +727,36 @@ async function persistPublishedArticle(
   return { articleId, path, seoPageId }
 }
 
+function getInternalServiceBaseUrl(): string {
+  const port = process.env.PORT || '3000'
+  return `http://127.0.0.1:${port}`
+}
+
 async function revalidateGeneratedPaths(paths: string[], category: string | null) {
   const uniquePaths = Array.from(new Set(paths.filter(Boolean)))
+  try {
+    const response = await fetch(`${getInternalServiceBaseUrl()}/api/internal/revalidate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-bes3-internal-token': process.env.JWT_SECRET || ''
+      },
+      body: JSON.stringify({ paths: uniquePaths, category })
+    })
+    if (response.ok) {
+      return
+    }
+  } catch {
+    // Fall back to direct revalidation when a request context exists.
+  }
+
   revalidatePath('/')
   revalidatePath('/directory')
   if (category) {
     revalidatePath(`/categories/${category}`)
   }
-  for (const path of uniquePaths) {
-    revalidatePath(path)
+  for (const item of uniquePaths) {
+    revalidatePath(item)
   }
 }
 
@@ -588,11 +845,22 @@ export async function runProductWorkspaceAction(productId: number, action: Produ
   const runId = await createRun({
     sourceLink: product.sourceAffiliateLink,
     affiliateProductId: product.affiliateProductId,
-    productId
+    productId,
+    runType: 'workspaceAction',
+    requestedAction: action
   })
-  await markRun(runId, 'running')
+  await ensurePipelineWorker()
+  return runId
+}
 
+async function executeProductWorkspaceActionRun(
+  runId: number,
+  productId: number,
+  action: ProductWorkspaceAction,
+  workerId: string
+): Promise<void> {
   try {
+    const product = await loadStoredProductRecord(productId)
     let keywordIdeas = await loadStoredKeywordIdeas(productId)
     const heroImageUrl = await loadPrimaryMediaUrl(productId)
 
@@ -678,10 +946,9 @@ export async function runProductWorkspaceAction(productId: number, action: Produ
       await refreshSeoStage()
     }
 
-    await markRun(runId, 'completed', null)
-    return runId
+    await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
   } catch (error: any) {
-    await markRun(runId, 'failed', null, error?.message || 'Workspace action failed')
+    await markRun(runId, 'failed', null, error?.message || 'Workspace action failed', { workerId: null, finished: true })
     const db = await getDatabase()
     const lastJob = await db.queryOne<{ id: number }>(
       'SELECT id FROM content_pipeline_jobs WHERE run_id = ? ORDER BY id DESC LIMIT 1',
@@ -698,10 +965,12 @@ export async function listPipelineRuns(): Promise<PipelineRunListItem[]> {
   const db = await getDatabase()
   return db.query<PipelineRunListItem>(
     `
-      SELECT r.id, r.product_id, r.affiliate_product_id, r.status, r.current_stage, r.error_message, r.source_link,
-        r.created_at, r.updated_at, p.product_name, p.slug
+      SELECT r.id, r.product_id, r.affiliate_product_id, r.run_type, r.requested_action, r.status, r.current_stage,
+        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count, r.created_at, r.updated_at,
+        COALESCE(p.product_name, ap.product_name) AS product_name, p.slug
       FROM content_pipeline_runs r
       LEFT JOIN products p ON p.id = r.product_id
+      LEFT JOIN affiliate_products ap ON ap.id = r.affiliate_product_id
       ORDER BY r.updated_at DESC, r.id DESC
     `
   )
@@ -711,10 +980,12 @@ export async function getPipelineRun(runId: number): Promise<PipelineRunDetailIt
   const db = await getDatabase()
   const run = await db.queryOne<PipelineRunListItem>(
     `
-      SELECT r.id, r.product_id, r.affiliate_product_id, r.status, r.current_stage, r.error_message, r.source_link,
-        r.created_at, r.updated_at, p.product_name, p.slug
+      SELECT r.id, r.product_id, r.affiliate_product_id, r.run_type, r.requested_action, r.status, r.current_stage,
+        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count, r.created_at, r.updated_at,
+        COALESCE(p.product_name, ap.product_name) AS product_name, p.slug
       FROM content_pipeline_runs r
       LEFT JOIN products p ON p.id = r.product_id
+      LEFT JOIN affiliate_products ap ON ap.id = r.affiliate_product_id
       WHERE r.id = ?
       LIMIT 1
     `,
@@ -740,21 +1011,42 @@ export async function runPipelineForAffiliateProduct(affiliateProductId: number)
   if (!affiliateProduct) throw new Error('Affiliate product not found')
   const sourceLink = affiliateProduct.short_promo_link || affiliateProduct.promo_link || affiliateProduct.product_url
   if (!sourceLink) throw new Error('Affiliate product has no available link')
-  return runPipelineInternal(sourceLink, affiliateProductId, affiliateProduct.platform)
+  const productId = await findProductIdByAffiliateProductId(affiliateProductId)
+  const runId = await createRun({
+    sourceLink,
+    affiliateProductId,
+    productId,
+    runType: 'fullPipeline'
+  })
+  await ensurePipelineWorker()
+  return runId
 }
 
 export async function runPipelineFromLink(sourceLink: string): Promise<number> {
   const affiliateProductId = await upsertManualAffiliateLink(sourceLink)
-  return runPipelineInternal(sourceLink, affiliateProductId, 'manual')
+  const productId = await findProductIdByAffiliateProductId(affiliateProductId)
+  const runId = await createRun({
+    sourceLink,
+    affiliateProductId,
+    productId,
+    runType: 'fullPipeline'
+  })
+  await ensurePipelineWorker()
+  return runId
 }
 
-async function runPipelineInternal(sourceLink: string, affiliateProductId: number | null, sourcePlatform: string): Promise<number> {
-  const runId = await createRun({ sourceLink, affiliateProductId })
-  await markRun(runId, 'running')
-
+async function executeFullPipelineRun(
+  runId: number,
+  sourceLink: string,
+  affiliateProductId: number | null,
+  workerId: string
+): Promise<void> {
   let productId: number | null = null
 
   try {
+    const affiliateProduct = affiliateProductId ? await getAffiliateProductById(affiliateProductId) : null
+    const sourcePlatform = affiliateProduct?.platform || 'manual'
+
     const resolveJob = await createJob(runId, 'resolveAffiliateLink')
     await markRun(runId, 'running', 'resolveAffiliateLink')
     const resolved = await resolveAffiliateLink(sourceLink)
@@ -904,11 +1196,10 @@ async function runPipelineInternal(sourceLink: string, affiliateProductId: numbe
     }
     await finishJob(pingJob, 'completed', 'Ping/indexing completed')
 
-    await markRun(runId, 'completed', null)
+    await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
     await db.exec('UPDATE content_pipeline_runs SET product_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [productId, runId])
-    return runId
   } catch (error: any) {
-    await markRun(runId, 'failed', null, error?.message || 'Pipeline failed')
+    await markRun(runId, 'failed', null, error?.message || 'Pipeline failed', { workerId: null, finished: true })
     const db = await getDatabase()
     const lastJob = await db.queryOne<{ id: number }>(
       'SELECT id FROM content_pipeline_jobs WHERE run_id = ? ORDER BY id DESC LIMIT 1',

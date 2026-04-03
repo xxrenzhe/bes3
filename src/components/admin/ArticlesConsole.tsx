@@ -291,11 +291,11 @@ export function ArticlesConsole() {
                         return
                       }
                       await load(selectedArticle.id)
-                      toast.success('Regeneration triggered')
+                      toast.success('Regeneration queued')
                     })
                   }}
                 >
-                  Regenerate
+                  Queue Regeneration
                 </Button>
                 <Button
                   size="sm"
