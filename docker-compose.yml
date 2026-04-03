@@ -1,0 +1,14 @@
+services:
+  bes3:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bes3:latest
+    restart: unless-stopped
+    env_file:
+      - .env.production
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data
+      - ./storage/media:/app/storage/media

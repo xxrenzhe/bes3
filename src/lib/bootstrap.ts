@@ -1,0 +1,306 @@
+import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
+import { hashPassword } from '@/lib/crypto'
+import { getDatabase } from '@/lib/db'
+import { slugify } from '@/lib/slug'
+
+let bootstrapPromise: Promise<void> | null = null
+
+const DEFAULT_SETTINGS = [
+  ['ai', 'provider', 'gemini', 'string', 0, 'AI provider'],
+  ['ai', 'geminiModel', 'gemini-2.5-flash', 'string', 0, 'Gemini model'],
+  ['proxy', 'browserProxyUrlsJson', '[]', 'json', 0, 'Proxy pool list'],
+  ['affiliateSync', 'partnerboostAmazonBaseUrl', 'https://app.partnerboost.com', 'string', 0, 'PartnerBoost Amazon API base URL'],
+  ['affiliateSync', 'partnerboostDtcBaseUrl', 'https://app.partnerboost.com', 'string', 0, 'PartnerBoost DTC API base URL'],
+  ['media', 'driver', process.env.MEDIA_DRIVER || 'local', 'string', 0, 'Media storage driver'],
+  ['media', 'publicBaseUrl', process.env.MEDIA_PUBLIC_BASE_URL || '', 'string', 0, 'Public base URL for media'],
+  ['seo', 'siteName', 'Bes3', 'string', 0, 'Public site name'],
+  ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline']
+] as const
+
+const DEFAULT_PROMPTS = [
+  {
+    promptId: 'keyword_mining',
+    category: 'keywordMining',
+    name: 'Keyword Mining',
+    version: 'v1',
+    promptContent:
+      'Generate 12 buyer-intent long-tail keywords for {{product.productName}}. Return JSON array with keyword, buyerIntent, serpWeakness, commissionPotential, contentFit, freshness.'
+  },
+  {
+    promptId: 'review_generation',
+    category: 'reviewGeneration',
+    name: 'Review Article',
+    version: 'v1',
+    promptContent:
+      'Write a concise independent review for {{product.productName}} with pros, cons, ideal buyer, and CTA-safe language. Return markdown.'
+  },
+  {
+    promptId: 'comparison_generation',
+    category: 'comparisonGeneration',
+    name: 'Comparison Article',
+    version: 'v1',
+    promptContent:
+      'Compare {{product.productName}} against two alternatives. Return markdown with verdict, comparison table, and FAQ.'
+  },
+  {
+    promptId: 'seo_enrichment',
+    category: 'seoEnrichment',
+    name: 'SEO Enrichment',
+    version: 'v1',
+    promptContent:
+      'Generate SEO title, meta description, FAQPage schema, Review schema, and open graph summary for {{article.title}}. Return JSON.'
+  }
+] as const
+
+function isUniqueConstraintError(error: unknown): boolean {
+  const code =
+    typeof error === 'object' && error && 'code' in error
+      ? String((error as { code?: unknown }).code || '')
+      : ''
+  const message = error instanceof Error ? error.message : String(error)
+
+  return (
+    code === '23505' ||
+    code === 'SQLITE_CONSTRAINT_UNIQUE' ||
+    message.includes('UNIQUE constraint failed') ||
+    message.includes('duplicate key value violates unique constraint')
+  )
+}
+
+async function ignoreUniqueViolation(operation: () => Promise<unknown>): Promise<void> {
+  try {
+    await operation()
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) throw error
+  }
+}
+
+async function ensureDefaultAdmin(): Promise<void> {
+  const db = await getDatabase()
+  const passwordHash = await hashPassword(DEFAULT_ADMIN_PASSWORD)
+  const existing = await db.queryOne<{ id: number }>(
+    'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',
+    [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL]
+  )
+
+  const syncAdmin = async (userId: number) =>
+    db.exec(
+      `
+        UPDATE users
+        SET username = ?, email = ?, password_hash = ?, role = 'admin', display_name = ?, is_active = ?,
+            must_change_password = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL, passwordHash, 'Bes3 Administrator', 1, 0, userId]
+    )
+
+  if (existing?.id) {
+    await syncAdmin(existing.id)
+    return
+  }
+
+  try {
+    await db.exec(
+      `
+        INSERT INTO users (username, email, password_hash, role, display_name, is_active, must_change_password)
+        VALUES (?, ?, ?, 'admin', 'Bes3 Administrator', 1, 0)
+      `,
+      [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL, passwordHash]
+    )
+  } catch (error) {
+    if (!isUniqueConstraintError(error)) throw error
+    const concurrentUser = await db.queryOne<{ id: number }>(
+      'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',
+      [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL]
+    )
+    if (!concurrentUser?.id) throw error
+    await syncAdmin(concurrentUser.id)
+  }
+}
+
+async function ensureDefaultSettings(): Promise<void> {
+  const db = await getDatabase()
+  for (const [category, key, value, dataType, isSensitive, description] of DEFAULT_SETTINGS) {
+    const existing = await db.queryOne<{ id: number }>(
+      'SELECT id FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
+      [category, key]
+    )
+    if (existing?.id) continue
+    await ignoreUniqueViolation(() =>
+      db.exec(
+        `
+          INSERT INTO system_settings (category, key, value, data_type, is_sensitive, description)
+          VALUES (?, ?, ?, ?, ?, ?)
+        `,
+        [category, key, value, dataType, isSensitive, description]
+      )
+    )
+  }
+}
+
+async function ensureDefaultPrompts(): Promise<void> {
+  const db = await getDatabase()
+  for (const prompt of DEFAULT_PROMPTS) {
+    const existing = await db.queryOne<{ id: number }>(
+      'SELECT id FROM prompt_versions WHERE prompt_id = ? AND version = ? LIMIT 1',
+      [prompt.promptId, prompt.version]
+    )
+    if (existing?.id) continue
+    await ignoreUniqueViolation(() =>
+      db.exec(
+        `
+          INSERT INTO prompt_versions (prompt_id, category, name, version, prompt_content, is_active, change_notes)
+          VALUES (?, ?, ?, ?, ?, ?, ?)
+        `,
+        [prompt.promptId, prompt.category, prompt.name, prompt.version, prompt.promptContent, 1, 'Initial Bes3 seed prompt']
+      )
+    )
+  }
+}
+
+async function ensureSeedContent(): Promise<void> {
+  const db = await getDatabase()
+  const existing = await db.queryOne<{ id: number }>('SELECT id FROM products LIMIT 1')
+  if (existing?.id) return
+
+  const seedProductSlug = slugify('Midea MERC07C4BAWW Chest Freezer')
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO products (
+          source_platform,
+          source_affiliate_link,
+          resolved_url,
+          canonical_url,
+          slug,
+          brand,
+          product_name,
+          category,
+          description,
+          price_amount,
+          price_currency,
+          rating,
+          review_count,
+          specs_json,
+          review_highlights_json,
+          published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `,
+      [
+        'manual',
+        'https://www.amazon.com/dp/B0CQT26VCW',
+        'https://www.amazon.com/dp/B0CQT26VCW',
+        'https://www.amazon.com/dp/B0CQT26VCW',
+        seedProductSlug,
+        'Midea',
+        'Midea MERC07C4BAWW Chest Freezer',
+        'home-office',
+        'A seeded demo product so the public site has initial content on first boot.',
+        269.99,
+        'USD',
+        4.4,
+        10196,
+        JSON.stringify({ Capacity: '7 Cu.ft', Mode: 'Convertible', Finish: 'White' }),
+        JSON.stringify(['Strong value for the size', 'Reliable temperature stability', 'Large review base'])
+      ]
+    )
+  )
+
+  const product = await db.queryOne<{ id: number; slug: string; product_name: string }>(
+    'SELECT id, slug, product_name FROM products WHERE slug = ? LIMIT 1',
+    [seedProductSlug]
+  )
+  if (!product) return
+
+  const articleSlug = `best-${product.slug}`
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO articles (
+          product_id,
+          article_type,
+          title,
+          slug,
+          summary,
+          keyword,
+          hero_image_url,
+          content_md,
+          content_html,
+          seo_title,
+          seo_description,
+          schema_json,
+          status,
+          published_at
+        ) VALUES (?, 'review', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
+      `,
+      [
+        product.id,
+        `${product.product_name} Review`,
+        articleSlug,
+        'Seeded article for the homepage and public routes.',
+        'midea chest freezer review',
+        'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?auto=format&fit=crop&w=1200&q=80',
+        `# ${product.product_name}\n\nThis seeded review exists so Bes3 boots with a working public experience.`,
+        `<h1>${product.product_name}</h1><p>This seeded review exists so Bes3 boots with a working public experience.</p>`,
+        `${product.product_name} Review | Bes3`,
+        'Seeded review page for Bes3.',
+        JSON.stringify({
+          '@type': 'Review',
+          reviewRating: { '@type': 'Rating', ratingValue: '4.4' }
+        })
+      ]
+    )
+  )
+
+  const article = await db.queryOne<{ id: number; title: string; slug: string }>(
+    'SELECT id, title, slug FROM articles WHERE slug = ? LIMIT 1',
+    [articleSlug]
+  )
+  if (!article) return
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO seo_pages (
+          article_id,
+          page_type,
+          pathname,
+          title,
+          meta_description,
+          canonical_url,
+          open_graph_json,
+          schema_json,
+          status,
+          published_at
+        ) VALUES (?, 'review', ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
+      `,
+      [
+        article.id,
+        `/reviews/${article.slug}`,
+        article.title,
+        'Seeded SEO record for the first Bes3 article.',
+        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reviews/${article.slug}`,
+        JSON.stringify({ title: article.title }),
+        JSON.stringify({ '@type': 'FAQPage', mainEntity: [] })
+      ]
+    )
+  )
+}
+
+export async function bootstrapApplication(): Promise<void> {
+  if (!bootstrapPromise) {
+    bootstrapPromise = (async () => {
+      await getDatabase()
+      await ensureDefaultAdmin()
+      await ensureDefaultSettings()
+      await ensureDefaultPrompts()
+      await ensureSeedContent()
+    })().catch((error) => {
+      bootstrapPromise = null
+      throw error
+    })
+  }
+
+  await bootstrapPromise
+}
