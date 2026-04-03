@@ -8,13 +8,25 @@ let bootstrapPromise: Promise<void> | null = null
 const DEFAULT_SETTINGS = [
   ['ai', 'provider', 'gemini', 'string', 0, 'AI provider'],
   ['ai', 'geminiModel', 'gemini-2.5-flash', 'string', 0, 'Gemini model'],
+  ['ai', 'geminiApiKey', '', 'secret', 1, 'Gemini API key used for keyword and article generation'],
   ['proxy', 'browserProxyUrlsJson', '[]', 'json', 0, 'Proxy pool list'],
   ['affiliateSync', 'partnerboostAmazonBaseUrl', 'https://app.partnerboost.com', 'string', 0, 'PartnerBoost Amazon API base URL'],
+  ['affiliateSync', 'partnerboostAmazonToken', '', 'secret', 1, 'PartnerBoost Amazon token'],
   ['affiliateSync', 'partnerboostDtcBaseUrl', 'https://app.partnerboost.com', 'string', 0, 'PartnerBoost DTC API base URL'],
+  ['affiliateSync', 'partnerboostDtcToken', '', 'secret', 1, 'PartnerBoost DTC token'],
   ['media', 'driver', process.env.MEDIA_DRIVER || 'local', 'string', 0, 'Media storage driver'],
+  ['media', 'localRoot', process.env.MEDIA_LOCAL_ROOT || 'storage/media', 'string', 0, 'Local media root relative to app root'],
   ['media', 'publicBaseUrl', process.env.MEDIA_PUBLIC_BASE_URL || '', 'string', 0, 'Public base URL for media'],
+  ['media', 's3Endpoint', process.env.S3_ENDPOINT || '', 'string', 0, 'S3-compatible endpoint'],
+  ['media', 's3Region', process.env.S3_REGION || 'auto', 'string', 0, 'S3 region'],
+  ['media', 's3Bucket', process.env.S3_BUCKET || '', 'string', 0, 'S3 bucket name'],
+  ['media', 's3AccessKeyId', process.env.S3_ACCESS_KEY_ID || '', 'secret', 1, 'S3 access key id'],
+  ['media', 's3SecretAccessKey', process.env.S3_SECRET_ACCESS_KEY || '', 'secret', 1, 'S3 secret access key'],
+  ['media', 's3ForcePathStyle', process.env.S3_FORCE_PATH_STYLE || 'false', 'boolean', 0, 'Force path-style access for MinIO and compatible storage'],
   ['seo', 'siteName', 'Bes3', 'string', 0, 'Public site name'],
-  ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline']
+  ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline'],
+  ['seo', 'appUrl', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', 'string', 0, 'Primary public site URL'],
+  ['seo', 'pingomaticEnabled', process.env.PINGOMATIC_ENABLED || 'false', 'boolean', 0, 'Enable Ping-O-Matic notifications']
 ] as const
 
 const DEFAULT_PROMPTS = [
