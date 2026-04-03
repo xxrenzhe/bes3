@@ -22,8 +22,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends supervisor && r
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
+COPY scripts/check-runtime-env.js /app/scripts/check-runtime-env.js
 COPY supervisord.conf /app/supervisord.conf
-RUN mkdir -p /app/data /app/storage/media
+RUN mkdir -p /app/data /app/storage/media /app/scripts
 VOLUME ["/app/data", "/app/storage/media"]
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD node -e "fetch('http://127.0.0.1:80/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"
