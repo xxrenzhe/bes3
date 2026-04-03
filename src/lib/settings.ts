@@ -17,6 +17,13 @@ export interface SettingDiagnostic {
   detail: string
 }
 
+const DEFAULT_ADMIN_PASSWORD = 'Auto12#40Bes3'
+const DEFAULT_JWT_SECRETS = new Set([
+  'change-me-to-a-long-random-secret',
+  'dev-only-jwt-secret-change-me',
+  'dev-only-jwt-secret-change-me-before-production'
+])
+
 function mapSetting(row: {
   category: string
   key: string
@@ -100,13 +107,27 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const dtcToken = read('affiliateSync', 'partnerboostDtcToken', 'PARTNERBOOST_DTC_TOKEN')
   const mediaDriver = read('media', 'driver', 'MEDIA_DRIVER', 'local')
   const mediaLocalRoot = read('media', 'localRoot', 'MEDIA_LOCAL_ROOT', 'storage/media')
+  const mediaS3Endpoint = read('media', 's3Endpoint', 'S3_ENDPOINT')
+  const mediaS3AccessKeyId = read('media', 's3AccessKeyId', 'S3_ACCESS_KEY_ID')
+  const mediaS3SecretAccessKey = read('media', 's3SecretAccessKey', 'S3_SECRET_ACCESS_KEY')
   const mediaBucket = read('media', 's3Bucket', 'S3_BUCKET')
   const mediaPublicBaseUrl = read('media', 'publicBaseUrl', 'MEDIA_PUBLIC_BASE_URL')
   const siteName = read('seo', 'siteName', undefined, 'Bes3')
   const siteTagline = read('seo', 'siteTagline', undefined, 'The Best 3 Tech Picks, Decoded.')
   const siteUrl = read('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL')
+  const jwtSecret = process.env.JWT_SECRET || ''
+  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
+  const runtimePort = process.env.PORT || '80'
+  const isJwtStrong = Boolean(jwtSecret) && !DEFAULT_JWT_SECRETS.has(jwtSecret) && jwtSecret.length >= 32
+  const isAdminPasswordRotated = Boolean(adminPassword) && adminPassword !== DEFAULT_ADMIN_PASSWORD
 
   return [
+    {
+      id: 'runtime-security',
+      title: 'Runtime Security',
+      status: getDiagnosticStatus([isJwtStrong, isAdminPasswordRotated]),
+      detail: `${isJwtStrong ? 'JWT secret ready' : 'JWT secret weak or default'} · ${isAdminPasswordRotated ? 'Admin password rotated' : 'Admin password still default'} · port ${runtimePort}`
+    },
     {
       id: 'ai',
       title: 'AI Engine',
@@ -138,11 +159,17 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
       title: 'Media Storage',
       status:
         mediaDriver === 's3'
-          ? getDiagnosticStatus([Boolean(mediaBucket), Boolean(mediaPublicBaseUrl)])
+          ? getDiagnosticStatus([
+              Boolean(mediaBucket),
+              Boolean(mediaPublicBaseUrl),
+              Boolean(mediaS3Endpoint),
+              Boolean(mediaS3AccessKeyId),
+              Boolean(mediaS3SecretAccessKey)
+            ])
           : getDiagnosticStatus([Boolean(mediaLocalRoot)]),
       detail:
         mediaDriver === 's3'
-          ? `S3 mode · bucket ${mediaBucket || 'missing'} · public URL ${mediaPublicBaseUrl || 'missing'}`
+          ? `S3 mode · bucket ${mediaBucket || 'missing'} · endpoint ${mediaS3Endpoint || 'missing'} · public URL ${mediaPublicBaseUrl || 'missing'}`
           : `Local mode · root ${mediaLocalRoot}`
     },
     {

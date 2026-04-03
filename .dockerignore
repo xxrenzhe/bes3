@@ -6,6 +6,7 @@
 node_modules
 data
 storage/media
+backups
 coverage
 dist
 build
