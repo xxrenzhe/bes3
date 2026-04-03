@@ -92,16 +92,24 @@ type QueuedRunRecord = {
   run_type: PipelineRunType
   requested_action: ProductWorkspaceAction | null
   source_link: string
+  status?: PipelineStatus
+  finished_at?: string | null
 }
 
-const PIPELINE_WORKER_POLL_MS = 2500
 const PIPELINE_WORKER_RECOVERY_MESSAGE = 'Recovered after worker restart'
+const PIPELINE_CANCELLED_MESSAGE = 'Cancelled by admin'
+const PIPELINE_CANCEL_REQUESTED_MESSAGE = 'Cancellation requested by admin'
+const DEFAULT_PIPELINE_WORKER_POLL_MS = 2500
+const DEFAULT_PIPELINE_WORKER_CONCURRENCY = 1
+const MAX_PIPELINE_WORKER_CONCURRENCY = 4
 
 type PipelineWorkerState = {
   started: boolean
   scheduled: boolean
   isTicking: boolean
   workerId: string
+  activeRuns: number
+  nextRunToken: number
 }
 
 function getPipelineWorkerState(): PipelineWorkerState {
@@ -111,10 +119,50 @@ function getPipelineWorkerState(): PipelineWorkerState {
       started: false,
       scheduled: false,
       isTicking: false,
-      workerId: `bes3-worker-${process.pid}`
+      workerId: `bes3-worker-${process.pid}`,
+      activeRuns: 0,
+      nextRunToken: 0
     }
   }
   return scope.__bes3PipelineWorkerState
+}
+
+class PipelineCancelledError extends Error {
+  constructor(message: string = PIPELINE_CANCELLED_MESSAGE) {
+    super(message)
+    this.name = 'PipelineCancelledError'
+  }
+}
+
+function isPipelineCancelledError(error: unknown): error is PipelineCancelledError {
+  return error instanceof PipelineCancelledError
+}
+
+function parsePositiveInt(value: string | undefined, fallback: number, max?: number): number {
+  const parsed = Number.parseInt(value || '', 10)
+  if (!Number.isFinite(parsed) || parsed <= 0) return fallback
+  if (typeof max === 'number') return Math.min(parsed, max)
+  return parsed
+}
+
+function isPipelineWorkerEnabled(): boolean {
+  return (process.env.PIPELINE_WORKER_ENABLED || 'true') !== 'false'
+}
+
+function getPipelineWorkerPollMs(): number {
+  return parsePositiveInt(process.env.PIPELINE_WORKER_POLL_MS, DEFAULT_PIPELINE_WORKER_POLL_MS)
+}
+
+function getPipelineWorkerConcurrency(): number {
+  return parsePositiveInt(process.env.PIPELINE_WORKER_CONCURRENCY, DEFAULT_PIPELINE_WORKER_CONCURRENCY, MAX_PIPELINE_WORKER_CONCURRENCY)
+}
+
+export function getPipelineWorkerRuntimeConfig() {
+  return {
+    enabled: isPipelineWorkerEnabled(),
+    pollMs: getPipelineWorkerPollMs(),
+    concurrency: getPipelineWorkerConcurrency()
+  }
 }
 
 async function createRun(input: {
@@ -234,7 +282,8 @@ async function getQueuedRun(runId: number): Promise<QueuedRunRecord | null> {
   const db = await getDatabase()
   const run = await db.queryOne<QueuedRunRecord>(
     `
-      SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link
+      SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link, status
+           , finished_at
       FROM content_pipeline_runs
       WHERE id = ?
       LIMIT 1
@@ -242,6 +291,37 @@ async function getQueuedRun(runId: number): Promise<QueuedRunRecord | null> {
     [runId]
   )
   return run || null
+}
+
+async function assertRunNotCancelled(runId: number): Promise<void> {
+  const run = await getQueuedRun(runId)
+  if (!run) {
+    throw new Error('Pipeline run not found')
+  }
+  if (run.status === 'cancelled') {
+    throw new PipelineCancelledError(PIPELINE_CANCEL_REQUESTED_MESSAGE)
+  }
+}
+
+async function getLastRunningJobId(runId: number): Promise<number | null> {
+  const db = await getDatabase()
+  const job = await db.queryOne<{ id: number }>(
+    `
+      SELECT id
+      FROM content_pipeline_jobs
+      WHERE run_id = ? AND status = 'running'
+      ORDER BY id DESC
+      LIMIT 1
+    `,
+    [runId]
+  )
+  return job?.id || null
+}
+
+async function finalizeLastRunningJob(runId: number, status: string, message: string, payload?: unknown) {
+  const jobId = await getLastRunningJobId(runId)
+  if (!jobId) return
+  await finishJob(jobId, status, message, payload)
 }
 
 async function recoverInterruptedRuns(): Promise<void> {
@@ -286,20 +366,42 @@ async function recoverInterruptedRuns(): Promise<void> {
 
 async function claimNextRun(workerId: string): Promise<QueuedRunRecord | null> {
   const db = await getDatabase()
-  const candidate = await db.queryOne<QueuedRunRecord>(
-    `
-      SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link
-      FROM content_pipeline_runs
-      WHERE status = 'queued'
-      ORDER BY created_at ASC, id ASC
-      LIMIT 1
-    `
-  )
+  for (let index = 0; index < 5; index += 1) {
+    const candidate = await db.queryOne<QueuedRunRecord>(
+      `
+        SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link, status
+             , finished_at
+        FROM content_pipeline_runs
+        WHERE status = 'queued'
+        ORDER BY created_at ASC, id ASC
+        LIMIT 1
+      `
+    )
 
-  if (!candidate) return null
+    if (!candidate) return null
 
-  await markRun(candidate.id, 'running', null, null, { workerId, started: true })
-  return candidate
+    const claimResult = await db.exec(
+      `
+        UPDATE content_pipeline_runs
+        SET status = 'running',
+            worker_id = ?,
+            locked_at = CURRENT_TIMESTAMP,
+            started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
+            finished_at = NULL,
+            attempt_count = attempt_count + 1,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ? AND status = 'queued'
+      `,
+      [workerId, candidate.id]
+    )
+
+    if (claimResult.changes > 0) {
+      candidate.status = 'running'
+      return candidate
+    }
+  }
+
+  return null
 }
 
 function schedulePipelineWorkerTick(delayMs: number) {
@@ -318,29 +420,44 @@ async function runPipelineWorkerTick() {
   state.isTicking = true
 
   try {
-    const run = await claimNextRun(state.workerId)
-    if (!run) {
-      schedulePipelineWorkerTick(PIPELINE_WORKER_POLL_MS)
+    if (!isPipelineWorkerEnabled()) {
       return
     }
 
-    try {
-      if (run.run_type === 'workspaceAction') {
-        if (!run.product_id || !run.requested_action) {
-          throw new Error('Queued workspace action is missing product_id or requested_action')
-        }
-        await executeProductWorkspaceActionRun(run.id, run.product_id, run.requested_action, state.workerId)
-      } else {
-        await executeFullPipelineRun(run.id, run.source_link, run.affiliate_product_id, state.workerId)
+    const concurrency = getPipelineWorkerConcurrency()
+
+    while (state.activeRuns < concurrency) {
+      state.nextRunToken += 1
+      const slotWorkerId = `${state.workerId}-${state.nextRunToken}`
+      const run = await claimNextRun(slotWorkerId)
+      if (!run) {
+        break
       }
-    } catch (error) {
-      console.error('[bes3-pipeline-worker] run failed', error)
+
+      state.activeRuns += 1
+      void (async () => {
+        try {
+          if (run.run_type === 'workspaceAction') {
+            if (!run.product_id || !run.requested_action) {
+              throw new Error('Queued workspace action is missing product_id or requested_action')
+            }
+            await executeProductWorkspaceActionRun(run.id, run.product_id, run.requested_action, slotWorkerId)
+          } else {
+            await executeFullPipelineRun(run.id, run.source_link, run.affiliate_product_id, slotWorkerId)
+          }
+        } catch (error) {
+          console.error('[bes3-pipeline-worker] run failed', error)
+        } finally {
+          state.activeRuns = Math.max(0, state.activeRuns - 1)
+          schedulePipelineWorkerTick(0)
+        }
+      })()
     }
 
-    schedulePipelineWorkerTick(0)
+    schedulePipelineWorkerTick(getPipelineWorkerPollMs())
   } catch (error) {
     console.error('[bes3-pipeline-worker] tick failed', error)
-    schedulePipelineWorkerTick(PIPELINE_WORKER_POLL_MS)
+    schedulePipelineWorkerTick(getPipelineWorkerPollMs())
   } finally {
     state.isTicking = false
   }
@@ -350,6 +467,9 @@ export async function ensurePipelineWorker(): Promise<void> {
   const state = getPipelineWorkerState()
   if (state.started) return
   state.started = true
+  if (!isPipelineWorkerEnabled()) {
+    return
+  }
   await recoverInterruptedRuns()
   schedulePipelineWorkerTick(250)
 }
@@ -840,6 +960,82 @@ async function applySeoRefreshPayloads(
   }
 }
 
+export async function cancelPipelineRun(runId: number): Promise<void> {
+  const db = await getDatabase()
+  const run = await db.queryOne<{ status: PipelineStatus }>(
+    'SELECT status FROM content_pipeline_runs WHERE id = ? LIMIT 1',
+    [runId]
+  )
+  if (!run) {
+    throw new Error('Pipeline run not found')
+  }
+  if (!['queued', 'running'].includes(run.status)) {
+    throw new Error('Only queued or running pipeline runs can be cancelled')
+  }
+
+  if (run.status === 'queued') {
+    await db.exec(
+      `
+        UPDATE content_pipeline_runs
+        SET status = 'cancelled',
+            current_stage = NULL,
+            error_message = ?,
+            worker_id = NULL,
+            locked_at = NULL,
+            finished_at = CURRENT_TIMESTAMP,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [PIPELINE_CANCELLED_MESSAGE, runId]
+    )
+    await db.exec(
+      `
+        UPDATE content_pipeline_jobs
+        SET status = 'cancelled',
+            message = ?,
+            finished_at = CURRENT_TIMESTAMP
+        WHERE run_id = ? AND finished_at IS NULL
+      `,
+      [PIPELINE_CANCELLED_MESSAGE, runId]
+    )
+    return
+  }
+
+  await db.exec(
+    `
+      UPDATE content_pipeline_runs
+      SET status = 'cancelled',
+          error_message = ?,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    [PIPELINE_CANCEL_REQUESTED_MESSAGE, runId]
+  )
+}
+
+export async function retryPipelineRun(runId: number): Promise<number> {
+  const run = await getQueuedRun(runId)
+  if (!run) {
+    throw new Error('Pipeline run not found')
+  }
+  if (!['failed', 'cancelled'].includes(run.status || '')) {
+    throw new Error('Only failed or cancelled pipeline runs can be retried')
+  }
+  if (run.status === 'cancelled' && !run.finished_at) {
+    throw new Error('Cancelled pipeline run is still shutting down')
+  }
+
+  const nextRunId = await createRun({
+    sourceLink: run.source_link,
+    affiliateProductId: run.affiliate_product_id,
+    productId: run.product_id,
+    runType: run.run_type,
+    requestedAction: run.requested_action
+  })
+  await ensurePipelineWorker()
+  return nextRunId
+}
+
 export async function runProductWorkspaceAction(productId: number, action: ProductWorkspaceAction): Promise<number> {
   const product = await loadStoredProductRecord(productId)
   const runId = await createRun({
@@ -860,20 +1056,24 @@ async function executeProductWorkspaceActionRun(
   workerId: string
 ): Promise<void> {
   try {
+    await assertRunNotCancelled(runId)
     const product = await loadStoredProductRecord(productId)
     let keywordIdeas = await loadStoredKeywordIdeas(productId)
     const heroImageUrl = await loadPrimaryMediaUrl(productId)
 
     const mineKeywordsStage = async () => {
+      await assertRunNotCancelled(runId)
       const jobId = await createJob(runId, 'mineKeywords')
       await markRun(runId, 'running', 'mineKeywords')
       const generated = await generateKeywordIdeas(product)
+      await assertRunNotCancelled(runId)
       await saveKeywords(productId, generated)
       keywordIdeas = await loadStoredKeywordIdeas(productId)
       await finishJob(jobId, 'completed', 'Keyword opportunities regenerated', { total: keywordIdeas.length })
     }
 
     const runArticleStage = async (articleAction: 'review' | 'comparison') => {
+      await assertRunNotCancelled(runId)
       const articleStage: PipelineStage =
         articleAction === 'review' ? 'generateReviewArticle' : 'generateComparisonArticle'
       const articleJobId = await createJob(runId, articleStage)
@@ -882,54 +1082,71 @@ async function executeProductWorkspaceActionRun(
         articleAction === 'review'
           ? await buildReviewDraft(product, heroImageUrl, keywordIdeas)
           : await buildComparisonDraft(product, heroImageUrl, keywordIdeas)
+      await assertRunNotCancelled(runId)
       await finishJob(articleJobId, 'completed', `${draft.title} drafted`, { slug: draft.slug, keyword: draft.keyword })
 
+      await assertRunNotCancelled(runId)
       const seoJobId = await createJob(runId, 'generateSeoPayload')
       await markRun(runId, 'running', 'generateSeoPayload')
       const seo = await generateSeoPayload(draft.title, draft.summary)
+      await assertRunNotCancelled(runId)
       await finishJob(seoJobId, 'completed', `SEO payload generated for ${draft.title}`, {
         seoTitle: seo.seoTitle
       })
 
+      await assertRunNotCancelled(runId)
       const publishJobId = await createJob(runId, 'publishPages')
       await markRun(runId, 'running', 'publishPages')
       const publication = await persistPublishedArticle(productId, draft, seo)
+      await assertRunNotCancelled(runId)
       await finishJob(publishJobId, 'completed', `${draft.title} published`, publication)
 
+      await assertRunNotCancelled(runId)
       const revalidateJobId = await createJob(runId, 'revalidateAndSitemap')
       await markRun(runId, 'running', 'revalidateAndSitemap')
       await revalidateGeneratedPaths([publication.path], product.category)
+      await assertRunNotCancelled(runId)
       await finishJob(revalidateJobId, 'completed', 'Public paths revalidated', { paths: [publication.path] })
 
+      await assertRunNotCancelled(runId)
       const pingJobId = await createJob(runId, 'pingAndIndexing')
       await markRun(runId, 'running', 'pingAndIndexing')
       await notifyPublishedPaths([publication.path], publication.seoPageId)
+      await assertRunNotCancelled(runId)
       await finishJob(pingJobId, 'completed', 'SEO notifications dispatched', { paths: [publication.path] })
     }
 
     const refreshSeoStage = async () => {
+      await assertRunNotCancelled(runId)
       const seoJobId = await createJob(runId, 'generateSeoPayload')
       await markRun(runId, 'running', 'generateSeoPayload')
       const seoPayloads = await buildSeoRefreshPayloads(productId)
+      await assertRunNotCancelled(runId)
       await finishJob(seoJobId, 'completed', 'SEO payloads regenerated for product articles', {
         total: seoPayloads.length
       })
 
+      await assertRunNotCancelled(runId)
       const publishJobId = await createJob(runId, 'publishPages')
       await markRun(runId, 'running', 'publishPages')
       const refreshed = await applySeoRefreshPayloads(seoPayloads)
+      await assertRunNotCancelled(runId)
       await finishJob(publishJobId, 'completed', 'SEO pages synchronized with current article content', {
         total: refreshed.updatedCount
       })
 
+      await assertRunNotCancelled(runId)
       const revalidateJobId = await createJob(runId, 'revalidateAndSitemap')
       await markRun(runId, 'running', 'revalidateAndSitemap')
       await revalidateGeneratedPaths(refreshed.paths, product.category)
+      await assertRunNotCancelled(runId)
       await finishJob(revalidateJobId, 'completed', 'Public paths revalidated', { paths: refreshed.paths })
 
+      await assertRunNotCancelled(runId)
       const pingJobId = await createJob(runId, 'pingAndIndexing')
       await markRun(runId, 'running', 'pingAndIndexing')
       await notifyPublishedPaths(refreshed.paths, refreshed.seoPageId)
+      await assertRunNotCancelled(runId)
       await finishJob(pingJobId, 'completed', 'SEO notifications dispatched', { paths: refreshed.paths })
     }
 
@@ -948,15 +1165,15 @@ async function executeProductWorkspaceActionRun(
 
     await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
   } catch (error: any) {
-    await markRun(runId, 'failed', null, error?.message || 'Workspace action failed', { workerId: null, finished: true })
-    const db = await getDatabase()
-    const lastJob = await db.queryOne<{ id: number }>(
-      'SELECT id FROM content_pipeline_jobs WHERE run_id = ? ORDER BY id DESC LIMIT 1',
-      [runId]
-    )
-    if (lastJob?.id) {
-      await finishJob(lastJob.id, 'failed', error?.message || 'Workspace action failed', { stack: error?.stack || null })
+    const message = error?.message || 'Workspace action failed'
+    if (isPipelineCancelledError(error)) {
+      await markRun(runId, 'cancelled', null, message, { workerId: null, finished: true })
+      await finalizeLastRunningJob(runId, 'cancelled', message)
+      return
     }
+
+    await markRun(runId, 'failed', null, message, { workerId: null, finished: true })
+    await finalizeLastRunningJob(runId, 'failed', message, { stack: error?.stack || null })
     throw error
   }
 }
@@ -1044,22 +1261,28 @@ async function executeFullPipelineRun(
   let productId: number | null = null
 
   try {
+    await assertRunNotCancelled(runId)
     const affiliateProduct = affiliateProductId ? await getAffiliateProductById(affiliateProductId) : null
     const sourcePlatform = affiliateProduct?.platform || 'manual'
 
+    await assertRunNotCancelled(runId)
     const resolveJob = await createJob(runId, 'resolveAffiliateLink')
     await markRun(runId, 'running', 'resolveAffiliateLink')
     const resolved = await resolveAffiliateLink(sourceLink)
+    await assertRunNotCancelled(runId)
     await finishJob(resolveJob, 'completed', 'Affiliate link resolved', resolved)
 
+    await assertRunNotCancelled(runId)
     const scrapeJob = await createJob(runId, 'scrapeProductFacts')
     await markRun(runId, 'running', 'scrapeProductFacts')
     const scraped = scrapeProductPage(resolved.finalUrl, resolved.landingHtml)
+    await assertRunNotCancelled(runId)
     await finishJob(scrapeJob, 'completed', 'Product page scraped', {
       productName: scraped.productName,
       imageCount: scraped.imageUrls.length
     })
 
+    await assertRunNotCancelled(runId)
     const mediaJob = await createJob(runId, 'persistMediaAssets')
     await markRun(runId, 'running', 'persistMediaAssets')
     productId = await ensureProductShell({
@@ -1072,6 +1295,7 @@ async function executeFullPipelineRun(
     })
     const persistedMediaUrls: string[] = []
     for (const [index, imageUrl] of scraped.imageUrls.slice(0, 6).entries()) {
+      await assertRunNotCancelled(runId)
       try {
         const assetRole = index === 0 ? 'hero' : 'gallery'
         const publicUrl = await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole, index })
@@ -1082,17 +1306,21 @@ async function executeFullPipelineRun(
       }
     }
     for (const [index, imageUrl] of scraped.reviewImageUrls.slice(0, 6).entries()) {
+      await assertRunNotCancelled(runId)
       try {
         await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole: 'review', index })
       } catch {
         // Review images are best effort.
       }
     }
+    await assertRunNotCancelled(runId)
     await finishJob(mediaJob, 'completed', 'Media persisted', { persistedMediaUrls })
 
+    await assertRunNotCancelled(runId)
     const normalizeJob = await createJob(runId, 'normalizeProduct')
     await markRun(runId, 'running', 'normalizeProduct')
     await updateProductFromScrape(productId, scraped)
+    await assertRunNotCancelled(runId)
     await finishJob(normalizeJob, 'completed', 'Product normalized', { productId })
 
     const db = await getDatabase()
@@ -1109,16 +1337,20 @@ async function executeFullPipelineRun(
     product.specs = product.specs_json ? JSON.parse(product.specs_json) : {}
     product.reviewHighlights = product.review_highlights_json ? JSON.parse(product.review_highlights_json) : []
 
+    await assertRunNotCancelled(runId)
     const keywordsJob = await createJob(runId, 'mineKeywords')
     await markRun(runId, 'running', 'mineKeywords')
     const keywordIdeas = await generateKeywordIdeas(product)
+    await assertRunNotCancelled(runId)
     await saveKeywords(productId, keywordIdeas)
     await finishJob(keywordsJob, 'completed', 'Keyword opportunities generated', { total: keywordIdeas.length })
 
+    await assertRunNotCancelled(runId)
     const reviewJob = await createJob(runId, 'generateReviewArticle')
     await markRun(runId, 'running', 'generateReviewArticle')
     const reviewCopy = await generateReviewCopy(product)
     const reviewSeo = await generateSeoPayload(`${product.productName} Review`, reviewCopy.summary)
+    await assertRunNotCancelled(runId)
     const reviewArticleId = await upsertArticle({
       productId,
       articleType: 'review',
@@ -1133,8 +1365,10 @@ async function executeFullPipelineRun(
       seoDescription: reviewSeo.seoDescription,
       schemaJson: reviewSeo.schemaJson
     })
+    await assertRunNotCancelled(runId)
     await finishJob(reviewJob, 'completed', 'Review article generated', { articleId: reviewArticleId })
 
+    await assertRunNotCancelled(runId)
     const comparisonJob = await createJob(runId, 'generateComparisonArticle')
     await markRun(runId, 'running', 'generateComparisonArticle')
     const allProducts = await db.query<any>(
@@ -1148,6 +1382,7 @@ async function executeFullPipelineRun(
     }))
     const comparisonCopy = await generateComparisonCopy(product, alternatives)
     const comparisonSeo = await generateSeoPayload(`${product.productName} Alternatives`, comparisonCopy.summary)
+    await assertRunNotCancelled(runId)
     const comparisonArticleId = await upsertArticle({
       productId,
       articleType: 'comparison',
@@ -1162,28 +1397,33 @@ async function executeFullPipelineRun(
       seoDescription: comparisonSeo.seoDescription,
       schemaJson: comparisonSeo.schemaJson
     })
+    await assertRunNotCancelled(runId)
     await finishJob(comparisonJob, 'completed', 'Comparison article generated', { articleId: comparisonArticleId })
 
+    await assertRunNotCancelled(runId)
     const seoJob = await createJob(runId, 'generateSeoPayload')
     await markRun(runId, 'running', 'generateSeoPayload')
+    await assertRunNotCancelled(runId)
     await finishJob(seoJob, 'completed', 'SEO payload attached', { reviewArticleId, comparisonArticleId })
 
+    await assertRunNotCancelled(runId)
     const publishJob = await createJob(runId, 'publishPages')
     await markRun(runId, 'running', 'publishPages')
     const reviewPath = `/reviews/${slugify(`${product.productName} review`)}`
     const comparisonPath = `/compare/${slugify(`${product.productName} alternatives`)}`
     const reviewSeoPageId = await publishSeoPage(reviewArticleId, 'review', reviewPath, `${product.productName} Review`, reviewCopy.summary, reviewSeo.schemaJson)
     const comparisonSeoPageId = await publishSeoPage(comparisonArticleId, 'comparison', comparisonPath, `${product.productName} Alternatives`, comparisonCopy.summary, comparisonSeo.schemaJson)
+    await assertRunNotCancelled(runId)
     await finishJob(publishJob, 'completed', 'SEO pages published', { reviewSeoPageId, comparisonSeoPageId })
 
+    await assertRunNotCancelled(runId)
     const revalidateJob = await createJob(runId, 'revalidateAndSitemap')
     await markRun(runId, 'running', 'revalidateAndSitemap')
-    revalidatePath('/')
-    revalidatePath(reviewPath)
-    revalidatePath(comparisonPath)
-    revalidatePath('/directory')
-    await finishJob(revalidateJob, 'completed', 'Paths revalidated')
+    await revalidateGeneratedPaths([reviewPath, comparisonPath], product.category || null)
+    await assertRunNotCancelled(runId)
+    await finishJob(revalidateJob, 'completed', 'Paths revalidated', { paths: [reviewPath, comparisonPath] })
 
+    await assertRunNotCancelled(runId)
     const pingJob = await createJob(runId, 'pingAndIndexing')
     await markRun(runId, 'running', 'pingAndIndexing')
     const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -1194,20 +1434,21 @@ async function executeFullPipelineRun(
         { method: 'GET' }
       ).catch(() => undefined)
     }
+    await assertRunNotCancelled(runId)
     await finishJob(pingJob, 'completed', 'Ping/indexing completed')
 
     await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
     await db.exec('UPDATE content_pipeline_runs SET product_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [productId, runId])
   } catch (error: any) {
-    await markRun(runId, 'failed', null, error?.message || 'Pipeline failed', { workerId: null, finished: true })
-    const db = await getDatabase()
-    const lastJob = await db.queryOne<{ id: number }>(
-      'SELECT id FROM content_pipeline_jobs WHERE run_id = ? ORDER BY id DESC LIMIT 1',
-      [runId]
-    )
-    if (lastJob?.id) {
-      await finishJob(lastJob.id, 'failed', error?.message || 'Pipeline failed', { stack: error?.stack || null })
+    const message = error?.message || 'Pipeline failed'
+    if (isPipelineCancelledError(error)) {
+      await markRun(runId, 'cancelled', null, message, { workerId: null, finished: true })
+      await finalizeLastRunningJob(runId, 'cancelled', message)
+      return
     }
+
+    await markRun(runId, 'failed', null, message, { workerId: null, finished: true })
+    await finalizeLastRunningJob(runId, 'failed', message, { stack: error?.stack || null })
     throw error
   }
 }
