@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { useEffect, useState, useTransition } from 'react'
 import { ArrowUpRight, FileSearch, RefreshCw, Save, RotateCcw } from 'lucide-react'
 import { toast } from 'sonner'
@@ -108,12 +109,14 @@ function getSeoLengthState(length: number, range: [number, number]) {
 }
 
 export function ArticlesConsole() {
+  const searchParams = useSearchParams()
   const [articles, setArticles] = useState<ArticleRow[]>([])
   const [selectedArticleId, setSelectedArticleId] = useState<number | null>(null)
   const [selectedArticle, setSelectedArticle] = useState<ArticleDetail | null>(null)
   const [draft, setDraft] = useState<ArticleDraft | null>(null)
   const [isLoadingArticle, setIsLoadingArticle] = useState(false)
   const [isPending, startTransition] = useTransition()
+  const requestedArticleId = Number(searchParams.get('article') || '')
 
   const loadArticle = async (articleId: number) => {
     setIsLoadingArticle(true)
@@ -148,10 +151,9 @@ export function ArticlesConsole() {
   }
 
   useEffect(() => {
-    void load()
-    // load intentionally runs once on mount; later refreshes are explicit user actions.
+    void load(Number.isFinite(requestedArticleId) && requestedArticleId > 0 ? requestedArticleId : undefined)
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [requestedArticleId])
 
   const selectedArticleListItem = articles.find((article) => article.id === selectedArticleId) || null
   const draftIsDirty = isDirty(selectedArticle, draft)
