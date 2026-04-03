@@ -10,6 +10,13 @@ export interface SettingRecord {
   description: string | null
 }
 
+export interface SettingDiagnostic {
+  id: string
+  title: string
+  status: 'configured' | 'partial' | 'missing'
+  detail: string
+}
+
 function mapSetting(row: {
   category: string
   key: string
@@ -48,6 +55,103 @@ export async function getSettingValue(category: string, key: string): Promise<st
     [category, key]
   )
   return row?.value ?? null
+}
+
+export async function getSettingValueOrEnv(
+  category: string,
+  key: string,
+  envKey?: string,
+  fallback: string = ''
+): Promise<string> {
+  const value = await getSettingValue(category, key)
+  if (value && value.trim()) return value
+  if (envKey) {
+    const envValue = process.env[envKey]
+    if (envValue && envValue.trim()) return envValue
+  }
+  return fallback
+}
+
+function getDiagnosticStatus(flags: boolean[]): SettingDiagnostic['status'] {
+  const enabled = flags.filter(Boolean).length
+  if (enabled === 0) return 'missing'
+  if (enabled === flags.length) return 'configured'
+  return 'partial'
+}
+
+export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
+  const settings = await listSettings()
+  const map = new Map(settings.map((item) => [`${item.category}.${item.key}`, item.value]))
+  const read = (category: string, key: string, envKey?: string, fallback: string = '') => {
+    const value = map.get(`${category}.${key}`)
+    if (value && value.trim()) return value
+    if (envKey) {
+      const envValue = process.env[envKey]
+      if (envValue && envValue.trim()) return envValue
+    }
+    return fallback
+  }
+
+  const aiProvider = read('ai', 'provider', undefined, 'gemini')
+  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-2.5-flash')
+  const aiKey = read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')
+  const amazonToken = read('affiliateSync', 'partnerboostAmazonToken', 'PARTNERBOOST_AMAZON_TOKEN')
+  const dtcToken = read('affiliateSync', 'partnerboostDtcToken', 'PARTNERBOOST_DTC_TOKEN')
+  const mediaDriver = read('media', 'driver', 'MEDIA_DRIVER', 'local')
+  const mediaLocalRoot = read('media', 'localRoot', 'MEDIA_LOCAL_ROOT', 'storage/media')
+  const mediaBucket = read('media', 's3Bucket', 'S3_BUCKET')
+  const mediaPublicBaseUrl = read('media', 'publicBaseUrl', 'MEDIA_PUBLIC_BASE_URL')
+  const siteName = read('seo', 'siteName', undefined, 'Bes3')
+  const siteTagline = read('seo', 'siteTagline', undefined, 'The Best 3 Tech Picks, Decoded.')
+  const siteUrl = read('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL')
+
+  return [
+    {
+      id: 'ai',
+      title: 'AI Engine',
+      status: getDiagnosticStatus([Boolean(aiProvider), Boolean(aiModel), Boolean(aiKey)]),
+      detail: aiKey
+        ? `${aiProvider} · ${aiModel} · key ready`
+        : `${aiProvider} · ${aiModel} · missing API key`
+    },
+    {
+      id: 'proxy',
+      title: 'Proxy Pool',
+      status: proxyPool !== '[]' && proxyPool !== '' ? 'configured' : 'missing',
+      detail: proxyPool !== '[]' && proxyPool !== '' ? 'Browser proxy pool configured' : 'No proxy endpoints configured'
+    },
+    {
+      id: 'affiliate-amazon',
+      title: 'PartnerBoost Amazon',
+      status: getDiagnosticStatus([Boolean(amazonToken)]),
+      detail: amazonToken ? 'Amazon sync token configured' : 'Missing Amazon sync token'
+    },
+    {
+      id: 'affiliate-dtc',
+      title: 'PartnerBoost DTC',
+      status: getDiagnosticStatus([Boolean(dtcToken)]),
+      detail: dtcToken ? 'DTC sync token configured' : 'Missing DTC sync token'
+    },
+    {
+      id: 'media',
+      title: 'Media Storage',
+      status:
+        mediaDriver === 's3'
+          ? getDiagnosticStatus([Boolean(mediaBucket), Boolean(mediaPublicBaseUrl)])
+          : getDiagnosticStatus([Boolean(mediaLocalRoot)]),
+      detail:
+        mediaDriver === 's3'
+          ? `S3 mode · bucket ${mediaBucket || 'missing'} · public URL ${mediaPublicBaseUrl || 'missing'}`
+          : `Local mode · root ${mediaLocalRoot}`
+    },
+    {
+      id: 'seo',
+      title: 'SEO Site',
+      status: getDiagnosticStatus([Boolean(siteName), Boolean(siteTagline), Boolean(siteUrl)]),
+      detail: `${siteName} · ${siteUrl || 'missing app URL'}`
+    }
+  ]
 }
 
 export async function saveSetting(input: {

@@ -1,5 +1,6 @@
 import { loadActivePrompt } from '@/lib/prompts'
 import type { ProductRecord } from '@/lib/site-data'
+import { getSettingValueOrEnv } from '@/lib/settings'
 
 type KeywordIdea = {
   keyword: string
@@ -17,8 +18,10 @@ function interpolate(template: string, variables: Record<string, string>): strin
 }
 
 async function generateTextWithGemini(prompt: string): Promise<string | null> {
-  const apiKey = process.env.GEMINI_API_KEY
-  const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash'
+  const provider = await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
+  const apiKey = await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const model = await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-2.5-flash')
+  if (provider !== 'gemini') return null
   if (!apiKey) return null
 
   const response = await fetch(

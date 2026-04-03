@@ -1,10 +1,13 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
-import { listSettings, saveSetting } from '@/lib/settings'
+import { listSettingDiagnostics, listSettings, saveSetting } from '@/lib/settings'
 
 export async function GET() {
   await requireAdmin()
-  return NextResponse.json(await listSettings())
+  return NextResponse.json({
+    items: await listSettings(),
+    diagnostics: await listSettingDiagnostics()
+  })
 }
 
 export async function PUT(request: Request) {
