@@ -5,6 +5,8 @@ export interface SyncResult {
   total: number
   created: number
   updated: number
+  createdIds: number[]
+  updatedIds: number[]
 }
 
 export interface AffiliateProductRecord {
@@ -75,7 +77,7 @@ async function upsertAffiliateProduct(payload: {
   rating?: number | null
   countryCode?: string | null
   rawPayload: Record<string, any>
-}): Promise<'created' | 'updated'> {
+}): Promise<{ id: number; status: 'created' | 'updated' }> {
   const db = await getDatabase()
   const existing = await db.queryOne<{ id: number }>(
     'SELECT id FROM affiliate_products WHERE platform = ? AND external_id = ? LIMIT 1',
@@ -110,10 +112,13 @@ async function upsertAffiliateProduct(payload: {
         existing.id
       ]
     )
-    return 'updated'
+    return {
+      id: existing.id,
+      status: 'updated'
+    }
   }
 
-  await db.exec(
+  const result = await db.exec(
     `
       INSERT INTO affiliate_products (
         platform, external_id, merchant_id, asin, brand, product_name, product_url, promo_link, short_promo_link,
@@ -140,7 +145,10 @@ async function upsertAffiliateProduct(payload: {
       JSON.stringify(payload.rawPayload)
     ]
   )
-  return 'created'
+  return {
+    id: Number(result.lastInsertRowid),
+    status: 'created'
+  }
 }
 
 export async function syncPartnerboostAmazonProducts(pageSize: number = 20): Promise<SyncResult> {
@@ -166,6 +174,8 @@ export async function syncPartnerboostAmazonProducts(pageSize: number = 20): Pro
 
   let created = 0
   let updated = 0
+  const createdIds: number[] = []
+  const updatedIds: number[] = []
   for (const item of payload.data?.list || []) {
     const result = await upsertAffiliateProduct({
       platform: 'partnerboost_amazon',
@@ -185,14 +195,22 @@ export async function syncPartnerboostAmazonProducts(pageSize: number = 20): Pro
       countryCode: item.country_code || 'US',
       rawPayload: item
     })
-    if (result === 'created') created += 1
-    if (result === 'updated') updated += 1
+    if (result.status === 'created') {
+      created += 1
+      createdIds.push(result.id)
+    }
+    if (result.status === 'updated') {
+      updated += 1
+      updatedIds.push(result.id)
+    }
   }
 
   return {
     total: (payload.data?.list || []).length,
     created,
-    updated
+    updated,
+    createdIds,
+    updatedIds
   }
 }
 
@@ -217,6 +235,8 @@ export async function syncPartnerboostDtcProducts(limit: number = 20): Promise<S
 
   let created = 0
   let updated = 0
+  const createdIds: number[] = []
+  const updatedIds: number[] = []
   for (const item of payload.data?.list || []) {
     const result = await upsertAffiliateProduct({
       platform: 'partnerboost_dtc',
@@ -233,14 +253,22 @@ export async function syncPartnerboostDtcProducts(limit: number = 20): Promise<S
       countryCode: 'US',
       rawPayload: item
     })
-    if (result === 'created') created += 1
-    if (result === 'updated') updated += 1
+    if (result.status === 'created') {
+      created += 1
+      createdIds.push(result.id)
+    }
+    if (result.status === 'updated') {
+      updated += 1
+      updatedIds.push(result.id)
+    }
   }
 
   return {
     total: (payload.data?.list || []).length,
     created,
-    updated
+    updated,
+    createdIds,
+    updatedIds
   }
 }
 
