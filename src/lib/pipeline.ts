@@ -116,7 +116,7 @@ type PipelineWorkerState = {
   configLoaded: boolean
 }
 
-function getPipelineWorkerState(): PipelineWorkerState {
+export function getPipelineWorkerState(): PipelineWorkerState {
   const scope = globalThis as typeof globalThis & { __bes3PipelineWorkerState?: PipelineWorkerState }
   if (!scope.__bes3PipelineWorkerState) {
     scope.__bes3PipelineWorkerState = {
@@ -133,7 +133,7 @@ function getPipelineWorkerState(): PipelineWorkerState {
   return scope.__bes3PipelineWorkerState
 }
 
-async function loadPipelineConfig(): Promise<void> {
+export async function loadPipelineConfig(): Promise<void> {
   const state = getPipelineWorkerState()
   if (state.configLoaded) return
 
@@ -356,7 +356,7 @@ async function finalizeLastRunningJob(runId: number, status: string, message: st
   await finishJob(jobId, status, message, payload)
 }
 
-async function recoverInterruptedRuns(): Promise<void> {
+export async function recoverInterruptedRuns(): Promise<void> {
   const db = await getDatabase()
   const interruptedRuns = await db.query<{ id: number }>(
     `
@@ -495,16 +495,18 @@ async function runPipelineWorkerTick() {
   }
 }
 
-export async function ensurePipelineWorker(): Promise<void> {
+export async function startPipelineWorker(): Promise<void> {
   const state = getPipelineWorkerState()
   if (state.started) return
   await loadPipelineConfig()
   state.started = true
   if (!isPipelineWorkerEnabled()) {
+    console.log('[bes3-worker] Disabled, not starting tick loop')
     return
   }
   await recoverInterruptedRuns()
   schedulePipelineWorkerTick(250)
+  console.log('[bes3-worker] Tick loop started')
 }
 
 async function ensureProductShell(input: {
@@ -1065,7 +1067,7 @@ export async function retryPipelineRun(runId: number): Promise<number> {
     runType: run.run_type,
     requestedAction: run.requested_action
   })
-  await ensurePipelineWorker()
+  await startPipelineWorker()
   return nextRunId
 }
 
@@ -1078,7 +1080,7 @@ export async function runProductWorkspaceAction(productId: number, action: Produ
     runType: 'workspaceAction',
     requestedAction: action
   })
-  await ensurePipelineWorker()
+  await startPipelineWorker()
   return runId
 }
 
@@ -1268,7 +1270,7 @@ export async function runPipelineForAffiliateProduct(affiliateProductId: number)
     productId,
     runType: 'fullPipeline'
   })
-  await ensurePipelineWorker()
+  await startPipelineWorker()
   return runId
 }
 
@@ -1281,7 +1283,7 @@ export async function runPipelineFromLink(sourceLink: string): Promise<number> {
     productId,
     runType: 'fullPipeline'
   })
-  await ensurePipelineWorker()
+  await startPipelineWorker()
   return runId
 }
 
