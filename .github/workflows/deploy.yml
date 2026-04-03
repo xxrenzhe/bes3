@@ -1,4 +1,4 @@
-name: Build and Deploy Bes3
+name: Build Bes3 Release Image
 
 on:
   push:
@@ -17,10 +17,6 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   NODE_VERSION: '20'
   RUN_OPTIONAL_TESTS: ${{ vars.RUN_OPTIONAL_TESTS || 'false' }}
-  ENABLE_SSH_DEPLOY: ${{ vars.ENABLE_SSH_DEPLOY || 'false' }}
-  DEPLOY_APP_DIR: ${{ vars.DEPLOY_APP_DIR || '/srv/bes3' }}
-  DEPLOY_PORT: ${{ vars.DEPLOY_PORT || '22' }}
-  DEPLOY_HEALTHCHECK_URL: ${{ vars.DEPLOY_HEALTHCHECK_URL || 'http://127.0.0.1:3000/api/health' }}
 
 jobs:
   build-and-test:
@@ -137,118 +133,12 @@ jobs:
 
       - name: Print image summary
         run: |
-          echo "Deployed image:"
+          echo "Release image:"
           echo "  ${{ steps.tags.outputs.deploy_image }}"
           echo "Published tags:"
           echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
 
-  deploy-via-ssh:
-    needs: build-and-push
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
-    if: ${{ env.ENABLE_SSH_DEPLOY == 'true' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/')) }}
-    permissions:
-      contents: read
-      packages: read
-
-    env:
-      DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
-      DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
-      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-      DEPLOY_SSH_KNOWN_HOSTS: ${{ secrets.DEPLOY_SSH_KNOWN_HOSTS }}
-      DEPLOY_ENV_PRODUCTION: ${{ secrets.DEPLOY_ENV_PRODUCTION }}
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 1
-          clean: true
-
-      - name: Validate deploy configuration
-        run: |
-          set -euo pipefail
-          for required in DEPLOY_HOST DEPLOY_USER DEPLOY_SSH_KEY DEPLOY_ENV_PRODUCTION; do
-            if [[ -z "${!required:-}" ]]; then
-              echo "::error::Missing required deploy secret: ${required}"
-              exit 1
-            fi
-          done
-
-      - name: Configure SSH
-        run: |
-          set -euo pipefail
-          install -d -m 700 ~/.ssh
-          printf '%s\n' "${DEPLOY_SSH_KEY}" > ~/.ssh/id_ed25519
-          chmod 600 ~/.ssh/id_ed25519
-
-          if [[ -n "${DEPLOY_SSH_KNOWN_HOSTS:-}" ]]; then
-            printf '%s\n' "${DEPLOY_SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
-          else
-            ssh-keyscan -p "${DEPLOY_PORT}" -H "${DEPLOY_HOST}" > ~/.ssh/known_hosts
-          fi
-          chmod 600 ~/.ssh/known_hosts
-
-      - name: Prepare remote directory
-        run: |
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" \
-            "mkdir -p '${DEPLOY_APP_DIR}' '${DEPLOY_APP_DIR}/data' '${DEPLOY_APP_DIR}/storage/media'"
-
-      - name: Upload compose files
-        run: |
-          scp -P "${DEPLOY_PORT}" docker-compose.yml Dockerfile "${DEPLOY_USER}@${DEPLOY_HOST}:${DEPLOY_APP_DIR}/"
-
-      - name: Upload production env file
-        run: |
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" "cat > '${DEPLOY_APP_DIR}/.env.production'" <<'__BES3_ENV__'
-          ${{ secrets.DEPLOY_ENV_PRODUCTION }}
-          __BES3_ENV__
-
-      - name: Deploy on remote host
-        run: |
-          ssh -p "${DEPLOY_PORT}" "${DEPLOY_USER}@${DEPLOY_HOST}" 'bash -s' <<'__BES3_REMOTE__'
-          set -euo pipefail
-
-          DEPLOY_APP_DIR='${{ env.DEPLOY_APP_DIR }}'
-          DEPLOY_HEALTHCHECK_URL='${{ env.DEPLOY_HEALTHCHECK_URL }}'
-          BES3_IMAGE='${{ needs.build-and-push.outputs.deploy_image }}'
-          GHCR_USERNAME='${{ github.actor }}'
-          GHCR_TOKEN=$(cat <<'__GHCR_TOKEN__'
-          ${{ secrets.GITHUB_TOKEN }}
-          __GHCR_TOKEN__
-          )
-
-          cd "${DEPLOY_APP_DIR}"
-
-          printf '%s' "${GHCR_TOKEN}" | docker login ghcr.io -u "${GHCR_USERNAME}" --password-stdin
-          BES3_IMAGE="${BES3_IMAGE}" docker compose pull
-          BES3_IMAGE="${BES3_IMAGE}" docker compose up -d --no-build
-          docker image prune -f || true
-
-          if command -v curl >/dev/null 2>&1; then
-            curl --fail --silent --show-error "${DEPLOY_HEALTHCHECK_URL}" >/dev/null
-          else
-            wget -qO- "${DEPLOY_HEALTHCHECK_URL}" >/dev/null
-          fi
-          __BES3_REMOTE__
-
-      - name: Print deploy summary
-        run: |
-          echo "Bes3 deployed successfully."
-          echo "Remote directory: ${{ env.DEPLOY_APP_DIR }}"
-          echo "Image: ${{ needs.build-and-push.outputs.deploy_image }}"
-
-# Required GitHub repository variables:
-# - ENABLE_SSH_DEPLOY: true to enable server deployment, false to publish image only
-# - DEPLOY_APP_DIR: remote app directory, defaults to /srv/bes3
-# - DEPLOY_PORT: remote SSH port, defaults to 22
-# - DEPLOY_HEALTHCHECK_URL: remote health URL, defaults to http://127.0.0.1:3000/api/health
-#
-# Required GitHub secrets for deploy-via-ssh:
-# - DEPLOY_HOST
-# - DEPLOY_USER
-# - DEPLOY_SSH_KEY
-# - DEPLOY_ENV_PRODUCTION
-#
-# Optional GitHub secret:
-# - DEPLOY_SSH_KNOWN_HOSTS
+# Bes3 release flow from MustKnowV1:
+# - Push to main: build and publish ghcr.io/xxrenzhe/bes3:prod-latest and prod-<commitid>
+# - Push version tag v*.*.*: build and publish prod-<version> and prod-<commitid>
+# - ClawCloud deployment stays manual: pull from GHCR and start the container on the server
