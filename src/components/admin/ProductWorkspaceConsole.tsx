@@ -4,9 +4,10 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
-import { ArrowLeft, ExternalLink, RefreshCw, Scan, Wand2 } from 'lucide-react'
+import { ArrowLeft, ExternalLink, FileText, RefreshCw, Scan, Search, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import type { AdminProductWorkspace } from '@/lib/admin-products'
+import { getArticlePath } from '@/lib/article-path'
 import { cn } from '@/lib/utils'
 import { buttonVariants, Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -25,17 +26,18 @@ function formatDate(value: string | null) {
   return new Date(value).toLocaleString()
 }
 
-function getArticlePath(articleType: string, slug: string) {
-  if (articleType === 'comparison') return `/compare/${slug}`
-  if (articleType === 'guide') return `/guides/${slug}`
-  return `/reviews/${slug}`
-}
-
 function scoreTone(score: number) {
   if (score >= 8.3) return 'text-emerald-700'
   if (score >= 7.4) return 'text-amber-700'
   return 'text-slate-600'
 }
+
+type WorkspaceActionId =
+  | 'contentPack'
+  | 'mineKeywords'
+  | 'generateReview'
+  | 'generateComparison'
+  | 'refreshSeo'
 
 export function ProductWorkspaceConsole({
   initialWorkspace
@@ -49,6 +51,71 @@ export function ProductWorkspaceConsole({
   const heroMedia = workspace.mediaAssets.find((item) => item.assetRole === 'hero') || null
   const galleryMedia = workspace.mediaAssets.filter((item) => item.assetRole === 'gallery')
   const reviewMedia = workspace.mediaAssets.filter((item) => item.assetRole === 'review')
+  const reviewArticle = workspace.articles.find((item) => item.articleType === 'review') || null
+  const comparisonArticle = workspace.articles.find((item) => item.articleType === 'comparison') || null
+  const workflowActions: Array<{
+    id: WorkspaceActionId
+    title: string
+    description: string
+    badge: string
+    accentClassName: string
+    cta: string
+    successMessage: string
+    icon: typeof Wand2
+    spanClassName?: string
+  }> = [
+    {
+      id: 'contentPack',
+      title: 'Rebuild Content Pack',
+      description: 'Reuse the current product facts and media to regenerate keyword opportunities, the review page, and the comparison page without re-scraping the landing page.',
+      badge: `${workspace.keywords.length} keywords · ${workspace.articles.length} articles`,
+      accentClassName: 'bg-[#f7f1e4] text-primary',
+      cta: 'Run Content Pack',
+      successMessage: 'Content pack regenerated and workspace refreshed',
+      icon: Wand2,
+      spanClassName: 'lg:col-span-2'
+    },
+    {
+      id: 'mineKeywords',
+      title: 'Mine Keywords',
+      description: 'Refresh high-intent long-tail opportunities from the normalized product facts currently stored in the database.',
+      badge: workspace.keywords.length > 0 ? `${workspace.keywords.length} saved` : 'Not generated',
+      accentClassName: 'bg-sky-100 text-sky-800',
+      cta: 'Run Keyword Mining',
+      successMessage: 'Keyword mining completed and workspace refreshed',
+      icon: Search
+    },
+    {
+      id: 'generateReview',
+      title: 'Generate Review',
+      description: 'Rebuild the product review article, regenerate its SEO payload, and republish the public review path.',
+      badge: reviewArticle ? `Updated ${formatDate(reviewArticle.updatedAt)}` : 'Not generated',
+      accentClassName: 'bg-rose-100 text-rose-800',
+      cta: 'Regenerate Review',
+      successMessage: 'Review article regenerated and workspace refreshed',
+      icon: FileText
+    },
+    {
+      id: 'generateComparison',
+      title: 'Generate Comparison',
+      description: 'Rebuild the alternatives article from the current product database and republish the comparison page.',
+      badge: comparisonArticle ? `Updated ${formatDate(comparisonArticle.updatedAt)}` : 'Not generated',
+      accentClassName: 'bg-indigo-100 text-indigo-800',
+      cta: 'Regenerate Comparison',
+      successMessage: 'Comparison article regenerated and workspace refreshed',
+      icon: FileText
+    },
+    {
+      id: 'refreshSeo',
+      title: 'Refresh SEO',
+      description: 'Recompute SEO title, meta description, and schema for all current product articles, then sync the linked SEO pages.',
+      badge: workspace.seoPages.length > 0 ? `${workspace.seoPages.length} SEO pages` : 'No SEO pages yet',
+      accentClassName: 'bg-emerald-100 text-emerald-800',
+      cta: 'Refresh SEO Pages',
+      successMessage: 'SEO metadata refreshed and workspace synchronized',
+      icon: RefreshCw
+    }
+  ]
 
   const refreshWorkspace = async () => {
     const response = await fetch(`/api/admin/products/${workspace.product.id}`)
@@ -175,6 +242,62 @@ export function ProductWorkspaceConsole({
             <p className="mt-2 text-2xl font-semibold">{workspace.articles.length}</p>
             <p className="mt-1 text-sm text-muted-foreground">{workspace.keywords.length} keyword opportunities saved</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div className="max-w-3xl">
+            <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Workflow Controls</p>
+            <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Drive the funnel one stage at a time</h2>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              Use the stored product facts when you only need to rerun keywords, content, or SEO. Keep the full pipeline for cases where the landing page itself changed.
+            </p>
+          </div>
+          <div className="rounded-[24px] border border-border bg-[#f7f1e4] px-5 py-4 text-sm text-muted-foreground">
+            Full pipeline is still available above for link resolution and fresh scraping.
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-2 xl:grid-cols-4">
+          {workflowActions.map((action) => {
+            const Icon = action.icon
+            return (
+              <div
+                key={action.id}
+                className={cn(
+                  'rounded-[28px] border border-border p-5',
+                  action.id === 'contentPack' ? 'bg-[#f7f1e4]' : 'bg-white',
+                  action.spanClassName
+                )}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className={cn('rounded-2xl p-3', action.accentClassName)}>
+                    <Icon className="h-5 w-5" />
+                  </div>
+                  <span className="rounded-full bg-white/80 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {action.badge}
+                  </span>
+                </div>
+                <h3 className="mt-4 text-xl font-semibold">{action.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{action.description}</p>
+                <Button
+                  className="mt-5 w-full"
+                  variant={action.id === 'contentPack' ? 'default' : 'secondary'}
+                  disabled={isPending}
+                  onClick={() =>
+                    triggerAction({
+                      path: `/api/admin/products/${workspace.product.id}/workspace-action`,
+                      body: { action: action.id },
+                      successMessage: action.successMessage
+                    })
+                  }
+                >
+                  {action.cta}
+                </Button>
+              </div>
+            )
+          })}
         </div>
       </section>
 
@@ -394,6 +517,12 @@ export function ProductWorkspaceConsole({
                         <p className="mt-2 text-sm text-muted-foreground">{article.summary || 'No summary available.'}</p>
                       </div>
                       <div className="flex flex-wrap justify-end gap-2">
+                        <Link
+                          href={`/admin/articles?article=${article.id}`}
+                          className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'rounded-full')}
+                        >
+                          Open Editor
+                        </Link>
                         <Link
                           href={getArticlePath(article.articleType, article.slug)}
                           target="_blank"
