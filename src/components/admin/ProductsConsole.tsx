@@ -40,6 +40,7 @@ export function ProductsConsole() {
   const [products, setProducts] = useState<Product[]>([])
   const [importLink, setImportLink] = useState('')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
+  const [syncAndQueueNew, setSyncAndQueueNew] = useState(true)
   const [isPending, startTransition] = useTransition()
 
   const load = async () => {
@@ -72,7 +73,7 @@ export function ProductsConsole() {
 
   const trigger = (path: string, options?: {
     body?: unknown
-    successMessage?: string
+    successMessage?: string | ((payload: any) => string)
     navigateToProduct?: boolean
   }) => {
     startTransition(async () => {
@@ -90,8 +91,26 @@ export function ProductsConsole() {
       if (options?.navigateToProduct && payload.productId) {
         router.push(`/admin/products/${payload.productId}`)
       }
-      toast.success(options?.successMessage || 'Action completed')
+      const successMessage =
+        typeof options?.successMessage === 'function'
+          ? options.successMessage(payload)
+          : options?.successMessage
+      toast.success(successMessage || 'Action completed')
     })
+  }
+
+  const buildSyncSuccessMessage = (label: string, payload: any) => {
+    const created = Number(payload?.created || 0)
+    const updated = Number(payload?.updated || 0)
+    const queued = Number(payload?.queued || 0)
+    const summary = `${label} sync completed · ${created} new / ${updated} updated`
+    if (!payload?.queuePipeline) {
+      return summary
+    }
+    if (queued > 0) {
+      return `${summary} · queued ${queued} new pipeline${queued === 1 ? '' : 's'}`
+    }
+    return `${summary} · no new products to queue`
   }
 
   return (
@@ -100,11 +119,41 @@ export function ProductsConsole() {
         <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Affiliate Sync</p>
           <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Import and launch the full Bes3 workflow.</h1>
+          <div className="mt-5 flex items-start gap-3 rounded-[24px] border border-border/70 bg-[#f7f1e4] p-4">
+            <Checkbox
+              checked={syncAndQueueNew}
+              onCheckedChange={(value) => setSyncAndQueueNew(Boolean(value))}
+              aria-label="Auto queue newly synced products"
+            />
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Auto queue newly synced products</p>
+              <p className="text-sm text-muted-foreground">
+                When enabled, this sync also enqueues the full Bes3 pipeline for products newly imported in this batch.
+              </p>
+            </div>
+          </div>
           <div className="mt-6 flex flex-wrap gap-3">
-            <Button disabled={isPending} onClick={() => trigger('/api/admin/products/sync/amazon', { successMessage: 'PartnerBoost Amazon sync completed' })}>
+            <Button
+              disabled={isPending}
+              onClick={() =>
+                trigger('/api/admin/products/sync/amazon', {
+                  body: { queuePipeline: syncAndQueueNew, queueScope: 'created' },
+                  successMessage: (payload) => buildSyncSuccessMessage('PartnerBoost Amazon', payload)
+                })
+              }
+            >
               Sync PartnerBoost Amazon
             </Button>
-            <Button disabled={isPending} variant="secondary" onClick={() => trigger('/api/admin/products/sync/dtc', { successMessage: 'PartnerBoost DTC sync completed' })}>
+            <Button
+              disabled={isPending}
+              variant="secondary"
+              onClick={() =>
+                trigger('/api/admin/products/sync/dtc', {
+                  body: { queuePipeline: syncAndQueueNew, queueScope: 'created' },
+                  successMessage: (payload) => buildSyncSuccessMessage('PartnerBoost DTC', payload)
+                })
+              }
+            >
               Sync PartnerBoost DTC
             </Button>
           </div>
