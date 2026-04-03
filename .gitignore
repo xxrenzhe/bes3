@@ -3,6 +3,8 @@
 .beads/
 .dolt/
 *.db
+*.db-shm
+*.db-wal
 
 # OS files
 .DS_Store
@@ -13,14 +15,18 @@
 !.env.example
 secrets/
 
-# Local docs and drafts that must not be pushed
-docs/
+# Local drafts that must not be pushed
 oldcode/
 front/
 
 # Build outputs and dependencies
 node_modules/
+.next/
 dist/
 build/
 coverage/
 .cache/
+
+# Runtime data
+data/
+storage/media/
