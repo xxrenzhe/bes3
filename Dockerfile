@@ -23,6 +23,7 @@ COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY scripts/check-runtime-env.js /app/scripts/check-runtime-env.js
+COPY scripts/worker-standalone.js /app/scripts/worker-standalone.js
 COPY supervisord.conf /app/supervisord.conf
 RUN mkdir -p /app/data /app/storage/media /app/scripts
 VOLUME ["/app/data", "/app/storage/media"]
