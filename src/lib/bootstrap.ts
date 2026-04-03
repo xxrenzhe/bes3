@@ -26,7 +26,10 @@ const DEFAULT_SETTINGS = [
   ['seo', 'siteName', 'Bes3', 'string', 0, 'Public site name'],
   ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline'],
   ['seo', 'appUrl', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', 'string', 0, 'Primary public site URL'],
-  ['seo', 'pingomaticEnabled', process.env.PINGOMATIC_ENABLED || 'false', 'boolean', 0, 'Enable Ping-O-Matic notifications']
+  ['seo', 'pingomaticEnabled', process.env.PINGOMATIC_ENABLED || 'false', 'boolean', 0, 'Enable Ping-O-Matic notifications'],
+  ['pipeline', 'workerEnabled', process.env.PIPELINE_WORKER_ENABLED || 'true', 'boolean', 0, 'Enable pipeline background worker'],
+  ['pipeline', 'workerPollMs', process.env.PIPELINE_WORKER_POLL_MS || '2500', 'string', 0, 'Worker poll interval in milliseconds'],
+  ['pipeline', 'workerConcurrency', process.env.PIPELINE_WORKER_CONCURRENCY || '1', 'string', 0, 'Max concurrent pipeline runs per container']
 ] as const
 
 const DEFAULT_PROMPTS = [
