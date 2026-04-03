@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
-import { runPipelineFromLink } from '@/lib/pipeline'
+import { getPipelineRun, runPipelineFromLink } from '@/lib/pipeline'
 
 export async function POST(request: Request) {
   await requireAdmin()
@@ -11,5 +11,6 @@ export async function POST(request: Request) {
   }
 
   const runId = await runPipelineFromLink(link)
-  return NextResponse.json({ success: true, runId })
+  const payload = await getPipelineRun(runId)
+  return NextResponse.json({ success: true, runId, productId: payload.run?.product_id || null })
 }
