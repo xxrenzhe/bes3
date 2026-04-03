@@ -21,6 +21,8 @@ export type PipelineStage =
   | 'revalidateAndSitemap'
   | 'pingAndIndexing'
 
+export type PipelineRunType = 'fullPipeline' | 'workspaceAction'
+
 export type PipelineStatus = 'queued' | 'running' | 'partialFailed' | 'failed' | 'completed' | 'cancelled'
 
 export type ArticleKind = 'review' | 'comparison' | 'guide'

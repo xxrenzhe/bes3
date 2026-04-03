@@ -25,5 +25,5 @@ export async function POST(
   }
 
   const runId = await runPipelineFromLink(article.source_affiliate_link)
-  return NextResponse.json({ success: true, runId })
+  return NextResponse.json({ success: true, queued: true, runId, status: 'queued' })
 }

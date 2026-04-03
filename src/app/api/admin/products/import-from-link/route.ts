@@ -12,5 +12,11 @@ export async function POST(request: Request) {
 
   const runId = await runPipelineFromLink(link)
   const payload = await getPipelineRun(runId)
-  return NextResponse.json({ success: true, runId, productId: payload?.product_id || null })
+  return NextResponse.json({
+    success: true,
+    queued: true,
+    runId,
+    productId: payload?.product_id || null,
+    status: payload?.status || 'queued'
+  })
 }
