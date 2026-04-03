@@ -19,6 +19,7 @@ secrets/
 # Local drafts that must not be pushed
 oldcode/
 front/
+docs/
 
 # Build outputs and dependencies
 node_modules/
