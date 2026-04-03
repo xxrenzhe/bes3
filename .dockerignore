@@ -1,6 +1,7 @@
 .git
 .beads
 .dolt
+.github
 .next
 node_modules
 data
@@ -14,6 +15,7 @@ build
 .env.development
 .env.production
 secrets
+docs
 front
 oldcode
 npm-debug.log*
