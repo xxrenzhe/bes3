@@ -7,7 +7,8 @@ export async function GET() {
   const db = await getDatabase()
   const rows = await db.query(
     `
-      SELECT a.*, p.product_name
+      SELECT a.id, a.product_id, a.article_type, a.title, a.slug, a.status, a.summary, a.keyword,
+        a.hero_image_url, a.seo_title, a.seo_description, a.published_at, a.updated_at, p.product_name
       FROM articles a
       LEFT JOIN products p ON p.id = a.product_id
       ORDER BY a.updated_at DESC, a.id DESC

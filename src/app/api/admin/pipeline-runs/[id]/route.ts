@@ -7,5 +7,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   await requireAdmin()
-  return NextResponse.json(await getPipelineRun(Number((await params).id)))
+  const run = await getPipelineRun(Number((await params).id))
+  if (!run) {
+    return NextResponse.json({ error: 'Pipeline run not found' }, { status: 404 })
+  }
+  return NextResponse.json(run)
 }
