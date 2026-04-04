@@ -1,26 +1,151 @@
+import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SectionHeader } from '@/components/site/SectionHeader'
 
 export default function PrivacyPage() {
+  const summaryCards = [
+    {
+      label: 'What Bes3 stores',
+      title: 'Operational and subscriber data only',
+      description: 'Bes3 stores the minimum information needed to run the public site, secure the internal CMS, and deliver newsletter updates people explicitly asked for.'
+    },
+    {
+      label: 'What Bes3 does not do',
+      title: 'No generic data harvesting',
+      description: 'The site is not designed to collect unnecessary personal data just to inflate ad targeting or grow unrelated marketing lists.'
+    },
+    {
+      label: 'Why it matters',
+      title: 'Privacy supports buyer trust',
+      description: 'A buyer-first guide loses credibility fast if the data model is more aggressive than the editorial promise. This page exists to keep those two things aligned.'
+    }
+  ]
+
+  const buyerPromises = [
+    'Newsletter signups are used to deliver the watch, brief, or deal flow that the subscriber actually selected.',
+    'Internal administrator and session records exist to protect the CMS and publishing workflow, not to profile public readers.',
+    'Product, article, and settings records are operational content data used to render Bes3 pages and maintain the site.'
+  ]
+
+  const routeCards = [
+    {
+      title: 'Read how Bes3 works',
+      description: 'Use the trust page if you want the product and editorial context behind the legal summary.',
+      href: '/about',
+      label: 'Open About'
+    },
+    {
+      title: 'Manage expectations with alerts',
+      description: 'Use newsletter flows only when you want Bes3 to keep a buying lane alive over time.',
+      href: '/newsletter',
+      label: 'Open Newsletter'
+    },
+    {
+      title: 'Contact the team',
+      description: 'Use contact if you need a human answer about privacy, corrections, or a public-site concern.',
+      href: '/contact',
+      label: 'Open Contact'
+    }
+  ]
+
   return (
     <PublicShell>
-      <article className="mx-auto max-w-4xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="w-fit rounded-full bg-white/70 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary shadow-panel">
-          Legal Framework
-        </div>
-        <div className="mt-8 editorial-prose">
-          <p>Last Updated: April 3, 2026</p>
-          <h1>Privacy Policy</h1>
-          <p>Bes3 stores only the operational and subscriber information required to run the site, deliver newsletter updates, and maintain platform security.</p>
-          <h2>Data we store</h2>
-          <ul>
-            <li>Administrator accounts and session records used to secure the internal CMS.</li>
-            <li>Affiliate product records, article metadata, and operational settings required to publish Bes3 pages.</li>
-            <li>Newsletter signups submitted through the site.</li>
-          </ul>
-          <h2>How we use it</h2>
-          <p>We use the information above to operate Bes3, maintain publishing workflows, and deliver the buyer-facing content and email updates you requested.</p>
-        </div>
-      </article>
+      <div className="mx-auto max-w-7xl space-y-14 px-4 py-16 sm:px-6 lg:px-8">
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">Legal Framework</p>
+              <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Privacy Policy</h1>
+              <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
+                Last updated April 4, 2026. This page explains what Bes3 stores, why it is stored, and how that data supports the public buying-guide experience without turning the site into a generic marketing machine.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Plain-language summary</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">
+                  Bes3 stores only the operational and subscriber information required to run the site, protect the internal system, and deliver the buyer-facing updates people intentionally requested.
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {summaryCards.map((card) => (
+                <div key={card.label} className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{card.label}</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{card.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{card.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-8 lg:grid-cols-[1.02fr_0.98fr]">
+          <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+            <SectionHeader
+              eyebrow="Buyer Meaning"
+              title="What privacy means inside Bes3."
+              description="Privacy is part of the product promise. If Bes3 asks readers to trust shortlist, alerts, and affiliate-linked pages, the data model has to stay proportionate to that purpose."
+            />
+            <div className="mt-8 space-y-4">
+              {buyerPromises.map((item) => (
+                <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
+                  <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
+                  <span>{item}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+            <p className="editorial-kicker">Next Steps</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the page that fits the question.</h2>
+            <p className="mt-4 text-sm leading-8 text-muted-foreground">
+              Legal pages should answer trust questions clearly, then route people back into the right product surface instead of trapping them in policy copy.
+            </p>
+            <div className="mt-6 grid gap-4">
+              {routeCards.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="rounded-[1.5rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] p-5 transition-transform hover:-translate-y-0.5"
+                >
+                  <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                  <p className="mt-4 text-sm font-semibold text-primary">{route.label} →</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+          <div className="editorial-prose">
+            <p>Last Updated: April 4, 2026</p>
+            <h2>Privacy Policy</h2>
+            <p>
+              Bes3 stores only the operational and subscriber information required to run the site, deliver newsletter updates, and maintain platform security.
+            </p>
+            <h3>Data we store</h3>
+            <ul>
+              <li>Administrator accounts and session records used to secure the internal CMS.</li>
+              <li>Affiliate product records, article metadata, and operational settings required to publish Bes3 pages.</li>
+              <li>Newsletter signups submitted through the site, including the preference information needed to deliver the selected alert flow.</li>
+            </ul>
+            <h3>How we use it</h3>
+            <p>
+              We use the information above to operate Bes3, maintain publishing workflows, and deliver the buyer-facing content and email updates you requested.
+            </p>
+            <h3>What we do not claim</h3>
+            <p>
+              Bes3 does not position itself as a broad social network, ad network, or data brokerage surface. The public site is a buying-guide product, and its data handling is intended to stay inside that operational scope.
+            </p>
+            <h3>Questions</h3>
+            <p>
+              If you need clarification about this policy or want to raise a correction request, use the <Link href="/contact">contact page</Link>.
+            </p>
+          </div>
+        </article>
+      </div>
     </PublicShell>
   )
 }
