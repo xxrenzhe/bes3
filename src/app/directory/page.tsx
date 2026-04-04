@@ -1,11 +1,20 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Category Directory',
+  description:
+    'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+  path: '/directory'
+})
 
 export default async function DirectoryPage() {
   const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])

@@ -1,9 +1,42 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const slug = (await params).slug
+  const article = await getArticleBySlug(slug)
+
+  if (!article || article.type !== 'guide') {
+    return buildPageMetadata({
+      title: 'Guide Not Found',
+      description: 'This Bes3 buying guide is unavailable.',
+      path: `/guides/${slug}`,
+      robots: {
+        index: false,
+        follow: false
+      }
+    })
+  }
+
+  return buildPageMetadata({
+    title: article.seoTitle || article.title,
+    description:
+      pickMetadataDescription(article.seoDescription, article.summary) ||
+      'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.',
+    path: `/guides/${article.slug}`,
+    image: article.heroImageUrl || article.product?.heroImageUrl,
+    type: 'article'
+  })
+}
 
 export default async function GuidePage({
   params

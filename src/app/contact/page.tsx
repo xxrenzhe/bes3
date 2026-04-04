@@ -1,9 +1,18 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ContactSupportForm } from '@/components/site/ContactSupportForm'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Contact Bes3',
+  description:
+    'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
+  path: '/contact'
+})
 
 export default async function ContactPage() {
   const [categories, articles] = await Promise.all([listCategories(), listPublishedArticles()])

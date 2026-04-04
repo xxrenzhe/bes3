@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -5,12 +6,44 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildFallbackNote(productName: string) {
   return `${productName} is best for buyers who want a straightforward recommendation without spending another week comparing near-identical options.`
+}
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const slug = (await params).slug
+  const article = await getArticleBySlug(slug)
+
+  if (!article || article.type !== 'review') {
+    return buildPageMetadata({
+      title: 'Review Not Found',
+      description: 'This Bes3 review page is unavailable.',
+      path: `/reviews/${slug}`,
+      robots: {
+        index: false,
+        follow: false
+      }
+    })
+  }
+
+  return buildPageMetadata({
+    title: article.seoTitle || article.title,
+    description:
+      pickMetadataDescription(article.seoDescription, article.summary) ||
+      buildFallbackNote(article.product?.productName || article.title),
+    path: `/reviews/${article.slug}`,
+    image: article.heroImageUrl || article.product?.heroImageUrl,
+    type: 'article'
+  })
 }
 
 export default async function ReviewPage({

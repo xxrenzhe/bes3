@@ -1,10 +1,35 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { getArticlePath } from '@/lib/article-path'
-import { formatEditorialDate } from '@/lib/editorial'
+import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
 import { listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const slug = (await params).slug
+  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const articles = allArticles.filter((article) => article.product?.category === slug)
+  const products = allProducts.filter((product) => product.category === slug)
+  const leadArticle = articles.find((article) => article.type === 'review') || articles[0] || null
+  const leadProduct = products[0] || null
+  const categoryLabel = getCategoryLabel(slug)
+
+  return buildPageMetadata({
+    title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
+    description:
+      pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
+      `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
+    path: `/categories/${slug}`,
+    image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl
+  })
+}
 
 export default async function CategoryPage({
   params
@@ -25,7 +50,7 @@ export default async function CategoryPage({
   ].find(Boolean)
   const reviewCount = articles.filter((article) => article.type === 'review').length
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
-  const categoryLabel = slug.replace(/-/g, ' ')
+  const categoryLabel = getCategoryLabel(slug)
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
   const buyerRoutes = [
     {

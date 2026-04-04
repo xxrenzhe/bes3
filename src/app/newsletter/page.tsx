@@ -1,12 +1,52 @@
+import type { Metadata } from 'next'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata, toTitleCaseWords } from '@/lib/metadata'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { slugify } from '@/lib/slug'
 
 const VALID_INTENTS = new Set(['deals', 'price-alert', 'category-brief'] as const)
 const VALID_CADENCE = new Set(['weekly', 'priority'] as const)
+
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ intent?: string; category?: string; cadence?: string }>
+}): Promise<Metadata> {
+  const resolvedParams = await searchParams
+  const selectedIntent = VALID_INTENTS.has((resolvedParams.intent || '') as 'deals')
+    ? (resolvedParams.intent as 'deals' | 'price-alert' | 'category-brief')
+    : 'deals'
+  const selectedCategory = slugify(String(resolvedParams.category || ''))
+  const selectedCategoryLabel = getCategoryLabel(selectedCategory)
+  const hasPrefill = Boolean(resolvedParams.intent || resolvedParams.category || resolvedParams.cadence)
+  const title = selectedCategory
+    ? `Track ${toTitleCaseWords(selectedCategoryLabel)}`
+    : selectedIntent === 'price-alert'
+      ? 'Price Alerts'
+      : selectedIntent === 'category-brief'
+        ? 'Category Briefs'
+        : 'Newsletter'
+
+  const description =
+    selectedIntent === 'price-alert'
+      ? `Set Bes3 price alerts${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without restarting research.`
+      : selectedIntent === 'category-brief'
+        ? `Subscribe to Bes3 category briefs${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} to keep one buying lane current while you wait.`
+        : 'Subscribe to Bes3 updates for deal alerts, shortlist-friendly watch flows, and buyer guidance that stays tied to real product decisions.'
+
+  return buildPageMetadata({
+    title,
+    description,
+    path: '/newsletter',
+    robots: {
+      index: !hasPrefill,
+      follow: true
+    }
+  })
+}
 
 export default async function NewsletterPage({
   searchParams

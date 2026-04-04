@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SectionHeader } from '@/components/site/SectionHeader'
+import { buildPageMetadata } from '@/lib/metadata'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Terms of Service',
+  description:
+    'Understand how Bes3 works as a buyer guidance product, where affiliate links fit, and when merchant terms take over.',
+  path: '/terms'
+})
 
 export default function TermsPage() {
   const summaryCards = [

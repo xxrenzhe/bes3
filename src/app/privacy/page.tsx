@@ -1,6 +1,15 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SectionHeader } from '@/components/site/SectionHeader'
+import { buildPageMetadata } from '@/lib/metadata'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Privacy Policy',
+  description:
+    'Read how Bes3 handles subscriber, operational, and admin data while keeping the buyer-first product promise aligned with privacy expectations.',
+  path: '/privacy'
+})
 
 export default function PrivacyPage() {
   const summaryCards = [

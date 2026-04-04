@@ -1,16 +1,20 @@
 import type { Metadata } from 'next'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistWorkspace } from '@/components/site/ShortlistWorkspace'
+import { buildPageMetadata } from '@/lib/metadata'
 import { listPublishedProductsByIds } from '@/lib/site-data'
 import { parseShortlistShareValue, toShortlistItem } from '@/lib/shortlist'
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildPageMetadata({
   title: 'Shortlist',
+  description:
+    'Keep Bes3 finalists together, compare serious options, and switch into price-watch flows without restarting the research process.',
+  path: '/shortlist',
   robots: {
     index: false,
     follow: true
   }
-}
+})
 
 export default async function ShortlistPage({
   searchParams

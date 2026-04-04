@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
@@ -6,10 +7,44 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const slug = (await params).slug
+  const product = await getProductBySlug(slug)
+
+  if (!product) {
+    return buildPageMetadata({
+      title: 'Product Not Found',
+      description: 'This Bes3 product deep-dive is unavailable.',
+      path: `/products/${slug}`,
+      robots: {
+        index: false,
+        follow: false
+      }
+    })
+  }
+
+  const articles = await listPublishedArticles()
+  const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
+
+  return buildPageMetadata({
+    title: product.productName,
+    description:
+      pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
+      `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`,
+    path: `/products/${product.slug}`,
+    image: product.heroImageUrl || reviewArticle?.heroImageUrl
+  })
+}
 
 export default async function ProductPage({
   params
