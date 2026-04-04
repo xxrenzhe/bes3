@@ -7,6 +7,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
@@ -235,7 +236,7 @@ export default async function ProductPage({
             </div>
             {reviewArticle ? (
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">
-                <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: reviewArticle.contentHtml }} />
+                <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(reviewArticle.contentHtml) }} />
               </div>
             ) : (
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">

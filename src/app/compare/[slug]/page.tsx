@@ -6,6 +6,7 @@ import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
@@ -287,7 +288,7 @@ export default async function ComparisonPage({
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Full Breakdown</p>
-            <div className="editorial-prose mt-6" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
+            <div className="editorial-prose mt-6" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(article.contentHtml) }} />
           </article>
 
           <aside className="space-y-6">
