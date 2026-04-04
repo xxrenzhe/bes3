@@ -38,6 +38,80 @@ function buildCategoryHubHref(item: ShortlistItem | undefined) {
   return item?.category ? `/categories/${item.category}` : '/directory'
 }
 
+function getCategoryLabel(item: ShortlistItem | undefined) {
+  return item?.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'
+}
+
+const DECISION_STAGE_PRIORITY: Record<ReturnType<typeof getShortlistDecisionState>['stage'], number> = {
+  finalist: 4,
+  'compare-ready': 3,
+  'needs-check': 2,
+  'signal-building': 1
+}
+
+type ShortlistDecisionPath = {
+  key: string
+  label: string
+  items: ShortlistItem[]
+  recommendedItems: ShortlistItem[]
+  activeCompareItems: ShortlistItem[]
+  summary: ReturnType<typeof summarizeShortlist>
+  readiness: ReturnType<typeof summarizeShortlistDecisionReadiness>
+}
+
+function buildDecisionPaths(items: ShortlistItem[], compareIds: number[]): ShortlistDecisionPath[] {
+  const groups = items.reduce((result, item) => {
+    const key = item.category || '__buyer-shortlist__'
+    const current = result.get(key) || []
+    current.push(item)
+    result.set(key, current)
+    return result
+  }, new Map<string, ShortlistItem[]>())
+
+  return Array.from(groups.entries())
+    .map(([key, groupItems]) => {
+      const groupIds = new Set(groupItems.map((item) => item.id))
+      const pathCompareIds = compareIds.filter((id) => groupIds.has(id))
+      const stateMap = new Map(
+        groupItems.map((item) => [
+          item.id,
+          getShortlistDecisionState(item, {
+            shortlistSize: groupItems.length,
+            compareIds: pathCompareIds
+          })
+        ])
+      )
+      const recommendedItems = groupItems
+        .slice()
+        .sort((left, right) => {
+          const leftState = stateMap.get(left.id)
+          const rightState = stateMap.get(right.id)
+          const stageDelta = (DECISION_STAGE_PRIORITY[rightState?.stage || 'signal-building'] || 0) - (DECISION_STAGE_PRIORITY[leftState?.stage || 'signal-building'] || 0)
+          if (stageDelta !== 0) return stageDelta
+
+          const scoreDelta = (rightState?.score || 0) - (leftState?.score || 0)
+          if (scoreDelta !== 0) return scoreDelta
+
+          return (right.reviewCount || 0) - (left.reviewCount || 0)
+        })
+        .slice(0, Math.min(groupItems.length, 3))
+
+      return {
+        key,
+        label: getCategoryLabel(groupItems[0]),
+        items: groupItems,
+        recommendedItems,
+        activeCompareItems: groupItems.filter((item) => compareIds.includes(item.id)),
+        summary: summarizeShortlist(groupItems),
+        readiness: summarizeShortlistDecisionReadiness(groupItems, pathCompareIds)
+      }
+    })
+    .sort((left, right) => {
+      if (right.items.length !== left.items.length) return right.items.length - left.items.length
+      return right.readiness.averageScore - left.readiness.averageScore
+    })
+}
+
 function getDecisionBadgeClass(stage: ReturnType<typeof getShortlistDecisionState>['stage']) {
   if (stage === 'finalist') return 'border-emerald-300 bg-emerald-50 text-emerald-900'
   if (stage === 'compare-ready') return 'border-primary/25 bg-primary/10 text-primary'
@@ -121,6 +195,10 @@ export function ShortlistWorkspace({
       })
     ])
   )
+  const decisionPaths = buildDecisionPaths(shortlist, compareIds)
+  const dominantDecisionPath = decisionPaths[0]
+  const compareCategoryCount = new Set(compare.map((item) => item.category || '__buyer-shortlist__')).size
+  const compareMixesCategories = compare.length >= 2 && compareCategoryCount > 1
   const compareCandidates = shortlist.slice(0, Math.min(shortlist.length, 3))
   const compareCandidateNames = buildProductRollup(compareCandidates)
   const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
@@ -490,6 +568,128 @@ export function ShortlistWorkspace({
         </section>
       ) : null}
 
+      {decisionPaths.length > 1 ? (
+        <section id="decision-paths" className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_50%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">Decision Paths</p>
+              <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Split unlike products into clean buying lanes.
+              </h3>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                {compareMixesCategories
+                  ? 'Your active compare queue mixes categories. Keep finalists inside the same product lane so the matrix stays honest and the tradeoffs remain actionable.'
+                  : `Your shortlist spans ${decisionPaths.length} decision paths. Treat each category as a separate buying choice instead of forcing unrelated products into one compare view.`}
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Recommended lane</p>
+                <p className="mt-3 text-2xl font-black">{dominantDecisionPath?.label || 'Buyer shortlist'}</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">
+                  {dominantDecisionPath?.readiness.note || 'Choose one same-category lane first, then narrow finalists inside it.'}
+                </p>
+              </div>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {dominantDecisionPath && dominantDecisionPath.recommendedItems.length >= 2 ? (
+                  <button
+                    type="button"
+                    onClick={() => setCompareFromItems(dominantDecisionPath.recommendedItems, 'shortlist-decision-paths')}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+                  >
+                    <Scale className="h-4 w-4" />
+                    Focus compare on {dominantDecisionPath.label}
+                  </button>
+                ) : null}
+                <Link
+                  href={buildCategoryHubHref(dominantDecisionPath?.items[0])}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-white px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                >
+                  Browse {dominantDecisionPath?.label || 'this category'}
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3">
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Decision lanes</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{decisionPaths.length}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Separate these by category before you let compare drive the purchase decision.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Dominant lane</p>
+                <p className="mt-3 text-sm font-semibold leading-7 text-foreground">{dominantDecisionPath?.label || 'Buyer shortlist'}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{dominantDecisionPath?.items.length || 0} saved picks currently support this lane.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Compare hygiene</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{compareMixesCategories ? 'Mixed' : 'Clean'}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {compareMixesCategories ? 'Current finalists span multiple categories.' : 'Current compare set stays inside one buying lane.'}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-8 grid gap-4 xl:grid-cols-3">
+            {decisionPaths.map((path) => (
+              <div key={path.key} className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{path.label}</p>
+                    <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{path.readiness.label}</h4>
+                  </div>
+                  <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${path.activeCompareItems.length ? 'border-emerald-300 bg-emerald-50 text-emerald-900' : 'border-slate-200 bg-slate-100 text-slate-700'}`}>
+                    {path.activeCompareItems.length ? `${path.activeCompareItems.length} in compare` : `${path.items.length} saved`}
+                  </span>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">{path.readiness.note}</p>
+
+                <div className="mt-5 grid gap-3 sm:grid-cols-3">
+                  <div className="rounded-[1.25rem] bg-muted p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Readiness</p>
+                    <p className="mt-2 text-lg font-black text-foreground">{path.readiness.averageScore}/100</p>
+                  </div>
+                  <div className="rounded-[1.25rem] bg-muted p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Price band</p>
+                    <p className="mt-2 text-sm font-black leading-6 text-foreground">{path.summary.priceRangeLabel}</p>
+                  </div>
+                  <div className="rounded-[1.25rem] bg-muted p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Finalists</p>
+                    <p className="mt-2 text-lg font-black text-foreground">{path.recommendedItems.length}</p>
+                  </div>
+                </div>
+
+                <div className="mt-5 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Strongest signal</p>
+                  <p className="mt-2 text-sm leading-7 text-foreground">{path.summary.strongestSignal}</p>
+                </div>
+
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">Included picks: {buildProductRollup(path.items)}.</p>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {path.recommendedItems.length >= 2 ? (
+                    <button
+                      type="button"
+                      onClick={() => setCompareFromItems(path.recommendedItems, 'shortlist-decision-paths')}
+                      className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                    >
+                      <Scale className="h-4 w-4" />
+                      Load {path.recommendedItems.length} into compare
+                    </button>
+                  ) : null}
+                  <Link
+                    href={buildCategoryHubHref(path.items[0])}
+                    className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                  >
+                    Browse this lane
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      ) : null}
+
       {coach ? (
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#fffdf8_45%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
@@ -692,13 +892,29 @@ export function ShortlistWorkspace({
             Use compare for the finalists only. If you have more than three, narrow the shortlist first so the tradeoffs stay obvious.
           </p>
 
+          {compareMixesCategories && dominantDecisionPath?.recommendedItems.length >= 2 ? (
+            <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4">
+              <p className="text-sm leading-7 text-amber-950">
+                Compare is currently mixing categories. Replace it with the strongest {dominantDecisionPath.label.toLowerCase()} lane so the decision matrix stays comparable.
+              </p>
+              <button
+                type="button"
+                onClick={() => setCompareFromItems(dominantDecisionPath.recommendedItems, 'shortlist-decision-paths')}
+                className="mt-4 inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-amber-950 px-4 text-sm font-semibold text-white"
+              >
+                <Scale className="h-4 w-4" />
+                Focus compare on {dominantDecisionPath.label}
+              </button>
+            </div>
+          ) : null}
+
           <div className="mt-6 space-y-3">
             {compare.length ? (
               compare.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-4 rounded-[1.5rem] bg-muted/50 px-4 py-4">
                   <div>
                     <p className="font-semibold text-foreground">{item.productName}</p>
-                    <p className="text-sm text-muted-foreground">{item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}</p>
+                    <p className="text-sm text-muted-foreground">{getCategoryLabel(item)}</p>
                   </div>
                   <button
                     type="button"
