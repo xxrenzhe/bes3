@@ -19,6 +19,12 @@ export function PublicShell({
 }) {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <a
+        href="#main-content"
+        className="absolute left-4 top-4 z-[70] -translate-y-20 rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+      >
+        Skip to main content
+      </a>
       <header className="sticky top-0 z-40 px-3 py-3 sm:px-6">
         <div className="glass-nav editorial-shadow mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/60 px-5 py-4 sm:px-7">
           <Link href="/" className="flex items-center gap-3">
@@ -27,10 +33,10 @@ export function PublicShell({
             </div>
             <div className="hidden sm:block">
               <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Digital Curator</p>
-              <h1 className="font-[var(--font-display)] text-xl font-extrabold tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h1>
+              <p className="font-[var(--font-display)] text-xl font-extrabold tracking-tight text-foreground">{DEFAULT_SITE_NAME}</p>
             </div>
           </Link>
-          <nav className="hidden items-center gap-6 md:flex">
+          <nav aria-label="Primary navigation" className="hidden items-center gap-6 md:flex">
             {NAV_ITEMS.map((item) => (
               <Link key={item.href} href={item.href} className="text-sm font-semibold tracking-tight text-muted-foreground transition-colors hover:text-primary">
                 {item.label}
@@ -45,11 +51,14 @@ export function PublicShell({
             </Link>
           </nav>
           <details className="relative md:hidden">
-            <summary className="list-none rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm font-semibold text-foreground">
+            <summary
+              aria-label="Open site menu"
+              className="list-none rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm font-semibold text-foreground"
+            >
               Menu
             </summary>
             <div className="absolute right-0 mt-3 w-56 rounded-[1.5rem] border border-border bg-white p-4 shadow-panel">
-              <div className="flex flex-col gap-3">
+              <nav aria-label="Mobile navigation" className="flex flex-col gap-3">
                 {NAV_ITEMS.map((item) => (
                   <Link key={item.href} href={item.href} className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
                     {item.label}
@@ -59,12 +68,14 @@ export function PublicShell({
                 <Link href="/login" className="rounded-xl bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-3 py-2 text-sm font-semibold text-primary-foreground">
                   Sign In
                 </Link>
-              </div>
+              </nav>
             </div>
           </details>
         </div>
       </header>
-      <main className="pb-24">{children}</main>
+      <main id="main-content" className="pb-24">
+        {children}
+      </main>
       <ShortlistDock />
       <footer className="mt-10 border-t border-border/40 bg-[linear-gradient(180deg,rgba(239,244,255,0.55),rgba(248,249,255,0.96))]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
@@ -77,23 +88,23 @@ export function PublicShell({
           </div>
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground">Explore</h3>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
+            <nav aria-label="Explore Bes3" className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
               <Link href="/">Home</Link>
               <Link href="/search">Search</Link>
               <Link href="/categories/home-office">Categories</Link>
               <Link href="/deals">Deals</Link>
               <Link href="/directory">Directory</Link>
               <Link href="/shortlist">Shortlist</Link>
-            </div>
+            </nav>
           </div>
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground">Company</h3>
-            <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
+            <nav aria-label="Company links" className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
               <Link href="/about">About</Link>
               <Link href="/contact">Contact</Link>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>
-            </div>
+            </nav>
           </div>
         </div>
       </footer>

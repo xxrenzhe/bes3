@@ -164,6 +164,9 @@ export function ShortlistWorkspace({
   if (!hasHydrated) {
     return (
       <div className="rounded-[2rem] bg-white p-10 shadow-panel">
+        <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+          Keep your buying decision alive across visits.
+        </h1>
         <p className="text-sm text-muted-foreground">Loading your shortlist...</p>
       </div>
     )
@@ -173,7 +176,7 @@ export function ShortlistWorkspace({
     return (
       <div className="rounded-[2.5rem] bg-white p-10 text-center shadow-panel sm:p-14">
         <p className="editorial-kicker">Buyer Workspace</p>
-        <h2 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">No saved candidates yet.</h2>
+        <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">No saved candidates yet.</h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
           Save products from search, category hubs, deals, or product deep-dives to keep your shortlist stable across visits.
         </p>
@@ -411,7 +414,7 @@ export function ShortlistWorkspace({
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div id="compare-queue" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Persistent Shortlist</p>
-          <h2 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your buying decision alive across visits.</h2>
+          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your buying decision alive across visits.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
             Bes3 now remembers your saved candidates locally, so you can collect strong options, return later, and continue comparing without starting over.
           </p>

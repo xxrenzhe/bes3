@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/structured-data'
@@ -196,7 +197,7 @@ export default async function GuidePage({
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-            <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
+            <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(article.contentHtml) }} />
           </article>
 
           <aside className="space-y-6">
