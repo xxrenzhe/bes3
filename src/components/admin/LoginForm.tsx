@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
@@ -40,6 +41,9 @@ export function LoginForm() {
         <p className="text-sm leading-7 text-slate-600">
           Internal access only. Default admin username is <span className="font-semibold text-slate-950">{DEFAULT_ADMIN_USERNAME}</span>.
         </p>
+        <p className="text-sm leading-7 text-slate-600">
+          If you were looking for product guidance rather than CMS access, go back to the <Link href="/" className="font-semibold text-primary">public buyer site</Link>.
+        </p>
       </div>
 
       <label className="block space-y-2">
@@ -65,6 +69,17 @@ export function LoginForm() {
 
       <div className="rounded-[1.5rem] bg-emerald-50 px-4 py-4 text-sm leading-7 text-emerald-900">
         Use this console for operational work only. Consumer-facing pages should stay editorial, calm, and product-comparison focused.
+      </div>
+
+      <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50 px-4 py-4">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-slate-500">Access expectations</p>
+        <div className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
+          <p>Only Bes3 operators should sign in here.</p>
+          <p>Credentials are managed by the team and should not be shared across roles.</p>
+          <p>
+            Public readers should use <Link href="/search?scope=products" className="font-semibold text-primary">search</Link>, <Link href="/shortlist" className="font-semibold text-primary">shortlist</Link>, or <Link href="/contact" className="font-semibold text-primary">contact</Link> instead.
+          </p>
+        </div>
       </div>
 
       <Button type="submit" disabled={isPending} className="min-h-[54px] w-full rounded-full px-6 text-base font-semibold">
