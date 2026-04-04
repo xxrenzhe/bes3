@@ -2,6 +2,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { getArticlePath } from '@/lib/article-path'
+import { getCategoryLabel } from '@/lib/editorial'
 import { listCategories, searchArticles, searchProducts } from '@/lib/site-data'
 
 const SEARCH_SCOPES = [
@@ -84,6 +85,69 @@ export default async function SearchPage({
   })
 
   const totalResults = filteredProducts.length + filteredArticles.length
+  const suggestedCategory = selectedCategory || filteredProducts[0]?.category || filteredArticles[0]?.product?.category || ''
+  const firstReview = filteredArticles.find((article) => article.type === 'review') || null
+  const firstComparison = filteredArticles.find((article) => article.type === 'comparison') || null
+  const firstGuide = filteredArticles.find((article) => article.type === 'guide') || null
+  const resultRoutes = query
+    ? [
+        filteredProducts[0]
+          ? {
+              eyebrow: 'Start',
+              title: 'Open the strongest candidate',
+              description: 'Use the top product match when your query is already specific enough and you want to move straight into specs, pricing, and buyer-fit.',
+              href: filteredProducts[0].slug ? `/products/${filteredProducts[0].slug}` : buildSearchHref(query, 'products', selectedCategory),
+              label: filteredProducts[0].slug ? 'Open product deep-dive' : 'See product matches'
+            }
+          : null,
+        firstComparison
+          ? {
+              eyebrow: 'Compare',
+              title: 'Pressure-test finalists',
+              description: 'If the search already surfaced a comparison, use it to keep the decision inside one lane instead of opening unrelated alternatives.',
+              href: getArticlePath(firstComparison.type, firstComparison.slug),
+              label: 'Open comparison'
+            }
+          : firstReview
+            ? {
+                eyebrow: 'Validate',
+                title: 'Read the clearest verdict',
+                description: 'Move into a review when you want Bes3 to confirm buyer fit before you save, compare, or click out.',
+                href: getArticlePath(firstReview.type, firstReview.slug),
+                label: 'Open review verdict'
+              }
+            : firstGuide
+              ? {
+                  eyebrow: 'Learn',
+                  title: 'Use a guide to narrow intent',
+                  description: 'The guide route is best when the search need is still broad and you want buying heuristics before choosing candidates.',
+                  href: getArticlePath(firstGuide.type, firstGuide.slug),
+                  label: 'Open guide'
+                }
+              : null,
+        suggestedCategory
+          ? {
+              eyebrow: 'Watch',
+              title: `Track ${getCategoryLabel(suggestedCategory)}`,
+              description: 'If timing is the blocker, turn this search into a category watch so you do not lose the buying context and start over later.',
+              href: `/newsletter?intent=price-alert&category=${encodeURIComponent(suggestedCategory)}&cadence=priority`,
+              label: 'Start price watch'
+            }
+          : {
+              eyebrow: 'Explore',
+              title: 'Broaden the lane cleanly',
+              description: 'When the query is still fuzzy, move into the directory or product search instead of widening the same search aimlessly.',
+              href: '/directory',
+              label: 'Browse category hubs'
+            }
+      ].filter(Boolean) as Array<{
+        eyebrow: string
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
+    : []
 
   return (
     <PublicShell>
@@ -152,6 +216,34 @@ export default async function SearchPage({
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Current route</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{SEARCH_SCOPE_META[selectedScope]}</p>
           </div>
+        ) : null}
+
+        {query && resultRoutes.length ? (
+          <section className="rounded-[2rem] bg-white p-8 shadow-panel">
+            <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="editorial-kicker">Best Next Move</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Keep this search inside one decision lane.</h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                Search should narrow the path, not create more branching. Use the next route that matches what is still unresolved: candidate quality, verdict confidence, or price timing.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              {resultRoutes.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
+                </Link>
+              ))}
+            </div>
+          </section>
         ) : null}
 
         {query ? (
@@ -231,7 +323,7 @@ export default async function SearchPage({
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with buyer intent.</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                `需求分析.md` 里最值得继承的不是另一条业务线，而是这件事：先判断用户现在要解决什么，再给他一个结构化入口。Bes3 的搜索应该为买家路径服务。
+                Good search should respect buying stage first: discover candidates, validate one product, compare finalists, or switch into a watch flow when the timing is not right yet.
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {SEARCH_STARTER_ROUTES.map((route) => (
