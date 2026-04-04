@@ -6,25 +6,67 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
-import { buildCollectionPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Category Directory',
-  description:
-    'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
-  path: '/directory'
-})
+export async function generateMetadata(): Promise<Metadata> {
+  const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const freshnessDate =
+    articles[0]?.updatedAt ||
+    articles[0]?.publishedAt ||
+    articles[0]?.createdAt ||
+    products[0]?.updatedAt ||
+    products[0]?.publishedAt ||
+    null
+
+  return buildPageMetadata({
+    title: 'Category Directory',
+    description:
+      'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+    path: '/directory',
+    image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
+    freshnessDate,
+    freshnessInTitle: true,
+    keywords: ['category directory', 'product categories', 'reviews', 'comparisons']
+  })
+}
 
 export default async function DirectoryPage() {
   const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])
   const leadCategory = categories[0] || ''
+  const latestRefresh =
+    articles[0]?.updatedAt ||
+    articles[0]?.publishedAt ||
+    articles[0]?.createdAt ||
+    products[0]?.updatedAt ||
+    products[0]?.publishedAt ||
+    null
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Directory', path: '/directory' }
+  ]
+  const howToSteps = [
+    {
+      name: 'Choose the category lane',
+      text: 'Open the category that matches your actual use case so Bes3 can keep reviews, comparisons, and products inside one clean decision lane.'
+    },
+    {
+      name: 'Shortlist the credible products',
+      text: 'Use the strongest products and live pages in that hub to narrow the field before you compare or click out.'
+    },
+    {
+      name: 'Track the lane if timing is the blocker',
+      text: 'If you are not buying today, switch the same category into an alert flow instead of reopening broad research later.'
+    }
+  ]
   const structuredData = buildCollectionPageSchema({
     path: '/directory',
     title: 'Category Directory',
     description: 'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+    breadcrumbItems,
+    dateModified: latestRefresh,
     items: categories.map((category) => ({
       name: category.replace(/-/g, ' '),
       path: `/categories/${category}`
@@ -63,7 +105,7 @@ export default async function DirectoryPage() {
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[buildBreadcrumbSchema('/directory', breadcrumbItems), structuredData, buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category lane, shortlist credible products, and track the lane if timing is the blocker.', howToSteps)]} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
