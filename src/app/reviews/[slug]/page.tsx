@@ -4,7 +4,7 @@ import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
-import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -23,8 +23,22 @@ export default async function ReviewPage({
 
   const articles = await listPublishedArticles()
   const category = article.product?.category || null
+  const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
   const confidenceSignals = buildConfidenceSignals(article.product)
+  const relatedComparison = articles.find((candidate) => {
+    if (candidate.type !== 'comparison') return false
+    if (article.productId && candidate.productId === article.productId) return true
+    if (category && candidate.product?.category === category) return true
+    return false
+  }) || null
+  const relatedGuide = articles.find((candidate) => {
+    if (candidate.type !== 'guide') return false
+    if (candidate.id === article.id) return false
+    if (article.productId && candidate.productId === article.productId) return true
+    if (category && candidate.product?.category === category) return true
+    return false
+  }) || null
 
   const reviewPicks = [
     article,
@@ -35,6 +49,48 @@ export default async function ReviewPage({
       return true
     })
   ].slice(0, 3)
+  const reviewRoutes = [
+    {
+      eyebrow: 'Deep Dive',
+      title: article.product?.slug ? 'Open the product page' : 'Stay with the verdict',
+      description: article.product?.slug
+        ? 'Move into the product page when this recommendation is already credible enough and you want specs, pricing, and merchant context.'
+        : 'Use this review as the main decision source when a separate product deep-dive is not available yet.',
+      href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
+      label: article.product?.slug ? 'Open product deep-dive' : 'Keep reading this review'
+    },
+    {
+      eyebrow: 'Compare',
+      title: relatedComparison ? 'Pressure-test the finalist' : 'Narrow the lane first',
+      description: relatedComparison
+        ? 'Use the comparison when this pick is strong enough to deserve a head-to-head decision against nearby alternatives.'
+        : 'If you are not ready to decide, go back to the category lane and narrow real alternatives before comparing.',
+      href: relatedComparison
+        ? getArticlePath(relatedComparison.type, relatedComparison.slug)
+        : category
+          ? `/categories/${category}#category-shortlist`
+          : '/shortlist',
+      label: relatedComparison ? 'Open related comparison' : 'Browse shortlist lane'
+    },
+    {
+      eyebrow: 'Learn',
+      title: relatedGuide ? 'Read the supporting guide' : 'Browse the category hub',
+      description: relatedGuide
+        ? 'Use the guide if you still need buying heuristics, compatibility context, or setup advice before finalizing the shortlist.'
+        : 'Return to the category hub when you still need broader coverage before acting on this verdict.',
+      href: relatedGuide ? getArticlePath(relatedGuide.type, relatedGuide.slug) : category ? `/categories/${category}` : '/directory',
+      label: relatedGuide ? 'Open category guide' : 'Visit category hub'
+    },
+    {
+      eyebrow: 'Watch',
+      title: category ? `Track ${categoryLabel}` : 'Track the market',
+      description: 'If the purchase is waiting on a better price, convert this review into a price-watch flow instead of reopening research from scratch later.',
+      href: category
+        ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
+        : '/newsletter?intent=deals&cadence=priority',
+      label: 'Start price watch'
+    }
+  ]
 
   return (
     <PublicShell>
@@ -78,6 +134,40 @@ export default async function ReviewPage({
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Skip if</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(article.product, 'review')}</p>
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">How To Use This Review</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the verdict, then choose the next move.</h2>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into a watch flow if timing is the only remaining blocker.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">
+                  {relatedComparison
+                    ? `This review already has enough adjacent coverage in ${categoryLabel} to support a head-to-head decision. Move into the comparison once the core fit feels right.`
+                    : 'This review is the clearest current answer. Use the product page or a price watch next if you do not need another comparison yet.'}
+                </p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              {reviewRoutes.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
+                </Link>
+              ))}
             </div>
           </div>
         </section>
