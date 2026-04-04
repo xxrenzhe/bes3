@@ -135,7 +135,7 @@ export default async function HomePage() {
               <SectionHeader
                 eyebrow="Buyer Intent Routes"
                 title="Choose the route that matches your buying moment."
-                description="The useful idea inside `需求分析.md` is structure, not sprawl. Bes3 should meet shoppers where they are: finding candidates, reading a verdict, comparing finalists, or waiting for the right price."
+                description="Bes3 works best when it meets shoppers where they are: finding candidates, reading a verdict, comparing finalists, or waiting for the right price."
               />
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {decisionPrinciples.map(([title, description]) => (
