@@ -9,7 +9,7 @@ import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDa
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
+import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -60,7 +60,7 @@ export default async function GuidePage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'guide') notFound()
 
-  const allArticles = await listPublishedArticles()
+  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
@@ -76,6 +76,9 @@ export default async function GuidePage({
     if (category && candidate.product?.category === category) return true
     return false
   }) || null
+  const peerProducts = allProducts
+    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .slice(0, 3)
   const path = `/guides/${article.slug}`
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
@@ -263,6 +266,29 @@ export default async function GuidePage({
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{relatedComparison.summary}</p>
                 <p className="mt-5 text-sm font-semibold text-primary">Open comparison →</p>
               </Link>
+            ) : null}
+            {category || peerProducts.length ? (
+              <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <div className="mt-5 space-y-3">
+                  {category ? (
+                    <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the full category lane if you need more live verdicts, comparisons, and shortlist coverage.</p>
+                    </Link>
+                  ) : null}
+                  {peerProducts.map((candidate) => (
+                    <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                        {candidate.description || `Another ${categoryLabel} option inside the same decision lane.`}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             ) : null}
             <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-6 shadow-panel">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Guide Outcome</p>
