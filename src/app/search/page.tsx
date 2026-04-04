@@ -7,7 +7,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { listCategories, searchArticles, searchProducts } from '@/lib/site-data'
+import { listCategories, listPublishedArticles, searchArticles, searchProducts } from '@/lib/site-data'
 
 const SEARCH_SCOPES = [
   { id: 'all', label: 'All' },
@@ -109,9 +109,12 @@ export default async function SearchPage({
 }) {
   const resolvedParams = await searchParams
   const query = resolvedParams.q?.trim() || ''
-  const [categories, articleMatches, productMatches] = query
-    ? await Promise.all([listCategories(), searchArticles(query), searchProducts(query)])
-    : await Promise.all([listCategories(), Promise.resolve([]), Promise.resolve([])])
+  const [categories, allArticles, articleMatches, productMatches] = await Promise.all([
+    listCategories(),
+    listPublishedArticles(),
+    query ? searchArticles(query) : Promise.resolve([]),
+    query ? searchProducts(query) : Promise.resolve([])
+  ])
 
   const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
@@ -133,6 +136,15 @@ export default async function SearchPage({
   const firstReview = filteredArticles.find((article) => article.type === 'review') || null
   const firstComparison = filteredArticles.find((article) => article.type === 'comparison') || null
   const firstGuide = filteredArticles.find((article) => article.type === 'guide') || null
+  const leadReview = allArticles.find((article) => article.type === 'review') || null
+  const leadGuide = allArticles.find((article) => article.type === 'guide') || null
+  const queryLower = query.toLowerCase()
+  const matchedCategorySlugs = categories.filter((category) => {
+    if (!queryLower) return true
+    const label = getCategoryLabel(category).toLowerCase()
+    return label.includes(queryLower) || queryLower.includes(label)
+  })
+  const fallbackCategories = (matchedCategorySlugs.length ? matchedCategorySlugs : categories).slice(0, 3)
   const resultRoutes = query
     ? [
         filteredProducts[0]
@@ -366,25 +378,58 @@ export default async function SearchPage({
               ) : null}
             </section>
           ) : (
-            <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
-              <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No results found.</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Try a product name, a brand, or a higher-level keyword like keyboard or desk setup. If your intent is still fuzzy, use one of the routes below instead of forcing the wrong query.
-              </p>
-              <div className="mt-8 flex flex-wrap justify-center gap-3">
-                {selectedScope !== 'all' ? (
-                  <Link href={buildSearchHref(query, 'all', selectedCategory)} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                    Search all routes
+            <section className="space-y-8">
+              <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
+                <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No exact match yet.</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Bes3 could not find a direct page for "{query}", but that should not end the decision. Use the closest category lane, a live verdict, or a broader route instead of forcing a dead query.
+                </p>
+                <div className="mt-8 flex flex-wrap justify-center gap-3">
+                  {selectedScope !== 'all' ? (
+                    <Link href={buildSearchHref(query, 'all', selectedCategory)} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                      Search all routes
+                    </Link>
+                  ) : null}
+                  <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Browse categories
+                  </Link>
+                  <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Check deals instead
+                  </Link>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-3">
+                {fallbackCategories.map((category) => (
+                  <Link key={category} href={`/categories/${category}`} className="rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Closest Category Lane</p>
+                    <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Use the category hub when the exact entity is missing but the broader lane is still right.</p>
+                    <p className="mt-5 text-sm font-semibold text-primary">Open category hub →</p>
+                  </Link>
+                ))}
+                {leadReview ? (
+                  <Link href={getArticlePath(leadReview.type, leadReview.slug)} className="rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Live Verdict</p>
+                    <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{leadReview.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                      {leadReview.summary || 'Use a live review when you need a concrete example of how Bes3 narrows a buying decision.'}
+                    </p>
+                    <p className="mt-5 text-sm font-semibold text-primary">Open review →</p>
                   </Link>
                 ) : null}
-                <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                  Browse categories
-                </Link>
-                <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                  Check deals instead
-                </Link>
+                {leadGuide ? (
+                  <Link href={getArticlePath(leadGuide.type, leadGuide.slug)} className="rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Fallback Guide</p>
+                    <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{leadGuide.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                      {leadGuide.summary || 'Use a guide when the query is too narrow and you need to re-enter the category at the heuristic level.'}
+                    </p>
+                    <p className="mt-5 text-sm font-semibold text-primary">Open guide →</p>
+                  </Link>
+                ) : null}
               </div>
-            </div>
+            </section>
           )
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">

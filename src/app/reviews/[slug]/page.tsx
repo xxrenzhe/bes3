@@ -12,7 +12,7 @@ import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
+import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildFallbackNote(productName: string) {
@@ -68,7 +68,7 @@ export default async function ReviewPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'review') notFound()
 
-  const articles = await listPublishedArticles()
+  const [articles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
@@ -86,6 +86,9 @@ export default async function ReviewPage({
     if (category && candidate.product?.category === category) return true
     return false
   }) || null
+  const peerProducts = allProducts
+    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .slice(0, 3)
   const path = `/reviews/${article.slug}`
   const reviewDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
@@ -389,6 +392,52 @@ export default async function ReviewPage({
         <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(article.contentHtml) }} />
         </section>
+
+        {(category || relatedGuide || relatedComparison || peerProducts.length) ? (
+          <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+            <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="editorial-kicker">Stay In This Lane</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep the related pages one click away.</h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                This review should connect you to the surrounding category graph: the category hub, the supporting guide, the head-to-head comparison, and nearby product pages.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+              {category ? (
+                <Link href={`/categories/${category}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{categoryLabel}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category lane if you still need adjacent verdicts, comparisons, or shortlist coverage.</p>
+                </Link>
+              ) : null}
+              {relatedGuide ? (
+                <Link href={getArticlePath(relatedGuide.type, relatedGuide.slug)} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Supporting Guide</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{relatedGuide.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{relatedGuide.summary}</p>
+                </Link>
+              ) : null}
+              {relatedComparison ? (
+                <Link href={getArticlePath(relatedComparison.type, relatedComparison.slug)} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Related Comparison</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{relatedComparison.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{relatedComparison.summary}</p>
+                </Link>
+              ) : null}
+              {peerProducts.map((candidate) => (
+                <Link key={candidate.id} href={`/products/${candidate.slug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{candidate.productName}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {candidate.description || `Another ${categoryLabel} option in the same buying lane.`}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
       </div>
     </PublicShell>
   )
