@@ -2,10 +2,12 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildCollectionPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -20,6 +22,16 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function DealsPage() {
   const products = (await listPublishedProducts()).filter((product) => product.resolvedUrl).slice(0, 6)
   const leadProduct = products[0] || null
+  const structuredData = buildCollectionPageSchema({
+    path: '/deals',
+    title: 'Live Deals',
+    description: 'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
+    image: leadProduct?.heroImageUrl,
+    items: products.map((product) => ({
+      name: product.productName,
+      path: product.slug ? `/products/${product.slug}` : '/deals'
+    }))
+  })
   const dealsRoutes = [
     {
       eyebrow: 'Validate',
@@ -55,6 +67,7 @@ export default async function DealsPage() {
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="space-y-16">
         <section className="overflow-hidden bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">

@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { ContactSupportForm } from '@/components/site/ContactSupportForm'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
 export const metadata: Metadata = buildPageMetadata({
@@ -75,9 +77,16 @@ export default async function ContactPage() {
       note: 'Best for collaboration, media, and commercial conversations.'
     }
   ]
+  const structuredData = buildWebPageSchema({
+    path: '/contact',
+    title: 'Contact Bes3',
+    description: 'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
+    type: 'ContactPage'
+  })
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-16 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">

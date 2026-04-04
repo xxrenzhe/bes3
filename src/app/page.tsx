@@ -1,12 +1,14 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { StructuredData } from '@/components/site/StructuredData'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildCollectionPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -59,9 +61,26 @@ export default async function HomePage() {
     ['Same-category compare', 'Bes3 keeps comparisons inside one product lane so the tradeoffs stay honest and useful.'],
     ['Low-pressure next step', 'Save, compare, or check price only when the decision is mature enough to justify the click.']
   ]
+  const structuredData = buildCollectionPageSchema({
+    path: '/',
+    title: 'Buyer-First Tech Buying Guide',
+    description: 'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
+    image: featured[0]?.heroImageUrl,
+    items: [
+      ...featured.map((article) => ({
+        name: article.title,
+        path: getArticlePath(article.type, article.slug)
+      })),
+      ...directoryCategories.map((category) => ({
+        name: category.replace(/-/g, ' '),
+        path: `/categories/${category}`
+      }))
+    ]
+  })
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <section className="overflow-hidden px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pb-24">
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">

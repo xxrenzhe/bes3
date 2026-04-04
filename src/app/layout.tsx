@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
+import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistProvider } from '@/components/site/ShortlistProvider'
 import { Inter } from 'next/font/google'
 import { ToasterProvider } from '@/components/ToasterProvider'
 import { bootstrapApplication } from '@/lib/bootstrap'
+import { buildOrganizationSchema, buildWebsiteSchema } from '@/lib/structured-data'
 import './globals.css'
 
 const bodyFont = Inter({
@@ -41,6 +43,7 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable} font-sans`}>
+        <StructuredData data={[buildOrganizationSchema(), buildWebsiteSchema()]} />
         <ShortlistProvider>
           {children}
           <ToasterProvider />

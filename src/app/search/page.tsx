@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, searchArticles, searchProducts } from '@/lib/site-data'
 
 const SEARCH_SCOPES = [
@@ -190,9 +192,33 @@ export default async function SearchPage({
         label: string
       }>
     : []
+  const structuredData = query
+    ? buildSearchResultsPageSchema({
+        path: buildSearchHref(query, selectedScope, selectedCategory),
+        title: `Search "${query}"`,
+        description: `Search Bes3 ${selectedScope === 'products' ? 'product candidates' : selectedScope === 'review' ? 'review verdicts' : selectedScope === 'comparison' ? 'finalist comparisons' : selectedScope === 'guide' ? 'buying guides' : 'products, reviews, comparisons, and buyer guides'} to narrow the buyer journey without reopening broad research.`,
+        query,
+        items: [
+          ...filteredProducts.slice(0, 5).map((product) => ({
+            name: product.productName,
+            path: product.slug ? `/products/${product.slug}` : '/search'
+          })),
+          ...filteredArticles.slice(0, 5).map((article) => ({
+            name: article.title,
+            path: getArticlePath(article.type, article.slug)
+          }))
+        ]
+      })
+    : buildWebPageSchema({
+        path: '/search',
+        title: 'Search',
+        description: 'Search Bes3 products, reviews, comparisons, and buyer guides to turn a concrete need into a cleaner shortlist.',
+        type: 'CollectionPage'
+      })
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">
           <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Search the shortlist, not the noise.</h1>
