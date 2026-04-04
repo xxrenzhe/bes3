@@ -1,7 +1,9 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
 const VALID_INTENTS = new Set(['buyer-support', 'editorial-feedback', 'correction', 'partnership', 'general'] as const)
@@ -14,6 +16,56 @@ function normalizeIntent(value: string | undefined): ContactIntent {
   }
 
   return 'general'
+}
+
+function buildThankYouMeta(intent: ContactIntent) {
+  switch (intent) {
+    case 'buyer-support':
+      return {
+        title: 'Buyer Support Request Received',
+        description: 'Bes3 received your buyer support request and routes you back into search, shortlist, or watch flows while the team reviews it.'
+      }
+    case 'editorial-feedback':
+      return {
+        title: 'Editorial Feedback Received',
+        description: 'Thanks for helping improve Bes3. Your editorial feedback is in review while the public buyer journey stays open.'
+      }
+    case 'correction':
+      return {
+        title: 'Correction Request Received',
+        description: 'Bes3 received your correction request and will review the public page issue while you keep the buying lane intact.'
+      }
+    case 'partnership':
+      return {
+        title: 'Partnership Inquiry Received',
+        description: 'Your Bes3 partnership note is with the team. In the meantime, the live public experience remains the best context for fit.'
+      }
+    default:
+      return {
+        title: 'Thank You',
+        description: 'Your message is in the Bes3 queue, and the site can still move the decision forward while the team reviews it.'
+      }
+  }
+}
+
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ intent?: string; subject?: string; name?: string }>
+}): Promise<Metadata> {
+  const resolvedParams = await searchParams
+  const intent = normalizeIntent(resolvedParams.intent)
+  const meta = buildThankYouMeta(intent)
+
+  return buildPageMetadata({
+    title: meta.title,
+    description: meta.description,
+    path: '/thank-you',
+    robots: {
+      index: false,
+      follow: false
+    }
+  })
 }
 
 export default async function ThankYouPage({

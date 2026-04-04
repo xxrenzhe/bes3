@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
@@ -5,6 +6,7 @@ import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
@@ -23,6 +25,37 @@ function splitComparisonTitle(title: string) {
     left: title,
     right: 'Alternative pick'
   }
+}
+
+export async function generateMetadata({
+  params
+}: {
+  params: Promise<{ slug: string }>
+}): Promise<Metadata> {
+  const slug = (await params).slug
+  const article = await getArticleBySlug(slug)
+
+  if (!article || article.type !== 'comparison') {
+    return buildPageMetadata({
+      title: 'Comparison Not Found',
+      description: 'This Bes3 comparison page is unavailable.',
+      path: `/compare/${slug}`,
+      robots: {
+        index: false,
+        follow: false
+      }
+    })
+  }
+
+  return buildPageMetadata({
+    title: article.seoTitle || article.title,
+    description:
+      pickMetadataDescription(article.seoDescription, article.summary) ||
+      'Use this Bes3 comparison to settle a shortlist, understand the tradeoffs, and move into the winner with less buyer regret.',
+    path: `/compare/${article.slug}`,
+    image: article.heroImageUrl || article.product?.heroImageUrl,
+    type: 'article'
+  })
 }
 
 export default async function ComparisonPage({

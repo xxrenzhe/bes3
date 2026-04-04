@@ -1,8 +1,10 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { listCategories, searchArticles, searchProducts } from '@/lib/site-data'
 
 const SEARCH_SCOPES = [
@@ -21,6 +23,46 @@ const SEARCH_SCOPE_META: Record<SearchScope, string> = {
   review: 'Use reviews when you need a verdict on one product before you put it on the shortlist.',
   comparison: 'Use comparisons when you are already down to finalists and want the tradeoffs laid out side by side.',
   guide: 'Use guides when you still need buying heuristics, compatibility help, or category education before choosing candidates.'
+}
+
+function normalizeSearchScope(value: string | undefined): SearchScope {
+  return SEARCH_SCOPES.some((scope) => scope.id === value) ? (value as SearchScope) : 'all'
+}
+
+export async function generateMetadata({
+  searchParams
+}: {
+  searchParams: Promise<{ q?: string; scope?: string; category?: string }>
+}): Promise<Metadata> {
+  const resolvedParams = await searchParams
+  const query = resolvedParams.q?.trim() || ''
+  const categories = await listCategories()
+  const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
+  const selectedScope = normalizeSearchScope(resolvedParams.scope)
+  const hasSearchState = Boolean(query || selectedCategory || selectedScope !== 'all')
+  const scopeLabel =
+    selectedScope === 'all'
+      ? 'products, reviews, comparisons, and buying guides'
+      : selectedScope === 'products'
+        ? 'product candidates'
+        : selectedScope === 'review'
+          ? 'review verdicts'
+          : selectedScope === 'comparison'
+            ? 'finalist comparisons'
+            : 'buying guides'
+  const categorySuffix = selectedCategory ? ` in ${getCategoryLabel(selectedCategory)}` : ''
+
+  return buildPageMetadata({
+    title: query ? `Search "${query}"` : 'Search',
+    description: query
+      ? `Search Bes3 ${scopeLabel}${categorySuffix} to narrow the buyer journey without reopening broad research.`
+      : 'Search Bes3 products, reviews, comparisons, and buyer guides to turn a concrete need into a cleaner shortlist.',
+    path: '/search',
+    robots: {
+      index: !hasSearchState,
+      follow: true
+    }
+  })
 }
 
 const SEARCH_STARTER_ROUTES = [
@@ -70,7 +112,7 @@ export default async function SearchPage({
     : await Promise.all([listCategories(), Promise.resolve([]), Promise.resolve([])])
 
   const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
-  const selectedScope = SEARCH_SCOPES.some((scope) => scope.id === resolvedParams.scope) ? (resolvedParams.scope as SearchScope) : 'all'
+  const selectedScope = normalizeSearchScope(resolvedParams.scope)
 
   const filteredProducts =
     selectedScope === 'all' || selectedScope === 'products'
