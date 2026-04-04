@@ -1,31 +1,268 @@
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
-import { listPublishedArticles } from '@/lib/site-data'
+import { getCategoryLabel } from '@/lib/editorial'
+import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
-export default async function ThankYouPage() {
-  const articles = (await listPublishedArticles()).slice(0, 3)
+const VALID_INTENTS = new Set(['buyer-support', 'editorial-feedback', 'correction', 'partnership', 'general'] as const)
+
+type ContactIntent = 'buyer-support' | 'editorial-feedback' | 'correction' | 'partnership' | 'general'
+
+function normalizeIntent(value: string | undefined): ContactIntent {
+  if (VALID_INTENTS.has((value || '') as ContactIntent)) {
+    return value as ContactIntent
+  }
+
+  return 'general'
+}
+
+export default async function ThankYouPage({
+  searchParams
+}: {
+  searchParams: Promise<{ intent?: string; subject?: string; name?: string }>
+}) {
+  const resolvedParams = await searchParams
+  const intent = normalizeIntent(resolvedParams.intent)
+  const subject = String(resolvedParams.subject || '').trim().slice(0, 80)
+  const firstName = String(resolvedParams.name || '').trim().split(/\s+/)[0] || ''
+  const articles = await listPublishedArticles()
+  const categories = await listCategories()
+  const leadReview = articles.find((article) => article.type === 'review') || null
+  const leadComparison = articles.find((article) => article.type === 'comparison') || null
+  const leadGuide = articles.find((article) => article.type === 'guide') || null
+  const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
+  const leadCategoryLabel = getCategoryLabel(leadCategory)
+
+  const intentMeta: Record<
+    ContactIntent,
+    {
+      eyebrow: string
+      title: string
+      description: string
+      bestRoute: string
+      routes: Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
+    }
+  > = {
+    'buyer-support': {
+      eyebrow: 'Buyer Support',
+      title: 'Your question is in the Bes3 queue.',
+      description:
+        'A Bes3 reviewer will look at the edge case you flagged. While that happens, the fastest resolution is often still inside the same buying lane rather than outside it.',
+      bestRoute:
+        'Keep the current decision alive with search, shortlist, or a watch flow so you do not lose the context that made you reach out in the first place.',
+      routes: [
+        {
+          title: 'Search product lanes',
+          description: 'Best when your use case is concrete and you still need Bes3 to narrow the field.',
+          href: '/search?scope=products',
+          label: 'Open search'
+        },
+        {
+          title: 'Keep finalists in shortlist',
+          description: 'Best when you already have plausible candidates and only need to keep them together while you wait.',
+          href: '/shortlist',
+          label: 'Open shortlist'
+        },
+        {
+          title: `Track ${leadCategoryLabel}`,
+          description: 'Best when timing, not product fit, is the last blocker still left in the decision.',
+          href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
+          label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+        }
+      ]
+    },
+    'editorial-feedback': {
+      eyebrow: 'Editorial Feedback',
+      title: 'Thanks for helping sharpen the public site.',
+      description:
+        'Editorial feedback is most useful when it improves how Bes3 helps people decide. The team will review your note and use it to tighten clarity, routing, or coverage depth where needed.',
+      bestRoute:
+        'The clearest next move is to stay inside a live article or category lane, so the feedback remains grounded in an actual buyer journey.',
+      routes: [
+        {
+          title: 'Read a live review',
+          description: 'Use a real verdict page to anchor what felt clear or unclear in the current editorial style.',
+          href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
+          label: leadReview ? 'Open review' : 'Browse reviews'
+        },
+        {
+          title: 'Open how Bes3 works',
+          description: 'Return to the methodology page if your note is about structure, trust, or decision framing.',
+          href: '/about',
+          label: 'Open methodology'
+        },
+        {
+          title: `Browse ${leadCategoryLabel}`,
+          description: 'Stay close to the category lane where the page structure and buyer cues can be judged in context.',
+          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          label: leadCategory ? 'Open category hub' : 'Open directory'
+        }
+      ]
+    },
+    correction: {
+      eyebrow: 'Correction',
+      title: 'Correction request received.',
+      description:
+        'Thanks for flagging a public-site issue. Bes3 treats accuracy corrections seriously because stale pricing, weak routing, or factual drift can damage buyer trust quickly.',
+      bestRoute:
+        'If the issue was tied to one page or one category, keep that lane open while the team reviews the correction so the decision context stays intact.',
+      routes: [
+        {
+          title: 'Review how Bes3 handles trust',
+          description: 'Use the trust workspace to understand the guardrails Bes3 is trying to maintain on the public site.',
+          href: '/about',
+          label: 'Open About'
+        },
+        {
+          title: 'Browse current category coverage',
+          description: 'Stay in the same product lane so you can re-check the updated context once the fix lands.',
+          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          label: leadCategory ? 'Open category hub' : 'Open directory'
+        },
+        {
+          title: 'Return to shortlist',
+          description: 'Keep saved candidates together while the public page or signal is being reviewed.',
+          href: '/shortlist',
+          label: 'Open shortlist'
+        }
+      ]
+    },
+    partnership: {
+      eyebrow: 'Partnership',
+      title: 'Your partnership note is with the Bes3 team.',
+      description:
+        'Partnership conversations are reviewed separately from buyer-support requests so they do not distort the public decision flow or editorial ranking.',
+      bestRoute:
+        'If you are evaluating fit with Bes3, the best context comes from the live trust page and the current public category experience rather than a generic media kit.',
+      routes: [
+        {
+          title: 'See how Bes3 works',
+          description: 'Review the buyer-first model, editorial guardrails, and route logic that shape the public site.',
+          href: '/about',
+          label: 'Open About'
+        },
+        {
+          title: `Browse ${leadCategoryLabel}`,
+          description: 'See a live category lane instead of a static brand deck to understand how Bes3 serves actual buying intent.',
+          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          label: leadCategory ? 'Open category hub' : 'Open directory'
+        },
+        {
+          title: 'Check live deals coverage',
+          description: 'Use the deals page to see how Bes3 handles price-aware buyer timing without collapsing into promotion-first UX.',
+          href: '/deals',
+          label: 'Open deals'
+        }
+      ]
+    },
+    general: {
+      eyebrow: 'General',
+      title: 'Thanks for reaching out to Bes3.',
+      description:
+        'Your note is in the queue. While the team reviews it, the public site can still move the decision forward if the underlying question is really about product fit, comparison, or timing.',
+      bestRoute:
+        'Use one concrete route next instead of reopening broad browsing. That keeps the question closer to a real buyer action.',
+      routes: [
+        {
+          title: 'Search the site',
+          description: 'Best when the question is really about a product or use case that needs narrowing.',
+          href: '/search?scope=products',
+          label: 'Open search'
+        },
+        {
+          title: 'Read a lead guide',
+          description: 'Best when you still need category logic before picking candidates or comparing finalists.',
+          href: leadGuide ? getArticlePath(leadGuide.type, leadGuide.slug) : '/directory',
+          label: leadGuide ? 'Open guide' : 'Open directory'
+        },
+        {
+          title: 'Keep a shortlist alive',
+          description: 'Best when the decision is already partly formed and just needs continuity rather than more noise.',
+          href: '/shortlist',
+          label: 'Open shortlist'
+        }
+      ]
+    }
+  }
+
+  const selectedMeta = intentMeta[intent]
+
   return (
     <PublicShell>
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-16 sm:px-6 lg:px-8">
-        <div className="rounded-[2.5rem] bg-white p-10 text-center shadow-panel sm:p-14">
-          <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-5xl text-primary">✓</div>
-          <h1 className="mt-6 font-[var(--font-display)] text-5xl font-black tracking-tight">Message sent.</h1>
-          <p className="mx-auto mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">
-            Thanks for reaching out. A member of the Bes3 team will get back to you soon. In the meantime, here are a few reviews worth browsing next.
-          </p>
-          <Link href="/" className="mt-8 inline-flex rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
-            Return to Homepage
-          </Link>
-        </div>
-        <div className="grid gap-6 md:grid-cols-3">
-          {articles.map((article) => (
+        <section className="rounded-[2.5rem] bg-white p-10 shadow-panel sm:p-14">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-5xl text-primary">✓</div>
+            <p className="mt-6 text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">{selectedMeta.eyebrow}</p>
+            <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground">
+              {firstName ? `${firstName}, ` : ''}
+              {selectedMeta.title}
+            </h1>
+            <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">{selectedMeta.description}</p>
+            <div className="mt-6 flex flex-wrap justify-center gap-2">
+              <span className="rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                {selectedMeta.eyebrow}
+              </span>
+              {subject ? (
+                <span className="rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  {subject}
+                </span>
+              ) : null}
+            </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">While You Wait</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep the decision moving in the right place.</h2>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                A contact confirmation should not trap the buyer in a dead end. Bes3 uses this step to route you back into the lane most likely to move the question forward while the team reviews your message.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">{selectedMeta.bestRoute}</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {selectedMeta.routes.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+                >
+                  <h3 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="grid gap-6 md:grid-cols-3">
+          {articles.slice(0, 3).map((article) => (
             <Link key={article.id} href={getArticlePath(article.type, article.slug)} className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1">
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">{article.type}</p>
-              <h2 className="mt-4 font-[var(--font-display)] text-2xl font-black tracking-tight">{article.title}</h2>
+              <h2 className="mt-4 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{article.title}</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">{article.summary}</p>
             </Link>
           ))}
+        </section>
+
+        <div className="flex flex-wrap gap-3">
+          <Link href="/contact" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
+            Send another note
+          </Link>
+          <Link href="/" className="rounded-full border border-border px-6 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+            Return home
+          </Link>
         </div>
       </div>
     </PublicShell>
