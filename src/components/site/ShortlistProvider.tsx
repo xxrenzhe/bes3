@@ -3,7 +3,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
 import { trackDecisionEvent } from '@/lib/decision-tracking'
-import { COMPARE_STORAGE_KEY, MAX_COMPARE_ITEMS, SHORTLIST_STORAGE_KEY, type ShortlistItem } from '@/lib/shortlist'
+import { COMPARE_STORAGE_KEY, MAX_COMPARE_ITEMS, SHORTLIST_STORAGE_KEY, type ShortlistItem, type ShortlistSpecEntry } from '@/lib/shortlist'
 
 type ShortlistContextValue = {
   shortlist: ShortlistItem[]
@@ -31,10 +31,31 @@ function toNullableNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+function normalizeSpecSnapshot(raw: unknown): ShortlistSpecEntry[] {
+  if (!Array.isArray(raw)) return []
+
+  return raw
+    .filter(
+      (item): item is ShortlistSpecEntry =>
+        Boolean(item) &&
+        typeof item === 'object' &&
+        typeof item.label === 'string' &&
+        item.label.trim().length > 0 &&
+        typeof item.value === 'string' &&
+        item.value.trim().length > 0
+    )
+    .slice(0, 6)
+}
+
 function normalizeItem(raw: any): ShortlistItem | null {
   if (!raw || typeof raw !== 'object') return null
   if (!Number.isInteger(Number(raw.id))) return null
   if (!raw.productName) return null
+
+  const specSnapshot = normalizeSpecSnapshot(raw.specSnapshot)
+  const specSummary = Array.isArray(raw.specSummary)
+    ? raw.specSummary.filter((item: unknown): item is string => typeof item === 'string').slice(0, 6)
+    : specSnapshot.map((item) => item.label).slice(0, 6)
 
   return {
     id: Number(raw.id),
@@ -51,9 +72,8 @@ function normalizeItem(raw: any): ShortlistItem | null {
     reviewHighlights: Array.isArray(raw.reviewHighlights)
       ? raw.reviewHighlights.filter((item: unknown): item is string => typeof item === 'string').slice(0, 3)
       : [],
-    specSummary: Array.isArray(raw.specSummary)
-      ? raw.specSummary.filter((item: unknown): item is string => typeof item === 'string').slice(0, 6)
-      : [],
+    specSummary,
+    specSnapshot,
     resolvedUrl: typeof raw.resolvedUrl === 'string' ? raw.resolvedUrl : null,
     publishedAt: typeof raw.publishedAt === 'string' ? raw.publishedAt : null,
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null
