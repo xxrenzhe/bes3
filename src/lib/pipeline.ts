@@ -4,6 +4,7 @@ import { updateAdminArticle } from '@/lib/admin-articles'
 import { getArticlePath } from '@/lib/article-path'
 import { escapeHtml } from '@/lib/html'
 import { persistMediaAsset } from '@/lib/media'
+import { getDecisionFunnelSummary } from '@/lib/decision-events'
 import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
@@ -67,6 +68,23 @@ export interface AdminDashboardSummary {
     merchantClicksLast7Days: number
     topMerchantSource: string | null
     topMerchantSourceClicks: number
+    decisionFunnel: {
+      lookbackDays: number
+      shortlistVisitors: number
+      shortlistEvents: number
+      compareVisitors: number
+      compareEvents: number
+      sharedViewVisitors: number
+      sharedImportVisitors: number
+      shareExportEvents: number
+      merchantIntentVisitors: number
+      merchantIntentEvents: number
+      shortlistToCompareRate: number
+      compareToMerchantRate: number
+      sharedViewToImportRate: number
+      topDecisionSource: string | null
+      topDecisionSourceEvents: number
+    }
   }
   recentRuns: PipelineRunListItem[]
   recentAffiliateProducts: AffiliateProductRecord[]
@@ -1539,7 +1557,7 @@ export async function rescrapeProductMedia(productId: number): Promise<void> {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -1559,7 +1577,8 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
            OR category_slug IS NOT NULL
       `
     ),
-    getMerchantClickSummary()
+    getMerchantClickSummary(),
+    getDecisionFunnelSummary()
   ])
 
   const staleArticles = publishedArticles
@@ -1603,7 +1622,24 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       totalMerchantClicks: merchantClicks.totalClicks,
       merchantClicksLast7Days: merchantClicks.recentClicks,
       topMerchantSource: merchantClicks.topSource,
-      topMerchantSourceClicks: merchantClicks.topSourceClicks
+      topMerchantSourceClicks: merchantClicks.topSourceClicks,
+      decisionFunnel: {
+        lookbackDays: decisionFunnel.lookbackDays,
+        shortlistVisitors: decisionFunnel.shortlistActivations.visitors,
+        shortlistEvents: decisionFunnel.shortlistActivations.events,
+        compareVisitors: decisionFunnel.compareActivations.visitors,
+        compareEvents: decisionFunnel.compareActivations.events,
+        sharedViewVisitors: decisionFunnel.sharedShortlistViews.visitors,
+        sharedImportVisitors: decisionFunnel.sharedShortlistImports.visitors,
+        shareExportEvents: decisionFunnel.shareExports.events,
+        merchantIntentVisitors: decisionFunnel.merchantIntentClicks.visitors,
+        merchantIntentEvents: decisionFunnel.merchantIntentClicks.events,
+        shortlistToCompareRate: decisionFunnel.shortlistToCompareRate,
+        compareToMerchantRate: decisionFunnel.compareToMerchantRate,
+        sharedViewToImportRate: decisionFunnel.sharedViewToImportRate,
+        topDecisionSource: decisionFunnel.topSource,
+        topDecisionSourceEvents: decisionFunnel.topSourceEvents
+      }
     },
     recentRuns: recentRuns.slice(0, 6),
     recentAffiliateProducts: recentAffiliateProducts.slice(0, 8),

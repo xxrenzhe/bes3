@@ -54,7 +54,7 @@ export default async function DirectoryPage() {
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">
                       {featuredProduct.description || 'Current price context and a clean path into the product-level Bes3 verdict.'}
                     </p>
-                    <ShortlistActionBar item={toShortlistItem(featuredProduct)} compact className="mt-4" />
+                    <ShortlistActionBar item={toShortlistItem(featuredProduct)} compact className="mt-4" source="directory-category-start" />
                     <div className="mt-4 flex items-center justify-between gap-4">
                       <span className="text-sm font-semibold text-foreground">
                         {formatPriceSnapshot(featuredProduct.priceAmount, featuredProduct.priceCurrency || 'USD')}

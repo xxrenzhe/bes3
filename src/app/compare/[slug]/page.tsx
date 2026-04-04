@@ -125,9 +125,11 @@ export default async function ComparisonPage({
               </div>
 
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} className="mb-5" /> : null}
+                {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} className="mb-5" source="comparison-page" /> : null}
                 <PrimaryCta
                   href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-primary-cta') : null}
+                  productId={article.product?.id || null}
+                  trackingSource="comparison-page-primary-cta"
                   label="Check Current Price"
                   note={`Price reviewed ${formatEditorialDate(snapshotDate)}. Use the winner only if it fits your actual requirements.`}
                 />

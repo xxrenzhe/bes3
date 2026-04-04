@@ -158,7 +158,7 @@ export default async function ReviewPage({
                     >
                       Open Deep-Dive
                     </Link>
-                    {product ? <ShortlistActionBar item={toShortlistItem(product)} compact /> : null}
+                    {product ? <ShortlistActionBar item={toShortlistItem(product)} compact source="review-page" /> : null}
                     {index === 0 ? (
                       <p className="text-xs leading-6 text-muted-foreground">
                         Confidence signals: {confidenceSignals.join(' · ')}

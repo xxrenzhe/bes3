@@ -1,11 +1,12 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
+import { trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { buildShortlistBuyingBrief, buildShortlistSharePath, getShortlistProductPath, summarizeShortlist, type ShortlistItem } from '@/lib/shortlist'
@@ -32,9 +33,22 @@ export function ShortlistWorkspace({
 }) {
   const [isCopying, setIsCopying] = useState(false)
   const [isCopyingBrief, setIsCopyingBrief] = useState(false)
+  const sharedViewTrackedRef = useRef(false)
   const { addManyToShortlist, clearShortlist, compare, compareCount, hasHydrated, removeShortlist, replaceShortlist, setCompareFromItems, shortlist, toggleCompare } = useShortlist()
   const hasSharedItems = sharedItems.length > 0
   const missingSharedItems = sharedItems.filter((item) => !shortlist.some((candidate) => candidate.id === item.id))
+
+  useEffect(() => {
+    if (!hasSharedItems || sharedViewTrackedRef.current) return
+    sharedViewTrackedRef.current = true
+    trackDecisionEvent({
+      eventType: 'shared_shortlist_view',
+      source: 'shared-shortlist-page',
+      metadata: {
+        itemCount: sharedItems.length
+      }
+    })
+  }, [hasSharedItems, sharedItems.length])
 
   if (!hasHydrated) {
     return (
@@ -95,18 +109,20 @@ export function ShortlistWorkspace({
   ]
 
   async function copyText(value: string, pendingLabel: (pending: boolean) => void, successMessage: string, errorMessage: string) {
-    if (!value) return
+    if (!value) return false
     if (typeof window === 'undefined' || !navigator.clipboard) {
       toast.error('Clipboard access is unavailable in this browser')
-      return
+      return false
     }
 
     pendingLabel(true)
     try {
       await navigator.clipboard.writeText(value)
       toast.success(successMessage)
+      return true
     } catch {
       toast.error(errorMessage)
+      return false
     } finally {
       pendingLabel(false)
     }
@@ -114,11 +130,29 @@ export function ShortlistWorkspace({
 
   async function copyShareLink() {
     if (!shortlist.length) return
-    await copyText(`${window.location.origin}${sharePath}`, setIsCopying, 'Shortlist share link copied', 'Unable to copy the shortlist link')
+    const copied = await copyText(`${window.location.origin}${sharePath}`, setIsCopying, 'Shortlist share link copied', 'Unable to copy the shortlist link')
+    if (copied) {
+      trackDecisionEvent({
+        eventType: 'shortlist_share_link_copy',
+        source: 'shortlist-workspace',
+        metadata: {
+          itemCount: shortlist.length
+        }
+      })
+    }
   }
 
   async function copyBuyingBrief() {
-    await copyText(sharedBuyingBrief, setIsCopyingBrief, 'Buying brief copied', 'Unable to copy the buying brief')
+    const copied = await copyText(sharedBuyingBrief, setIsCopyingBrief, 'Buying brief copied', 'Unable to copy the buying brief')
+    if (copied) {
+      trackDecisionEvent({
+        eventType: 'shared_shortlist_brief_copy',
+        source: 'shared-shortlist-page',
+        metadata: {
+          itemCount: sharedItems.length
+        }
+      })
+    }
   }
 
   return (
@@ -240,7 +274,7 @@ export function ShortlistWorkspace({
               {missingSharedItems.length ? (
                 <button
                   type="button"
-                  onClick={() => addManyToShortlist(sharedItems)}
+                  onClick={() => addManyToShortlist(sharedItems, 'shared-shortlist-page')}
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
                 >
                   <Copy className="h-4 w-4" />
@@ -253,7 +287,7 @@ export function ShortlistWorkspace({
               )}
               <button
                 type="button"
-                onClick={() => replaceShortlist(sharedItems)}
+                onClick={() => replaceShortlist(sharedItems, 'shared-shortlist-page')}
                 className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
               >
                 <RefreshCcw className="h-4 w-4" />
@@ -262,7 +296,7 @@ export function ShortlistWorkspace({
               {sharedItems.length >= 2 ? (
                 <button
                   type="button"
-                  onClick={() => setCompareFromItems(sharedItems)}
+                  onClick={() => setCompareFromItems(sharedItems, 'shared-shortlist-page')}
                   className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                 >
                   <Scale className="h-4 w-4" />
@@ -348,7 +382,7 @@ export function ShortlistWorkspace({
                       </Link>
                       <button
                         type="button"
-                        onClick={() => toggleCompare(item)}
+                        onClick={() => toggleCompare(item, 'shortlist-workspace-card')}
                         className={`inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors ${
                           compare.some((candidate) => candidate.id === item.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-white text-foreground hover:bg-muted'
                         }`}
@@ -361,6 +395,13 @@ export function ShortlistWorkspace({
                           href={buildMerchantExitPath(item.id, 'shortlist-workspace')}
                           target="_blank"
                           prefetch={false}
+                          onClick={() =>
+                            trackDecisionEvent({
+                              eventType: 'merchant_cta_click',
+                              source: 'shortlist-workspace',
+                              productId: item.id
+                            })
+                          }
                           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                         >
                           Check price
@@ -369,7 +410,7 @@ export function ShortlistWorkspace({
                       ) : null}
                       <button
                         type="button"
-                        onClick={() => removeShortlist(item.id)}
+                        onClick={() => removeShortlist(item.id, 'shortlist-workspace-card')}
                         className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
                       >
                         <Trash2 className="h-4 w-4" />
@@ -409,7 +450,7 @@ export function ShortlistWorkspace({
                   </div>
                   <button
                     type="button"
-                    onClick={() => toggleCompare(item)}
+                    onClick={() => toggleCompare(item, 'shortlist-workspace-queue')}
                     className="rounded-full border border-border px-3 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-white"
                   >
                     Remove

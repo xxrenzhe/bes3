@@ -161,7 +161,7 @@ export default async function HomePage() {
                   <p className="mt-4 text-sm leading-7 text-muted-foreground">
                     {article.summary || 'Clear tradeoffs and calm buyer guidance.'}
                   </p>
-                  {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} compact className="mt-5" /> : null}
+                  {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} compact className="mt-5" source="homepage-best3-card" /> : null}
                   <div className="mt-auto flex items-center justify-between pt-8">
                     <span className="text-xl font-black text-foreground">
                       {formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')}
