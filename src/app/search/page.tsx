@@ -14,6 +14,41 @@ const SEARCH_SCOPES = [
 
 type SearchScope = (typeof SEARCH_SCOPES)[number]['id']
 
+const SEARCH_SCOPE_META: Record<SearchScope, string> = {
+  all: 'Use this when you only know the need. Bes3 will surface product candidates and the editorial context around them.',
+  products: 'Best for mid-funnel shoppers who want Bes3 to narrow a noisy category into concrete candidates worth saving.',
+  review: 'Use reviews when you need a verdict on one product before you put it on the shortlist.',
+  comparison: 'Use comparisons when you are already down to finalists and want the tradeoffs laid out side by side.',
+  guide: 'Use guides when you still need buying heuristics, compatibility help, or category education before choosing candidates.'
+}
+
+const SEARCH_STARTER_ROUTES = [
+  {
+    title: 'Build a shortlist',
+    description: 'Start with products when you need Bes3 to narrow a category into a few serious options.',
+    href: '/search?q=standing%20desk&scope=products',
+    label: 'Search product candidates'
+  },
+  {
+    title: 'Read a verdict',
+    description: 'Open reviews when one product already has your attention and you want the buyer fit fast.',
+    href: '/search?q=noise%20cancelling&scope=review',
+    label: 'Search review pages'
+  },
+  {
+    title: 'Compare finalists',
+    description: 'Use comparison pages when you are choosing between two or three credible options.',
+    href: '/search?q=ergonomic%20chair&scope=comparison',
+    label: 'Search comparisons'
+  },
+  {
+    title: 'Browse the market',
+    description: 'Open the directory when you need to discover categories before you commit to a specific query.',
+    href: '/directory',
+    label: 'Browse the directory'
+  }
+] as const
+
 function buildSearchHref(query: string, scope: SearchScope, category: string) {
   const params = new URLSearchParams()
   if (query) params.set('q', query)
@@ -113,6 +148,13 @@ export default async function SearchPage({
         ) : null}
 
         {query ? (
+          <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] px-6 py-5 shadow-panel">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Current route</p>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{SEARCH_SCOPE_META[selectedScope]}</p>
+          </div>
+        ) : null}
+
+        {query ? (
           totalResults ? (
             <section className="space-y-8">
               <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
@@ -166,36 +208,49 @@ export default async function SearchPage({
           ) : (
             <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
               <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No results found.</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">Try a product name, a brand, or a higher-level keyword like keyboard or desk setup.</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                Try a product name, a brand, or a higher-level keyword like keyboard or desk setup. If your intent is still fuzzy, use one of the routes below instead of forcing the wrong query.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                {selectedScope !== 'all' ? (
+                  <Link href={buildSearchHref(query, 'all', selectedCategory)} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                    Search all routes
+                  </Link>
+                ) : null}
+                <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                  Browse categories
+                </Link>
+                <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                  Check deals instead
+                </Link>
+              </div>
             </div>
           )
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with buyer intent.</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">These shortcuts mirror how people actually shop: compare products, find a price watch, or jump into a category.</p>
-              <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                <Link href="/search?q=standing%20desk&scope=products" className="rounded-[1.5rem] bg-muted px-5 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
-                  Find a product shortlist
-                </Link>
-                <Link href="/search?q=noise%20cancelling&scope=review" className="rounded-[1.5rem] bg-muted px-5 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
-                  Read review verdicts
-                </Link>
-                <Link href="/search?q=ergonomic%20chair&scope=comparison" className="rounded-[1.5rem] bg-muted px-5 py-4 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
-                  Jump to comparisons
-                </Link>
-                <Link href="/directory" className="rounded-[1.5rem] bg-primary px-5 py-4 text-sm font-semibold text-primary-foreground">
-                  Browse the directory
-                </Link>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                `需求分析.md` 里最值得继承的不是另一条业务线，而是这件事：先判断用户现在要解决什么，再给他一个结构化入口。Bes3 的搜索应该为买家路径服务。
+              </p>
+              <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                {SEARCH_STARTER_ROUTES.map((route) => (
+                  <Link key={route.title} href={route.href} className="rounded-[1.5rem] bg-muted px-5 py-5 transition-colors hover:bg-emerald-50">
+                    <p className="text-sm font-semibold text-foreground">{route.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                    <p className="mt-4 text-sm font-semibold text-primary">{route.label} →</p>
+                  </Link>
+                ))}
               </div>
             </div>
 
             <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel">
-              <p className="editorial-kicker">Search Tips</p>
+              <p className="editorial-kicker">How Bes3 Search Works</p>
               <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
                 <p>Search a product name if you are already mid-funnel and want to validate one pick fast.</p>
-                <p>Search a category or use case if you still need Bes3 to narrow the field for you.</p>
-                <p>Use the scope filter to switch between direct product candidates and editorial context.</p>
+                <p>Search a category or use case if you still need Bes3 to generate the right shortlist lane.</p>
+                <p>Use the scope filter to move from candidate discovery to verdict reading to finalist comparison.</p>
+                <p>When search still feels too broad, open a category hub or the shortlist workspace instead of widening the query.</p>
               </div>
             </div>
           </div>
