@@ -99,9 +99,11 @@ export default async function ProductPage({
                 </div>
               </div>
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <ShortlistActionBar item={shortlistItem} className="mb-5" />
+                <ShortlistActionBar item={shortlistItem} className="mb-5" source="product-page" />
                 <PrimaryCta
                   href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-primary-cta') : null}
+                  productId={product.id}
+                  trackingSource="product-page-primary-cta"
                   label="Check Current Price"
                   note={`Confidence signals: ${confidenceSignals.join(' · ')}`}
                 />

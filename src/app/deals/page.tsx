@@ -51,9 +51,11 @@ export default async function DealsPage() {
                       {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'} · Checked {formatEditorialDate(product.updatedAt || product.publishedAt)}
                     </p>
                   </div>
-                  <ShortlistActionBar item={toShortlistItem(product)} compact />
+                  <ShortlistActionBar item={toShortlistItem(product)} compact source="deals-grid" />
                   <PrimaryCta
                     href={buildMerchantExitPath(product.id, 'deals-grid')}
+                    productId={product.id}
+                    trackingSource="deals-grid"
                     label="Check Current Price"
                     note={`Decision note: move fast only if this still fits your actual use case and budget.`}
                   />
