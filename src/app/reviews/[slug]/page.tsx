@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatCurrency } from '@/lib/utils'
 
@@ -20,6 +21,8 @@ export default async function ReviewPage({
 
   const articles = await listPublishedArticles()
   const category = article.product?.category || null
+  const snapshotDate = getSnapshotDate(article, article.product)
+  const confidenceSignals = buildConfidenceSignals(article.product)
 
   const reviewPicks = [
     article,
@@ -59,6 +62,21 @@ export default async function ReviewPage({
             <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
               {article.summary || buildFallbackNote(article.product?.productName || article.title)}
             </p>
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Freshness</p>
+                <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
+              </div>
+              <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Best for</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildBestFor(article.product, 'review')}</p>
+              </div>
+              <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Skip if</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(article.product, 'review')}</p>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -138,6 +156,11 @@ export default async function ReviewPage({
                     >
                       Open Deep-Dive
                     </Link>
+                    {index === 0 ? (
+                      <p className="text-xs leading-6 text-muted-foreground">
+                        Confidence signals: {confidenceSignals.join(' · ')}
+                      </p>
+                    ) : null}
                   </div>
 
                   <div className={index % 2 === 1 ? 'md:order-1' : ''}>

@@ -15,6 +15,8 @@ export interface ProductRecord {
   specs: Record<string, string>
   reviewHighlights: string[]
   resolvedUrl: string | null
+  publishedAt: string | null
+  updatedAt: string | null
 }
 
 export interface ArticleRecord {
@@ -30,6 +32,8 @@ export interface ArticleRecord {
   seoTitle: string | null
   seoDescription: string | null
   publishedAt: string | null
+  createdAt: string | null
+  updatedAt: string | null
   product: ProductRecord | null
 }
 
@@ -67,7 +71,9 @@ function mapArticleRow(row: any): ArticleRecord {
         reviewCount: row.review_count,
         specs: parseJsonObject(row.specs_json),
         reviewHighlights: parseJsonArray(row.review_highlights_json),
-        resolvedUrl: row.resolved_url
+        resolvedUrl: row.resolved_url,
+        publishedAt: row.product_published_at || row.product_created_at || null,
+        updatedAt: row.product_updated_at || null
       }
     : null
 
@@ -84,6 +90,8 @@ function mapArticleRow(row: any): ArticleRecord {
     seoTitle: row.seo_title,
     seoDescription: row.seo_description,
     publishedAt: row.published_at,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
     product
   }
 }
@@ -94,6 +102,7 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
         p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -116,6 +125,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleRecord | nu
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
         p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -143,7 +153,7 @@ export async function listProducts(): Promise<ProductRecord[]> {
   const rows = await db.query<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        rating, review_count, specs_json, review_highlights_json, resolved_url, published_at, updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -170,7 +180,9 @@ export async function listProducts(): Promise<ProductRecord[]> {
     reviewCount: row.review_count,
     specs: parseJsonObject(row.specs_json),
     reviewHighlights: parseJsonArray(row.review_highlights_json),
-    resolvedUrl: row.resolved_url
+    resolvedUrl: row.resolved_url,
+    publishedAt: row.published_at || null,
+    updatedAt: row.updated_at || null
   }))
 }
 
@@ -179,7 +191,7 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        rating, review_count, specs_json, review_highlights_json, resolved_url, published_at, updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -210,7 +222,9 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
     reviewCount: row.review_count,
     specs: parseJsonObject(row.specs_json),
     reviewHighlights: parseJsonArray(row.review_highlights_json),
-    resolvedUrl: row.resolved_url
+    resolvedUrl: row.resolved_url,
+    publishedAt: row.published_at || null,
+    updatedAt: row.updated_at || null
   }
 }
 

@@ -230,7 +230,12 @@ const SQLITE_SCHEMA = [
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       source TEXT NOT NULL DEFAULT 'site',
-      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+      intent TEXT NOT NULL DEFAULT 'deals',
+      category_slug TEXT,
+      cadence TEXT NOT NULL DEFAULT 'weekly',
+      notes TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `
 ]
@@ -318,10 +323,19 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
   )
 }
 
+async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'newsletter_subscribers', 'intent', "TEXT NOT NULL DEFAULT 'deals'")
+  await ensureColumn(db, 'newsletter_subscribers', 'category_slug', 'TEXT')
+  await ensureColumn(db, 'newsletter_subscribers', 'cadence', "TEXT NOT NULL DEFAULT 'weekly'")
+  await ensureColumn(db, 'newsletter_subscribers', 'notes', 'TEXT')
+  await ensureColumn(db, 'newsletter_subscribers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+}
+
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   const statements = db.type === 'postgres' ? POSTGRES_SCHEMA : SQLITE_SCHEMA
   for (const statement of statements) {
     await db.exec(statement)
   }
   await ensurePipelineRunSchema(db)
+  await ensureNewsletterSubscriberSchema(db)
 }

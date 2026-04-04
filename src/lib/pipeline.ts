@@ -7,7 +7,7 @@ import { persistMediaAsset } from '@/lib/media'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
 import { scrapeProductPage } from '@/lib/scraper'
-import type { ProductRecord } from '@/lib/site-data'
+import { listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { resolveAffiliateLink } from '@/lib/url-resolver'
@@ -52,8 +52,25 @@ export interface AdminDashboardSummary {
     articles: number
     runs: number
   }
+  contentHealth: {
+    productsWithLivePrice: number
+    productsMissingHero: number
+    productsMissingCategory: number
+    articlesMissingVisual: number
+    staleArticleCount: number
+    newsletterSubscribers: number
+    targetedSubscribers: number
+  }
   recentRuns: PipelineRunListItem[]
   recentAffiliateProducts: AffiliateProductRecord[]
+  staleArticles: Array<{
+    id: number
+    slug: string
+    title: string
+    type: string
+    ageDays: number
+    lastReviewedAt: string | null
+  }>
 }
 
 export type ProductWorkspaceAction =
@@ -1515,15 +1532,48 @@ export async function rescrapeProductMedia(productId: number): Promise<void> {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
-    db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM content_pipeline_runs')
+    db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM content_pipeline_runs'),
+    listPipelineRuns(),
+    listAffiliateProducts(),
+    listProducts(),
+    listPublishedArticles(),
+    db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM newsletter_subscribers'),
+    db.queryOne<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM newsletter_subscribers
+        WHERE source <> 'site'
+           OR intent <> 'deals'
+           OR cadence <> 'weekly'
+           OR category_slug IS NOT NULL
+      `
+    )
   ])
 
-  const recentRuns = await listPipelineRuns()
-  const recentAffiliateProducts = await listAffiliateProducts()
+  const staleArticles = publishedArticles
+    .map((article) => {
+      const lastReviewedAt = article.updatedAt || article.publishedAt || article.createdAt || null
+      const ageDays = lastReviewedAt ? Math.max(0, Math.floor((Date.now() - new Date(lastReviewedAt).getTime()) / 86_400_000)) : 999
+      return {
+        id: article.id,
+        slug: article.slug,
+        title: article.title,
+        type: article.type,
+        ageDays,
+        lastReviewedAt
+      }
+    })
+    .filter((article) => article.ageDays >= 30)
+    .sort((left, right) => right.ageDays - left.ageDays)
+
+  const productsMissingHero = siteProducts.filter((product) => !product.heroImageUrl).length
+  const productsMissingCategory = siteProducts.filter((product) => !product.category).length
+  const productsWithLivePrice = siteProducts.filter((product) => product.priceAmount !== null && product.resolvedUrl).length
+  const articlesMissingVisual = publishedArticles.filter((article) => !article.heroImageUrl && !article.product?.heroImageUrl).length
 
   return {
     totals: {
@@ -1532,8 +1582,18 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       articles: Number(articles?.count || 0),
       runs: Number(runs?.count || 0)
     },
+    contentHealth: {
+      productsWithLivePrice,
+      productsMissingHero,
+      productsMissingCategory,
+      articlesMissingVisual,
+      staleArticleCount: staleArticles.length,
+      newsletterSubscribers: Number(newsletterSubscribers?.count || 0),
+      targetedSubscribers: Number(targetedSubscribers?.count || 0)
+    },
     recentRuns: recentRuns.slice(0, 6),
-    recentAffiliateProducts: recentAffiliateProducts.slice(0, 8)
+    recentAffiliateProducts: recentAffiliateProducts.slice(0, 8),
+    staleArticles: staleArticles.slice(0, 5)
   }
 }
 

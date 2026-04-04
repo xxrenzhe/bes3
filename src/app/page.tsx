@@ -180,7 +180,7 @@ export default async function HomePage() {
               Join the Bes3 shortlist for buyer-focused email notes on category shifts, newly published comparisons, and worthwhile price drops.
             </p>
           </div>
-          <NewsletterSignup />
+          <NewsletterSignup categoryOptions={categories.slice(0, 6)} source="homepage-alert-module" />
         </div>
       </section>
     </PublicShell>

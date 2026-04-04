@@ -2,10 +2,12 @@ import Link from 'next/link'
 
 export function PrimaryCta({
   href,
-  label = 'Check Current Price'
+  label = 'Check Current Price',
+  note
 }: {
   href: string
   label?: string
+  note?: string
 }) {
   return (
     <div className="space-y-2">
@@ -17,6 +19,7 @@ export function PrimaryCta({
         {label}
         <span aria-hidden="true">↗</span>
       </Link>
+      {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
       <p className="text-xs text-muted-foreground">Affiliate disclosure: Bes3 may earn from qualifying purchases at no extra cost to you.</p>
     </div>
   )
