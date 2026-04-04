@@ -7,6 +7,7 @@ export interface ProductRecord {
   productName: string
   category: string | null
   description: string | null
+  heroImageUrl: string | null
   priceAmount: number | null
   priceCurrency: string | null
   rating: number | null
@@ -52,13 +53,14 @@ function parseJsonArray(value: string | null): string[] {
 
 function mapArticleRow(row: any): ArticleRecord {
   const product = row.product_id
-    ? {
+      ? {
         id: row.product_id,
         slug: row.product_slug,
         brand: row.brand,
         productName: row.product_name,
         category: row.category,
         description: row.product_description,
+        heroImageUrl: row.product_hero_image_url || null,
         priceAmount: row.price_amount,
         priceCurrency: row.price_currency,
         rating: row.rating,
@@ -91,7 +93,14 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
   const rows = await db.query(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
-        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url
+        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = p.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS product_hero_image_url
       FROM articles a
       LEFT JOIN products p ON p.id = a.product_id
       WHERE a.status = 'published'
@@ -106,7 +115,14 @@ export async function getArticleBySlug(slug: string): Promise<ArticleRecord | nu
   const row = await db.queryOne(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
-        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url
+        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = p.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS product_hero_image_url
       FROM articles a
       LEFT JOIN products p ON p.id = a.product_id
       WHERE a.slug = ? AND a.status = 'published'
@@ -127,7 +143,14 @@ export async function listProducts(): Promise<ProductRecord[]> {
   const rows = await db.query<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url
+        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = products.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS hero_image_url
       FROM products
       ORDER BY published_at DESC, id DESC
     `
@@ -140,6 +163,7 @@ export async function listProducts(): Promise<ProductRecord[]> {
     productName: row.product_name,
     category: row.category,
     description: row.description,
+    heroImageUrl: row.hero_image_url || null,
     priceAmount: row.price_amount,
     priceCurrency: row.price_currency,
     rating: row.rating,
@@ -148,6 +172,51 @@ export async function listProducts(): Promise<ProductRecord[]> {
     reviewHighlights: parseJsonArray(row.review_highlights_json),
     resolvedUrl: row.resolved_url
   }))
+}
+
+export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
+  const db = await getDatabase()
+  const row = await db.queryOne<any>(
+    `
+      SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
+        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = products.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS hero_image_url
+      FROM products
+      WHERE slug = ?
+      LIMIT 1
+    `,
+    [slug]
+  )
+
+  if (!row) return null
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    brand: row.brand,
+    productName: row.product_name,
+    category: row.category,
+    description: row.description,
+    heroImageUrl: row.hero_image_url || null,
+    priceAmount: row.price_amount,
+    priceCurrency: row.price_currency,
+    rating: row.rating,
+    reviewCount: row.review_count,
+    specs: parseJsonObject(row.specs_json),
+    reviewHighlights: parseJsonArray(row.review_highlights_json),
+    resolvedUrl: row.resolved_url
+  }
+}
+
+export async function listProductsByCategory(category: string): Promise<ProductRecord[]> {
+  const products = await listProducts()
+  return products.filter((product) => product.category === category)
 }
 
 export async function searchArticles(query: string): Promise<ArticleRecord[]> {

@@ -1,16 +1,16 @@
 import type { Metadata } from 'next'
-import { Manrope, Space_Grotesk } from 'next/font/google'
+import { Inter } from 'next/font/google'
 import { ToasterProvider } from '@/components/ToasterProvider'
 import { bootstrapApplication } from '@/lib/bootstrap'
 import './globals.css'
 
-const bodyFont = Manrope({
+const bodyFont = Inter({
   subsets: ['latin'],
   variable: '--font-body',
   display: 'swap'
 })
 
-const displayFont = Space_Grotesk({
+const displayFont = Inter({
   subsets: ['latin'],
   variable: '--font-display',
   display: 'swap'
@@ -22,7 +22,12 @@ export const metadata: Metadata = {
     template: '%s | Bes3'
   },
   description: 'Bes3 helps shoppers compare real tech products, track pricing, and read high-signal buying guides.',
-  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000')
+  metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'),
+  icons: {
+    icon: '/icon.svg',
+    shortcut: '/icon.svg',
+    apple: '/icon.svg'
+  }
 }
 
 export default async function RootLayout({

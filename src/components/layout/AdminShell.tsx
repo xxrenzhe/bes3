@@ -1,5 +1,10 @@
+'use client'
+
 import Link from 'next/link'
-import { LayoutDashboard, ShoppingCart, GitBranch, FileText, Settings, Wand2, LogOut } from 'lucide-react'
+import { usePathname } from 'next/navigation'
+import { ExternalLink, FileText, GitBranch, LayoutDashboard, LogOut, Search, Settings, ShoppingCart, Wand2 } from 'lucide-react'
+import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
+import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
@@ -10,40 +15,104 @@ const NAV_ITEMS = [
   { href: '/admin/settings', label: 'Settings', icon: Settings }
 ]
 
+function isActive(pathname: string, href: string) {
+  if (href === '/admin') return pathname === href
+  return pathname.startsWith(href)
+}
+
 export function AdminShell({
   children
 }: {
   children: React.ReactNode
 }) {
+  const pathname = usePathname()
+  const currentSection = NAV_ITEMS.find((item) => isActive(pathname, item.href))?.label || 'Workspace'
+
   return (
-    <div className="min-h-screen bg-[#f6f5ef] text-foreground">
-      <div className="grid min-h-screen lg:grid-cols-[280px_1fr]">
-        <aside className="bg-[#111827] px-6 py-8 text-white">
-          <div className="rounded-3xl border border-white/10 bg-white/5 p-5 shadow-panel">
-            <p className="font-mono text-xs uppercase tracking-[0.26em] text-emerald-200/80">Bes3 Console</p>
-            <h1 className="mt-3 font-[var(--font-display)] text-2xl font-semibold">Autobes3</h1>
-            <p className="mt-2 text-sm leading-7 text-slate-300">One-click affiliate ingestion, scraping, keyword mining, content generation, and SEO publishing.</p>
+    <div className="min-h-screen bg-slate-950 text-slate-100">
+      <div className="grid min-h-screen lg:grid-cols-[288px_1fr]">
+        <aside className="border-b border-white/10 bg-[linear-gradient(180deg,#0f172a,#020617)] px-4 py-5 lg:border-b-0 lg:border-r lg:px-5 lg:py-6">
+          <div className="rounded-[2rem] border border-white/10 bg-[linear-gradient(180deg,rgba(15,23,42,0.96),rgba(15,23,42,0.72))] p-6 shadow-[0_28px_70px_-40px_rgba(0,0,0,0.8)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-300/80">Bes3 Internal Console</p>
+            <h1 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-white">Local Generator</h1>
+            <p className="mt-3 text-sm leading-7 text-slate-300">
+              Operate the consumer buying-guide engine without leaking internal workflow language into the public site.
+            </p>
           </div>
-          <nav className="mt-8 space-y-2">
+          <nav className="mt-8 grid gap-2">
             {NAV_ITEMS.map(({ href, label, icon: Icon }) => (
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-3 rounded-2xl px-4 py-3 text-sm font-medium text-slate-200 transition-colors hover:bg-white/10 hover:text-white"
+                className={cn(
+                  'flex items-center gap-3 rounded-[1.25rem] px-4 py-3 text-sm font-medium transition-colors',
+                  isActive(pathname, href)
+                    ? 'bg-emerald-500/14 text-emerald-200 shadow-[inset_0_0_0_1px_rgba(16,185,129,0.18)]'
+                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                )}
               >
                 <Icon className="h-4 w-4" />
                 <span>{label}</span>
               </Link>
             ))}
           </nav>
-          <form action="/api/auth/logout" method="post" className="mt-8">
-            <button className="flex w-full items-center gap-3 rounded-2xl border border-white/10 px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white">
+
+          <div className="mt-8 rounded-[1.75rem] border border-white/10 bg-white/5 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-slate-400">Current Focus</p>
+            <h2 className="mt-3 text-lg font-semibold text-white">{currentSection}</h2>
+            <p className="mt-2 text-sm leading-7 text-slate-300">
+              Product ingestion, editorial generation, and operational controls live here. The consumer site stays clean and buyer-facing.
+            </p>
+            <Link
+              href="/"
+              target="_blank"
+              className="mt-4 inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-200 transition-colors hover:bg-emerald-400/15"
+            >
+              Open Public Site
+              <ExternalLink className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+
+          <div className="mt-6 rounded-[1.75rem] border border-white/10 bg-black/20 p-5">
+            <p className="text-sm font-semibold text-white">{DEFAULT_ADMIN_USERNAME}</p>
+            <p className="mt-1 text-xs uppercase tracking-[0.22em] text-slate-400">Editorial Ops</p>
+          </div>
+
+          <form action="/api/auth/logout" method="post" className="mt-6">
+            <button className="flex w-full items-center justify-center gap-3 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-sm font-medium text-slate-300 transition-colors hover:bg-white/10 hover:text-white">
               <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <span>Sign Out</span>
             </button>
           </form>
         </aside>
-        <div className="min-w-0">{children}</div>
+
+        <div className="min-w-0 bg-[radial-gradient(circle_at_top_right,rgba(16,185,129,0.12),transparent_26%),linear-gradient(180deg,#f8fbff_0%,#eef4ff_100%)]">
+          <header className="sticky top-0 z-30 border-b border-slate-200/70 bg-white/75 backdrop-blur-xl">
+            <div className="flex flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-10">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-slate-500">Bes3 Local Admin</p>
+                <h2 className="mt-1 font-[var(--font-display)] text-3xl font-black tracking-tight text-slate-950">{currentSection}</h2>
+              </div>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="hidden items-center gap-2 rounded-full border border-slate-200 bg-white px-4 py-2 text-sm text-slate-500 xl:flex">
+                  <Search className="h-4 w-4" />
+                  <span>Global search coming online</span>
+                </div>
+                <div className="inline-flex items-center rounded-full bg-emerald-500/10 px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] text-emerald-700">
+                  System Online
+                </div>
+                <Link
+                  href="/admin/settings"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-700 transition-colors hover:border-emerald-200 hover:text-emerald-700"
+                >
+                  <Settings className="h-4 w-4" />
+                </Link>
+              </div>
+            </div>
+          </header>
+
+          <div className="min-h-[calc(100vh-97px)]">{children}</div>
+        </div>
       </div>
     </div>
   )

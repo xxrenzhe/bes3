@@ -1,34 +1,58 @@
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { listProducts } from '@/lib/site-data'
+import { formatCurrency } from '@/lib/utils'
 
 export default async function DealsPage() {
   const products = (await listProducts()).slice(0, 6)
 
   return (
     <PublicShell>
-      <div className="mx-auto max-w-7xl space-y-10 px-4 py-14 sm:px-6 lg:px-8">
-        <div className="rounded-[32px] border border-border bg-[linear-gradient(135deg,#fff2e5_0%,#fff 48%,#eef8f3_100%)] p-8 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Deals Hub</p>
-          <h1 className="mt-4 font-[var(--font-display)] text-5xl font-semibold tracking-tight">Live deal board for high-intent shoppers.</h1>
-          <p className="mt-4 max-w-2xl text-lg leading-8 text-muted-foreground">Prime Day, Black Friday, or daily price drops: Bes3 surfaces pages with clean pricing context and fast buyer CTAs.</p>
-        </div>
-        <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
-          {products.map((product) => (
-            <div key={product.id} className="rounded-[28px] border border-border bg-white p-6 shadow-panel">
-              <div className="inline-flex rounded-full bg-rose-100 px-3 py-1 text-xs font-semibold uppercase tracking-[0.22em] text-rose-700">Live Deal</div>
-              <h2 className="mt-5 font-[var(--font-display)] text-2xl font-semibold">{product.productName}</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">{product.description}</p>
-              <div className="mt-5 flex items-end gap-3">
-                <p className="text-3xl font-semibold">{product.priceCurrency} {product.priceAmount?.toFixed(2)}</p>
-                <p className="pb-1 text-sm text-muted-foreground line-through">{product.priceCurrency} {((product.priceAmount || 0) * 1.18).toFixed(2)}</p>
-              </div>
-              <div className="mt-6">
-                <PrimaryCta href={product.resolvedUrl || '#'} label="Check Current Price on Amazon" />
-              </div>
+      <div className="space-y-16">
+        <section className="overflow-hidden bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
+          <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+            <div className="max-w-3xl space-y-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Timed Editorial Drop</p>
+              <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">Today&apos;s best live deals.</h1>
+              <p className="max-w-2xl text-lg leading-8 text-emerald-50/80">
+                Bes3 surfaces the strongest value opportunities we can verify right now. No fake markdowns, just the current price context and the products worth checking.
+              </p>
             </div>
-          ))}
-        </div>
+            <div className="glass-panel rounded-[2rem] px-8 py-6 text-center text-foreground">
+              <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary">Current snapshot</p>
+              <p className="mt-3 text-4xl font-black">{products.length}</p>
+              <p className="mt-2 text-sm text-muted-foreground">Deals currently surfaced on Bes3</p>
+            </div>
+          </div>
+        </section>
+        <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
+          <div className="mb-10">
+            <p className="editorial-kicker">Today&apos;s Selection</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Curated Live Deals</h2>
+          </div>
+          <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
+            {products.map((product) => (
+              <div key={product.id} className="editorial-shadow group overflow-hidden rounded-[2rem] bg-white">
+                <div className="flex items-center justify-between px-6 pt-6">
+                  <span className="rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-rose-700">Live Deal</span>
+                  {product.rating ? <span className="text-sm font-semibold text-muted-foreground">{product.rating.toFixed(1)} / 5</span> : null}
+                </div>
+                <div className="space-y-4 p-6">
+                  <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">{product.productName}</h2>
+                  <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Live pricing snapshot with a direct path to the current merchant page.'}</p>
+                  <div className="rounded-[1.5rem] bg-muted p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
+                    <p className="mt-3 text-3xl font-black text-foreground">{formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}</p>
+                    <p className="mt-2 text-sm text-muted-foreground">
+                      {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'}
+                    </p>
+                  </div>
+                  <PrimaryCta href={product.resolvedUrl || '#'} label="Check Current Price on Amazon" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </PublicShell>
   )
