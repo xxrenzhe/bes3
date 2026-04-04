@@ -2,10 +2,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { SectionHeader } from '@/components/site/SectionHeader'
+import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
-import { formatCurrency } from '@/lib/utils'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 export default async function HomePage() {
   const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
@@ -34,6 +36,12 @@ export default async function HomePage() {
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
               >
                 Explore the Top 3
+              </Link>
+              <Link
+                href="/shortlist"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
+              >
+                Open My Shortlist
               </Link>
               <Link
                 href="/deals"
@@ -153,9 +161,10 @@ export default async function HomePage() {
                   <p className="mt-4 text-sm leading-7 text-muted-foreground">
                     {article.summary || 'Clear tradeoffs and calm buyer guidance.'}
                   </p>
+                  {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} compact className="mt-5" /> : null}
                   <div className="mt-auto flex items-center justify-between pt-8">
                     <span className="text-xl font-black text-foreground">
-                      {formatCurrency(article.product?.priceAmount, article.product?.priceCurrency || 'USD')}
+                      {formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')}
                     </span>
                     <Link
                       href={getArticlePath(article.type, article.slug)}

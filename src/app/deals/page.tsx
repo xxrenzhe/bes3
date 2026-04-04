@@ -1,7 +1,9 @@
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { toShortlistItem } from '@/lib/shortlist'
 import { listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -49,6 +51,7 @@ export default async function DealsPage() {
                       {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'} · Checked {formatEditorialDate(product.updatedAt || product.publishedAt)}
                     </p>
                   </div>
+                  <ShortlistActionBar item={toShortlistItem(product)} compact />
                   <PrimaryCta
                     href={buildMerchantExitPath(product.id, 'deals-grid')}
                     label="Check Current Price"

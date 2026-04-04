@@ -2,8 +2,10 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -123,6 +125,7 @@ export default async function ComparisonPage({
               </div>
 
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+                {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} className="mb-5" /> : null}
                 <PrimaryCta
                   href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-primary-cta') : null}
                   label="Check Current Price"
