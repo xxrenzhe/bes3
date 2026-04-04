@@ -77,13 +77,24 @@ export interface AdminDashboardSummary {
       sharedViewVisitors: number
       sharedImportVisitors: number
       shareExportEvents: number
+      coachVisitors: number
+      coachPrimaryEvents: number
+      coachSecondaryEvents: number
+      coachCompareLoadVisitors: number
+      coachCompareLoadEvents: number
       merchantIntentVisitors: number
       merchantIntentEvents: number
+      verifiedMerchantVisitors: number
+      verifiedMerchantEvents: number
       shortlistToCompareRate: number
       compareToMerchantRate: number
+      coachInfluencedCompareRate: number
+      compareToVerifiedMerchantRate: number
       sharedViewToImportRate: number
       topDecisionSource: string | null
       topDecisionSourceEvents: number
+      topCoachAction: string | null
+      topCoachActionEvents: number
     }
   }
   recentRuns: PipelineRunListItem[]
@@ -1632,13 +1643,24 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         sharedViewVisitors: decisionFunnel.sharedShortlistViews.visitors,
         sharedImportVisitors: decisionFunnel.sharedShortlistImports.visitors,
         shareExportEvents: decisionFunnel.shareExports.events,
+        coachVisitors: decisionFunnel.coachEngagements.visitors,
+        coachPrimaryEvents: decisionFunnel.coachPrimaryClicks.events,
+        coachSecondaryEvents: decisionFunnel.coachSecondaryClicks.events,
+        coachCompareLoadVisitors: decisionFunnel.coachCompareLoads.visitors,
+        coachCompareLoadEvents: decisionFunnel.coachCompareLoads.events,
         merchantIntentVisitors: decisionFunnel.merchantIntentClicks.visitors,
         merchantIntentEvents: decisionFunnel.merchantIntentClicks.events,
+        verifiedMerchantVisitors: decisionFunnel.verifiedMerchantExits.visitors,
+        verifiedMerchantEvents: decisionFunnel.verifiedMerchantExits.events,
         shortlistToCompareRate: decisionFunnel.shortlistToCompareRate,
         compareToMerchantRate: decisionFunnel.compareToMerchantRate,
+        coachInfluencedCompareRate: decisionFunnel.coachInfluencedCompareRate,
+        compareToVerifiedMerchantRate: decisionFunnel.compareToVerifiedMerchantRate,
         sharedViewToImportRate: decisionFunnel.sharedViewToImportRate,
         topDecisionSource: decisionFunnel.topSource,
-        topDecisionSourceEvents: decisionFunnel.topSourceEvents
+        topDecisionSourceEvents: decisionFunnel.topSourceEvents,
+        topCoachAction: decisionFunnel.topCoachAction,
+        topCoachActionEvents: decisionFunnel.topCoachActionEvents
       }
     },
     recentRuns: recentRuns.slice(0, 6),
