@@ -6,6 +6,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildArticleSchema, buildBreadcrumbSchema, buildReviewSchema } from '@/lib/structured-data'
@@ -337,7 +338,7 @@ export default async function ReviewPage({
         </section>
 
         <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-          <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: article.contentHtml }} />
+          <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(article.contentHtml) }} />
         </section>
       </div>
     </PublicShell>
