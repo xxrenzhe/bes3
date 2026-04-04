@@ -229,6 +229,15 @@ export async function listPublishedProducts(): Promise<ProductRecord[]> {
   return products.filter(isPublicProduct)
 }
 
+export async function listPublishedProductsByIds(ids: number[]): Promise<ProductRecord[]> {
+  if (!ids.length) return []
+
+  const products = await listPublishedProducts()
+  const byId = new Map(products.map((product) => [product.id, product]))
+
+  return ids.map((id) => byId.get(id)).filter(Boolean) as ProductRecord[]
+}
+
 export async function searchArticles(query: string): Promise<ArticleRecord[]> {
   const lowered = query.trim().toLowerCase()
   const articles = await listPublishedArticles()
