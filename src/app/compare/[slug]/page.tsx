@@ -13,7 +13,7 @@ import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
+import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function splitComparisonTitle(title: string) {
@@ -80,7 +80,7 @@ export default async function ComparisonPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'comparison') notFound()
 
-  const allArticles = await listPublishedArticles()
+  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
   const category = article.product?.category || null
@@ -94,6 +94,16 @@ export default async function ComparisonPage({
     if (category && candidate.product?.category === category) return true
     return false
   }) || null
+  const relatedGuide = allArticles.find((candidate) => {
+    if (candidate.type !== 'guide') return false
+    if (candidate.id === article.id) return false
+    if (article.productId && candidate.productId === article.productId) return true
+    if (category && candidate.product?.category === category) return true
+    return false
+  }) || null
+  const peerProducts = allProducts
+    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .slice(0, 3)
   const path = `/compare/${article.slug}`
   const comparisonDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
@@ -361,6 +371,43 @@ export default async function ComparisonPage({
                 If you only need the answer fast, start with <span className="font-semibold text-foreground">{winner}</span>. The supporting article below exists for buyers who want the why, not just the verdict.
               </p>
             </div>
+            {relatedReview || relatedGuide || peerProducts.length ? (
+              <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <div className="mt-5 space-y-3">
+                  {relatedReview ? (
+                    <Link href={getArticlePath(relatedReview.type, relatedReview.slug)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Supporting Review</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{relatedReview.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{relatedReview.summary}</p>
+                    </Link>
+                  ) : null}
+                  {relatedGuide ? (
+                    <Link href={getArticlePath(relatedGuide.type, relatedGuide.slug)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Supporting Guide</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{relatedGuide.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{relatedGuide.summary}</p>
+                    </Link>
+                  ) : null}
+                  {category ? (
+                    <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the main category lane if you need adjacent context before accepting the winner.</p>
+                    </Link>
+                  ) : null}
+                  {peerProducts.map((candidate) => (
+                    <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                        {candidate.description || `Another ${categoryLabel} option in the same decision lane.`}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </aside>
         </section>
       </div>
