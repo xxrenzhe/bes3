@@ -1,6 +1,7 @@
 import { PublicShell } from '@/components/layout/PublicShell'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { listCategories } from '@/lib/site-data'
+import { slugify } from '@/lib/slug'
 
 const VALID_INTENTS = new Set(['deals', 'price-alert', 'category-brief'] as const)
 const VALID_CADENCE = new Set(['weekly', 'priority'] as const)
@@ -18,7 +19,7 @@ export default async function NewsletterPage({
   const selectedCadence = VALID_CADENCE.has((resolvedParams.cadence || '') as 'weekly')
     ? (resolvedParams.cadence as 'weekly' | 'priority')
     : 'weekly'
-  const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
+  const selectedCategory = slugify(String(resolvedParams.category || ''))
 
   return (
     <PublicShell>
