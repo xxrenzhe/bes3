@@ -32,10 +32,22 @@ const STYLES: Record<string, string> = {
   pingAndIndexing: 'bg-pink-100 text-pink-800'
 }
 
+function formatValue(value: string) {
+  return value
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/_/g, ' ')
+    .trim()
+}
+
 export function StatusBadge({ value }: { value: string }) {
   return (
-    <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', STYLES[value] || 'bg-slate-100 text-slate-700')}>
-      {value}
+    <span
+      className={cn(
+        'inline-flex rounded-full px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em]',
+        STYLES[value] || 'bg-slate-100 text-slate-700'
+      )}
+    >
+      {formatValue(value)}
     </span>
   )
 }

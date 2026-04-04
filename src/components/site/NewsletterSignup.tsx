@@ -10,16 +10,17 @@ export function NewsletterSignup() {
   const [isPending, startTransition] = useTransition()
 
   return (
-    <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+    <div className="editorial-shadow relative overflow-hidden rounded-[2rem] bg-white p-8 sm:p-10">
+      <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-100/60 blur-3xl" />
       {done ? (
-        <div className="space-y-3">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Subscribed</p>
-          <h3 className="font-[var(--font-display)] text-3xl font-semibold">Thanks for joining.</h3>
-          <p className="text-sm leading-7 text-muted-foreground">You are on the Bes3 shortlist for monthly tech deals and new reviews.</p>
+        <div className="relative space-y-3">
+          <p className="editorial-kicker">Subscribed</p>
+          <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Thanks for joining.</h3>
+          <p className="text-sm leading-7 text-muted-foreground">You are on the Bes3 shortlist for monthly buyer notes, category changes, and worthwhile price drops.</p>
         </div>
       ) : (
         <form
-          className="space-y-4"
+          className="relative space-y-5"
           onSubmit={(event) => {
             event.preventDefault()
             startTransition(async () => {
@@ -35,20 +36,21 @@ export function NewsletterSignup() {
           }}
         >
           <div className="space-y-2">
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Monthly Deals</p>
-            <h3 className="font-[var(--font-display)] text-3xl font-semibold">Not ready to buy yet?</h3>
-            <p className="text-sm leading-7 text-muted-foreground">Join readers getting curated price drops, shortlists, and buyer notes from Bes3.</p>
+            <p className="editorial-kicker">Weekly Briefing</p>
+            <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Stay decoded.</h3>
+            <p className="text-sm leading-7 text-muted-foreground">Get concise updates on trending categories, fresh comparisons, and meaningful deals instead of inbox spam.</p>
           </div>
           <Input
             type="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
-            placeholder="alex@bes3.com"
-            className="min-h-[52px] rounded-2xl"
+            placeholder="name@company.com"
+            className="min-h-[56px] rounded-2xl border-none bg-muted px-5"
           />
-          <Button type="submit" disabled={!email.includes('@') || isPending} className="min-h-[52px] rounded-full px-6">
+          <Button type="submit" disabled={!email.includes('@') || isPending} className="min-h-[56px] rounded-full px-6">
             {isPending ? 'Subscribing...' : 'Subscribe'}
           </Button>
+          <p className="text-xs leading-6 text-muted-foreground">One email a week. Unsubscribe any time.</p>
         </form>
       )}
     </div>

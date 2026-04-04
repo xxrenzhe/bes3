@@ -3,6 +3,7 @@ import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home' },
+  { href: '/search', label: 'Search' },
   { href: '/deals', label: 'Deals' },
   { href: '/directory', label: 'Directory' },
   { href: '/about', label: 'How We Test' },
@@ -15,46 +16,66 @@ export function PublicShell({
   children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-40 border-b border-border/80 bg-background/90 backdrop-blur">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground">
+      <header className="sticky top-0 z-40 px-3 py-3 sm:px-6">
+        <div className="glass-nav editorial-shadow mx-auto flex max-w-7xl items-center justify-between rounded-full border border-white/60 px-5 py-4 sm:px-7">
           <Link href="/" className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-primary text-sm font-bold text-primary-foreground shadow-panel">
+            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] text-sm font-black text-primary-foreground">
               B3
             </div>
-            <div>
-              <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">Independent Tech Picks</p>
-              <h1 className="font-[var(--font-display)] text-xl font-semibold text-foreground">{DEFAULT_SITE_NAME}</h1>
+            <div className="hidden sm:block">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Digital Curator</p>
+              <h1 className="font-[var(--font-display)] text-xl font-extrabold tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h1>
             </div>
           </Link>
           <nav className="hidden items-center gap-6 md:flex">
             {NAV_ITEMS.map((item) => (
-              <Link key={item.href} href={item.href} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+              <Link key={item.href} href={item.href} className="text-sm font-semibold tracking-tight text-muted-foreground transition-colors hover:text-primary">
                 {item.label}
               </Link>
             ))}
             <Link
-              href="/admin"
-              className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground shadow-sm transition-transform hover:-translate-y-0.5"
+              href="/login"
+              className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
             >
-              Admin
+              Sign In
             </Link>
           </nav>
+          <details className="relative md:hidden">
+            <summary className="list-none rounded-full border border-border/70 bg-white/70 px-4 py-2 text-sm font-semibold text-foreground">
+              Menu
+            </summary>
+            <div className="absolute right-0 mt-3 w-56 rounded-[1.5rem] border border-border bg-white p-4 shadow-panel">
+              <div className="flex flex-col gap-3">
+                {NAV_ITEMS.map((item) => (
+                  <Link key={item.href} href={item.href} className="rounded-xl px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-muted hover:text-primary">
+                    {item.label}
+                  </Link>
+                ))}
+                <Link href="/login" className="rounded-xl bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-3 py-2 text-sm font-semibold text-primary-foreground">
+                  Sign In
+                </Link>
+              </div>
+            </div>
+          </details>
         </div>
       </header>
-      <main>{children}</main>
-      <footer className="border-t border-border bg-[#f7f1e4]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
+      <main className="pb-6">{children}</main>
+      <footer className="mt-10 border-t border-border/40 bg-[linear-gradient(180deg,rgba(239,244,255,0.55),rgba(248,249,255,0.96))]">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
           <div className="space-y-4">
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-muted-foreground">Tech Buying Intelligence</p>
-            <h2 className="font-[var(--font-display)] text-2xl font-semibold text-foreground">{DEFAULT_SITE_NAME}</h2>
-            <p className="max-w-xl text-sm leading-7 text-muted-foreground">{DEFAULT_SITE_TAGLINE} Bes3 turns affiliate products into high-signal review and comparison pages with a transparent, buyer-first tone.</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Tech Buying Intelligence</p>
+            <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h2>
+            <p className="max-w-xl text-sm leading-7 text-muted-foreground">
+              {DEFAULT_SITE_TAGLINE} Bes3 filters review noise into decisive shortlists, comparison guides, and calm buyer notes built for real purchase decisions.
+            </p>
           </div>
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground">Explore</h3>
             <div className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
               <Link href="/">Home</Link>
               <Link href="/search">Search</Link>
+              <Link href="/categories/home-office">Categories</Link>
               <Link href="/deals">Deals</Link>
               <Link href="/directory">Directory</Link>
             </div>
