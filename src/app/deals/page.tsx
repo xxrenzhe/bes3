@@ -1,12 +1,21 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Live Deals',
+  description:
+    'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
+  path: '/deals'
+})
 
 export default async function DealsPage() {
   const products = (await listPublishedProducts()).filter((product) => product.resolvedUrl).slice(0, 6)

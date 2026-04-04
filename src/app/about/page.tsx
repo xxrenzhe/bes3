@@ -1,9 +1,18 @@
+import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
+import { buildPageMetadata } from '@/lib/metadata'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'About Bes3',
+  description:
+    'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
+  path: '/about'
+})
 
 export default async function AboutPage() {
   const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])

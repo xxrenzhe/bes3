@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
@@ -5,9 +6,17 @@ import { SectionHeader } from '@/components/site/SectionHeader'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { buildPageMetadata } from '@/lib/metadata'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+
+export const metadata: Metadata = buildPageMetadata({
+  title: 'Buyer-First Tech Buying Guide',
+  description:
+    'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
+  path: '/'
+})
 
 export default async function HomePage() {
   const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
