@@ -6,14 +6,15 @@ import { ContactSupportForm } from '@/components/site/ContactSupportForm'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
-import { buildWebPageSchema } from '@/lib/structured-data'
+import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'Contact Bes3',
   description:
     'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
-  path: '/contact'
+  path: '/contact',
+  keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
 })
 
 export default async function ContactPage() {
@@ -62,27 +63,44 @@ export default async function ContactPage() {
 
   const contactChannels = [
     {
-      label: 'General inbox',
-      value: 'hello@bes3.local',
-      note: 'Best for buyer support edge cases and general Bes3 questions.'
+      label: 'Buyer support path',
+      value: 'Use the form below',
+      note: 'Best for buyer support edge cases and public-site questions that still feel blocked after using search, shortlist, or review pages.'
     },
     {
-      label: 'Corrections',
-      value: 'corrections@bes3.local',
-      note: 'Best for content accuracy, stale details, and page-level fixes.'
+      label: 'Corrections path',
+      value: 'Choose “Correction” in the form',
+      note: 'Best for content accuracy issues, stale details, and page-level fixes that could affect buyer trust.'
     },
     {
-      label: 'Partnerships',
-      value: 'partners@bes3.local',
-      note: 'Best for collaboration, media, and commercial conversations.'
+      label: 'Partnerships path',
+      value: 'Choose “Partnership” in the form',
+      note: 'Best for collaboration, media, and commercial conversations that do not fit the public buyer journey.'
     }
   ]
-  const structuredData = buildWebPageSchema({
-    path: '/contact',
-    title: 'Contact Bes3',
-    description: 'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
-    type: 'ContactPage'
-  })
+  const faqEntries = [
+    {
+      question: 'When should I contact Bes3 instead of using the public pages?',
+      answer: 'Use contact when a real buyer edge case still feels unresolved after search, shortlist, reviews, and comparisons, or when you need to report a factual problem on a public page.'
+    },
+    {
+      question: 'Is email the main support route?',
+      answer: 'No. The public contact form is the primary route because it keeps the inquiry type structured and lets Bes3 send you back into the right public path while the note is reviewed.'
+    },
+    {
+      question: 'What gets the fastest answer?',
+      answer: 'Questions tied to a specific product, category, or public page route more cleanly than vague requests, because Bes3 can keep the same decision lane intact.'
+    }
+  ]
+  const structuredData = [
+    buildWebPageSchema({
+      path: '/contact',
+      title: 'Contact Bes3',
+      description: 'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
+      type: 'ContactPage'
+    }),
+    buildFaqSchema('/contact', faqEntries)
+  ]
 
   return (
     <PublicShell>
@@ -146,6 +164,18 @@ export default async function ContactPage() {
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">{channel.note}</p>
                 </div>
               ))}
+            </div>
+
+            <div className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel">
+              <p className="editorial-kicker">Contact FAQ</p>
+              <div className="mt-6 space-y-4">
+                {faqEntries.map((entry) => (
+                  <div key={entry.question} className="rounded-[1.5rem] bg-white p-5">
+                    <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{entry.question}</h2>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{entry.answer}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
 

@@ -10,7 +10,8 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
-import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/structured-data'
+import { toAbsoluteUrl } from '@/lib/site-url'
+import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -50,6 +51,9 @@ export async function generateMetadata({
     })
   }
 
+  const freshnessDate = article.updatedAt || article.publishedAt || article.createdAt
+  const categoryLabel = getCategoryLabel(article.product?.category || null)
+
   return buildPageMetadata({
     title: article.seoTitle || article.title,
     description:
@@ -57,7 +61,14 @@ export async function generateMetadata({
       'Use this Bes3 comparison to settle a shortlist, understand the tradeoffs, and move into the winner with less buyer regret.',
     path: `/compare/${article.slug}`,
     image: article.heroImageUrl || article.product?.heroImageUrl,
-    type: 'article'
+    type: 'article',
+    category: categoryLabel || undefined,
+    freshnessDate,
+    freshnessInTitle: true,
+    modifiedTime: freshnessDate,
+    publishedTime: article.publishedAt || article.createdAt,
+    section: categoryLabel || 'Comparisons',
+    keywords: [article.title, article.product?.productName || '', categoryLabel, 'comparison', 'buying guide'].filter(Boolean)
   })
 }
 
@@ -87,12 +98,51 @@ export default async function ComparisonPage({
   const comparisonDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     'Use this Bes3 comparison to settle a shortlist, understand the tradeoffs, and move into the winner with less buyer regret.'
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons', path: article.product?.category ? `/categories/${article.product.category}` : '/directory' },
+    { name: article.title, path }
+  ]
+  const howToSteps = [
+    {
+      name: 'Confirm the finalists',
+      text: 'Use the comparison only when the shortlist is already narrow enough that the tradeoffs stay honest and decision-ready.'
+    },
+    {
+      name: 'Pick the winner',
+      text: article.product?.slug
+        ? 'Open the winning product page when you need pricing, specs, and merchant context before clicking through.'
+        : 'Treat the editorial winner as the default answer unless you still have a product-fit blocker.'
+    },
+    {
+      name: 'Keep the category in play',
+      text: 'If price timing is the only blocker, switch into a category watch. If neither finalist is right, reopen the shortlist lane instead of branching into unrelated products.'
+    }
+  ]
   const structuredData = [
-    buildBreadcrumbSchema(path, [
-      { name: 'Home', path: '/' },
-      { name: article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons', path: article.product?.category ? `/categories/${article.product.category}` : '/directory' },
-      { name: article.title, path }
-    ]),
+    buildBreadcrumbSchema(path, breadcrumbItems),
+    buildWebPageSchema({
+      path,
+      title: article.seoTitle || article.title,
+      description: comparisonDescription,
+      image: article.heroImageUrl || article.product?.heroImageUrl,
+      breadcrumbItems,
+      datePublished: article.publishedAt || article.createdAt,
+      dateModified: article.updatedAt || article.publishedAt || article.createdAt,
+      about: [
+        {
+          '@type': 'Thing',
+          name: contenders.left
+        },
+        {
+          '@type': 'Thing',
+          name: contenders.right
+        }
+      ],
+      mainEntity: {
+        '@id': `${toAbsoluteUrl(path)}#article`
+      }
+    }),
     buildArticleSchema({
       path,
       title: article.seoTitle || article.title,
@@ -111,7 +161,8 @@ export default async function ComparisonPage({
           name: contenders.right
         }
       ]
-    })
+    }),
+    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the finalists, pick the cleanest winner, and decide whether to buy, watch, or reopen the shortlist.', howToSteps)
   ]
   const comparisonRoutes = [
     {
