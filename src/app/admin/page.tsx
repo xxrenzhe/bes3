@@ -3,6 +3,7 @@ import { ArrowRight, Boxes, FileText, GitBranch, Settings, Wand2 } from 'lucide-
 import { MetricCard } from '@/components/admin/MetricCard'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { getArticlePath } from '@/lib/article-path'
+import { formatMerchantSource } from '@/lib/merchant-links'
 import { getAdminDashboardSummary, getPipelineWorkerRuntimeConfig } from '@/lib/pipeline'
 
 function getHealthTone(count: number) {
@@ -144,6 +145,20 @@ export default async function AdminDashboardPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Preference-Aware Leads</p>
               <p className="mt-3 text-3xl font-black text-slate-950">{summary.contentHealth.targetedSubscribers}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">Subscribers now stored with explicit alert intent for future lifecycle flows.</p>
+            </div>
+            <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-38px_rgba(15,23,42,0.26)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Merchant Clicks</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{summary.conversionSignals.totalMerchantClicks}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{summary.conversionSignals.merchantClicksLast7Days} tracked over the last 7 days.</p>
+            </div>
+            <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-38px_rgba(15,23,42,0.26)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Top Exit Surface</p>
+              <p className="mt-3 text-2xl font-black text-slate-950">
+                {summary.conversionSignals.topMerchantSource ? formatMerchantSource(summary.conversionSignals.topMerchantSource) : 'No click data yet'}
+              </p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {summary.conversionSignals.topMerchantSource ? `${summary.conversionSignals.topMerchantSourceClicks} clicks from the strongest public CTA surface.` : 'Once buyers start clicking through, Bes3 will surface the strongest path here.'}
+              </p>
             </div>
           </div>
         </div>

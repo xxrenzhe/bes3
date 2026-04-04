@@ -55,6 +55,27 @@ function parseJsonArray(value: string | null): string[] {
   }
 }
 
+function mapProductRow(row: any): ProductRecord {
+  return {
+    id: row.id,
+    slug: row.slug,
+    brand: row.brand,
+    productName: row.product_name,
+    category: row.category,
+    description: row.description,
+    heroImageUrl: row.hero_image_url || null,
+    priceAmount: row.price_amount,
+    priceCurrency: row.price_currency,
+    rating: row.rating,
+    reviewCount: row.review_count,
+    specs: parseJsonObject(row.specs_json),
+    reviewHighlights: parseJsonArray(row.review_highlights_json),
+    resolvedUrl: row.resolved_url,
+    publishedAt: row.published_at || null,
+    updatedAt: row.updated_at || null
+  }
+}
+
 function mapArticleRow(row: any): ArticleRecord {
   const product = row.product_id
       ? {
@@ -166,24 +187,7 @@ export async function listProducts(): Promise<ProductRecord[]> {
     `
   )
 
-  return rows.map((row) => ({
-    id: row.id,
-    slug: row.slug,
-    brand: row.brand,
-    productName: row.product_name,
-    category: row.category,
-    description: row.description,
-    heroImageUrl: row.hero_image_url || null,
-    priceAmount: row.price_amount,
-    priceCurrency: row.price_currency,
-    rating: row.rating,
-    reviewCount: row.review_count,
-    specs: parseJsonObject(row.specs_json),
-    reviewHighlights: parseJsonArray(row.review_highlights_json),
-    resolvedUrl: row.resolved_url,
-    publishedAt: row.published_at || null,
-    updatedAt: row.updated_at || null
-  }))
+  return rows.map(mapProductRow)
 }
 
 export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
@@ -208,29 +212,21 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
 
   if (!row) return null
 
-  return {
-    id: row.id,
-    slug: row.slug,
-    brand: row.brand,
-    productName: row.product_name,
-    category: row.category,
-    description: row.description,
-    heroImageUrl: row.hero_image_url || null,
-    priceAmount: row.price_amount,
-    priceCurrency: row.price_currency,
-    rating: row.rating,
-    reviewCount: row.review_count,
-    specs: parseJsonObject(row.specs_json),
-    reviewHighlights: parseJsonArray(row.review_highlights_json),
-    resolvedUrl: row.resolved_url,
-    publishedAt: row.published_at || null,
-    updatedAt: row.updated_at || null
-  }
+  return mapProductRow(row)
 }
 
 export async function listProductsByCategory(category: string): Promise<ProductRecord[]> {
   const products = await listProducts()
   return products.filter((product) => product.category === category)
+}
+
+export function isPublicProduct(product: ProductRecord) {
+  return Boolean(product.slug)
+}
+
+export async function listPublishedProducts(): Promise<ProductRecord[]> {
+  const products = await listProducts()
+  return products.filter(isPublicProduct)
 }
 
 export async function searchArticles(query: string): Promise<ArticleRecord[]> {
@@ -245,7 +241,25 @@ export async function searchArticles(query: string): Promise<ArticleRecord[]> {
   })
 }
 
+export async function searchProducts(query: string): Promise<ProductRecord[]> {
+  const lowered = query.trim().toLowerCase()
+  const products = await listPublishedProducts()
+  if (!lowered) return products
+
+  return products.filter((product) => {
+    return [product.productName, product.brand || '', product.category || '', product.description || '', product.reviewHighlights.join(' ')]
+      .join(' ')
+      .toLowerCase()
+      .includes(lowered)
+  })
+}
+
 export async function listCategories(): Promise<string[]> {
-  const products = await listProducts()
-  return Array.from(new Set(products.map((product) => product.category).filter(Boolean) as string[]))
+  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  return Array.from(
+    new Set([
+      ...products.map((product) => product.category).filter(Boolean),
+      ...articles.map((article) => article.product?.category).filter(Boolean)
+    ] as string[])
+  ).sort()
 }

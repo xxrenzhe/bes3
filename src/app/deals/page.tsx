@@ -1,11 +1,12 @@
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import { listProducts } from '@/lib/site-data'
-import { formatCurrency } from '@/lib/utils'
+import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { listPublishedProducts } from '@/lib/site-data'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 export default async function DealsPage() {
-  const products = (await listProducts()).slice(0, 6)
+  const products = (await listPublishedProducts()).filter((product) => product.resolvedUrl).slice(0, 6)
 
   return (
     <PublicShell>
@@ -43,14 +44,14 @@ export default async function DealsPage() {
                   <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Live pricing snapshot with a direct path to the current merchant page.'}</p>
                   <div className="rounded-[1.5rem] bg-muted p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
-                    <p className="mt-3 text-3xl font-black text-foreground">{formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}</p>
+                    <p className="mt-3 text-3xl font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'} · Checked {formatEditorialDate(product.updatedAt || product.publishedAt)}
                     </p>
                   </div>
                   <PrimaryCta
-                    href={product.resolvedUrl || '#'}
-                    label="Check Current Price on Amazon"
+                    href={buildMerchantExitPath(product.id, 'deals-grid')}
+                    label="Check Current Price"
                     note={`Decision note: move fast only if this still fits your actual use case and budget.`}
                   />
                 </div>

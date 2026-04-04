@@ -4,6 +4,7 @@ import { updateAdminArticle } from '@/lib/admin-articles'
 import { getArticlePath } from '@/lib/article-path'
 import { escapeHtml } from '@/lib/html'
 import { persistMediaAsset } from '@/lib/media'
+import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
 import { scrapeProductPage } from '@/lib/scraper'
@@ -60,6 +61,12 @@ export interface AdminDashboardSummary {
     staleArticleCount: number
     newsletterSubscribers: number
     targetedSubscribers: number
+  }
+  conversionSignals: {
+    totalMerchantClicks: number
+    merchantClicksLast7Days: number
+    topMerchantSource: string | null
+    topMerchantSourceClicks: number
   }
   recentRuns: PipelineRunListItem[]
   recentAffiliateProducts: AffiliateProductRecord[]
@@ -1532,7 +1539,7 @@ export async function rescrapeProductMedia(productId: number): Promise<void> {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -1551,7 +1558,8 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
            OR cadence <> 'weekly'
            OR category_slug IS NOT NULL
       `
-    )
+    ),
+    getMerchantClickSummary()
   ])
 
   const staleArticles = publishedArticles
@@ -1590,6 +1598,12 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       staleArticleCount: staleArticles.length,
       newsletterSubscribers: Number(newsletterSubscribers?.count || 0),
       targetedSubscribers: Number(targetedSubscribers?.count || 0)
+    },
+    conversionSignals: {
+      totalMerchantClicks: merchantClicks.totalClicks,
+      merchantClicksLast7Days: merchantClicks.recentClicks,
+      topMerchantSource: merchantClicks.topSource,
+      topMerchantSourceClicks: merchantClicks.topSourceClicks
     },
     recentRuns: recentRuns.slice(0, 6),
     recentAffiliateProducts: recentAffiliateProducts.slice(0, 8),

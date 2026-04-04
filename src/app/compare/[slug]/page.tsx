@@ -3,8 +3,9 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { getArticleBySlug } from '@/lib/site-data'
-import { formatCurrency } from '@/lib/utils'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 function splitComparisonTitle(title: string) {
   const parts = title.split(/\s+(?:vs\.?|versus)\s+/i)
@@ -31,7 +32,7 @@ export default async function ComparisonPage({
 
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
-  const priceLabel = formatCurrency(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
+  const priceLabel = formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
   const snapshotDate = getSnapshotDate(article, article.product)
   const decisionChecklist = buildDecisionChecklist(article.product)
   const scoreCards = [
@@ -123,8 +124,8 @@ export default async function ComparisonPage({
 
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 <PrimaryCta
-                  href={article.product?.resolvedUrl || '#'}
-                  label="Check Current Price on Amazon"
+                  href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-primary-cta') : null}
+                  label="Check Current Price"
                   note={`Price reviewed ${formatEditorialDate(snapshotDate)}. Use the winner only if it fits your actual requirements.`}
                 />
               </div>
