@@ -235,7 +235,7 @@ export function ShortlistProvider({
     setShortlist((current) => mergeItems(nextCompare, current))
     setCompare(nextCompare)
     trackDecisionEvent({
-      eventType: 'shared_shortlist_compare_load',
+      eventType: source === 'shared-shortlist-page' ? 'shared_shortlist_compare_load' : 'shortlist_compare_load',
       source,
       metadata: {
         itemCount: nextCompare.length
