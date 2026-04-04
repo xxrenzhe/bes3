@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState } from 'react'
 import { toast } from 'sonner'
+import { trackDecisionEvent } from '@/lib/decision-tracking'
 import { COMPARE_STORAGE_KEY, MAX_COMPARE_ITEMS, SHORTLIST_STORAGE_KEY, type ShortlistItem } from '@/lib/shortlist'
 
 type ShortlistContextValue = {
@@ -12,12 +13,12 @@ type ShortlistContextValue = {
   hasHydrated: boolean
   isShortlisted: (productId: number) => boolean
   isCompared: (productId: number) => boolean
-  toggleShortlist: (item: ShortlistItem) => void
-  toggleCompare: (item: ShortlistItem) => void
-  addManyToShortlist: (items: ShortlistItem[]) => void
-  replaceShortlist: (items: ShortlistItem[]) => void
-  setCompareFromItems: (items: ShortlistItem[]) => void
-  removeShortlist: (productId: number) => void
+  toggleShortlist: (item: ShortlistItem, source?: string) => void
+  toggleCompare: (item: ShortlistItem, source?: string) => void
+  addManyToShortlist: (items: ShortlistItem[], source?: string) => void
+  replaceShortlist: (items: ShortlistItem[], source?: string) => void
+  setCompareFromItems: (items: ShortlistItem[], source?: string) => void
+  removeShortlist: (productId: number, source?: string) => void
   clearShortlist: () => void
   clearCompare: () => void
 }
@@ -118,38 +119,79 @@ export function ShortlistProvider({
   const isShortlisted = (productId: number) => shortlist.some((item) => item.id === productId)
   const isCompared = (productId: number) => compare.some((item) => item.id === productId)
 
-  const removeShortlist = (productId: number) => {
+  const removeShortlist = (productId: number, source: string = 'site') => {
+    const removedItem = shortlist.find((item) => item.id === productId)
+    const removedFromCompare = compare.some((item) => item.id === productId)
+
     setShortlist((current) => removeById(current, productId))
     setCompare((current) => removeById(current, productId))
+
+    if (removedItem) {
+      trackDecisionEvent({
+        eventType: 'shortlist_remove',
+        source,
+        productId,
+        metadata: {
+          compareRemoved: removedFromCompare
+        }
+      })
+    }
   }
 
-  const toggleShortlist = (item: ShortlistItem) => {
+  const toggleShortlist = (item: ShortlistItem, source: string = 'site') => {
     if (isShortlisted(item.id)) {
-      removeShortlist(item.id)
+      removeShortlist(item.id, source)
       toast.message(`${item.productName} removed from shortlist`)
       return
     }
 
     setShortlist((current) => [item, ...removeById(current, item.id)])
+    trackDecisionEvent({
+      eventType: 'shortlist_add',
+      source,
+      productId: item.id,
+      metadata: {
+        category: item.category || undefined
+      }
+    })
     toast.success(`${item.productName} saved to your shortlist`)
   }
 
-  const addManyToShortlist = (items: ShortlistItem[]) => {
+  const addManyToShortlist = (items: ShortlistItem[], source: string = 'shared-shortlist-page') => {
     if (!items.length) return
     setShortlist((current) => mergeItems(items, current))
+    trackDecisionEvent({
+      eventType: 'shared_shortlist_import',
+      source,
+      metadata: {
+        itemCount: items.length
+      }
+    })
     toast.success(`${items.length} shared ${items.length === 1 ? 'pick' : 'picks'} added to your shortlist`)
   }
 
-  const replaceShortlist = (items: ShortlistItem[]) => {
+  const replaceShortlist = (items: ShortlistItem[], source: string = 'shared-shortlist-page') => {
     const nextShortlist = mergeItems(items, [])
     setShortlist(nextShortlist)
     setCompare((current) => current.filter((item) => nextShortlist.some((candidate) => candidate.id === item.id)).slice(0, MAX_COMPARE_ITEMS))
+    trackDecisionEvent({
+      eventType: 'shared_shortlist_replace',
+      source,
+      metadata: {
+        itemCount: nextShortlist.length
+      }
+    })
     toast.success(`Shortlist replaced with ${nextShortlist.length} shared ${nextShortlist.length === 1 ? 'pick' : 'picks'}`)
   }
 
-  const toggleCompare = (item: ShortlistItem) => {
+  const toggleCompare = (item: ShortlistItem, source: string = 'site') => {
     if (isCompared(item.id)) {
       setCompare((current) => removeById(current, item.id))
+      trackDecisionEvent({
+        eventType: 'compare_remove',
+        source,
+        productId: item.id
+      })
       toast.message(`${item.productName} removed from compare queue`)
       return
     }
@@ -174,16 +216,31 @@ export function ShortlistProvider({
 
     if (added) {
       setShortlist((current) => [item, ...removeById(current, item.id)])
+      trackDecisionEvent({
+        eventType: 'compare_add',
+        source,
+        productId: item.id,
+        metadata: {
+          category: item.category || undefined
+        }
+      })
       toast.success(`${item.productName} added to compare queue`)
     }
   }
 
-  const setCompareFromItems = (items: ShortlistItem[]) => {
+  const setCompareFromItems = (items: ShortlistItem[], source: string = 'shared-shortlist-page') => {
     const nextCompare = mergeItems(items, []).slice(0, MAX_COMPARE_ITEMS)
     if (!nextCompare.length) return
 
     setShortlist((current) => mergeItems(nextCompare, current))
     setCompare(nextCompare)
+    trackDecisionEvent({
+      eventType: 'shared_shortlist_compare_load',
+      source,
+      metadata: {
+        itemCount: nextCompare.length
+      }
+    })
     toast.success(`${nextCompare.length} ${nextCompare.length === 1 ? 'product' : 'products'} loaded into compare`)
   }
 

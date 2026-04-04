@@ -87,10 +87,12 @@ export function ProductSpotlightCard({
           {product.reviewHighlights[0] ? <p className="text-xs text-muted-foreground">{product.reviewHighlights[0]}</p> : null}
         </div>
 
-        <ShortlistActionBar item={shortlistItem} compact />
+        <ShortlistActionBar item={shortlistItem} compact source={source} />
 
         <PrimaryCta
           href={merchantHref}
+          productId={product.id}
+          trackingSource={source}
           note="Use the Bes3 deep-dive first if you still need to verify fit, specs, or tradeoffs."
         />
       </div>

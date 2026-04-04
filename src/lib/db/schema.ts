@@ -238,6 +238,20 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS buyer_decision_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      visitor_id TEXT NOT NULL,
+      event_type TEXT NOT NULL,
+      product_id INTEGER,
+      source TEXT NOT NULL DEFAULT 'site',
+      metadata_json TEXT,
+      referer TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS newsletter_subscribers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
@@ -361,6 +375,32 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
   )
 }
 
+async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'buyer_decision_events', 'visitor_id', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'event_type', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'product_id', 'INTEGER')
+  await ensureColumn(db, 'buyer_decision_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
+  await ensureColumn(db, 'buyer_decision_events', 'metadata_json', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'referer', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'user_agent', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureIndex(
+    db,
+    'idx_buyer_decision_events_event_created_at',
+    'CREATE INDEX idx_buyer_decision_events_event_created_at ON buyer_decision_events (event_type, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_buyer_decision_events_visitor_event_created_at',
+    'CREATE INDEX idx_buyer_decision_events_visitor_event_created_at ON buyer_decision_events (visitor_id, event_type, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_buyer_decision_events_source_created_at',
+    'CREATE INDEX idx_buyer_decision_events_source_created_at ON buyer_decision_events (source, created_at)'
+  )
+}
+
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   const statements = db.type === 'postgres' ? POSTGRES_SCHEMA : SQLITE_SCHEMA
   for (const statement of statements) {
@@ -368,5 +408,6 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   }
   await ensurePipelineRunSchema(db)
   await ensureMerchantClickSchema(db)
+  await ensureDecisionEventSchema(db)
   await ensureNewsletterSubscriberSchema(db)
 }
