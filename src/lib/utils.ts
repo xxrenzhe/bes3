@@ -101,6 +101,24 @@ export function formatCurrency(
   return `${symbol}${formattedAmount}`
 }
 
+export function formatPriceSnapshot(
+  amount: number | string | null | undefined,
+  currency: string = 'USD',
+  decimals: number = 2,
+  fallback: string = 'Price pending'
+): string {
+  if (amount === null || amount === undefined || amount === '') {
+    return fallback
+  }
+
+  const numValue = typeof amount === 'string' ? parseFloat(amount) : Number(amount)
+  if (!isFinite(numValue) || numValue <= 0) {
+    return fallback
+  }
+
+  return formatCurrency(numValue, currency, decimals)
+}
+
 /**
  * Format multiple currency amounts (for mixed currency scenarios)
  * Used when dashboard shows data from accounts with different currencies

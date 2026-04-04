@@ -226,6 +226,18 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS merchant_click_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      source TEXT NOT NULL DEFAULT 'site',
+      target_url TEXT NOT NULL,
+      referer TEXT,
+      user_agent TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS newsletter_subscribers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
@@ -331,11 +343,30 @@ async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<vo
   await ensureColumn(db, 'newsletter_subscribers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
 }
 
+async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'merchant_click_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
+  await ensureColumn(db, 'merchant_click_events', 'target_url', 'TEXT')
+  await ensureColumn(db, 'merchant_click_events', 'referer', 'TEXT')
+  await ensureColumn(db, 'merchant_click_events', 'user_agent', 'TEXT')
+  await ensureColumn(db, 'merchant_click_events', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureIndex(
+    db,
+    'idx_merchant_click_events_product_created_at',
+    'CREATE INDEX idx_merchant_click_events_product_created_at ON merchant_click_events (product_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_merchant_click_events_source_created_at',
+    'CREATE INDEX idx_merchant_click_events_source_created_at ON merchant_click_events (source, created_at)'
+  )
+}
+
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   const statements = db.type === 'postgres' ? POSTGRES_SCHEMA : SQLITE_SCHEMA
   for (const statement of statements) {
     await db.exec(statement)
   }
   await ensurePipelineRunSchema(db)
+  await ensureMerchantClickSchema(db)
   await ensureNewsletterSubscriberSchema(db)
 }

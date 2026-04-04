@@ -5,8 +5,9 @@ import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
-import { formatCurrency } from '@/lib/utils'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 export default async function ProductPage({
   params
@@ -65,7 +66,7 @@ export default async function ProductPage({
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current Price</p>
-                  <p className="mt-2 text-2xl font-black text-foreground">{formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}</p>
+                  <p className="mt-2 text-2xl font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
                 </div>
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Rating</p>
@@ -96,8 +97,8 @@ export default async function ProductPage({
               </div>
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 <PrimaryCta
-                  href={product.resolvedUrl || '#'}
-                  label="Check Current Price on Amazon"
+                  href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-primary-cta') : null}
+                  label="Check Current Price"
                   note={`Confidence signals: ${confidenceSignals.join(' · ')}`}
                 />
               </div>
