@@ -26,6 +26,10 @@ function buildProductRollup(items: ShortlistItem[]) {
   return `${names.slice(0, 3).join(', ')}, plus ${names.length - 3} more`
 }
 
+function buildCategoryHubHref(item: ShortlistItem | undefined) {
+  return item?.category ? `/categories/${item.category}` : '/directory'
+}
+
 export function ShortlistWorkspace({
   sharedItems = []
 }: {
@@ -82,6 +86,9 @@ export function ShortlistWorkspace({
   const sharePath = buildShortlistSharePath(shortlist)
   const sharedSummary = hasSharedItems ? summarizeShortlist(sharedItems) : null
   const sharedBuyingBrief = hasSharedItems ? buildShortlistBuyingBrief(sharedItems) : ''
+  const compareCandidates = shortlist.slice(0, Math.min(shortlist.length, 3))
+  const compareCandidateNames = buildProductRollup(compareCandidates)
+  const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
   const sharedBriefPreview = sharedSummary
     ? [
         `${sharedSummary.overview} ${sharedSummary.decisionNote}`,
@@ -107,6 +114,52 @@ export function ShortlistWorkspace({
       values: compare.map((item) => item.reviewHighlights[0] || 'Open the deep-dive for the fuller verdict')
     }
   ]
+  const coach = shortlist.length === 1
+    ? {
+        eyebrow: 'Decision Coach',
+        title: 'Add one more contender before you decide.',
+        description: 'A single saved product is still a preference, not a decision. Pull in at least one serious alternative so the tradeoffs become obvious.',
+        primaryLabel: shortlist[0]?.category ? 'Browse this category' : 'Browse the directory',
+        primaryHref: searchForAlternativesHref,
+        secondaryLabel: 'Open saved pick',
+        secondaryHref: getShortlistProductPath(shortlist[0]),
+        highlights: [
+          'Best next move: find one comparable option in the same category.',
+          `Current saved pick: ${shortlist[0]?.productName || 'Your saved product'}.`
+        ],
+        emphasis: 'Collecting is still the right move, but only until you have a second real option.'
+      }
+    : shortlist.length >= 2 && compareCount < 2
+      ? {
+          eyebrow: 'Decision Coach',
+          title: 'Turn your shortlist into a real comparison.',
+          description: 'You already have enough candidates to stop collecting and start deciding. Load the strongest saved picks into compare and keep the shortlist for backups.',
+          primaryLabel: `Load ${compareCandidates.length} ${compareCandidates.length === 1 ? 'pick' : 'picks'} into compare`,
+          primaryAction: () => setCompareFromItems(compareCandidates, 'shortlist-decision-coach'),
+          secondaryLabel: 'Review saved candidates',
+          secondaryHref: '/shortlist#saved-candidates',
+          highlights: [
+            `Recommended finalists: ${compareCandidateNames}.`,
+            'Bes3 uses your most recently saved picks first, capped at three.'
+          ],
+          emphasis: 'The decision is mature enough to compare now. More saving will likely add noise, not clarity.'
+        }
+      : compareCount >= 2
+        ? {
+            eyebrow: 'Decision Coach',
+            title: 'Your finalists are ready for a decision.',
+            description: 'Keep compare tight, review the decision matrix, then move to a published comparison or merchant price checks once the tradeoffs feel clear.',
+            primaryLabel: 'Jump to decision matrix',
+            primaryHref: '/shortlist#decision-matrix',
+            secondaryLabel: comparisonSearchHref ? 'Search for a published comparison' : 'Open compare queue',
+            secondaryHref: comparisonSearchHref || '/shortlist#compare-queue',
+            highlights: [
+              `Active finalists: ${buildProductRollup(compare)}.`,
+              compareCount < shortlist.length ? `${shortlist.length - compareCount} saved ${shortlist.length - compareCount === 1 ? 'backup remains' : 'backups remain'} outside compare.` : 'Your shortlist and compare set are currently aligned.'
+            ],
+            emphasis: 'You already have enough signal to decide. The next gains come from sharper comparison, not more candidates.'
+          }
+        : null
 
   async function copyText(value: string, pendingLabel: (pending: boolean) => void, successMessage: string, errorMessage: string) {
     if (!value) return false
@@ -158,7 +211,7 @@ export function ShortlistWorkspace({
   return (
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+        <div id="compare-queue" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Persistent Shortlist</p>
           <h2 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your buying decision alive across visits.</h2>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
@@ -326,8 +379,58 @@ export function ShortlistWorkspace({
         </section>
       ) : null}
 
+      {coach ? (
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#fffdf8_45%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">{coach.eyebrow}</p>
+              <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">{coach.title}</h3>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">{coach.description}</p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                {'primaryAction' in coach ? (
+                  <button
+                    type="button"
+                    onClick={coach.primaryAction}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+                  >
+                    <Scale className="h-4 w-4" />
+                    {coach.primaryLabel}
+                  </button>
+                ) : (
+                  <Link
+                    href={coach.primaryHref}
+                    className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+                  >
+                    {coach.primaryLabel}
+                    <ArrowRight className="h-4 w-4" />
+                  </Link>
+                )}
+                <Link
+                  href={coach.secondaryHref}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-white px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                >
+                  {coach.secondaryLabel}
+                </Link>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              {coach.highlights.map((highlight) => (
+                <div key={highlight} className="rounded-[1.75rem] bg-white p-5">
+                  <p className="text-sm leading-7 text-foreground">{highlight}</p>
+                </div>
+              ))}
+              <div className="rounded-[1.75rem] border border-emerald-200 bg-emerald-50/80 p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">Coach Read</p>
+                <p className="mt-3 text-sm leading-7 text-emerald-950">{coach.emphasis}</p>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="space-y-5">
-        <div className="flex items-center justify-between gap-4">
+        <div id="saved-candidates" className="flex items-center justify-between gap-4">
           <div>
             <p className="editorial-kicker">Saved Candidates</p>
             <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Your shortlist workspace</h3>
@@ -433,7 +536,7 @@ export function ShortlistWorkspace({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+        <div id="decision-matrix" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Compare Queue</p>
           <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Side-by-side decision board</h3>
           <p className="mt-4 text-sm leading-7 text-muted-foreground">
