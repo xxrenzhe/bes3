@@ -51,6 +51,9 @@ function normalizeItem(raw: any): ShortlistItem | null {
     reviewHighlights: Array.isArray(raw.reviewHighlights)
       ? raw.reviewHighlights.filter((item: unknown): item is string => typeof item === 'string').slice(0, 3)
       : [],
+    specSummary: Array.isArray(raw.specSummary)
+      ? raw.specSummary.filter((item: unknown): item is string => typeof item === 'string').slice(0, 6)
+      : [],
     resolvedUrl: typeof raw.resolvedUrl === 'string' ? raw.resolvedUrl : null,
     publishedAt: typeof raw.publishedAt === 'string' ? raw.publishedAt : null,
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null
