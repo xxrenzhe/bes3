@@ -27,6 +27,47 @@ export default async function ProductPage({
   const snapshotDate = getSnapshotDate(reviewArticle, product)
   const confidenceSignals = buildConfidenceSignals(product)
   const shortlistItem = toShortlistItem(product)
+  const categoryLabel = product.category ? product.category.replace(/-/g, ' ') : 'this category'
+  const nextMoves = [
+    reviewArticle
+      ? {
+          eyebrow: 'Validate',
+          title: 'Read the full verdict',
+          description: 'Use the full review when you want the strongest buyer-fit read before you save or click through.',
+          href: getArticlePath(reviewArticle.type, reviewArticle.slug),
+          label: 'Open review verdict'
+        }
+      : null,
+    comparisonArticle
+      ? {
+          eyebrow: 'Compare',
+          title: 'See close alternatives',
+          description: 'Open the comparison once this product is good enough to become a finalist against nearby substitutes.',
+          href: getArticlePath(comparisonArticle.type, comparisonArticle.slug),
+          label: 'Open comparison'
+        }
+      : null,
+    {
+      eyebrow: 'Watch',
+      title: `Track ${categoryLabel}`,
+      description: 'If you are not ready to buy yet, turn this product interest into a category-level watch instead of losing the thread.',
+      href: `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category || '')}&cadence=priority`,
+      label: 'Start a price watch'
+    },
+    {
+      eyebrow: 'Explore',
+      title: 'Go back to the lane',
+      description: 'Return to the category hub if you still need Bes3 to narrow the field before comparing or checking price.',
+      href: product.category ? `/categories/${product.category}` : '/directory',
+      label: 'Browse category hub'
+    }
+  ].filter(Boolean) as Array<{
+    eyebrow: string
+    title: string
+    description: string
+    href: string
+    label: string
+  }>
 
   return (
     <PublicShell>
@@ -108,6 +149,23 @@ export default async function ProductPage({
                   note={`Confidence signals: ${confidenceSignals.join(' · ')}`}
                 />
               </div>
+              <div className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Next Best Move</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">Keep the decision chain intact.</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  This product page should not be a dead end. Use the next route that matches your buying stage: validate, compare, or switch to a watch flow.
+                </p>
+                <div className="mt-5 grid gap-3">
+                  {nextMoves.map((move) => (
+                    <Link key={move.title} href={move.href} className="rounded-[1.25rem] bg-white/80 px-4 py-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)] transition-transform hover:-translate-y-0.5">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{move.eyebrow}</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{move.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{move.description}</p>
+                      <p className="mt-3 text-sm font-semibold text-primary">{move.label} →</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -159,7 +217,8 @@ export default async function ProductPage({
                 {[
                   'Confirm this product still fits your actual use case before clicking through.',
                   'Treat price as a final check, not the only reason to buy.',
-                  'Use the specs snapshot to verify there is no hidden mismatch.'
+                  'Use the specs snapshot to verify there is no hidden mismatch.',
+                  comparisonArticle ? 'If this product survives the checklist, move into the comparison page next instead of opening unrelated alternatives.' : `If you still need options, return to the ${categoryLabel} hub and narrow the lane before comparing.`
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />

@@ -33,15 +33,21 @@ type CadenceId = (typeof CADENCE_OPTIONS)[number]['id']
 
 export function NewsletterSignup({
   categoryOptions = [],
-  source = 'site'
+  source = 'site',
+  initialIntent = 'deals',
+  initialCategorySlug = '',
+  initialCadence = 'weekly'
 }: {
   categoryOptions?: string[]
   source?: string
+  initialIntent?: IntentId
+  initialCategorySlug?: string
+  initialCadence?: CadenceId
 }) {
   const [email, setEmail] = useState('')
-  const [intent, setIntent] = useState<IntentId>('deals')
-  const [categorySlug, setCategorySlug] = useState(categoryOptions[0] || '')
-  const [cadence, setCadence] = useState<CadenceId>('weekly')
+  const [intent, setIntent] = useState<IntentId>(initialIntent)
+  const [categorySlug, setCategorySlug] = useState(categoryOptions.includes(initialCategorySlug) ? initialCategorySlug : '')
+  const [cadence, setCadence] = useState<CadenceId>(initialCadence)
   const [done, setDone] = useState(false)
   const [isPending, startTransition] = useTransition()
   const selectedIntent = INTENT_OPTIONS.find((option) => option.id === intent) || INTENT_OPTIONS[0]
