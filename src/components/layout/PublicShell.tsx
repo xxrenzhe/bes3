@@ -1,5 +1,7 @@
 import Link from 'next/link'
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
+import { ShortlistDock } from '@/components/site/ShortlistDock'
+import { ShortlistNav } from '@/components/site/ShortlistNav'
 
 const NAV_ITEMS = [
   { href: '/', label: 'Home' },
@@ -34,6 +36,7 @@ export function PublicShell({
                 {item.label}
               </Link>
             ))}
+            <ShortlistNav />
             <Link
               href="/login"
               className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
@@ -52,6 +55,7 @@ export function PublicShell({
                     {item.label}
                   </Link>
                 ))}
+                <ShortlistNav mobile />
                 <Link href="/login" className="rounded-xl bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-3 py-2 text-sm font-semibold text-primary-foreground">
                   Sign In
                 </Link>
@@ -60,7 +64,8 @@ export function PublicShell({
           </details>
         </div>
       </header>
-      <main className="pb-6">{children}</main>
+      <main className="pb-24">{children}</main>
+      <ShortlistDock />
       <footer className="mt-10 border-t border-border/40 bg-[linear-gradient(180deg,rgba(239,244,255,0.55),rgba(248,249,255,0.96))]">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-14 sm:px-6 lg:grid-cols-[1.3fr_1fr_1fr] lg:px-8">
           <div className="space-y-4">
@@ -78,6 +83,7 @@ export function PublicShell({
               <Link href="/categories/home-office">Categories</Link>
               <Link href="/deals">Deals</Link>
               <Link href="/directory">Directory</Link>
+              <Link href="/shortlist">Shortlist</Link>
             </div>
           </div>
           <div>

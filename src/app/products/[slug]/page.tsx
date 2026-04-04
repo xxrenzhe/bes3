@@ -3,9 +3,11 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { toShortlistItem } from '@/lib/shortlist'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -24,6 +26,7 @@ export default async function ProductPage({
   const specs = Object.entries(product.specs).slice(0, 6)
   const snapshotDate = getSnapshotDate(reviewArticle, product)
   const confidenceSignals = buildConfidenceSignals(product)
+  const shortlistItem = toShortlistItem(product)
 
   return (
     <PublicShell>
@@ -96,6 +99,7 @@ export default async function ProductPage({
                 </div>
               </div>
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+                <ShortlistActionBar item={shortlistItem} className="mb-5" />
                 <PrimaryCta
                   href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-primary-cta') : null}
                   label="Check Current Price"

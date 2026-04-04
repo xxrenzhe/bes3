@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { ShortlistProvider } from '@/components/site/ShortlistProvider'
 import { Inter } from 'next/font/google'
 import { ToasterProvider } from '@/components/ToasterProvider'
 import { bootstrapApplication } from '@/lib/bootstrap'
@@ -40,8 +41,10 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${bodyFont.variable} ${displayFont.variable} font-sans`}>
-        {children}
-        <ToasterProvider />
+        <ShortlistProvider>
+          {children}
+          <ToasterProvider />
+        </ShortlistProvider>
       </body>
     </html>
   )

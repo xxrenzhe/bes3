@@ -2,10 +2,12 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
+import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
-import { formatCurrency } from '@/lib/utils'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildFallbackNote(productName: string) {
   return `${productName} is best for buyers who want a straightforward recommendation without spending another week comparing near-identical options.`
@@ -105,7 +107,7 @@ export default async function ReviewPage({
                     <div className="grid gap-3 sm:grid-cols-2">
                       <div className="rounded-[1.25rem] bg-muted p-4">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current Price</p>
-                        <p className="mt-2 text-lg font-black text-foreground">{formatCurrency(product?.priceAmount, product?.priceCurrency || 'USD')}</p>
+                        <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(product?.priceAmount, product?.priceCurrency || 'USD')}</p>
                       </div>
                       <div className="rounded-[1.25rem] bg-muted p-4">
                         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Reader Signal</p>
@@ -156,6 +158,7 @@ export default async function ReviewPage({
                     >
                       Open Deep-Dive
                     </Link>
+                    {product ? <ShortlistActionBar item={toShortlistItem(product)} compact /> : null}
                     {index === 0 ? (
                       <p className="text-xs leading-6 text-muted-foreground">
                         Confidence signals: {confidenceSignals.join(' · ')}
