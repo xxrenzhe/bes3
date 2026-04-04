@@ -8,7 +8,15 @@ import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
-import { buildShortlistBuyingBrief, buildShortlistSharePath, getShortlistProductPath, summarizeShortlist, type ShortlistItem } from '@/lib/shortlist'
+import {
+  buildShortlistBuyingBrief,
+  buildShortlistSharePath,
+  getShortlistDecisionState,
+  getShortlistProductPath,
+  summarizeShortlist,
+  summarizeShortlistDecisionReadiness,
+  type ShortlistItem
+} from '@/lib/shortlist'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildComparisonSearchHref(productNames: string[]) {
@@ -27,6 +35,13 @@ function buildProductRollup(items: ShortlistItem[]) {
 
 function buildCategoryHubHref(item: ShortlistItem | undefined) {
   return item?.category ? `/categories/${item.category}` : '/directory'
+}
+
+function getDecisionBadgeClass(stage: ReturnType<typeof getShortlistDecisionState>['stage']) {
+  if (stage === 'finalist') return 'border-emerald-300 bg-emerald-50 text-emerald-900'
+  if (stage === 'compare-ready') return 'border-primary/25 bg-primary/10 text-primary'
+  if (stage === 'needs-check') return 'border-amber-300 bg-amber-50 text-amber-900'
+  return 'border-slate-200 bg-slate-100 text-slate-700'
 }
 
 export function ShortlistWorkspace({
@@ -81,10 +96,29 @@ export function ShortlistWorkspace({
     )
   }
 
+  const compareIds = compare.map((item) => item.id)
   const comparisonSearchHref = compareCount >= 2 ? buildComparisonSearchHref(compare.map((item) => item.productName)) : null
   const sharePath = buildShortlistSharePath(shortlist)
   const sharedSummary = hasSharedItems ? summarizeShortlist(sharedItems) : null
   const sharedBuyingBrief = hasSharedItems ? buildShortlistBuyingBrief(sharedItems) : ''
+  const shortlistDecisionSummary = summarizeShortlistDecisionReadiness(shortlist, compareIds)
+  const shortlistDecisionStates = new Map(
+    shortlist.map((item) => [
+      item.id,
+      getShortlistDecisionState(item, {
+        shortlistSize: shortlist.length,
+        compareIds
+      })
+    ])
+  )
+  const sharedDecisionStates = new Map(
+    sharedItems.map((item) => [
+      item.id,
+      getShortlistDecisionState(item, {
+        shortlistSize: sharedItems.length
+      })
+    ])
+  )
   const compareCandidates = shortlist.slice(0, Math.min(shortlist.length, 3))
   const compareCandidateNames = buildProductRollup(compareCandidates)
   const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
@@ -244,16 +278,21 @@ export function ShortlistWorkspace({
         </div>
         <div className="rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)]">
           <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Decision Status</p>
-          <div className="mt-6 grid gap-4 sm:grid-cols-2">
+          <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Saved</p>
               <p className="mt-3 text-4xl font-black">{shortlist.length}</p>
             </div>
             <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Ready to compare</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">In compare</p>
               <p className="mt-3 text-4xl font-black">{compareCount}</p>
             </div>
+            <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Compare-ready</p>
+              <p className="mt-3 text-4xl font-black">{shortlistDecisionSummary.compareReadyCount}</p>
+            </div>
           </div>
+          <p className="mt-6 max-w-xl text-sm leading-7 text-slate-200/80">{shortlistDecisionSummary.note}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
@@ -384,21 +423,81 @@ export function ShortlistWorkspace({
           </div>
 
           <div className="mt-8 grid gap-4 xl:grid-cols-3">
-            {sharedItems.map((item) => (
-              <div key={`shared-${item.id}`} className="rounded-[1.75rem] bg-white p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}</p>
-                <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{item.productName}</h4>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  {item.reviewHighlights[0] || item.description || 'Shared as part of a Bes3 buying decision.'}
-                </p>
-                <div className="mt-4 flex items-center justify-between gap-4 text-sm">
-                  <span className="font-semibold text-foreground">{formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD')}</span>
-                  <Link href={getShortlistProductPath(item)} className="font-semibold text-primary transition-colors hover:text-emerald-700">
-                    Open →
-                  </Link>
+            {sharedItems.map((item) => {
+              const decisionState = sharedDecisionStates.get(item.id)
+
+              return (
+                <div key={`shared-${item.id}`} className="rounded-[1.75rem] bg-white p-5">
+                  <div className="flex items-start justify-between gap-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}</p>
+                    {decisionState ? (
+                      <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getDecisionBadgeClass(decisionState.stage)}`}>
+                        {decisionState.label} · {decisionState.score}
+                      </span>
+                    ) : null}
+                  </div>
+                  <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{item.productName}</h4>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {item.reviewHighlights[0] || item.description || 'Shared as part of a Bes3 buying decision.'}
+                  </p>
+                  {decisionState?.whySaved.length ? (
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {decisionState.whySaved.slice(0, 2).map((tag) => (
+                        <span key={`${item.id}-${tag}`} className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-foreground">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  <div className="mt-4 flex items-center justify-between gap-4 text-sm">
+                    <span className="font-semibold text-foreground">{formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD')}</span>
+                    <Link href={getShortlistProductPath(item)} className="font-semibold text-primary transition-colors hover:text-emerald-700">
+                      Open →
+                    </Link>
+                  </div>
                 </div>
+              )
+            })}
+          </div>
+        </section>
+      ) : null}
+
+      {shortlist.length ? (
+        <section className="rounded-[2.5rem] bg-[linear-gradient(180deg,#f8fbff,#ffffff)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">Decision Readiness</p>
+              <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                {shortlistDecisionSummary.label}
+              </h3>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">{shortlistDecisionSummary.note}</p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Next move</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.nextAction}</p>
               </div>
-            ))}
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Average readiness</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.averageScore}/100</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">A blend of price proof, merchant readiness, freshness, and shortlist maturity.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Finalists</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.finalistCount}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Products already promoted into compare and treated as real decision candidates.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Needs a check</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.needsCheckCount + shortlistDecisionSummary.buildingCount}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Saved picks that still need sharper evidence before they deserve finalist attention.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Biggest gap</p>
+                <p className="mt-3 text-sm font-semibold leading-7 text-foreground">{shortlistDecisionSummary.topGap}</p>
+              </div>
+            </div>
           </div>
         </section>
       ) : null}
@@ -470,91 +569,122 @@ export function ShortlistWorkspace({
 
         {shortlist.length ? (
           <div className="grid gap-6 xl:grid-cols-2">
-            {shortlist.map((item) => (
-              <article key={item.id} className="overflow-hidden rounded-[2rem] bg-white shadow-panel">
-                <div className="grid gap-6 md:grid-cols-[180px_1fr]">
-                  <div className="relative min-h-[180px] bg-[linear-gradient(135deg,#e5eeff,#dfe9fa)]">
-                    {item.heroImageUrl ? (
-                      <Image src={item.heroImageUrl} alt={item.productName} fill sizes="180px" className="object-cover" />
-                    ) : (
-                      <div className="bg-grid absolute inset-0" />
-                    )}
-                  </div>
-                  <div className="space-y-5 p-6">
-                    <div className="space-y-2">
-                      <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-                        {item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}
-                      </p>
-                      <h4 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{item.productName}</h4>
-                      <p className="text-sm leading-7 text-muted-foreground">
-                        {item.description || 'Saved for later review. Open the deep-dive or merchant page when you are ready to continue.'}
-                      </p>
-                    </div>
+            {shortlist.map((item) => {
+              const decisionState = shortlistDecisionStates.get(item.id)
 
-                    <div className="grid gap-3 sm:grid-cols-3">
-                      <div className="rounded-[1.25rem] bg-muted p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Price</p>
-                        <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD')}</p>
-                      </div>
-                      <div className="rounded-[1.25rem] bg-muted p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Signal</p>
-                        <p className="mt-2 text-lg font-black text-foreground">{item.rating ? `${item.rating.toFixed(1)} / 5` : 'Building'}</p>
-                      </div>
-                      <div className="rounded-[1.25rem] bg-muted p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Last checked</p>
-                        <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(item.updatedAt || item.publishedAt, 'Tracking soon')}</p>
-                      </div>
+              return (
+                <article key={item.id} className="overflow-hidden rounded-[2rem] bg-white shadow-panel">
+                  <div className="grid gap-6 md:grid-cols-[180px_1fr]">
+                    <div className="relative min-h-[180px] bg-[linear-gradient(135deg,#e5eeff,#dfe9fa)]">
+                      {item.heroImageUrl ? (
+                        <Image src={item.heroImageUrl} alt={item.productName} fill sizes="180px" className="object-cover" />
+                      ) : (
+                        <div className="bg-grid absolute inset-0" />
+                      )}
                     </div>
+                    <div className="space-y-5 p-6">
+                      <div className="space-y-2">
+                        <div className="flex items-start justify-between gap-3">
+                          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
+                            {item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}
+                          </p>
+                          {decisionState ? (
+                            <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getDecisionBadgeClass(decisionState.stage)}`}>
+                              {decisionState.label} · {decisionState.score}
+                            </span>
+                          ) : null}
+                        </div>
+                        <h4 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{item.productName}</h4>
+                        <p className="text-sm leading-7 text-muted-foreground">
+                          {item.description || 'Saved for later review. Open the deep-dive or merchant page when you are ready to continue.'}
+                        </p>
+                      </div>
 
-                    <div className="flex flex-wrap gap-3">
-                      <Link
-                        href={getShortlistProductPath(item)}
-                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
-                      >
-                        Open deep-dive
-                        <ArrowRight className="h-4 w-4" />
-                      </Link>
-                      <button
-                        type="button"
-                        onClick={() => toggleCompare(item, 'shortlist-workspace-card')}
-                        className={`inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors ${
-                          compare.some((candidate) => candidate.id === item.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-white text-foreground hover:bg-muted'
-                        }`}
-                      >
-                        <Scale className="h-4 w-4" />
-                        {compare.some((candidate) => candidate.id === item.id) ? 'In compare' : 'Add to compare'}
-                      </button>
-                      {item.resolvedUrl ? (
-                        <Link
-                          href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
-                          target="_blank"
-                          prefetch={false}
-                          onClick={() =>
-                            trackDecisionEvent({
-                              eventType: 'merchant_cta_click',
-                              source: 'shortlist-workspace',
-                              productId: item.id
-                            })
-                          }
-                          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
-                        >
-                          Check price
-                          <ExternalLink className="h-4 w-4" />
-                        </Link>
+                      {decisionState?.whySaved.length ? (
+                        <div className="flex flex-wrap gap-2">
+                          {decisionState.whySaved.slice(0, 3).map((tag) => (
+                            <span key={`${item.id}-${tag}`} className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-foreground">
+                              {tag}
+                            </span>
+                          ))}
+                        </div>
                       ) : null}
-                      <button
-                        type="button"
-                        onClick={() => removeShortlist(item.id, 'shortlist-workspace-card')}
-                        className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                        Remove
-                      </button>
+
+                      <div className="grid gap-3 sm:grid-cols-3">
+                        <div className="rounded-[1.25rem] bg-muted p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Price</p>
+                          <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD')}</p>
+                        </div>
+                        <div className="rounded-[1.25rem] bg-muted p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Signal</p>
+                          <p className="mt-2 text-lg font-black text-foreground">{item.rating ? `${item.rating.toFixed(1)} / 5` : 'Building'}</p>
+                        </div>
+                        <div className="rounded-[1.25rem] bg-muted p-4">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Last checked</p>
+                          <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(item.updatedAt || item.publishedAt, 'Tracking soon')}</p>
+                        </div>
+                      </div>
+
+                      {decisionState ? (
+                        <div className={`rounded-[1.25rem] border p-4 ${getDecisionBadgeClass(decisionState.stage)}`}>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Decision read</p>
+                          <p className="mt-2 text-sm font-semibold leading-7">{decisionState.note}</p>
+                          {decisionState.gaps[0] ? (
+                            <p className="mt-2 text-xs leading-6 opacity-80">Watchout: {decisionState.gaps[0]}</p>
+                          ) : null}
+                        </div>
+                      ) : null}
+
+                      <div className="flex flex-wrap gap-3">
+                        <Link
+                          href={getShortlistProductPath(item)}
+                          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                        >
+                          Open deep-dive
+                          <ArrowRight className="h-4 w-4" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => toggleCompare(item, 'shortlist-workspace-card')}
+                          className={`inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border px-4 text-sm font-semibold transition-colors ${
+                            compare.some((candidate) => candidate.id === item.id) ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-white text-foreground hover:bg-muted'
+                          }`}
+                        >
+                          <Scale className="h-4 w-4" />
+                          {compare.some((candidate) => candidate.id === item.id) ? 'In compare' : 'Add to compare'}
+                        </button>
+                        {item.resolvedUrl ? (
+                          <Link
+                            href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
+                            target="_blank"
+                            prefetch={false}
+                            onClick={() =>
+                              trackDecisionEvent({
+                                eventType: 'merchant_cta_click',
+                                source: 'shortlist-workspace',
+                                productId: item.id
+                              })
+                            }
+                            className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                          >
+                            Check price
+                            <ExternalLink className="h-4 w-4" />
+                          </Link>
+                        ) : null}
+                        <button
+                          type="button"
+                          onClick={() => removeShortlist(item.id, 'shortlist-workspace-card')}
+                          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground transition-colors hover:bg-muted"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Remove
+                        </button>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </article>
-            ))}
+                </article>
+              )
+            })}
           </div>
         ) : (
           <div className="rounded-[2rem] border border-dashed border-border bg-white p-10 text-center shadow-panel">

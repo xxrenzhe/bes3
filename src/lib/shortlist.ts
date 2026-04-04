@@ -39,9 +39,32 @@ export interface ShortlistSummary {
   decisionNote: string
 }
 
+export interface ShortlistDecisionState {
+  score: number
+  stage: 'signal-building' | 'needs-check' | 'compare-ready' | 'finalist'
+  label: string
+  note: string
+  whySaved: string[]
+  gaps: string[]
+}
+
+export interface ShortlistDecisionSummary {
+  averageScore: number
+  compareReadyCount: number
+  finalistCount: number
+  needsCheckCount: number
+  buildingCount: number
+  label: string
+  note: string
+  topGap: string
+  nextAction: string
+}
+
 type ShortlistItemInput = Omit<ShortlistItem, 'reviewHighlights'> & {
   reviewHighlights?: string[] | null
 }
+
+const DAY_MS = 86_400_000
 
 export function toShortlistItem(product: ShortlistItemInput): ShortlistItem {
   return {
@@ -95,6 +118,267 @@ export function buildShortlistSharePath(items: Array<Pick<ShortlistItem, 'id'> |
 
 function humanizeCategory(category: string | null) {
   return category ? category.replace(/-/g, ' ') : 'buyer shortlist'
+}
+
+function pushUnique(items: string[], value: string | null | undefined) {
+  if (!value || items.includes(value)) return
+  items.push(value)
+}
+
+function parseShortlistTimestamp(value: string | null | undefined) {
+  if (!value) return null
+  const timestamp = new Date(value).getTime()
+  return Number.isNaN(timestamp) ? null : timestamp
+}
+
+export function getShortlistDecisionState(
+  item: ShortlistItem,
+  options?: {
+    shortlistSize?: number
+    compareIds?: number[]
+  }
+): ShortlistDecisionState {
+  const shortlistSize = Math.max(1, options?.shortlistSize || 1)
+  const inCompare = (options?.compareIds || []).includes(item.id)
+  const whySaved: string[] = []
+  const gaps: string[] = []
+  let score = 0
+
+  if (item.priceAmount !== null && item.priceAmount !== undefined && Number.isFinite(item.priceAmount) && item.priceAmount > 0) {
+    score += 15
+    pushUnique(whySaved, 'Verified price')
+  } else {
+    pushUnique(gaps, 'Price snapshot still missing')
+  }
+
+  if (item.resolvedUrl) {
+    score += 15
+    pushUnique(whySaved, 'Merchant ready')
+  } else {
+    pushUnique(gaps, 'Merchant link still pending')
+  }
+
+  const rating = item.rating || 0
+  const reviewCount = item.reviewCount || 0
+
+  if (rating >= 4.4 && reviewCount >= 1000) {
+    score += 20
+    pushUnique(whySaved, 'Strong buyer proof')
+  } else if (rating >= 4.1 && reviewCount >= 200) {
+    score += 16
+    pushUnique(whySaved, 'Review-backed')
+  } else if (rating >= 4.4) {
+    score += 12
+    pushUnique(whySaved, 'High rating signal')
+  } else if (reviewCount >= 1000) {
+    score += 12
+    pushUnique(whySaved, 'Heavy review volume')
+  } else if (rating >= 4 || reviewCount >= 200) {
+    score += 8
+    pushUnique(whySaved, 'Early buyer proof')
+  } else {
+    pushUnique(gaps, 'Buyer proof still thin')
+  }
+
+  if (item.reviewHighlights.length) {
+    score += 15
+    pushUnique(whySaved, 'Clear tradeoff clue')
+  } else if (item.description) {
+    score += 10
+    pushUnique(whySaved, 'Use-case signal')
+  } else {
+    pushUnique(gaps, 'Deep-dive signal still thin')
+  }
+
+  const signalTimestamp = parseShortlistTimestamp(item.updatedAt || item.publishedAt)
+  if (signalTimestamp !== null) {
+    const ageDays = Math.max(0, Math.floor((Date.now() - signalTimestamp) / DAY_MS))
+
+    if (ageDays <= 14) {
+      score += 15
+      pushUnique(whySaved, 'Freshly checked')
+    } else if (ageDays <= 45) {
+      score += 10
+      pushUnique(whySaved, 'Recently checked')
+    } else {
+      score += 5
+      pushUnique(gaps, 'Snapshot needs a fresher check')
+    }
+  } else {
+    pushUnique(gaps, 'Freshness still unclear')
+  }
+
+  if (inCompare) {
+    score += 20
+    pushUnique(whySaved, 'Finalist in compare')
+  } else if (shortlistSize >= 2) {
+    score += 10
+    pushUnique(whySaved, 'Ready for compare')
+  } else {
+    pushUnique(gaps, 'Needs one more contender')
+  }
+
+  const boundedScore = Math.max(0, Math.min(100, score))
+
+  if (inCompare && boundedScore >= 70) {
+    return {
+      score: boundedScore,
+      stage: 'finalist',
+      label: 'Finalist',
+      note: 'Already in compare with enough verified signal to move toward the decision matrix and merchant checks.',
+      whySaved: whySaved.slice(0, 4),
+      gaps: gaps.slice(0, 2)
+    }
+  }
+
+  if (boundedScore >= 70) {
+    return {
+      score: boundedScore,
+      stage: 'compare-ready',
+      label: 'Compare-ready',
+      note: 'This pick already carries enough price, proof, and freshness context to become a finalist now.',
+      whySaved: whySaved.slice(0, 4),
+      gaps: gaps.slice(0, 2)
+    }
+  }
+
+  if (boundedScore >= 45) {
+    return {
+      score: boundedScore,
+      stage: 'needs-check',
+      label: 'Needs one more check',
+      note: gaps[0]
+        ? `Strong option, but ${gaps[0].charAt(0).toLowerCase()}${gaps[0].slice(1)} before it deserves finalist status.`
+        : 'Strong option, but it still needs one tighter proof point before it belongs in compare.',
+      whySaved: whySaved.slice(0, 4),
+      gaps: gaps.slice(0, 2)
+    }
+  }
+
+  return {
+    score: boundedScore,
+    stage: 'signal-building',
+    label: 'Signal building',
+    note: 'Worth keeping visible, but the decision evidence is still too thin to treat this as a serious finalist.',
+    whySaved: whySaved.slice(0, 4),
+    gaps: gaps.slice(0, 2)
+  }
+}
+
+export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], compareIds: number[] = []): ShortlistDecisionSummary {
+  if (!items.length) {
+    return {
+      averageScore: 0,
+      compareReadyCount: 0,
+      finalistCount: 0,
+      needsCheckCount: 0,
+      buildingCount: 0,
+      label: 'No shortlist yet',
+      note: 'Save a few products first so Bes3 can tell you which ones are actually decision-ready.',
+      topGap: 'No saved picks yet.',
+      nextAction: 'Add products from search, deals, or category hubs to start building a real decision set.'
+    }
+  }
+
+  const states = items.map((item) =>
+    getShortlistDecisionState(item, {
+      shortlistSize: items.length,
+      compareIds
+    })
+  )
+
+  const averageScore = Math.round(states.reduce((sum, state) => sum + state.score, 0) / states.length)
+  const compareReadyCount = states.filter((state) => state.stage === 'compare-ready').length
+  const finalistCount = states.filter((state) => state.stage === 'finalist').length
+  const needsCheckCount = states.filter((state) => state.stage === 'needs-check').length
+  const buildingCount = states.filter((state) => state.stage === 'signal-building').length
+
+  const missingPriceCount = items.filter((item) => item.priceAmount === null || item.priceAmount === undefined || !Number.isFinite(item.priceAmount)).length
+  const missingMerchantCount = items.filter((item) => !item.resolvedUrl).length
+  const thinProofCount = items.filter((item) => (item.rating || 0) < 4 && (item.reviewCount || 0) < 200).length
+  const staleCheckCount = items.filter((item) => {
+    const timestamp = parseShortlistTimestamp(item.updatedAt || item.publishedAt)
+    if (timestamp === null) return true
+    return Date.now() - timestamp > 45 * DAY_MS
+  }).length
+
+  const topGap = missingMerchantCount
+    ? `${missingMerchantCount} ${missingMerchantCount === 1 ? 'pick still lacks' : 'picks still lack'} a verified merchant exit.`
+    : missingPriceCount
+      ? `${missingPriceCount} ${missingPriceCount === 1 ? 'pick is still missing' : 'picks are still missing'} a price snapshot.`
+      : thinProofCount
+        ? `${thinProofCount} ${thinProofCount === 1 ? 'pick still needs' : 'picks still need'} stronger buyer proof.`
+        : staleCheckCount
+          ? `${staleCheckCount} ${staleCheckCount === 1 ? 'pick needs' : 'picks need'} a fresher verification pass.`
+          : 'The shortlist has enough signal to move toward compare.'
+
+  if (finalistCount >= 2) {
+    return {
+      averageScore,
+      compareReadyCount,
+      finalistCount,
+      needsCheckCount,
+      buildingCount,
+      label: 'Decision in motion',
+      note: `${finalistCount} finalists already sit in compare, so the shortlist is now supporting a real choice instead of passive saving.`,
+      topGap,
+      nextAction: 'Use the decision matrix, then check merchant pricing only for the finalists instead of reopening the whole search.'
+    }
+  }
+
+  if (compareReadyCount >= 2) {
+    return {
+      averageScore,
+      compareReadyCount,
+      finalistCount,
+      needsCheckCount,
+      buildingCount,
+      label: 'Ready to compare',
+      note: `${compareReadyCount} saved ${compareReadyCount === 1 ? 'pick already has' : 'picks already have'} enough proof to become finalists.`,
+      topGap,
+      nextAction: 'Move the strongest two or three picks into compare before adding anything new.'
+    }
+  }
+
+  if (items.length === 1) {
+    return {
+      averageScore,
+      compareReadyCount,
+      finalistCount,
+      needsCheckCount,
+      buildingCount,
+      label: 'Too early to decide',
+      note: 'One saved product is still a preference, not a real decision set.',
+      topGap,
+      nextAction: 'Add one same-category alternative so the tradeoffs become obvious.'
+    }
+  }
+
+  if (buildingCount >= Math.ceil(items.length / 2)) {
+    return {
+      averageScore,
+      compareReadyCount,
+      finalistCount,
+      needsCheckCount,
+      buildingCount,
+      label: 'Proof still uneven',
+      note: `${buildingCount} saved ${buildingCount === 1 ? 'pick is' : 'picks are'} still building evidence, so the shortlist is not ready to collapse into finalists yet.`,
+      topGap,
+      nextAction: `Close the biggest gap next: ${topGap}`
+    }
+  }
+
+  return {
+    averageScore,
+    compareReadyCount,
+    finalistCount,
+    needsCheckCount,
+    buildingCount,
+    label: 'Shortlist taking shape',
+    note: `${needsCheckCount} ${needsCheckCount === 1 ? 'pick is' : 'picks are'} close, but the shortlist still has one main proof gap to close before compare gets cleaner.`,
+    topGap,
+    nextAction: `Tighten the shortlist by fixing the biggest gap first: ${topGap}`
+  }
 }
 
 function formatShortlistPriceRange(items: ShortlistItem[]) {
@@ -223,21 +507,26 @@ export function buildShortlistBuyingBrief(items: ShortlistItem[]) {
   if (!items.length) return 'No shortlist items selected.'
 
   const summary = summarizeShortlist(items)
+  const decisionSummary = summarizeShortlistDecisionReadiness(items)
 
   return [
     'Bes3 shortlist buying brief',
     `${summary.overview} ${summary.decisionNote}`,
+    `Decision readiness: ${decisionSummary.label} (${decisionSummary.averageScore}/100 average).`,
+    `Next move: ${decisionSummary.nextAction}`,
     `Price range: ${summary.priceRangeLabel}.`,
     `Strongest signal: ${summary.strongestSignal}`,
     '',
     ...items.map((item, index) => {
       const notes = item.reviewHighlights[0] || item.description || 'Open the deep-dive for the full Bes3 read.'
       const ratingLabel = item.rating ? `${item.rating.toFixed(1)} / 5` : 'Signal building'
+      const decisionState = getShortlistDecisionState(item, { shortlistSize: items.length })
+      const whySaved = decisionState.whySaved.length ? `Why saved: ${decisionState.whySaved.slice(0, 3).join(', ')}.` : ''
 
       return `${index + 1}. ${item.productName} (${humanizeCategory(item.category)}) - ${formatPriceSnapshot(
         item.priceAmount,
         item.priceCurrency || 'USD'
-      )} - ${ratingLabel} - ${notes}`
+      )} - ${ratingLabel} - ${decisionState.label} ${decisionState.score}/100 - ${whySaved} ${notes}`.trim()
     })
   ].join('\n')
 }
