@@ -10,6 +10,7 @@ import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision
 import { formatEditorialDate } from '@/lib/editorial'
 import {
   buildShortlistBuyingBrief,
+  buildShortlistComparisonSummary,
   buildShortlistSharePath,
   getShortlistDecisionState,
   getShortlistProductPath,
@@ -131,24 +132,7 @@ export function ShortlistWorkspace({
         `Included picks: ${buildProductRollup(sharedItems)}.`
       ].filter(Boolean).join('\n')
     : ''
-  const compareRows = [
-    {
-      label: 'Price',
-      values: compare.map((item) => formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD'))
-    },
-    {
-      label: 'Buyer signal',
-      values: compare.map((item) => (item.rating ? `${item.rating.toFixed(1)} / 5` : 'Signal building'))
-    },
-    {
-      label: 'Review count',
-      values: compare.map((item) => (item.reviewCount ? item.reviewCount.toLocaleString() : 'Pending'))
-    },
-    {
-      label: 'Best clue',
-      values: compare.map((item) => item.reviewHighlights[0] || 'Open the deep-dive for the fuller verdict')
-    }
-  ]
+  const comparisonSummary = buildShortlistComparisonSummary(compare)
   const coachSource = 'shortlist-decision-coach'
   const coach = shortlist.length === 1
     ? {
@@ -743,13 +727,27 @@ export function ShortlistWorkspace({
         <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Decision Matrix</p>
           <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">What changes between the finalists</h3>
+          <p className="mt-4 text-sm leading-7 text-muted-foreground">{comparisonSummary.lensNote}</p>
+
+          <div className="mt-6 rounded-[1.75rem] bg-[linear-gradient(135deg,#f8fafc_0%,#eef4ff_52%,#ecfdf5_100%)] p-5">
+            <div className="grid gap-4 lg:grid-cols-2">
+              <div className="rounded-[1.25rem] bg-white/80 p-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.5)] backdrop-blur">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">{comparisonSummary.lensLabel}</p>
+                <p className="mt-2 text-sm leading-7 text-foreground">{comparisonSummary.lensNote}</p>
+              </div>
+              <div className="rounded-[1.25rem] bg-white/80 p-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.5)] backdrop-blur">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-700">Matrix focus</p>
+                <p className="mt-2 text-sm leading-7 text-foreground">{comparisonSummary.focusNote}</p>
+              </div>
+            </div>
+          </div>
 
           {compare.length ? (
             <div className="mt-6 overflow-x-auto">
               <table className="min-w-full border-separate border-spacing-y-3">
                 <thead>
                   <tr>
-                    <th className="px-4 text-left text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Signal</th>
+                    <th className="px-4 text-left text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Criteria</th>
                     {compare.map((item) => (
                       <th key={item.id} className="rounded-[1.25rem] bg-muted/50 px-4 py-3 text-left text-sm font-semibold text-foreground">
                         {item.productName}
@@ -758,7 +756,7 @@ export function ShortlistWorkspace({
                   </tr>
                 </thead>
                 <tbody>
-                  {compareRows.map((row) => (
+                  {comparisonSummary.rows.map((row) => (
                     <tr key={row.label}>
                       <td className="px-4 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">{row.label}</td>
                       {row.values.map((value, index) => (

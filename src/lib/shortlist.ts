@@ -14,9 +14,15 @@ export interface ShortlistItem {
   reviewCount: number | null
   reviewHighlights: string[]
   specSummary: string[]
+  specSnapshot: ShortlistSpecEntry[]
   resolvedUrl: string | null
   publishedAt: string | null
   updatedAt: string | null
+}
+
+export interface ShortlistSpecEntry {
+  label: string
+  value: string
 }
 
 export const SHORTLIST_STORAGE_KEY = 'bes3-shortlist'
@@ -64,9 +70,22 @@ export interface ShortlistDecisionSummary {
   nextAction: string
 }
 
-type ShortlistItemInput = Omit<ShortlistItem, 'reviewHighlights' | 'specSummary'> & {
+export interface ShortlistComparisonRow {
+  label: string
+  values: string[]
+}
+
+export interface ShortlistComparisonSummary {
+  lensLabel: string
+  lensNote: string
+  focusNote: string
+  rows: ShortlistComparisonRow[]
+}
+
+type ShortlistItemInput = Omit<ShortlistItem, 'reviewHighlights' | 'specSummary' | 'specSnapshot'> & {
   reviewHighlights?: string[] | null
   specSummary?: string[] | null
+  specSnapshot?: ShortlistSpecEntry[] | null
   specs?: Record<string, string> | null
 }
 
@@ -158,6 +177,8 @@ const CATEGORY_DECISION_PROFILES: CategoryDecisionProfile[] = [
 ]
 
 export function toShortlistItem(product: ShortlistItemInput): ShortlistItem {
+  const specSnapshot = buildSpecSnapshot(product)
+
   return {
     id: product.id,
     slug: product.slug,
@@ -171,7 +192,11 @@ export function toShortlistItem(product: ShortlistItemInput): ShortlistItem {
     rating: product.rating,
     reviewCount: product.reviewCount,
     reviewHighlights: (product.reviewHighlights || []).slice(0, 3),
-    specSummary: buildSpecSummary(product),
+    specSummary: buildSpecSummary({
+      ...product,
+      specSnapshot
+    }),
+    specSnapshot,
     resolvedUrl: product.resolvedUrl,
     publishedAt: product.publishedAt,
     updatedAt: product.updatedAt
@@ -236,11 +261,51 @@ function buildSpecSummary(product: ShortlistItemInput) {
     return directSummary.slice(0, 6)
   }
 
+  const snapshotLabels = Array.isArray(product.specSnapshot)
+    ? product.specSnapshot
+        .filter((item): item is ShortlistSpecEntry => Boolean(item) && typeof item.label === 'string' && item.label.trim().length > 0)
+        .map((item) => item.label)
+    : []
+
+  if (snapshotLabels.length) {
+    return snapshotLabels.slice(0, 6)
+  }
+
   const specKeys = product.specs && typeof product.specs === 'object'
     ? Object.keys(product.specs).filter((key) => key.trim().length > 0)
     : []
 
   return specKeys.slice(0, 6)
+}
+
+function buildSpecSnapshot(product: ShortlistItemInput): ShortlistSpecEntry[] {
+  const directSnapshot = Array.isArray(product.specSnapshot)
+    ? product.specSnapshot.filter(
+        (item): item is ShortlistSpecEntry =>
+          Boolean(item) &&
+          typeof item === 'object' &&
+          typeof item.label === 'string' &&
+          item.label.trim().length > 0 &&
+          typeof item.value === 'string' &&
+          item.value.trim().length > 0
+      )
+    : []
+
+  if (directSnapshot.length) {
+    return directSnapshot.slice(0, 6)
+  }
+
+  if (!product.specs || typeof product.specs !== 'object') {
+    return []
+  }
+
+  return Object.entries(product.specs)
+    .filter(([label, value]) => label.trim().length > 0 && String(value || '').trim().length > 0)
+    .slice(0, 6)
+    .map(([label, value]) => ({
+      label,
+      value: String(value)
+    }))
 }
 
 function getCategoryDecisionProfile(item: ShortlistItem) {
@@ -576,6 +641,155 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
     nextAction: topGap === noMajorGapLabel
       ? 'Promote the strongest remaining pick into compare instead of widening the shortlist.'
       : `Tighten the shortlist by fixing the biggest gap first: ${topGap}`
+  }
+}
+
+function findSpecValueByLabel(item: ShortlistItem, label: string) {
+  const normalizedLabel = normalizeDecisionText(label)
+  const exact = item.specSnapshot.find((entry) => normalizeDecisionText(entry.label) === normalizedLabel)
+  if (exact) return exact.value
+
+  const loose = item.specSnapshot.find((entry) => {
+    const candidate = normalizeDecisionText(entry.label)
+    return candidate.includes(normalizedLabel) || normalizedLabel.includes(candidate)
+  })
+  return loose?.value || null
+}
+
+function buildPrimarySpecValue(item: ShortlistItem) {
+  const primaryEntry = item.specSnapshot[0]
+  if (primaryEntry) {
+    return `${primaryEntry.label}: ${primaryEntry.value}`
+  }
+
+  return item.specSummary[0] || 'Open deep-dive'
+}
+
+function buildCategorySpecificComparisonRows(items: ShortlistItem[], profile: CategoryDecisionProfile) {
+  if (profile.id === GENERIC_DECISION_PROFILE.id) return []
+
+  const labelMap = new Map<string, { label: string; hits: number; priority: number }>()
+
+  items.forEach((item) => {
+    item.specSnapshot.forEach((entry) => {
+      const normalizedLabel = normalizeDecisionText(entry.label)
+      const matchedKeywordIndexes = profile.specKeywords.reduce<number[]>((result, keyword, index) => {
+        if (normalizedLabel.includes(keyword) || keyword.includes(normalizedLabel)) {
+          result.push(index)
+        }
+        return result
+      }, [])
+      const keywordHits = matchedKeywordIndexes.length
+      if (!keywordHits) return
+
+      const priority = matchedKeywordIndexes[0] ?? profile.specKeywords.length
+
+      const current = labelMap.get(normalizedLabel)
+      if (current) {
+        current.hits += keywordHits
+        current.priority = Math.min(current.priority, priority)
+        return
+      }
+
+      labelMap.set(normalizedLabel, {
+        label: entry.label,
+        hits: keywordHits,
+        priority
+      })
+    })
+  })
+
+  return Array.from(labelMap.values())
+    .sort((left, right) => {
+      if (right.hits !== left.hits) return right.hits - left.hits
+      if (left.priority !== right.priority) return left.priority - right.priority
+      return left.label.localeCompare(right.label)
+    })
+    .slice(0, 3)
+    .map((entry) => ({
+      label: entry.label,
+      values: items.map((item) => findSpecValueByLabel(item, entry.label) || 'Not surfaced')
+    }))
+}
+
+export function buildShortlistComparisonSummary(items: ShortlistItem[]): ShortlistComparisonSummary {
+  if (!items.length) {
+    return {
+      lensLabel: 'Decision lens',
+      lensNote: GENERIC_DECISION_PROFILE.decisionLens,
+      focusNote: 'Add at least two finalists to compare product-level tradeoffs.',
+      rows: []
+    }
+  }
+
+  const states = items.map((item) => getShortlistDecisionState(item, { shortlistSize: items.length, compareIds: items.map((candidate) => candidate.id) }))
+  const profiles = items.map((item) => getCategoryDecisionProfile(item))
+  const allSameProfile = profiles.every((profile) => profile.id === profiles[0]?.id)
+  const dominantProfileEntry = Array.from(
+    profiles.reduce((result, profile) => {
+      result.set(profile.id, {
+        profile,
+        count: (result.get(profile.id)?.count || 0) + 1
+      })
+      return result
+    }, new Map<string, { profile: CategoryDecisionProfile; count: number }>()).values()
+  ).sort((left, right) => right.count - left.count)[0]
+  const dominantProfile = dominantProfileEntry?.profile || GENERIC_DECISION_PROFILE
+
+  const rows: ShortlistComparisonRow[] = []
+
+  if (allSameProfile) {
+    rows.push(...buildCategorySpecificComparisonRows(items, dominantProfile))
+    if (!rows.length) {
+      rows.push({
+        label: 'Key spec',
+        values: items.map((item) => buildPrimarySpecValue(item))
+      })
+    }
+  } else {
+    rows.push({
+      label: 'Decision fit',
+      values: states.map((state) => state.profileLabel)
+    })
+    rows.push({
+      label: 'Key spec',
+      values: items.map((item) => buildPrimarySpecValue(item))
+    })
+  }
+
+  rows.push(
+    {
+      label: 'Price',
+      values: items.map((item) => formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD'))
+    },
+    {
+      label: 'Buyer signal',
+      values: items.map((item) => (item.rating ? `${item.rating.toFixed(1)} / 5` : 'Signal building'))
+    },
+    {
+      label: 'Review count',
+      values: items.map((item) => (item.reviewCount ? item.reviewCount.toLocaleString() : 'Pending'))
+    },
+    {
+      label: 'Best clue',
+      values: items.map((item) => item.reviewHighlights[0] || item.description || 'Open the deep-dive for the fuller verdict')
+    }
+  )
+
+  if (allSameProfile) {
+    return {
+      lensLabel: dominantProfile.label,
+      lensNote: dominantProfile.decisionLens,
+      focusNote: items.length >= 2 ? dominantProfile.compareFocus : 'Add one more finalist so Bes3 can expose the real tradeoffs instead of showing a single-item snapshot.',
+      rows
+    }
+  }
+
+  return {
+    lensLabel: 'Mixed-category shortlist',
+    lensNote: 'These finalists span different product types, so Bes3 compares fit, key specs, and buyer proof before asking you to collapse them into one decision path.',
+    focusNote: 'Use the matrix to identify whether one product type is clearly dominating your actual use case before checking prices.',
+    rows
   }
 }
 
