@@ -3,9 +3,11 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
+import { buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/structured-data'
 import { listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -52,6 +54,32 @@ export default async function CategoryPage({
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
   const categoryLabel = getCategoryLabel(slug)
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
+  const path = `/categories/${slug}`
+  const structuredData = [
+    buildBreadcrumbSchema(path, [
+      { name: 'Home', path: '/' },
+      { name: 'Directory', path: '/directory' },
+      { name: toTitleCaseWords(categoryLabel), path }
+    ]),
+    buildCollectionPageSchema({
+      path,
+      title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
+      description:
+        pickMetadataDescription(featuredReview?.seoDescription, featuredReview?.summary, featured?.summary) ||
+        `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
+      image: featured?.heroImageUrl || products[0]?.heroImageUrl,
+      items: [
+        ...products.slice(0, 6).map((product) => ({
+          name: product.productName,
+          path: product.slug ? `/products/${product.slug}` : path
+        })),
+        ...articles.slice(0, 6).map((article) => ({
+          name: article.title,
+          path: getArticlePath(article.type, article.slug)
+        }))
+      ]
+    })
+  ]
   const buyerRoutes = [
     {
       eyebrow: 'Start',
@@ -85,6 +113,7 @@ export default async function CategoryPage({
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
