@@ -3,6 +3,7 @@ export const DECISION_EVENT_TYPES = [
   'shortlist_remove',
   'compare_add',
   'compare_remove',
+  'shortlist_compare_load',
   'shared_shortlist_view',
   'shared_shortlist_import',
   'shared_shortlist_replace',

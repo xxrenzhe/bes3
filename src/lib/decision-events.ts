@@ -12,6 +12,7 @@ const SHORTLIST_ACTIVATION_TYPES: DecisionEventType[] = [
 
 const COMPARE_ACTIVATION_TYPES: DecisionEventType[] = [
   'compare_add',
+  'shortlist_compare_load',
   'shared_shortlist_compare_load'
 ]
 
