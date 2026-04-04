@@ -14,7 +14,7 @@ import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
+import { getProductBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getCategoryLabelValue(category: string | null) {
@@ -68,9 +68,15 @@ export default async function ProductPage({
   const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
 
-  const articles = await listPublishedArticles()
+  const [articles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
+  const guideArticle = articles.find((article) => {
+    if (article.type !== 'guide') return false
+    if (article.productId === product.id) return true
+    return Boolean(product.category && article.product?.category === product.category)
+  }) || null
+  const peerProducts = allProducts.filter((candidate) => candidate.id !== product.id && candidate.category === product.category).slice(0, 3)
   const heroImageUrl = product.heroImageUrl || reviewArticle?.heroImageUrl || null
   const specs = Object.entries(product.specs).slice(0, 6)
   const snapshotDate = getSnapshotDate(reviewArticle, product)
@@ -333,6 +339,36 @@ export default async function ProductPage({
                 <Link href={getArticlePath(comparisonArticle.type, comparisonArticle.slug)} className="mt-5 inline-flex text-sm font-semibold text-primary">
                   Open comparison →
                 </Link>
+              </div>
+            ) : null}
+            {guideArticle || peerProducts.length ? (
+              <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <div className="mt-5 space-y-3">
+                  {guideArticle ? (
+                    <Link href={getArticlePath(guideArticle.type, guideArticle.slug)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Supporting Guide</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{guideArticle.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{guideArticle.summary}</p>
+                    </Link>
+                  ) : null}
+                  {product.category ? (
+                    <Link href={`/categories/${product.category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main hub if you need adjacent coverage before committing to this product.</p>
+                    </Link>
+                  ) : null}
+                  {peerProducts.map((candidate) => (
+                    <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                        {candidate.description || `Another ${categoryLabel} option in the same decision lane.`}
+                      </p>
+                    </Link>
+                  ))}
+                </div>
               </div>
             ) : null}
           </aside>

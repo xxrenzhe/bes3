@@ -13,12 +13,21 @@ import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Buyer-First Tech Buying Guide',
-  description:
-    'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
-  path: '/'
-})
+export async function generateMetadata(): Promise<Metadata> {
+  const articles = await listPublishedArticles()
+  const freshnessDate = articles[0]?.updatedAt || articles[0]?.publishedAt || articles[0]?.createdAt || null
+
+  return buildPageMetadata({
+    title: 'Buyer-First Tech Buying Guide',
+    description:
+      'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
+    path: '/',
+    image: articles[0]?.heroImageUrl,
+    freshnessDate,
+    freshnessInTitle: true,
+    keywords: ['tech buying guide', 'product reviews', 'comparisons', 'shortlist']
+  })
+}
 
 export default async function HomePage() {
   const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
