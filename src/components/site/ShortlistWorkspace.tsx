@@ -100,6 +100,7 @@ export function ShortlistWorkspace({
   const comparisonSearchHref = compareCount >= 2 ? buildComparisonSearchHref(compare.map((item) => item.productName)) : null
   const sharePath = buildShortlistSharePath(shortlist)
   const sharedSummary = hasSharedItems ? summarizeShortlist(sharedItems) : null
+  const sharedDecisionSummary = hasSharedItems ? summarizeShortlistDecisionReadiness(sharedItems) : null
   const sharedBuyingBrief = hasSharedItems ? buildShortlistBuyingBrief(sharedItems) : ''
   const shortlistDecisionSummary = summarizeShortlistDecisionReadiness(shortlist, compareIds)
   const shortlistDecisionStates = new Map(
@@ -125,9 +126,10 @@ export function ShortlistWorkspace({
   const sharedBriefPreview = sharedSummary
     ? [
         `${sharedSummary.overview} ${sharedSummary.decisionNote}`,
+        sharedDecisionSummary ? `Decision lens: ${sharedDecisionSummary.decisionLens}` : '',
         `Strongest signal: ${sharedSummary.strongestSignal}`,
         `Included picks: ${buildProductRollup(sharedItems)}.`
-      ].join('\n')
+      ].filter(Boolean).join('\n')
     : ''
   const compareRows = [
     {
@@ -472,7 +474,9 @@ export function ShortlistWorkspace({
               </h3>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">{shortlistDecisionSummary.note}</p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Next move</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Decision lens</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.decisionLens}</p>
+                <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Next move</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.nextAction}</p>
               </div>
             </div>
