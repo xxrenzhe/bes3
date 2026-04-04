@@ -41,7 +41,6 @@ export async function generateMetadata({
   const categories = await listCategories()
   const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
-  const hasSearchState = Boolean(query || selectedCategory || selectedScope !== 'all')
   const scopeLabel =
     selectedScope === 'all'
       ? 'products, reviews, comparisons, and buying guides'
@@ -61,9 +60,10 @@ export async function generateMetadata({
       : 'Search Bes3 products, reviews, comparisons, and buyer guides to turn a concrete need into a cleaner shortlist.',
     path: '/search',
     robots: {
-      index: !hasSearchState,
+      index: false,
       follow: true
-    }
+    },
+    keywords: ['site search', 'product search', 'reviews', 'comparisons']
   })
 }
 

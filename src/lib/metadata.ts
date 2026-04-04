@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { DEFAULT_SITE_NAME } from '@/lib/constants'
+import { toAbsoluteUrl } from '@/lib/site-url'
 
 interface PageMetadataOptions {
   title: string
@@ -8,6 +9,13 @@ interface PageMetadataOptions {
   image?: string | null
   robots?: Metadata['robots']
   type?: 'website' | 'article'
+  keywords?: string[]
+  section?: string
+  category?: string
+  publishedTime?: string | null
+  modifiedTime?: string | null
+  freshnessDate?: string | null
+  freshnessInTitle?: boolean
 }
 
 const LOW_SIGNAL_DESCRIPTIONS = new Set([
@@ -24,6 +32,18 @@ function normalizeText(value: string | null | undefined) {
 
 function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function formatFreshnessDate(value: string | null | undefined, format: 'short' | 'long' = 'long') {
+  if (!value) return ''
+
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return ''
+
+  return new Intl.DateTimeFormat('en-US', {
+    month: format === 'short' ? 'short' : 'long',
+    year: 'numeric'
+  }).format(parsed)
 }
 
 export function sanitizeMetadataTitle(value: string) {
@@ -49,44 +69,102 @@ export function toTitleCaseWords(value: string) {
     .join(' ')
 }
 
+export function buildFreshMetadataDescription(description: string, freshnessDate?: string | null) {
+  const freshnessLabel = formatFreshnessDate(freshnessDate, 'long')
+  const normalizedDescription = normalizeText(description)
+
+  if (!freshnessLabel || !normalizedDescription || /^updated\s+[a-z]+\s+\d{4}\b/i.test(normalizedDescription)) {
+    return normalizedDescription
+  }
+
+  return `Updated ${freshnessLabel}. ${normalizedDescription}`
+}
+
+export function buildFreshMetadataTitle(title: string, freshnessDate?: string | null) {
+  const freshnessLabel = formatFreshnessDate(freshnessDate, 'short')
+  const normalizedTitle = sanitizeMetadataTitle(title)
+
+  if (!freshnessLabel || /\b(?:jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\s+\d{4}\b/i.test(normalizedTitle)) {
+    return normalizedTitle
+  }
+
+  return `${normalizedTitle} (${freshnessLabel})`
+}
+
 export function buildPageMetadata({
   title,
   description,
   path,
   image,
   robots,
-  type = 'website'
+  type = 'website',
+  keywords,
+  section,
+  category,
+  publishedTime,
+  modifiedTime,
+  freshnessDate,
+  freshnessInTitle = false
 }: PageMetadataOptions): Metadata {
-  const normalizedTitle = sanitizeMetadataTitle(title)
+  const canonical = toAbsoluteUrl(path)
+  const normalizedTitle = freshnessInTitle ? buildFreshMetadataTitle(title, freshnessDate) : sanitizeMetadataTitle(title)
+  const normalizedDescription = buildFreshMetadataDescription(description, freshnessDate)
+  const imageUrl = image ? toAbsoluteUrl(image) : undefined
+  const resolvedModifiedTime = modifiedTime || publishedTime || freshnessDate || undefined
+
+  const openGraphBase = {
+    title: normalizedTitle,
+    description: normalizedDescription,
+    url: canonical,
+    siteName: DEFAULT_SITE_NAME,
+    locale: 'en_US',
+    images: imageUrl
+      ? [
+          {
+            url: imageUrl,
+            alt: normalizedTitle
+          }
+        ]
+      : undefined
+  }
 
   return {
     title: normalizedTitle,
-    description,
+    description: normalizedDescription,
+    keywords,
+    category,
+    authors: [{ name: DEFAULT_SITE_NAME }],
+    creator: DEFAULT_SITE_NAME,
+    publisher: DEFAULT_SITE_NAME,
     alternates: {
-      canonical: path
+      canonical
     },
     robots,
-    openGraph: {
-      type,
-      title: normalizedTitle,
-      description,
-      url: path,
-      siteName: DEFAULT_SITE_NAME,
-      locale: 'en_US',
-      images: image
-        ? [
-            {
-              url: image,
-              alt: normalizedTitle
-            }
-          ]
-        : undefined
-    },
+    openGraph:
+      type === 'article'
+        ? {
+            ...openGraphBase,
+            type: 'article',
+            publishedTime: publishedTime || freshnessDate || undefined,
+            modifiedTime: resolvedModifiedTime,
+            section,
+            tags: keywords
+          }
+        : {
+            ...openGraphBase,
+            type: 'website'
+          },
     twitter: {
-      card: image ? 'summary_large_image' : 'summary',
+      card: imageUrl ? 'summary_large_image' : 'summary',
       title: normalizedTitle,
-      description,
-      images: image ? [image] : undefined
-    }
+      description: normalizedDescription,
+      images: imageUrl ? [imageUrl] : undefined
+    },
+    other:
+      type === 'article' && resolvedModifiedTime
+        ? {
+            'article:modified_time': resolvedModifiedTime
+          }
+        : undefined
   }
 }

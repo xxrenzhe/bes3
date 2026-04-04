@@ -7,7 +7,8 @@ import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
-import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/structured-data'
+import { toAbsoluteUrl } from '@/lib/site-url'
+import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -30,6 +31,9 @@ export async function generateMetadata({
     })
   }
 
+  const freshnessDate = article.updatedAt || article.publishedAt || article.createdAt
+  const categoryLabel = getCategoryLabel(article.product?.category || null)
+
   return buildPageMetadata({
     title: article.seoTitle || article.title,
     description:
@@ -37,7 +41,14 @@ export async function generateMetadata({
       'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.',
     path: `/guides/${article.slug}`,
     image: article.heroImageUrl || article.product?.heroImageUrl,
-    type: 'article'
+    type: 'article',
+    category: categoryLabel || undefined,
+    freshnessDate,
+    freshnessInTitle: true,
+    modifiedTime: freshnessDate,
+    publishedTime: article.publishedAt || article.createdAt,
+    section: categoryLabel || 'Guides',
+    keywords: [article.title, article.product?.productName || '', categoryLabel, 'buying guide'].filter(Boolean)
   })
 }
 
@@ -69,12 +80,47 @@ export default async function GuidePage({
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.'
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
+    { name: article.title, path }
+  ]
+  const howToSteps = [
+    {
+      name: 'Frame the category first',
+      text: 'Use the guide to understand the category logic, compatibility concerns, and the heuristics that matter before you compare products.'
+    },
+    {
+      name: 'Move into a live verdict',
+      text: relatedReview
+        ? 'Open the strongest review once the guide has narrowed what matters for your actual use case.'
+        : 'Use the category hub or shortlist when you are ready to move from abstract guidance into concrete candidates.'
+    },
+    {
+      name: 'Keep the lane active',
+      text: 'If you are not ready to buy yet, turn the category into a briefing or alert flow instead of reopening the same research loop later.'
+    }
+  ]
   const structuredData = [
-    buildBreadcrumbSchema(path, [
-      { name: 'Home', path: '/' },
-      { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
-      { name: article.title, path }
-    ]),
+    buildBreadcrumbSchema(path, breadcrumbItems),
+    buildWebPageSchema({
+      path,
+      title: article.seoTitle || article.title,
+      description: guideDescription,
+      image: article.heroImageUrl || article.product?.heroImageUrl,
+      breadcrumbItems,
+      datePublished: article.publishedAt || article.createdAt,
+      dateModified: article.updatedAt || article.publishedAt || article.createdAt,
+      about: category
+        ? {
+            '@type': 'Thing',
+            name: categoryLabel
+          }
+        : undefined,
+      mainEntity: {
+        '@id': `${toAbsoluteUrl(path)}#article`
+      }
+    }),
     buildArticleSchema({
       path,
       title: article.seoTitle || article.title,
@@ -89,7 +135,8 @@ export default async function GuidePage({
             name: categoryLabel
           }
         : undefined
-    })
+    }),
+    buildHowToSchema(path, `How to use the ${article.title} guide`, 'Use the guide to frame the category, move into a live verdict, and keep the same buying lane active.', howToSteps)
   ]
   const guideRoutes = [
     {

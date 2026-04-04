@@ -1,7 +1,9 @@
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
 import { getCategoryLabel } from '@/lib/editorial'
 import { pickMetadataDescription, sanitizeMetadataTitle } from '@/lib/metadata'
+import { toAbsoluteUrl } from '@/lib/site-url'
 import type { ArticleRecord, ProductRecord } from '@/lib/site-data'
+import { slugify } from '@/lib/slug'
 
 export type SchemaNode = Record<string, unknown>
 
@@ -15,6 +17,17 @@ export interface ItemListEntry {
   path: string
 }
 
+export interface HowToStepEntry {
+  name: string
+  text: string
+  path?: string
+}
+
+export interface FaqEntry {
+  question: string
+  answer: string
+}
+
 interface WebPageSchemaOptions {
   path: string
   title: string
@@ -23,6 +36,9 @@ interface WebPageSchemaOptions {
   image?: string | null
   mainEntity?: SchemaNode
   about?: SchemaNode | SchemaNode[]
+  breadcrumbItems?: BreadcrumbItem[]
+  datePublished?: string | null
+  dateModified?: string | null
 }
 
 interface ArticleSchemaOptions {
@@ -42,6 +58,10 @@ interface CollectionPageSchemaOptions {
   description: string
   items: ItemListEntry[]
   image?: string | null
+  about?: SchemaNode | SchemaNode[]
+  breadcrumbItems?: BreadcrumbItem[]
+  datePublished?: string | null
+  dateModified?: string | null
 }
 
 interface SearchResultsSchemaOptions {
@@ -53,17 +73,6 @@ interface SearchResultsSchemaOptions {
 }
 
 const SCHEMA_CONTEXT = 'https://schema.org'
-
-function getSiteUrl() {
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-}
-
-export function toAbsoluteUrl(path?: string | null) {
-  if (!path) return getSiteUrl()
-  if (/^https?:\/\//i.test(path)) return path
-
-  return `${getSiteUrl()}${path.startsWith('/') ? path : `/${path}`}`
-}
 
 function buildOrganizationReference() {
   return {
@@ -111,7 +120,10 @@ export function buildWebPageSchema({
   type = 'WebPage',
   image,
   mainEntity,
-  about
+  about,
+  breadcrumbItems,
+  datePublished,
+  dateModified
 }: WebPageSchemaOptions): SchemaNode {
   const url = toAbsoluteUrl(path)
 
@@ -124,6 +136,21 @@ export function buildWebPageSchema({
     description,
     image: image ? [toAbsoluteUrl(image)] : undefined,
     isPartOf: buildWebsiteReference(),
+    breadcrumb: breadcrumbItems?.length
+      ? {
+          '@id': `${url}#breadcrumb`
+        }
+      : undefined,
+    primaryImageOfPage: image
+      ? {
+          '@type': 'ImageObject',
+          url: toAbsoluteUrl(image)
+        }
+      : undefined,
+    inLanguage: 'en-US',
+    publisher: buildOrganizationReference(),
+    datePublished: datePublished || undefined,
+    dateModified: dateModified || datePublished || undefined,
     about,
     mainEntity
   }
@@ -134,7 +161,11 @@ export function buildCollectionPageSchema({
   title,
   description,
   items,
-  image
+  image,
+  about,
+  breadcrumbItems,
+  datePublished,
+  dateModified
 }: CollectionPageSchemaOptions): SchemaNode {
   return buildWebPageSchema({
     path,
@@ -142,6 +173,10 @@ export function buildCollectionPageSchema({
     description,
     type: 'CollectionPage',
     image,
+    about,
+    breadcrumbItems,
+    datePublished,
+    dateModified,
     mainEntity: items.length ? buildItemListSchema(path, items) : undefined
   })
 }
@@ -200,6 +235,8 @@ export function buildArticleSchema({
 }
 
 export function buildOrganizationSchema(): SchemaNode {
+  const publicContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL
+
   return {
     '@context': SCHEMA_CONTEXT,
     '@type': 'Organization',
@@ -212,11 +249,14 @@ export function buildOrganizationSchema(): SchemaNode {
     },
     description: 'Bes3 helps shoppers compare real tech products, track pricing, and read high-signal buying guides.',
     slogan: DEFAULT_SITE_TAGLINE,
+    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'price tracking'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
-      email: 'hello@bes3.local',
-      url: toAbsoluteUrl('/contact')
+      email: publicContactEmail || undefined,
+      url: toAbsoluteUrl('/contact'),
+      availableLanguage: ['en'],
+      areaServed: 'Worldwide'
     }
   }
 }
@@ -228,7 +268,9 @@ export function buildWebsiteSchema(): SchemaNode {
     '@id': `${toAbsoluteUrl('/')}#website`,
     url: toAbsoluteUrl('/'),
     name: DEFAULT_SITE_NAME,
+    alternateName: DEFAULT_SITE_TAGLINE,
     description: 'Bes3 helps shoppers compare real tech products, track pricing, and read high-signal buying guides.',
+    inLanguage: 'en-US',
     publisher: buildOrganizationReference(),
     potentialAction: {
       '@type': 'SearchAction',
@@ -315,5 +357,45 @@ export function buildReviewSchema(article: ArticleRecord, path: string): SchemaN
     mainEntityOfPage: {
       '@id': `${toAbsoluteUrl(path)}#webpage`
     }
+  }
+}
+
+export function buildHowToSchema(pagePath: string, name: string, description: string, steps: HowToStepEntry[]): SchemaNode | null {
+  if (!steps.length) return null
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'HowTo',
+    '@id': `${toAbsoluteUrl(pagePath)}#how-to`,
+    name,
+    description,
+    inLanguage: 'en-US',
+    step: steps.map((step, index) => ({
+      '@type': 'HowToStep',
+      '@id': `${toAbsoluteUrl(pagePath)}#${slugify(step.name) || `step-${index + 1}`}`,
+      position: index + 1,
+      name: step.name,
+      text: step.text,
+      url: step.path ? toAbsoluteUrl(step.path) : undefined
+    }))
+  }
+}
+
+export function buildFaqSchema(pagePath: string, entries: FaqEntry[]): SchemaNode | null {
+  if (!entries.length) return null
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'FAQPage',
+    '@id': `${toAbsoluteUrl(pagePath)}#faq`,
+    mainEntity: entries.map((entry, index) => ({
+      '@type': 'Question',
+      '@id': `${toAbsoluteUrl(pagePath)}#faq-${index + 1}`,
+      name: entry.question,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: entry.answer
+      }
+    }))
   }
 }

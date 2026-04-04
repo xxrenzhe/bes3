@@ -9,7 +9,8 @@ import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
-import { buildArticleSchema, buildBreadcrumbSchema, buildReviewSchema } from '@/lib/structured-data'
+import { toAbsoluteUrl } from '@/lib/site-url'
+import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -38,6 +39,9 @@ export async function generateMetadata({
     })
   }
 
+  const freshnessDate = article.updatedAt || article.publishedAt || article.createdAt
+  const categoryLabel = getCategoryLabel(article.product?.category || null)
+
   return buildPageMetadata({
     title: article.seoTitle || article.title,
     description:
@@ -45,7 +49,14 @@ export async function generateMetadata({
       buildFallbackNote(article.product?.productName || article.title),
     path: `/reviews/${article.slug}`,
     image: article.heroImageUrl || article.product?.heroImageUrl,
-    type: 'article'
+    type: 'article',
+    category: categoryLabel || undefined,
+    freshnessDate,
+    freshnessInTitle: true,
+    modifiedTime: freshnessDate,
+    publishedTime: article.publishedAt || article.createdAt,
+    section: categoryLabel || 'Reviews',
+    keywords: [article.title, article.product?.productName || '', categoryLabel, 'review', 'buying guide'].filter(Boolean)
   })
 }
 
@@ -79,12 +90,49 @@ export default async function ReviewPage({
   const reviewDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     buildFallbackNote(article.product?.productName || article.title)
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: category ? category.replace(/-/g, ' ') : 'Reviews', path: category ? `/categories/${category}` : '/directory' },
+    { name: article.title, path }
+  ]
+  const howToSteps = [
+    {
+      name: 'Read the buyer fit first',
+      text: 'Use the summary, freshness, best-for, and skip-if signals to decide whether this product deserves deeper attention.'
+    },
+    {
+      name: 'Validate against product details',
+      text: article.product?.slug
+        ? 'Open the product page when you need specs, pricing, and merchant context before acting on the verdict.'
+        : 'Use the review itself as the main source of truth when a separate product page is not available yet.'
+    },
+    {
+      name: 'Choose the next route',
+      text: relatedComparison
+        ? 'Move into the related comparison if you are down to finalists, or switch to a price watch if timing is the only blocker left.'
+        : 'Use the category hub or a price watch if you are not ready to compare finalists yet.'
+    }
+  ]
   const structuredData = [
-    buildBreadcrumbSchema(path, [
-      { name: 'Home', path: '/' },
-      { name: category ? category.replace(/-/g, ' ') : 'Reviews', path: category ? `/categories/${category}` : '/directory' },
-      { name: article.title, path }
-    ]),
+    buildBreadcrumbSchema(path, breadcrumbItems),
+    buildWebPageSchema({
+      path,
+      title: article.seoTitle || article.title,
+      description: reviewDescription,
+      image: article.heroImageUrl || article.product?.heroImageUrl,
+      breadcrumbItems,
+      datePublished: article.publishedAt || article.createdAt,
+      dateModified: article.updatedAt || article.publishedAt || article.createdAt,
+      about: category
+        ? {
+            '@type': 'Thing',
+            name: categoryLabel
+          }
+        : undefined,
+      mainEntity: {
+        '@id': `${toAbsoluteUrl(path)}#review`
+      }
+    }),
     buildArticleSchema({
       path,
       title: article.seoTitle || article.title,
@@ -94,7 +142,8 @@ export default async function ReviewPage({
       dateModified: article.updatedAt || article.publishedAt || article.createdAt,
       type: 'Article'
     }),
-    buildReviewSchema(article, path)
+    buildReviewSchema(article, path),
+    buildHowToSchema(path, `How to use the ${article.title} review`, 'Use the review to confirm buyer fit, validate the product details, and choose the next decision step.', howToSteps)
   ]
 
   const reviewPicks = [
