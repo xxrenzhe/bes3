@@ -8,7 +8,7 @@ import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { formatEditorialDate } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
-import { buildShortlistSharePath, getShortlistProductPath, type ShortlistItem } from '@/lib/shortlist'
+import { buildShortlistBuyingBrief, buildShortlistSharePath, getShortlistProductPath, summarizeShortlist, type ShortlistItem } from '@/lib/shortlist'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildComparisonSearchHref(productNames: string[]) {
@@ -19,12 +19,19 @@ function buildComparisonSearchHref(productNames: string[]) {
   return `/search?${params.toString()}`
 }
 
+function buildProductRollup(items: ShortlistItem[]) {
+  const names = items.map((item) => item.productName)
+  if (names.length <= 3) return names.join(', ')
+  return `${names.slice(0, 3).join(', ')}, plus ${names.length - 3} more`
+}
+
 export function ShortlistWorkspace({
   sharedItems = []
 }: {
   sharedItems?: ShortlistItem[]
 }) {
   const [isCopying, setIsCopying] = useState(false)
+  const [isCopyingBrief, setIsCopyingBrief] = useState(false)
   const { addManyToShortlist, clearShortlist, compare, compareCount, hasHydrated, removeShortlist, replaceShortlist, setCompareFromItems, shortlist, toggleCompare } = useShortlist()
   const hasSharedItems = sharedItems.length > 0
   const missingSharedItems = sharedItems.filter((item) => !shortlist.some((candidate) => candidate.id === item.id))
@@ -59,6 +66,15 @@ export function ShortlistWorkspace({
 
   const comparisonSearchHref = compareCount >= 2 ? buildComparisonSearchHref(compare.map((item) => item.productName)) : null
   const sharePath = buildShortlistSharePath(shortlist)
+  const sharedSummary = hasSharedItems ? summarizeShortlist(sharedItems) : null
+  const sharedBuyingBrief = hasSharedItems ? buildShortlistBuyingBrief(sharedItems) : ''
+  const sharedBriefPreview = sharedSummary
+    ? [
+        `${sharedSummary.overview} ${sharedSummary.decisionNote}`,
+        `Strongest signal: ${sharedSummary.strongestSignal}`,
+        `Included picks: ${buildProductRollup(sharedItems)}.`
+      ].join('\n')
+    : ''
   const compareRows = [
     {
       label: 'Price',
@@ -78,22 +94,31 @@ export function ShortlistWorkspace({
     }
   ]
 
-  async function copyShareLink() {
-    if (!shortlist.length) return
+  async function copyText(value: string, pendingLabel: (pending: boolean) => void, successMessage: string, errorMessage: string) {
+    if (!value) return
     if (typeof window === 'undefined' || !navigator.clipboard) {
       toast.error('Clipboard access is unavailable in this browser')
       return
     }
 
-    setIsCopying(true)
+    pendingLabel(true)
     try {
-      await navigator.clipboard.writeText(`${window.location.origin}${sharePath}`)
-      toast.success('Shortlist share link copied')
+      await navigator.clipboard.writeText(value)
+      toast.success(successMessage)
     } catch {
-      toast.error('Unable to copy the shortlist link')
+      toast.error(errorMessage)
     } finally {
-      setIsCopying(false)
+      pendingLabel(false)
     }
+  }
+
+  async function copyShareLink() {
+    if (!shortlist.length) return
+    await copyText(`${window.location.origin}${sharePath}`, setIsCopying, 'Shortlist share link copied', 'Unable to copy the shortlist link')
+  }
+
+  async function copyBuyingBrief() {
+    await copyText(sharedBuyingBrief, setIsCopyingBrief, 'Buying brief copied', 'Unable to copy the buying brief')
   }
 
   return (
@@ -145,12 +170,70 @@ export function ShortlistWorkspace({
 
       {hasSharedItems ? (
         <section className="rounded-[2.5rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel sm:p-10">
-          <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
-            <div className="max-w-3xl space-y-4">
+          <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
+            <div className="rounded-[2rem] bg-white p-7 sm:p-8">
               <p className="editorial-kicker">Shared Shortlist</p>
-              <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Someone sent you {sharedItems.length} buyer-ready {sharedItems.length === 1 ? 'pick' : 'picks'}.</h3>
+              <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Someone sent you {sharedItems.length} buyer-ready {sharedItems.length === 1 ? 'pick' : 'picks'}.
+              </h3>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                {sharedSummary?.overview} {sharedSummary?.decisionNote} Review the incoming candidates below, then merge them into your own workspace or replace your current shortlist if this shared set is stronger.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Strongest signal</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">{sharedSummary?.strongestSignal}</p>
+              </div>
+            </div>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Shared picks</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{sharedItems.length}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Enough to review, discuss, and load into your own shortlist.</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Category spread</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{sharedSummary?.categoryLabel}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{sharedSummary?.categoryNote}</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Price band</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{sharedSummary?.priceRangeLabel}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{sharedSummary?.priceRangeNote}</p>
+              </div>
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Buyer proof</p>
+                <p className="mt-3 text-3xl font-black text-foreground">{sharedSummary?.buyerProofLabel}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {sharedSummary?.averageRating
+                    ? `Average signal ${sharedSummary.averageRatingLabel}.`
+                    : sharedSummary?.buyerProofNote}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="mt-6 rounded-[2rem] bg-[linear-gradient(135deg,#0f172a_0%,#1e293b_48%,#14532d_100%)] p-6 text-white shadow-[0_30px_70px_-45px_rgba(15,23,42,0.92)] sm:p-7">
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="max-w-3xl">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Buying Brief</p>
+                <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-white">Ready to paste into notes, chat, or email.</h4>
+                <p className="mt-3 whitespace-pre-line text-sm leading-7 text-slate-200">{sharedBriefPreview}</p>
+              </div>
+              <button
+                type="button"
+                onClick={copyBuyingBrief}
+                className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-white/20 px-4 text-sm font-semibold text-white transition-colors hover:bg-white/10"
+              >
+                <Copy className="h-4 w-4" />
+                {isCopyingBrief ? 'Copying...' : 'Copy buying brief'}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
+            <div className="max-w-3xl">
               <p className="text-sm leading-8 text-muted-foreground">
-                Review the incoming candidates below, then merge them into your own workspace or replace your current shortlist if this shared set is stronger.
+                Use these actions to import the shared set into your own workspace, replace your current shortlist, or move the incoming picks straight into compare.
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
