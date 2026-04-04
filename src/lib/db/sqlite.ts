@@ -6,6 +6,14 @@ import type { DatabaseAdapter } from '@/lib/types'
 export class SQLiteAdapter implements DatabaseAdapter {
   type = 'sqlite' as const
   private db: Database.Database
+  private readonly transactionStatements: {
+    begin: Database.Statement
+    commit: Database.Statement
+    rollback: Database.Statement
+    savepoint: Database.Statement
+    release: Database.Statement
+    rollbackTo: Database.Statement
+  }
 
   constructor(dbPath: string) {
     const directory = path.dirname(dbPath)
@@ -17,6 +25,14 @@ export class SQLiteAdapter implements DatabaseAdapter {
     this.db.pragma('foreign_keys = ON')
     this.db.pragma('journal_mode = WAL')
     this.db.pragma('synchronous = NORMAL')
+    this.transactionStatements = {
+      begin: this.db.prepare('BEGIN'),
+      commit: this.db.prepare('COMMIT'),
+      rollback: this.db.prepare('ROLLBACK'),
+      savepoint: this.db.prepare('SAVEPOINT `\t_bs3.\t`'),
+      release: this.db.prepare('RELEASE `\t_bs3.\t`'),
+      rollbackTo: this.db.prepare('ROLLBACK TO `\t_bs3.\t`')
+    }
   }
 
   async query<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
@@ -35,8 +51,32 @@ export class SQLiteAdapter implements DatabaseAdapter {
     }
   }
 
-  async transaction<T>(fn: () => Promise<T>): Promise<T> {
-    const runner = this.db.transaction(() => fn())
-    return runner() as Promise<T>
+  async transaction<T>(fn: () => T | Promise<T>): Promise<T> {
+    const statements = this.db.inTransaction
+      ? {
+          before: this.transactionStatements.savepoint,
+          after: this.transactionStatements.release,
+          undo: this.transactionStatements.rollbackTo
+        }
+      : {
+          before: this.transactionStatements.begin,
+          after: this.transactionStatements.commit,
+          undo: this.transactionStatements.rollback
+        }
+
+    statements.before.run()
+    try {
+      const result = await fn()
+      statements.after.run()
+      return result
+    } catch (error) {
+      if (this.db.inTransaction) {
+        statements.undo.run()
+        if (statements.undo !== this.transactionStatements.rollback) {
+          statements.after.run()
+        }
+      }
+      throw error
+    }
   }
 }

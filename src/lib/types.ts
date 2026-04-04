@@ -38,5 +38,5 @@ export interface DatabaseAdapter {
   query<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T[]>
   queryOne<T = Record<string, unknown>>(sql: string, params?: unknown[]): Promise<T | undefined>
   exec(sql: string, params?: unknown[]): Promise<{ changes: number; lastInsertRowid?: number }>
-  transaction<T>(fn: () => Promise<T>): Promise<T>
+  transaction<T>(fn: () => T | Promise<T>): Promise<T>
 }

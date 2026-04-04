@@ -38,7 +38,7 @@ export class PostgresAdapter implements DatabaseAdapter {
     }
   }
 
-  async transaction<T>(fn: () => Promise<T>): Promise<T> {
+  async transaction<T>(fn: () => T | Promise<T>): Promise<T> {
     return this.client.begin(async () => fn()) as unknown as Promise<T>
   }
 }
