@@ -1,98 +1,183 @@
+import Image from 'next/image'
 import Link from 'next/link'
-import { ArticleCard } from '@/components/site/ArticleCard'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
-import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { getArticlePath } from '@/lib/article-path'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
+import { formatCurrency } from '@/lib/utils'
 
 export default async function HomePage() {
   const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
   const featured = articles.slice(0, 3)
+  const directoryCategories = categories.slice(0, 3)
 
   return (
     <PublicShell>
-      <section className="border-b border-border bg-[linear-gradient(135deg,#fff6e8_0%,#ecf8f2_52%,#f4efe4_100%)]">
-        <div className="mx-auto grid max-w-7xl gap-12 px-4 py-16 sm:px-6 lg:grid-cols-[1.2fr_0.8fr] lg:px-8 lg:py-24">
+      <section className="overflow-hidden px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pb-24">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
-            <div className="inline-flex rounded-full border border-primary/15 bg-white/80 px-4 py-2 font-mono text-xs uppercase tracking-[0.28em] text-primary shadow-sm">
-              Bes3 Review Engine
+            <div className="inline-flex items-center rounded-full bg-secondary px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-secondary-foreground">
+              Expert Selection
             </div>
-            <div className="space-y-5">
-              <h1 className="max-w-4xl font-[var(--font-display)] text-5xl font-semibold tracking-tight text-balance text-foreground sm:text-6xl">
-                The best 3 tech picks, decoded.
+            <div className="space-y-6">
+              <h1 className="max-w-4xl font-[var(--font-display)] text-5xl font-black tracking-tight text-balance text-foreground sm:text-7xl">
+                The Best 3 Tech Picks, <span className="text-primary">decoded.</span>
               </h1>
-              <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-                Bes3 turns affiliate products into practical review pages, comparison breakdowns, and buyer-ready summaries with a clear CTA and transparent tradeoffs.
+              <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
+                Bes3 filters review noise into decisive shortlists, comparison notes, and buyer-ready guidance so you can make the next purchase with confidence.
               </p>
             </div>
-            <div className="flex flex-wrap items-center gap-4">
-              <PrimaryCta href={featured[0] ? `/reviews/${featured[0].slug}` : '/deals'} label="Browse Featured Review" />
-              <Link href="/directory" className="rounded-full border border-border bg-white px-5 py-3 text-sm font-semibold text-foreground shadow-sm transition-transform hover:-translate-y-0.5">
-                Open Directory
+            <div className="flex flex-wrap gap-4">
+              <Link
+                href={featured[0] ? getArticlePath(featured[0].type, featured[0].slug) : '/directory'}
+                className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
+              >
+                Explore the Top 3
+              </Link>
+              <Link
+                href="/deals"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
+              >
+                See Trending Deals
               </Link>
             </div>
           </div>
-          <div className="rounded-[32px] border border-white/60 bg-white/80 p-6 shadow-panel backdrop-blur">
-            <div className="bg-grid rounded-[24px] border border-border bg-[#f7f1e4] p-6">
-              <p className="font-mono text-xs uppercase tracking-[0.24em] text-muted-foreground">Core Workflow</p>
-              <div className="mt-5 space-y-4">
-                {[
-                  'Paste affiliate link or sync products from PartnerBoost',
-                  'Resolve redirects and scrape the real product page',
-                  'Mine high-value long-tail keywords',
-                  'Generate review and comparison content',
-                  'Publish SEO pages and update sitemap'
-                ].map((item, index) => (
-                  <div key={item} className="flex items-start gap-4 rounded-2xl border border-border bg-white px-4 py-4">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
-                      {index + 1}
-                    </div>
-                    <p className="text-sm leading-7 text-foreground">{item}</p>
-                  </div>
-                ))}
+          <div className="relative">
+            <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2.5rem] bg-primary/10" />
+            <div className="editorial-shadow relative overflow-hidden rounded-[2.5rem] bg-white">
+              <div className="relative aspect-[4/4.7] bg-[linear-gradient(135deg,#dfe9fa,#eef4ff)]">
+                {featured[0]?.heroImageUrl ? (
+                  <Image
+                    src={featured[0].heroImageUrl}
+                    alt={featured[0].title}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 42vw"
+                    className="object-cover"
+                  />
+                ) : (
+                  <div className="bg-grid absolute inset-0" />
+                )}
+              </div>
+              <div className="space-y-5 p-8">
+                <div className="flex items-center gap-3">
+                  <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-primary-foreground">
+                    Featured Review
+                  </span>
+                  {featured[0]?.product?.category ? (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
+                      {featured[0].product.category.replace(/-/g, ' ')}
+                    </span>
+                  ) : null}
+                </div>
+                <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
+                  {featured[0]?.title || 'Calm, buyer-first recommendations.'}
+                </h2>
+                <p className="text-base leading-8 text-muted-foreground">
+                  {featured[0]?.summary || 'Practical verdicts, clear tradeoffs, and direct paths into the products that actually deserve your time.'}
+                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl space-y-10 px-4 py-16 sm:px-6 lg:px-8">
-        <SectionHeader eyebrow="Featured Reviews" title="High-signal pages built for buyers, not fluff." description="Review pages, comparison guides, and supporting informational content share one consistent visual system and one clean buying language." />
-        <div className="grid gap-8 lg:grid-cols-3">
-          {featured.map((article) => {
-            const href = article.type === 'comparison' ? `/compare/${article.slug}` : `/reviews/${article.slug}`
-            return <ArticleCard key={article.id} article={article} href={href} />
-          })}
-        </div>
-      </section>
-
-      <section className="border-y border-border bg-[#f7f1e4]">
-        <div className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-          <SectionHeader eyebrow="Categories" title="Topic hubs designed for crawl depth and fast browsing." />
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {categories.map((category) => (
+      <section className="tonal-surface border-y border-white/50 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+            <SectionHeader
+              eyebrow="Category Directory"
+              title="Discover the sections worth browsing."
+              description="Each category hub curates the strongest reviews, useful comparison pages, and supporting how-to content in one place."
+            />
+            <Link href="/directory" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform hover:translate-x-1">
+              View all categories <span aria-hidden="true">→</span>
+            </Link>
+          </div>
+          <div className="grid gap-8 md:grid-cols-3">
+            {directoryCategories.map((category) => (
               <Link
                 key={category}
                 href={`/categories/${category}`}
-                className="rounded-[28px] border border-border bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-panel"
+                className="editorial-shadow group rounded-[2rem] bg-white p-8 transition-transform hover:-translate-y-1"
               >
-                <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Category</p>
-                <h3 className="mt-4 font-[var(--font-display)] text-2xl font-semibold capitalize">{category.replace(/-/g, ' ')}</h3>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">Review hubs, comparisons, and price-driven picks in one place.</p>
+                <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">
+                  <span className="text-lg font-black">{category[0]?.toUpperCase()}</span>
+                </div>
+                <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground group-hover:text-primary">
+                  {category.replace(/-/g, ' ')}
+                </h3>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                  Reviews, comparisons, and buyer notes organized for fast decision-making.
+                </p>
               </Link>
             ))}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-        <div className="grid gap-10 lg:grid-cols-[1.1fr_0.9fr]">
-          <div className="space-y-4">
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Buyer Method</p>
-            <h2 className="font-[var(--font-display)] text-4xl font-semibold">Why only three picks?</h2>
-            <p className="text-base leading-8 text-muted-foreground">
-              Bes3 is built around decision compression. Instead of flooding buyers with fifteen near-identical options, we surface a shortlist with clear reasons to buy, reasons to skip, and one low-friction CTA.
+      <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-14 text-center">
+            <p className="editorial-kicker">Currently Trending</p>
+            <h2 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">
+              The Current Best 3
+            </h2>
+            <div className="mx-auto mt-5 h-1.5 w-24 rounded-full bg-primary" />
+          </div>
+          <div className="grid gap-10 lg:grid-cols-3">
+            {featured.map((article, index) => (
+              <article key={article.id} className="editorial-shadow group relative flex flex-col overflow-hidden rounded-[2rem] bg-white">
+                <div className="absolute left-5 top-5 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-primary text-base font-black text-primary-foreground shadow-lg shadow-emerald-950/10">
+                  {index + 1}
+                </div>
+                <div className="relative aspect-[4/3] overflow-hidden bg-[linear-gradient(135deg,#e5eeff,#dfe9fa)]">
+                  {article.heroImageUrl ? (
+                    <Image
+                      src={article.heroImageUrl}
+                      alt={article.title}
+                      fill
+                      sizes="(max-width: 1024px) 100vw, 33vw"
+                      className="object-cover transition-transform duration-700 group-hover:scale-105"
+                    />
+                  ) : (
+                    <div className="bg-grid absolute inset-0" />
+                  )}
+                </div>
+                <div className="flex flex-1 flex-col p-8">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">
+                    {article.product?.category?.replace(/-/g, ' ') || article.type}
+                  </p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{article.title}</h3>
+                  <p className="mt-4 text-sm leading-7 text-muted-foreground">
+                    {article.summary || 'Clear tradeoffs and calm buyer guidance.'}
+                  </p>
+                  <div className="mt-auto flex items-center justify-between pt-8">
+                    <span className="text-xl font-black text-foreground">
+                      {formatCurrency(article.product?.priceAmount, article.product?.priceCurrency || 'USD')}
+                    </span>
+                    <Link
+                      href={getArticlePath(article.type, article.slug)}
+                      className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
+                    >
+                      Review
+                    </Link>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 overflow-hidden rounded-[2.5rem] bg-[#14202c] px-8 py-10 text-white lg:grid-cols-[0.95fr_1.05fr] lg:px-12 lg:py-14">
+          <div className="space-y-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Weekly Briefing</p>
+            <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-balance text-white">Stay decoded.</h2>
+            <p className="max-w-xl text-base leading-8 text-slate-300">
+              Join the Bes3 shortlist for buyer-focused email notes on category shifts, newly published comparisons, and worthwhile price drops.
             </p>
           </div>
           <NewsletterSignup />

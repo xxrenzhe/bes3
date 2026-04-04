@@ -4,31 +4,31 @@
 
 @layer base {
   :root {
-    --background: 36 33% 98%;
-    --foreground: 210 38% 12%;
+    --background: 220 50% 98%;
+    --foreground: 214 37% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 210 38% 12%;
+    --card-foreground: 214 37% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 38% 12%;
-    --primary: 166 85% 27%;
-    --primary-foreground: 36 33% 98%;
-    --secondary: 34 56% 94%;
-    --secondary-foreground: 210 38% 18%;
-    --muted: 42 28% 94%;
-    --muted-foreground: 215 16% 41%;
-    --accent: 37 89% 60%;
-    --accent-foreground: 212 43% 12%;
+    --popover-foreground: 214 37% 12%;
+    --primary: 158 100% 21%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 217 74% 90%;
+    --secondary-foreground: 216 21% 41%;
+    --muted: 214 64% 94%;
+    --muted-foreground: 210 17% 38%;
+    --accent: 154 85% 74%;
+    --accent-foreground: 155 100% 12%;
     --destructive: 2 78% 59%;
     --destructive-foreground: 0 0% 100%;
-    --border: 38 25% 87%;
-    --input: 38 25% 87%;
-    --ring: 166 85% 27%;
-    --chart-1: 166 85% 27%;
-    --chart-2: 190 83% 39%;
-    --chart-3: 36 87% 55%;
+    --border: 214 26% 82%;
+    --input: 214 26% 82%;
+    --ring: 158 100% 21%;
+    --chart-1: 158 100% 21%;
+    --chart-2: 205 81% 37%;
+    --chart-3: 40 88% 48%;
     --chart-4: 8 75% 58%;
-    --chart-5: 263 70% 57%;
-    --radius: 1rem;
+    --chart-5: 252 68% 58%;
+    --radius: 1.25rem;
   }
 
   * {
@@ -41,6 +41,24 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at top left, rgba(104, 219, 169, 0.12), transparent 30%),
+      radial-gradient(circle at top right, rgba(213, 227, 253, 0.7), transparent 24%),
+      linear-gradient(180deg, rgba(255, 255, 255, 0.45), rgba(248, 249, 255, 0.92));
+  }
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    @apply text-foreground;
+  }
+
+  ::selection {
+    background: rgba(104, 219, 169, 0.35);
+    color: rgb(0 33 20);
   }
 }
 
@@ -53,10 +71,36 @@
   }
 
   .shadow-panel {
-    box-shadow: 0 18px 55px -24px rgba(15, 23, 42, 0.3);
+    box-shadow: 0 24px 50px -28px rgba(18, 28, 40, 0.24);
   }
 
   .text-balance {
     text-wrap: balance;
+  }
+
+  .editorial-shadow {
+    box-shadow: 0 20px 48px -20px rgba(18, 28, 40, 0.12);
+  }
+
+  .glass-nav {
+    background: rgba(248, 249, 255, 0.8);
+    backdrop-filter: blur(18px);
+  }
+
+  .glass-panel {
+    background: rgba(255, 255, 255, 0.76);
+    backdrop-filter: blur(14px);
+  }
+
+  .editorial-kicker {
+    @apply text-xs font-semibold uppercase tracking-[0.28em] text-primary;
+  }
+
+  .editorial-prose {
+    @apply prose prose-slate max-w-none prose-headings:font-[var(--font-display)] prose-headings:tracking-tight prose-p:text-muted-foreground prose-li:text-muted-foreground prose-strong:text-foreground prose-a:text-primary;
+  }
+
+  .tonal-surface {
+    @apply bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(239,244,255,0.72))];
   }
 }

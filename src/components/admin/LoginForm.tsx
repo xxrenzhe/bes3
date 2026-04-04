@@ -15,7 +15,7 @@ export function LoginForm() {
 
   return (
     <form
-      className="space-y-5 rounded-[32px] border border-border bg-white p-8 shadow-panel"
+      className="w-full space-y-6 rounded-[2rem] border border-slate-200/80 bg-white/95 p-8 shadow-[0_28px_70px_-45px_rgba(15,23,42,0.4)]"
       onSubmit={(event) => {
         event.preventDefault()
         startTransition(async () => {
@@ -34,14 +34,40 @@ export function LoginForm() {
         })
       }}
     >
-      <div className="space-y-2">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Admin Login</p>
-        <h1 className="font-[var(--font-display)] text-4xl font-semibold tracking-tight">Sign in to Autobes3.</h1>
-        <p className="text-sm leading-7 text-muted-foreground">Default admin username is <span className="font-semibold">autobes3</span>.</p>
+      <div className="space-y-3">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary">Admin Login</p>
+        <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950">Sign in to Bes3.</h1>
+        <p className="text-sm leading-7 text-slate-600">
+          Internal access only. Default admin username is <span className="font-semibold text-slate-950">{DEFAULT_ADMIN_USERNAME}</span>.
+        </p>
       </div>
-      <Input value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Username" className="min-h-[52px] rounded-2xl" />
-      <Input value={password} onChange={(event) => setPassword(event.target.value)} type="password" placeholder="Password" className="min-h-[52px] rounded-2xl" />
-      <Button type="submit" disabled={isPending} className="min-h-[52px] rounded-full px-6">
+
+      <label className="block space-y-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Username</span>
+        <Input
+          value={username}
+          onChange={(event) => setUsername(event.target.value)}
+          placeholder="Username"
+          className="min-h-[54px] rounded-[1.25rem] border-slate-200 bg-slate-50 px-4 shadow-none focus-visible:ring-2"
+        />
+      </label>
+
+      <label className="block space-y-2">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Password</span>
+        <Input
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          type="password"
+          placeholder="Password"
+          className="min-h-[54px] rounded-[1.25rem] border-slate-200 bg-slate-50 px-4 shadow-none focus-visible:ring-2"
+        />
+      </label>
+
+      <div className="rounded-[1.5rem] bg-emerald-50 px-4 py-4 text-sm leading-7 text-emerald-900">
+        Use this console for operational work only. Consumer-facing pages should stay editorial, calm, and product-comparison focused.
+      </div>
+
+      <Button type="submit" disabled={isPending} className="min-h-[54px] w-full rounded-full px-6 text-base font-semibold">
         {isPending ? 'Signing in...' : 'Sign in'}
       </Button>
     </form>
