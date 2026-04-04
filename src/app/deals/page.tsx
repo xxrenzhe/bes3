@@ -7,26 +7,55 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
-import { buildCollectionPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Live Deals',
-  description:
-    'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
-  path: '/deals'
-})
+export async function generateMetadata(): Promise<Metadata> {
+  const leadProduct = (await listPublishedProducts()).filter((product) => product.resolvedUrl)[0] || null
+
+  return buildPageMetadata({
+    title: 'Live Deals',
+    description:
+      'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
+    path: '/deals',
+    image: leadProduct?.heroImageUrl,
+    freshnessDate: leadProduct?.updatedAt || leadProduct?.publishedAt,
+    freshnessInTitle: true,
+    keywords: ['live deals', 'price tracking', 'product deals', 'buying guide']
+  })
+}
 
 export default async function DealsPage() {
   const products = (await listPublishedProducts()).filter((product) => product.resolvedUrl).slice(0, 6)
   const leadProduct = products[0] || null
+  const latestRefresh = products.map((product) => product.updatedAt || product.publishedAt).find(Boolean) || null
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Deals', path: '/deals' }
+  ]
+  const howToSteps = [
+    {
+      name: 'Validate the product fit first',
+      text: 'Use deals only after the product already looks credible for your use case. A markdown should accelerate a good decision, not create a bad one.'
+    },
+    {
+      name: 'Keep finalists in shortlist',
+      text: 'Save strong candidates so a temporary price move does not destroy the comparison context you already built.'
+    },
+    {
+      name: 'Switch to a price watch when needed',
+      text: 'If the current deal is close but not quite right, track the category instead of buying under pressure.'
+    }
+  ]
   const structuredData = buildCollectionPageSchema({
     path: '/deals',
     title: 'Live Deals',
     description: 'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
     image: leadProduct?.heroImageUrl,
+    breadcrumbItems,
+    dateModified: latestRefresh,
     items: products.map((product) => ({
       name: product.productName,
       path: product.slug ? `/products/${product.slug}` : '/deals'
@@ -67,7 +96,7 @@ export default async function DealsPage() {
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[buildBreadcrumbSchema('/deals', breadcrumbItems), structuredData, buildHowToSchema('/deals', 'How to use Bes3 live deals', 'Use the deals page to validate product fit, keep finalists together, and switch to a price watch when timing matters.', howToSteps)]} />
       <div className="space-y-16">
         <section className="overflow-hidden bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">

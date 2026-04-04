@@ -11,10 +11,15 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
-import { buildBreadcrumbSchema, buildProductSchema } from '@/lib/structured-data'
+import { toAbsoluteUrl } from '@/lib/site-url'
+import { buildBreadcrumbSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+
+function getCategoryLabelValue(category: string | null) {
+  return category ? category.replace(/-/g, ' ') : ''
+}
 
 export async function generateMetadata({
   params
@@ -38,6 +43,8 @@ export async function generateMetadata({
 
   const articles = await listPublishedArticles()
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
+  const freshnessDate = reviewArticle?.updatedAt || reviewArticle?.publishedAt || reviewArticle?.createdAt || product.updatedAt || product.publishedAt
+  const category = getCategoryLabelValue(product.category)
 
   return buildPageMetadata({
     title: product.productName,
@@ -45,7 +52,11 @@ export async function generateMetadata({
       pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
       `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`,
     path: `/products/${product.slug}`,
-    image: product.heroImageUrl || reviewArticle?.heroImageUrl
+    image: product.heroImageUrl || reviewArticle?.heroImageUrl,
+    category: category || undefined,
+    freshnessDate,
+    freshnessInTitle: true,
+    keywords: [product.productName, product.brand || '', category, 'product review', 'buying guide'].filter(Boolean)
   })
 }
 
@@ -70,13 +81,49 @@ export default async function ProductPage({
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
     `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: product.category ? `/categories/${product.category}` : '/directory' },
+    { name: product.productName, path }
+  ]
+  const howToSteps = [
+    {
+      name: 'Check the product fit',
+      text: 'Start with the freshness, best-for, and skip-if signals on this page before price influences the decision.'
+    },
+    {
+      name: 'Validate the verdict',
+      text: reviewArticle
+        ? 'Open the full review when you need deeper buyer-fit context before you save or click through.'
+        : 'Use the product facts and confidence signals here to decide whether the product deserves a place on the shortlist.'
+    },
+    {
+      name: 'Compare or watch the lane',
+      text: `If the product looks plausible but not final, move into ${categoryLabel} comparisons or price-watch flows instead of restarting research.`
+    }
+  ]
   const structuredData = [
-    buildBreadcrumbSchema(path, [
-      { name: 'Home', path: '/' },
-      { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: product.category ? `/categories/${product.category}` : '/directory' },
-      { name: product.productName, path }
-    ]),
-    buildProductSchema(product, path, productDescription, heroImageUrl)
+    buildBreadcrumbSchema(path, breadcrumbItems),
+    buildWebPageSchema({
+      path,
+      title: product.productName,
+      description: productDescription,
+      image: heroImageUrl,
+      breadcrumbItems,
+      datePublished: product.publishedAt || reviewArticle?.publishedAt || reviewArticle?.createdAt || null,
+      dateModified: snapshotDate,
+      about: product.category
+        ? {
+            '@type': 'Thing',
+            name: categoryLabel
+          }
+        : undefined,
+      mainEntity: {
+        '@id': `${toAbsoluteUrl(path)}#product`
+      }
+    }),
+    buildProductSchema(product, path, productDescription, heroImageUrl),
+    buildHowToSchema(path, `How to use ${product.productName} on Bes3`, 'Use the product page to validate fit, pressure-test the verdict, and choose the cleanest next move.', howToSteps)
   ]
   const nextMoves = [
     reviewArticle

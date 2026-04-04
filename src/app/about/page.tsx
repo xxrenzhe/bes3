@@ -6,14 +6,15 @@ import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
-import { buildWebPageSchema } from '@/lib/structured-data'
+import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export const metadata: Metadata = buildPageMetadata({
   title: 'About Bes3',
   description:
     'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
-  path: '/about'
+  path: '/about',
+  keywords: ['about bes3', 'product reviews', 'comparison methodology', 'buying guides']
 })
 
 export default async function AboutPage() {
@@ -135,12 +136,29 @@ export default async function AboutPage() {
       label: 'Open shortlist'
     }
   ]
-  const structuredData = buildWebPageSchema({
-    path: '/about',
-    title: 'About Bes3',
-    description: 'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
-    type: 'AboutPage'
-  })
+  const faqEntries = [
+    {
+      question: 'What does Bes3 actually publish?',
+      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category hubs, and alert flows that map to different stages of a real buying decision.'
+    },
+    {
+      question: 'When should you use a review instead of a comparison?',
+      answer: 'Use a review when one product already looks plausible and you want buyer-fit validation. Use a comparison only after the shortlist is tight enough for a head-to-head decision.'
+    },
+    {
+      question: 'How does Bes3 try to stay trustworthy?',
+      answer: 'Bes3 keeps sponsored intent next to buying actions instead of inside the ranking logic, avoids giant filler lists, and treats price as a final accelerant rather than the first filter.'
+    }
+  ]
+  const structuredData = [
+    buildWebPageSchema({
+      path: '/about',
+      title: 'About Bes3',
+      description: 'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
+      type: 'AboutPage'
+    }),
+    buildFaqSchema('/about', faqEntries)
+  ]
 
   return (
     <PublicShell>
@@ -281,6 +299,24 @@ export default async function AboutPage() {
                   </div>
                 ))}
               </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+            <SectionHeader
+              eyebrow="Trust FAQ"
+              title="Questions people should be able to answer before trusting the site."
+              description="These are the practical methodology questions that matter most if you are deciding whether Bes3 is worth using as part of a live purchase decision."
+            />
+            <div className="mt-8 grid gap-4 md:grid-cols-3">
+              {faqEntries.map((entry) => (
+                <div key={entry.question} className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{entry.question}</h2>
+                  <p className="mt-4 text-sm leading-7 text-muted-foreground">{entry.answer}</p>
+                </div>
+              ))}
             </div>
           </div>
         </section>

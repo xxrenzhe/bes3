@@ -7,7 +7,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
-import { buildBreadcrumbSchema, buildCollectionPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
 import { listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -22,6 +22,13 @@ export async function generateMetadata({
   const leadArticle = articles.find((article) => article.type === 'review') || articles[0] || null
   const leadProduct = products[0] || null
   const categoryLabel = getCategoryLabel(slug)
+  const freshnessDate =
+    leadArticle?.updatedAt ||
+    leadArticle?.publishedAt ||
+    leadArticle?.createdAt ||
+    leadProduct?.updatedAt ||
+    leadProduct?.publishedAt ||
+    null
 
   return buildPageMetadata({
     title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
@@ -29,7 +36,11 @@ export async function generateMetadata({
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
       `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
     path: `/categories/${slug}`,
-    image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl
+    image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
+    category: categoryLabel,
+    freshnessDate,
+    freshnessInTitle: true,
+    keywords: [categoryLabel, 'buying guide', 'product reviews', 'comparisons'].filter(Boolean)
   })
 }
 
@@ -55,12 +66,29 @@ export default async function CategoryPage({
   const categoryLabel = getCategoryLabel(slug)
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
   const path = `/categories/${slug}`
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Directory', path: '/directory' },
+    { name: toTitleCaseWords(categoryLabel), path }
+  ]
+  const howToSteps = [
+    {
+      name: 'Shortlist the credible products',
+      text: 'Start with the strongest product cards when you still need the category narrowed into a few options worth saving.'
+    },
+    {
+      name: 'Validate with a live verdict',
+      text: featuredReview
+        ? 'Open the lead review once one candidate already looks plausible and you want product-fit context before comparing.'
+        : 'Use the strongest available page in the category to validate whether the lane is mature enough to act on.'
+    },
+    {
+      name: 'Compare or track the lane',
+      text: 'Move into comparisons when the shortlist is tight. If timing is the blocker, switch to category alerts without losing the same buying context.'
+    }
+  ]
   const structuredData = [
-    buildBreadcrumbSchema(path, [
-      { name: 'Home', path: '/' },
-      { name: 'Directory', path: '/directory' },
-      { name: toTitleCaseWords(categoryLabel), path }
-    ]),
+    buildBreadcrumbSchema(path, breadcrumbItems),
     buildCollectionPageSchema({
       path,
       title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
@@ -68,6 +96,12 @@ export default async function CategoryPage({
         pickMetadataDescription(featuredReview?.seoDescription, featuredReview?.summary, featured?.summary) ||
         `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
       image: featured?.heroImageUrl || products[0]?.heroImageUrl,
+      breadcrumbItems,
+      about: {
+        '@type': 'Thing',
+        name: categoryLabel
+      },
+      dateModified: latestRefresh,
       items: [
         ...products.slice(0, 6).map((product) => ({
           name: product.productName,
@@ -78,7 +112,8 @@ export default async function CategoryPage({
           path: getArticlePath(article.type, article.slug)
         }))
       ]
-    })
+    }),
+    buildHowToSchema(path, `How to use the ${categoryLabel} category hub`, 'Use the category hub to shortlist credible products, validate the lead verdict, and compare or track the lane.', howToSteps)
   ]
   const buyerRoutes = [
     {
