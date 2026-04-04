@@ -72,7 +72,7 @@ export function PublicShell({
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Tech Buying Intelligence</p>
             <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h2>
             <p className="max-w-xl text-sm leading-7 text-muted-foreground">
-              {DEFAULT_SITE_TAGLINE} Bes3 filters review noise into decisive shortlists, comparison guides, and calm buyer notes built for real purchase decisions.
+              {DEFAULT_SITE_TAGLINE} Bes3 is a buyer-first consumer guide that turns noisy research into shortlists, comparisons, deep dives, and price-aware next steps.
             </p>
           </div>
           <div>
