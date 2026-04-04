@@ -3,6 +3,7 @@
 import { useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { slugify } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 
 const INTENT_OPTIONS = [
@@ -44,9 +45,13 @@ export function NewsletterSignup({
   initialCategorySlug?: string
   initialCadence?: CadenceId
 }) {
+  const normalizedInitialCategorySlug = slugify(initialCategorySlug)
+  const resolvedCategoryOptions = normalizedInitialCategorySlug && !categoryOptions.includes(normalizedInitialCategorySlug)
+    ? [normalizedInitialCategorySlug, ...categoryOptions]
+    : categoryOptions
   const [email, setEmail] = useState('')
   const [intent, setIntent] = useState<IntentId>(initialIntent)
-  const [categorySlug, setCategorySlug] = useState(categoryOptions.includes(initialCategorySlug) ? initialCategorySlug : '')
+  const [categorySlug, setCategorySlug] = useState(normalizedInitialCategorySlug)
   const [cadence, setCadence] = useState<CadenceId>(initialCadence)
   const [done, setDone] = useState(false)
   const [isPending, startTransition] = useTransition()
@@ -122,7 +127,7 @@ export function NewsletterSignup({
                 className="w-full border-none bg-transparent text-sm text-foreground outline-none"
               >
                 <option value="">Any category</option>
-                {categoryOptions.map((category) => (
+                {resolvedCategoryOptions.map((category) => (
                   <option key={category} value={category}>
                     {category.replace(/-/g, ' ')}
                   </option>

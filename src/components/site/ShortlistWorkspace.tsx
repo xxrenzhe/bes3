@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-import { ArrowRight, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
+import { ArrowRight, BellRing, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
@@ -40,6 +40,24 @@ function buildCategoryHubHref(item: ShortlistItem | undefined) {
 
 function getCategoryLabel(item: ShortlistItem | undefined) {
   return item?.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'
+}
+
+function buildCategoryAlertHref(
+  item: ShortlistItem | undefined,
+  intent: 'price-alert' | 'category-brief' | 'deals' = 'price-alert',
+  cadence: 'priority' | 'weekly' = 'priority'
+) {
+  if (!item?.category) {
+    return `/newsletter?intent=${intent === 'category-brief' ? 'deals' : intent}&cadence=${cadence}`
+  }
+
+  const params = new URLSearchParams({
+    intent,
+    category: item.category,
+    cadence
+  })
+
+  return `/newsletter?${params.toString()}`
 }
 
 const DECISION_STAGE_PRIORITY: Record<ReturnType<typeof getShortlistDecisionState>['stage'], number> = {
@@ -202,6 +220,64 @@ export function ShortlistWorkspace({
   const compareCandidates = shortlist.slice(0, Math.min(shortlist.length, 3))
   const compareCandidateNames = buildProductRollup(compareCandidates)
   const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
+  const leadDecisionItem = compare[0] || dominantDecisionPath?.recommendedItems[0] || shortlist[0]
+  const alertAnchorItem = dominantDecisionPath?.items[0] || compare[0] || shortlist[0]
+  const outcomeCards = shortlist.length
+    ? [
+        {
+          eyebrow: 'Validate',
+          title: leadDecisionItem ? `Open ${leadDecisionItem.productName}` : 'Open the strongest saved pick',
+          description: 'Use the lead product page when you want one last buyer-fit check before compare or checkout.',
+          href: getShortlistProductPath(leadDecisionItem),
+          label: 'Open deep-dive'
+        },
+        compareCount >= 2
+          ? {
+              eyebrow: 'Compare',
+              title: 'Finish the finalist comparison',
+              description: 'Your compare queue already has enough candidates. Stay inside the matrix until one winner is clear.',
+              href: '/shortlist#decision-matrix',
+              label: 'Jump to matrix'
+            }
+          : compareCandidates.length >= 2
+            ? {
+                eyebrow: 'Compare',
+                title: 'Promote saved picks into compare',
+                description: 'The shortlist is mature enough to stop collecting and start deciding between real finalists.',
+                action: () => setCompareFromItems(compareCandidates, 'shortlist-outcome-cards'),
+                label: `Load ${compareCandidates.length} into compare`
+              }
+            : {
+                eyebrow: 'Compare',
+                title: 'Add one more serious contender',
+                description: 'You still need a cleaner lane before compare becomes useful. Pull one more option from the same category first.',
+                href: searchForAlternativesHref,
+                label: 'Browse this lane'
+              },
+        {
+          eyebrow: 'Wait',
+          title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Start price alerts',
+          description: 'If timing is the blocker, switch from active deciding into a price-watch flow instead of losing the shortlist context.',
+          href: buildCategoryAlertHref(alertAnchorItem, 'price-alert', 'priority'),
+          label: 'Start price watch'
+        },
+        comparisonSearchHref && compareCount >= 2
+          ? {
+              eyebrow: 'Publish',
+              title: 'Look for a published comparison',
+              description: 'If the shortlist matrix is close but you want editorial backup, search for a Bes3 comparison page next.',
+              href: comparisonSearchHref,
+              label: 'Search comparisons'
+            }
+          : {
+              eyebrow: 'Browse',
+              title: alertAnchorItem?.category ? `Reopen ${getCategoryLabel(alertAnchorItem)}` : 'Reopen the directory',
+              description: 'Return to the category lane when the shortlist still needs stronger context before you keep deciding.',
+              href: buildCategoryHubHref(alertAnchorItem),
+              label: 'Browse category hub'
+            }
+      ]
+    : []
   const sharedBriefPreview = sharedSummary
     ? [
         `${sharedSummary.overview} ${sharedSummary.decisionNote}`,
@@ -568,6 +644,67 @@ export function ShortlistWorkspace({
         </section>
       ) : null}
 
+      {outcomeCards.length ? (
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">Decision Exits</p>
+              <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Choose whether this shortlist should compare, validate, or wait.
+              </h3>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                A saved list only has value if it leads somewhere. Use these routes to keep the shortlist moving: validate the lead pick, promote finalists into compare, or switch the whole lane into alerts when buying later is smarter.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">
+                  {compareCount >= 2
+                    ? 'Your shortlist already has active finalists. Compare now if the decision is close, or switch to a watch flow if price timing is the only thing left.'
+                    : shortlist.length >= 2
+                      ? 'This shortlist is mature enough to compare. If you are still hesitating, validate the lead pick or set alerts instead of adding more noise.'
+                      : 'One saved product is not a decision yet. Either validate it with a deep-dive or reopen the lane and add one more serious contender.'}
+                </p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {outcomeCards.map((card) =>
+                'action' in card ? (
+                  <button
+                    key={card.title}
+                    type="button"
+                    onClick={card.action}
+                    className="rounded-[1.75rem] bg-white p-6 text-left shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{card.eyebrow}</p>
+                    <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{card.title}</h4>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{card.description}</p>
+                    <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Scale className="h-4 w-4" />
+                      {card.label}
+                    </p>
+                  </button>
+                ) : (
+                  <Link
+                    key={card.title}
+                    href={card.href}
+                    className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{card.eyebrow}</p>
+                    <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{card.title}</h4>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{card.description}</p>
+                    <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                      {card.eyebrow === 'Wait' ? <BellRing className="h-4 w-4" /> : <ArrowRight className="h-4 w-4" />}
+                      {card.label}
+                    </p>
+                  </Link>
+                )
+              )}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       {decisionPaths.length > 1 ? (
         <section id="decision-paths" className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_50%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
@@ -859,6 +996,13 @@ export function ShortlistWorkspace({
                             <ExternalLink className="h-4 w-4" />
                           </Link>
                         ) : null}
+                        <Link
+                          href={buildCategoryAlertHref(item, 'price-alert', 'priority')}
+                          className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+                        >
+                          <BellRing className="h-4 w-4" />
+                          Track price
+                        </Link>
                         <button
                           type="button"
                           onClick={() => removeShortlist(item.id, 'shortlist-workspace-card')}
