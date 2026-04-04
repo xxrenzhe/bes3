@@ -1,5 +1,6 @@
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { listProducts } from '@/lib/site-data'
 import { formatCurrency } from '@/lib/utils'
 
@@ -35,7 +36,7 @@ export default async function DealsPage() {
               <div key={product.id} className="editorial-shadow group overflow-hidden rounded-[2rem] bg-white">
                 <div className="flex items-center justify-between px-6 pt-6">
                   <span className="rounded-full bg-rose-100 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-rose-700">Live Deal</span>
-                  {product.rating ? <span className="text-sm font-semibold text-muted-foreground">{product.rating.toFixed(1)} / 5</span> : null}
+                  <span className="text-sm font-semibold text-muted-foreground">{getFreshnessLabel(product.updatedAt || product.publishedAt)}</span>
                 </div>
                 <div className="space-y-4 p-6">
                   <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">{product.productName}</h2>
@@ -44,10 +45,14 @@ export default async function DealsPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
                     <p className="mt-3 text-3xl font-black text-foreground">{formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}</p>
                     <p className="mt-2 text-sm text-muted-foreground">
-                      {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'}
+                      {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'} · Checked {formatEditorialDate(product.updatedAt || product.publishedAt)}
                     </p>
                   </div>
-                  <PrimaryCta href={product.resolvedUrl || '#'} label="Check Current Price on Amazon" />
+                  <PrimaryCta
+                    href={product.resolvedUrl || '#'}
+                    label="Check Current Price on Amazon"
+                    note={`Decision note: move fast only if this still fits your actual use case and budget.`}
+                  />
                 </div>
               </div>
             ))}
