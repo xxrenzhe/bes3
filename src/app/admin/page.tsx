@@ -79,7 +79,7 @@ export default async function AdminDashboardPage() {
         </div>
 
         <div className="mt-6 grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
-          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Shortlist Visitors</p>
               <p className="mt-3 text-3xl font-black text-slate-950">{decisionFunnel.shortlistVisitors}</p>
@@ -91,6 +91,13 @@ export default async function AdminDashboardPage() {
               <p className="mt-2 text-sm leading-7 text-slate-600">{decisionFunnel.compareEvents} compare activations show who is narrowing to finalists.</p>
             </div>
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Coach Engaged</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{decisionFunnel.coachVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {decisionFunnel.coachPrimaryEvents} primary and {decisionFunnel.coachSecondaryEvents} secondary coach clicks in the last {decisionFunnel.lookbackDays} days.
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Shared Imports</p>
               <p className="mt-3 text-3xl font-black text-slate-950">{decisionFunnel.sharedImportVisitors}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">{decisionFunnel.sharedViewVisitors} visitors opened a shared shortlist.</p>
@@ -100,18 +107,34 @@ export default async function AdminDashboardPage() {
               <p className="mt-3 text-3xl font-black text-slate-950">{decisionFunnel.merchantIntentVisitors}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">{decisionFunnel.merchantIntentEvents} merchant CTA clicks captured before redirect.</p>
             </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Verified Exits</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{decisionFunnel.verifiedMerchantVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{decisionFunnel.verifiedMerchantEvents} server-side redirects matched to anonymous buyer IDs.</p>
+            </div>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
+          <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
             <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#0f766e_100%)] p-5 text-white shadow-[0_24px_60px_-36px_rgba(15,23,42,0.5)]">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200/90">Shortlist → Compare</p>
               <p className="mt-3 text-3xl font-black">{formatPercent(decisionFunnel.shortlistToCompareRate)}</p>
               <p className="mt-2 text-sm leading-7 text-slate-200">Visitor-level conversion from saving candidates to loading finalists into compare.</p>
             </div>
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Compare → Merchant</p>
-              <p className="mt-3 text-3xl font-black text-slate-950">{formatPercent(decisionFunnel.compareToMerchantRate)}</p>
-              <p className="mt-2 text-sm leading-7 text-slate-600">How many compare visitors click a merchant CTA in the same lookback window.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Coach Share Of Compare</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{formatPercent(decisionFunnel.coachInfluencedCompareRate)}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {decisionFunnel.topCoachAction
+                  ? `${decisionFunnel.coachCompareLoadVisitors} compare visitors were loaded directly by the coach. Top coach action: ${formatMerchantSource(decisionFunnel.topCoachAction)} (${decisionFunnel.topCoachActionEvents}).`
+                  : 'Once buyers click coach actions, Bes3 will surface which prompt drives the most movement into compare.'}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Compare → Verified Exit</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{formatPercent(decisionFunnel.compareToVerifiedMerchantRate)}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {formatPercent(decisionFunnel.compareToMerchantRate)} intent rate versus a verified server-side exit rate from the same lookback window.
+              </p>
             </div>
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Shared View → Import</p>

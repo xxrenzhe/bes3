@@ -10,6 +10,8 @@ export const DECISION_EVENT_TYPES = [
   'shared_shortlist_compare_load',
   'shortlist_share_link_copy',
   'shared_shortlist_brief_copy',
+  'decision_coach_primary_click',
+  'decision_coach_secondary_click',
   'merchant_cta_click'
 ] as const
 

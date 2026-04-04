@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/db'
+import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/decision-visitor'
 import { recordMerchantClick } from '@/lib/merchant-clicks'
 import { normalizeMerchantSource } from '@/lib/merchant-links'
 
@@ -39,6 +40,7 @@ export async function GET(
   try {
     await recordMerchantClick({
       productId: product.id,
+      visitorId: normalizeDecisionVisitorId(request.nextUrl.searchParams.get(DECISION_VISITOR_QUERY_PARAM)),
       source: normalizeMerchantSource(request.nextUrl.searchParams.get('source')),
       targetUrl: destination,
       referer: request.headers.get('referer'),
@@ -49,7 +51,10 @@ export async function GET(
   }
 
   try {
-    return NextResponse.redirect(new URL(destination), 307)
+    const response = NextResponse.redirect(new URL(destination), 307)
+    response.headers.set('Cache-Control', 'no-store')
+    response.headers.set('Referrer-Policy', 'origin')
+    return response
   } catch {
     return NextResponse.redirect(new URL(getFallbackPath(product), request.url))
   }

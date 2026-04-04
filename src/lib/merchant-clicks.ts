@@ -1,14 +1,17 @@
 import { getDatabase } from '@/lib/db'
+import { normalizeDecisionVisitorId } from '@/lib/decision-visitor'
 import { normalizeMerchantSource } from '@/lib/merchant-links'
 
 export async function recordMerchantClick({
   productId,
+  visitorId,
   source,
   targetUrl,
   referer,
   userAgent
 }: {
   productId: number
+  visitorId?: string | null
   source: string
   targetUrl: string
   referer?: string | null
@@ -17,10 +20,17 @@ export async function recordMerchantClick({
   const db = await getDatabase()
   await db.exec(
     `
-      INSERT INTO merchant_click_events (product_id, source, target_url, referer, user_agent)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO merchant_click_events (product_id, visitor_id, source, target_url, referer, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?)
     `,
-    [productId, normalizeMerchantSource(source), targetUrl, referer || null, userAgent || null]
+    [
+      productId,
+      normalizeDecisionVisitorId(visitorId) || null,
+      normalizeMerchantSource(source),
+      targetUrl,
+      referer || null,
+      userAgent || null
+    ]
   )
 }
 

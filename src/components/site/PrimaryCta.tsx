@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { trackDecisionEvent } from '@/lib/decision-tracking'
+import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 
 export function PrimaryCta({
   href,
@@ -16,11 +17,27 @@ export function PrimaryCta({
   productId?: number | null
   trackingSource?: string
 }) {
+  const [resolvedHref, setResolvedHref] = useState(href)
+
+  useEffect(() => {
+    if (!href) {
+      setResolvedHref(null)
+      return
+    }
+
+    if (!productId || !href.startsWith('/go/')) {
+      setResolvedHref(href)
+      return
+    }
+
+    setResolvedHref(buildTrackedMerchantExitPath(productId, trackingSource))
+  }, [href, productId, trackingSource])
+
   return (
     <div className="space-y-2">
-      {href ? (
+      {resolvedHref ? (
         <Link
-          href={href}
+          href={resolvedHref}
           target="_blank"
           prefetch={false}
           onClick={() => {
@@ -46,7 +63,7 @@ export function PrimaryCta({
       )}
       {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
       <p className="text-xs text-muted-foreground">
-        {href
+        {resolvedHref
           ? 'Affiliate disclosure: Bes3 may earn from qualifying purchases at no extra cost to you.'
           : 'Bes3 only sends buyers off-site after a merchant link is verified.'}
       </p>
