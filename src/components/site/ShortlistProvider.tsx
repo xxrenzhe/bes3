@@ -14,6 +14,9 @@ type ShortlistContextValue = {
   isCompared: (productId: number) => boolean
   toggleShortlist: (item: ShortlistItem) => void
   toggleCompare: (item: ShortlistItem) => void
+  addManyToShortlist: (items: ShortlistItem[]) => void
+  replaceShortlist: (items: ShortlistItem[]) => void
+  setCompareFromItems: (items: ShortlistItem[]) => void
   removeShortlist: (productId: number) => void
   clearShortlist: () => void
   clearCompare: () => void
@@ -79,6 +82,11 @@ function removeById(items: ShortlistItem[], productId: number) {
   return items.filter((item) => item.id !== productId)
 }
 
+function mergeItems(priorityItems: ShortlistItem[], existingItems: ShortlistItem[] = []) {
+  const merged = [...priorityItems, ...existingItems]
+  return merged.filter((item, index, list) => list.findIndex((candidate) => candidate.id === item.id) === index)
+}
+
 export function ShortlistProvider({
   children
 }: {
@@ -126,6 +134,19 @@ export function ShortlistProvider({
     toast.success(`${item.productName} saved to your shortlist`)
   }
 
+  const addManyToShortlist = (items: ShortlistItem[]) => {
+    if (!items.length) return
+    setShortlist((current) => mergeItems(items, current))
+    toast.success(`${items.length} shared ${items.length === 1 ? 'pick' : 'picks'} added to your shortlist`)
+  }
+
+  const replaceShortlist = (items: ShortlistItem[]) => {
+    const nextShortlist = mergeItems(items, [])
+    setShortlist(nextShortlist)
+    setCompare((current) => current.filter((item) => nextShortlist.some((candidate) => candidate.id === item.id)).slice(0, MAX_COMPARE_ITEMS))
+    toast.success(`Shortlist replaced with ${nextShortlist.length} shared ${nextShortlist.length === 1 ? 'pick' : 'picks'}`)
+  }
+
   const toggleCompare = (item: ShortlistItem) => {
     if (isCompared(item.id)) {
       setCompare((current) => removeById(current, item.id))
@@ -157,6 +178,15 @@ export function ShortlistProvider({
     }
   }
 
+  const setCompareFromItems = (items: ShortlistItem[]) => {
+    const nextCompare = mergeItems(items, []).slice(0, MAX_COMPARE_ITEMS)
+    if (!nextCompare.length) return
+
+    setShortlist((current) => mergeItems(nextCompare, current))
+    setCompare(nextCompare)
+    toast.success(`${nextCompare.length} ${nextCompare.length === 1 ? 'product' : 'products'} loaded into compare`)
+  }
+
   const clearShortlist = () => {
     setShortlist([])
     setCompare([])
@@ -180,6 +210,9 @@ export function ShortlistProvider({
         isCompared,
         toggleShortlist,
         toggleCompare,
+        addManyToShortlist,
+        replaceShortlist,
+        setCompareFromItems,
         removeShortlist,
         clearShortlist,
         clearCompare
