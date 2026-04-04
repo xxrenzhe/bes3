@@ -1,3 +1,5 @@
+import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/decision-visitor'
+
 const MAX_SOURCE_LENGTH = 80
 
 export function normalizeMerchantSource(source: string | null | undefined) {
@@ -11,8 +13,12 @@ export function normalizeMerchantSource(source: string | null | undefined) {
   return normalized.slice(0, MAX_SOURCE_LENGTH) || 'site'
 }
 
-export function buildMerchantExitPath(productId: number, source: string) {
+export function buildMerchantExitPath(productId: number, source: string, visitorId?: string | null) {
   const params = new URLSearchParams({ source: normalizeMerchantSource(source) })
+  const normalizedVisitorId = normalizeDecisionVisitorId(visitorId)
+  if (normalizedVisitorId) {
+    params.set(DECISION_VISITOR_QUERY_PARAM, normalizedVisitorId)
+  }
   return `/go/${productId}?${params.toString()}`
 }
 

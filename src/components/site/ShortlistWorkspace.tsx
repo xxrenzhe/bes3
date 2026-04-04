@@ -6,9 +6,8 @@ import Link from 'next/link'
 import { ArrowRight, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
-import { trackDecisionEvent } from '@/lib/decision-tracking'
+import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { buildShortlistBuyingBrief, buildShortlistSharePath, getShortlistProductPath, summarizeShortlist, type ShortlistItem } from '@/lib/shortlist'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -114,15 +113,19 @@ export function ShortlistWorkspace({
       values: compare.map((item) => item.reviewHighlights[0] || 'Open the deep-dive for the fuller verdict')
     }
   ]
+  const coachSource = 'shortlist-decision-coach'
   const coach = shortlist.length === 1
     ? {
+        variant: 'expand-options',
         eyebrow: 'Decision Coach',
         title: 'Add one more contender before you decide.',
         description: 'A single saved product is still a preference, not a decision. Pull in at least one serious alternative so the tradeoffs become obvious.',
         primaryLabel: shortlist[0]?.category ? 'Browse this category' : 'Browse the directory',
         primaryHref: searchForAlternativesHref,
+        primaryActionKey: 'browse-category',
         secondaryLabel: 'Open saved pick',
         secondaryHref: getShortlistProductPath(shortlist[0]),
+        secondaryActionKey: 'open-saved-pick',
         highlights: [
           'Best next move: find one comparable option in the same category.',
           `Current saved pick: ${shortlist[0]?.productName || 'Your saved product'}.`
@@ -131,13 +134,16 @@ export function ShortlistWorkspace({
       }
     : shortlist.length >= 2 && compareCount < 2
       ? {
+          variant: 'start-compare',
           eyebrow: 'Decision Coach',
           title: 'Turn your shortlist into a real comparison.',
           description: 'You already have enough candidates to stop collecting and start deciding. Load the strongest saved picks into compare and keep the shortlist for backups.',
           primaryLabel: `Load ${compareCandidates.length} ${compareCandidates.length === 1 ? 'pick' : 'picks'} into compare`,
           primaryAction: () => setCompareFromItems(compareCandidates, 'shortlist-decision-coach'),
+          primaryActionKey: 'load-compare',
           secondaryLabel: 'Review saved candidates',
           secondaryHref: '/shortlist#saved-candidates',
+          secondaryActionKey: 'review-saved-candidates',
           highlights: [
             `Recommended finalists: ${compareCandidateNames}.`,
             'Bes3 uses your most recently saved picks first, capped at three.'
@@ -146,13 +152,16 @@ export function ShortlistWorkspace({
         }
       : compareCount >= 2
         ? {
+            variant: 'close-decision',
             eyebrow: 'Decision Coach',
             title: 'Your finalists are ready for a decision.',
             description: 'Keep compare tight, review the decision matrix, then move to a published comparison or merchant price checks once the tradeoffs feel clear.',
             primaryLabel: 'Jump to decision matrix',
             primaryHref: '/shortlist#decision-matrix',
+            primaryActionKey: 'jump-decision-matrix',
             secondaryLabel: comparisonSearchHref ? 'Search for a published comparison' : 'Open compare queue',
             secondaryHref: comparisonSearchHref || '/shortlist#compare-queue',
+            secondaryActionKey: comparisonSearchHref ? 'search-published-comparison' : 'open-compare-queue',
             highlights: [
               `Active finalists: ${buildProductRollup(compare)}.`,
               compareCount < shortlist.length ? `${shortlist.length - compareCount} saved ${shortlist.length - compareCount === 1 ? 'backup remains' : 'backups remain'} outside compare.` : 'Your shortlist and compare set are currently aligned.'
@@ -179,6 +188,21 @@ export function ShortlistWorkspace({
     } finally {
       pendingLabel(false)
     }
+  }
+
+  function trackCoachAction(position: 'primary' | 'secondary', action: string) {
+    if (!coach) return
+
+    trackDecisionEvent({
+      eventType: position === 'primary' ? 'decision_coach_primary_click' : 'decision_coach_secondary_click',
+      source: coachSource,
+      metadata: {
+        action,
+        variant: coach.variant,
+        shortlistCount: shortlist.length,
+        compareCount
+      }
+    })
   }
 
   async function copyShareLink() {
@@ -390,7 +414,12 @@ export function ShortlistWorkspace({
                 {'primaryAction' in coach ? (
                   <button
                     type="button"
-                    onClick={coach.primaryAction}
+                    onClick={() => {
+                      trackCoachAction('primary', coach.primaryActionKey)
+                      if (typeof coach.primaryAction === 'function') {
+                        coach.primaryAction()
+                      }
+                    }}
                     className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
                   >
                     <Scale className="h-4 w-4" />
@@ -399,6 +428,7 @@ export function ShortlistWorkspace({
                 ) : (
                   <Link
                     href={coach.primaryHref}
+                    onClick={() => trackCoachAction('primary', coach.primaryActionKey)}
                     className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
                   >
                     {coach.primaryLabel}
@@ -407,6 +437,7 @@ export function ShortlistWorkspace({
                 )}
                 <Link
                   href={coach.secondaryHref}
+                  onClick={() => trackCoachAction('secondary', coach.secondaryActionKey)}
                   className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-white px-5 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                 >
                   {coach.secondaryLabel}
@@ -495,7 +526,7 @@ export function ShortlistWorkspace({
                       </button>
                       {item.resolvedUrl ? (
                         <Link
-                          href={buildMerchantExitPath(item.id, 'shortlist-workspace')}
+                          href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
                           target="_blank"
                           prefetch={false}
                           onClick={() =>

@@ -229,6 +229,7 @@ const SQLITE_SCHEMA = [
     CREATE TABLE IF NOT EXISTS merchant_click_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
+      visitor_id TEXT,
       source TEXT NOT NULL DEFAULT 'site',
       target_url TEXT NOT NULL,
       referer TEXT,
@@ -358,6 +359,7 @@ async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<vo
 }
 
 async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'merchant_click_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
   await ensureColumn(db, 'merchant_click_events', 'target_url', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'referer', 'TEXT')
@@ -372,6 +374,11 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
     db,
     'idx_merchant_click_events_source_created_at',
     'CREATE INDEX idx_merchant_click_events_source_created_at ON merchant_click_events (source, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_merchant_click_events_visitor_created_at',
+    'CREATE INDEX idx_merchant_click_events_visitor_created_at ON merchant_click_events (visitor_id, created_at)'
   )
 }
 
