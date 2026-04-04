@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatCurrency } from '@/lib/utils'
 
@@ -20,6 +21,8 @@ export default async function ProductPage({
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
   const heroImageUrl = product.heroImageUrl || reviewArticle?.heroImageUrl || null
   const specs = Object.entries(product.specs).slice(0, 6)
+  const snapshotDate = getSnapshotDate(reviewArticle, product)
+  const confidenceSignals = buildConfidenceSignals(product)
 
   return (
     <PublicShell>
@@ -44,6 +47,21 @@ export default async function ProductPage({
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
                 {reviewArticle?.summary || product.description || `${product.productName} is part of the current Bes3 shortlist and this page captures the product facts, price context, and deep-dive notes that matter before you buy.`}
               </p>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Review freshness</p>
+                  <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
+                </div>
+                <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Best for</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildBestFor(product, 'product')}</p>
+                </div>
+                <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Skip if</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(product, 'product')}</p>
+                </div>
+              </div>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current Price</p>
@@ -77,7 +95,11 @@ export default async function ProductPage({
                 </div>
               </div>
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <PrimaryCta href={product.resolvedUrl || '#'} label="Check Current Price on Amazon" />
+                <PrimaryCta
+                  href={product.resolvedUrl || '#'}
+                  label="Check Current Price on Amazon"
+                  note={`Confidence signals: ${confidenceSignals.join(' · ')}`}
+                />
               </div>
             </div>
           </div>
@@ -120,6 +142,21 @@ export default async function ProductPage({
                   <div key={label} className="flex items-center justify-between gap-4 rounded-[1rem] bg-white px-4 py-3">
                     <span className="text-sm text-muted-foreground">{label}</span>
                     <span className="text-sm font-semibold text-foreground">{value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Decision Checklist</p>
+              <div className="mt-4 space-y-3">
+                {[
+                  'Confirm this product still fits your actual use case before clicking through.',
+                  'Treat price as a final check, not the only reason to buy.',
+                  'Use the specs snapshot to verify there is no hidden mismatch.'
+                ].map((item) => (
+                  <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
+                    <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
+                    <span>{item}</span>
                   </div>
                 ))}
               </div>

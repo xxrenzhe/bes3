@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { getArticleBySlug } from '@/lib/site-data'
 import { formatCurrency } from '@/lib/utils'
 
@@ -31,6 +32,8 @@ export default async function ComparisonPage({
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
   const priceLabel = formatCurrency(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
+  const snapshotDate = getSnapshotDate(article, article.product)
+  const decisionChecklist = buildDecisionChecklist(article.product)
   const scoreCards = [
     {
       label: contenders.left,
@@ -65,6 +68,21 @@ export default async function ComparisonPage({
                 {article.title}
               </h1>
               <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{article.summary}</p>
+              <div className="mt-8 grid gap-4 md:grid-cols-3">
+                <div className="rounded-[1.5rem] border border-border/60 bg-muted/40 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Freshness</p>
+                  <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-border/60 bg-muted/40 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Best for</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildBestFor(article.product, 'comparison')}</p>
+                </div>
+                <div className="rounded-[1.5rem] border border-border/60 bg-muted/40 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Watch out</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(article.product, 'comparison')}</p>
+                </div>
+              </div>
 
               <div className="mt-8 grid gap-4 md:grid-cols-2">
                 {scoreCards.map((card) => (
@@ -104,7 +122,11 @@ export default async function ComparisonPage({
               </div>
 
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <PrimaryCta href={article.product?.resolvedUrl || '#'} label="Check Current Price on Amazon" />
+                <PrimaryCta
+                  href={article.product?.resolvedUrl || '#'}
+                  label="Check Current Price on Amazon"
+                  note={`Price reviewed ${formatEditorialDate(snapshotDate)}. Use the winner only if it fits your actual requirements.`}
+                />
               </div>
             </aside>
           </div>
@@ -120,11 +142,7 @@ export default async function ComparisonPage({
             <div className="rounded-[2rem] bg-white p-6 shadow-panel">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Decision Framework</p>
               <div className="mt-5 space-y-4">
-                {[
-                  'Pick the winner if you want the most reliable default option.',
-                  'Choose the alternative only if a specific niche requirement matters more than overall confidence.',
-                  'Use price as a tiebreaker, not the first filter, when the products solve the same problem.'
-                ].map((item) => (
+                {decisionChecklist.map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
                     <span>{item}</span>
