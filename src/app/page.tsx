@@ -13,6 +13,43 @@ export default async function HomePage() {
   const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
   const featured = articles.slice(0, 3)
   const directoryCategories = categories.slice(0, 3)
+  const featuredReview = articles.find((article) => article.type === 'review') || featured[0] || null
+  const featuredComparison = articles.find((article) => article.type === 'comparison') || featured[1] || featuredReview
+  const intentRoutes = [
+    {
+      eyebrow: 'Start narrow',
+      title: 'Build a shortlist',
+      description: 'Use product-first search when you already know the use case and want Bes3 to narrow the field into a few serious options.',
+      href: '/search?scope=products',
+      label: 'Search products'
+    },
+    {
+      eyebrow: 'Go deep',
+      title: 'Read a real verdict',
+      description: 'Open the full review when you need the buyer fit, the main tradeoffs, and the reasons to skip a product before you click out.',
+      href: featuredReview ? getArticlePath(featuredReview.type, featuredReview.slug) : '/search?scope=review',
+      label: 'Open a review'
+    },
+    {
+      eyebrow: 'Decide faster',
+      title: 'Compare finalists',
+      description: 'Use side-by-side comparisons or the shortlist workspace once you already have two or three credible candidates.',
+      href: featuredComparison ? getArticlePath(featuredComparison.type, featuredComparison.slug) : '/shortlist',
+      label: 'Open comparisons'
+    },
+    {
+      eyebrow: 'Stay price-aware',
+      title: 'Track deals and shifts',
+      description: 'Use Bes3 deals and briefing flows when you are not ready to buy today but want the next worthwhile price or category move.',
+      href: '/deals',
+      label: 'See current deals'
+    }
+  ]
+  const decisionPrinciples = [
+    ['Intent first', 'Pick the route that matches where you are in the buying journey instead of sifting through raw archives.'],
+    ['Same-category compare', 'Bes3 keeps comparisons inside one product lane so the tradeoffs stay honest and useful.'],
+    ['Low-pressure next step', 'Save, compare, or check price only when the decision is mature enough to justify the click.']
+  ]
 
   return (
     <PublicShell>
@@ -27,7 +64,7 @@ export default async function HomePage() {
                 The Best 3 Tech Picks, <span className="text-primary">decoded.</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-                Bes3 filters review noise into decisive shortlists, comparison notes, and buyer-ready guidance so you can make the next purchase with confidence.
+                Bes3 is a buyer-first consumer guide for tech and home-office gear. We turn noisy product research into shortlists, deep-dive verdicts, cleaner comparisons, and price-aware next steps.
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
@@ -91,13 +128,50 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
+            <div>
+              <SectionHeader
+                eyebrow="Buyer Intent Routes"
+                title="Choose the route that matches your buying moment."
+                description="The useful idea inside `需求分析.md` is structure, not sprawl. Bes3 should meet shoppers where they are: finding candidates, reading a verdict, comparing finalists, or waiting for the right price."
+              />
+              <div className="mt-6 grid gap-4 sm:grid-cols-3">
+                {decisionPrinciples.map(([title, description]) => (
+                  <div key={title} className="rounded-[1.5rem] bg-white/85 p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">{title}</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              {intentRoutes.map((route) => (
+                <Link
+                  key={route.title}
+                  href={route.href}
+                  className="group rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground group-hover:text-primary">{route.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="tonal-surface border-y border-white/50 px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="mb-16 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
             <SectionHeader
               eyebrow="Category Directory"
-              title="Discover the sections worth browsing."
-              description="Each category hub curates the strongest reviews, useful comparison pages, and supporting how-to content in one place."
+              title="Browse by category once you know the lane."
+              description="Category hubs are still useful, but they work best after intent is clear. Each hub gathers the strongest reviews, comparisons, and supporting buyer guidance in one place."
             />
             <Link href="/directory" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform hover:translate-x-1">
               View all categories <span aria-hidden="true">→</span>
@@ -133,6 +207,9 @@ export default async function HomePage() {
               The Current Best 3
             </h2>
             <div className="mx-auto mt-5 h-1.5 w-24 rounded-full bg-primary" />
+            <p className="mx-auto mt-5 max-w-2xl text-sm leading-7 text-muted-foreground">
+              These are not just recent publishes. They are the clearest current entry points into the Bes3 decision flow: a candidate worth saving, a verdict worth reading, or a comparison worth acting on.
+            </p>
           </div>
           <div className="grid gap-10 lg:grid-cols-3">
             {featured.map((article, index) => (
@@ -186,7 +263,7 @@ export default async function HomePage() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Weekly Briefing</p>
             <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-balance text-white">Stay decoded.</h2>
             <p className="max-w-xl text-base leading-8 text-slate-300">
-              Join the Bes3 shortlist for buyer-focused email notes on category shifts, newly published comparisons, and worthwhile price drops.
+              Join the Bes3 shortlist for buyer-focused email notes on category shifts, newly published comparisons, worthwhile price drops, and the next decision-ready product lanes.
             </p>
           </div>
           <NewsletterSignup categoryOptions={categories.slice(0, 6)} source="homepage-alert-module" />
