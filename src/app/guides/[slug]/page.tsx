@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { buildArticleSchema, buildBreadcrumbSchema } from '@/lib/structured-data'
 import { getArticleBySlug, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -62,6 +64,32 @@ export default async function GuidePage({
     if (category && candidate.product?.category === category) return true
     return false
   }) || null
+  const path = `/guides/${article.slug}`
+  const guideDescription =
+    pickMetadataDescription(article.seoDescription, article.summary) ||
+    'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.'
+  const structuredData = [
+    buildBreadcrumbSchema(path, [
+      { name: 'Home', path: '/' },
+      { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
+      { name: article.title, path }
+    ]),
+    buildArticleSchema({
+      path,
+      title: article.seoTitle || article.title,
+      description: guideDescription,
+      image: article.heroImageUrl || article.product?.heroImageUrl,
+      datePublished: article.publishedAt || article.createdAt,
+      dateModified: article.updatedAt || article.publishedAt || article.createdAt,
+      type: 'Article',
+      about: category
+        ? {
+            '@type': 'Thing',
+            name: categoryLabel
+          }
+        : undefined
+    })
+  ]
   const guideRoutes = [
     {
       eyebrow: 'Validate',
@@ -94,6 +122,7 @@ export default async function GuidePage({
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">

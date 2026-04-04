@@ -5,10 +5,12 @@ import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
+import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildBreadcrumbSchema, buildProductSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { getProductBySlug, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -63,6 +65,18 @@ export default async function ProductPage({
   const confidenceSignals = buildConfidenceSignals(product)
   const shortlistItem = toShortlistItem(product)
   const categoryLabel = product.category ? product.category.replace(/-/g, ' ') : 'this category'
+  const path = `/products/${product.slug}`
+  const productDescription =
+    pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
+    `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`
+  const structuredData = [
+    buildBreadcrumbSchema(path, [
+      { name: 'Home', path: '/' },
+      { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: product.category ? `/categories/${product.category}` : '/directory' },
+      { name: product.productName, path }
+    ]),
+    buildProductSchema(product, path, productDescription, heroImageUrl)
+  ]
   const nextMoves = [
     reviewArticle
       ? {
@@ -106,6 +120,7 @@ export default async function ProductPage({
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">

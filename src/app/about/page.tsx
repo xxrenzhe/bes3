@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export const metadata: Metadata = buildPageMetadata({
@@ -133,9 +135,16 @@ export default async function AboutPage() {
       label: 'Open shortlist'
     }
   ]
+  const structuredData = buildWebPageSchema({
+    path: '/about',
+    title: 'About Bes3',
+    description: 'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
+    type: 'AboutPage'
+  })
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="space-y-20 pb-20">
         <section className="px-4 pb-10 pt-12 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">

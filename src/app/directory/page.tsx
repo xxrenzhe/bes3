@@ -1,10 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildCollectionPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
@@ -19,6 +21,15 @@ export const metadata: Metadata = buildPageMetadata({
 export default async function DirectoryPage() {
   const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])
   const leadCategory = categories[0] || ''
+  const structuredData = buildCollectionPageSchema({
+    path: '/directory',
+    title: 'Category Directory',
+    description: 'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+    items: categories.map((category) => ({
+      name: category.replace(/-/g, ' '),
+      path: `/categories/${category}`
+    }))
+  })
   const directoryRoutes = [
     {
       eyebrow: 'Start',
@@ -52,6 +63,7 @@ export default async function DirectoryPage() {
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
