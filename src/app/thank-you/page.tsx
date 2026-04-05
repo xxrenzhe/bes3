@@ -4,6 +4,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
 const VALID_INTENTS = new Set(['buyer-support', 'editorial-feedback', 'correction', 'partnership', 'general'] as const)
@@ -61,6 +62,7 @@ export async function generateMetadata({
     title: meta.title,
     description: meta.description,
     path: '/thank-you',
+    locale: getRequestLocale(),
     robots: {
       index: false,
       follow: false

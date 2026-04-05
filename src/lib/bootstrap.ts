@@ -27,6 +27,12 @@ const DEFAULT_SETTINGS = [
   ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline'],
   ['seo', 'appUrl', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', 'string', 0, 'Primary public site URL'],
   ['seo', 'pingomaticEnabled', process.env.PINGOMATIC_ENABLED || 'false', 'boolean', 0, 'Enable Ping-O-Matic notifications'],
+  ['seo', 'googleIndexingEnabled', process.env.GOOGLE_INDEXING_ENABLED || 'false', 'boolean', 0, 'Enable Google Indexing API dispatch'],
+  ['seo', 'googleServiceAccountJson', process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '', 'secret', 1, 'Google service account JSON used for Indexing API dispatch'],
+  ['seo', 'syndicationEnabled', process.env.SEO_SYNDICATION_ENABLED || 'false', 'boolean', 0, 'Enable external syndication handoff after publish'],
+  ['seo', 'syndicationTargetsJson', process.env.SEO_SYNDICATION_TARGETS_JSON || '[]', 'json', 0, 'Configured syndication targets such as Medium, Substack, or LinkedIn webhooks'],
+  ['seo', 'linkInspectorEnabled', process.env.LINK_INSPECTOR_ENABLED || 'true', 'boolean', 0, 'Enable link inspector checks'],
+  ['seo', 'linkInspectorMaxUrls', process.env.LINK_INSPECTOR_MAX_URLS || '60', 'string', 0, 'Maximum URLs checked per manual inspection run'],
   ['pipeline', 'workerEnabled', process.env.PIPELINE_WORKER_ENABLED || 'true', 'boolean', 0, 'Enable pipeline background worker'],
   ['pipeline', 'workerPollMs', process.env.PIPELINE_WORKER_POLL_MS || '2500', 'string', 0, 'Worker poll interval in milliseconds'],
   ['pipeline', 'workerConcurrency', process.env.PIPELINE_WORKER_CONCURRENCY || '1', 'string', 0, 'Max concurrent pipeline runs per container']

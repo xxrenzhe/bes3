@@ -19,6 +19,9 @@
     "ops:restore-runtime": "bash ./scripts/restore-runtime.sh",
     "ops:deploy-ghcr": "bash ./scripts/deploy-ghcr.sh",
     "ops:health-check": "bash ./scripts/health-check.sh",
+    "seo:index": "tsx scripts/google-indexing.ts",
+    "seo:inspect-links": "tsx scripts/link-inspector.ts",
+    "seo:syndicate": "tsx scripts/syndicate-pages.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate:sqlite": "DB_TYPE=sqlite tsx scripts/migrate.ts",
     "db:migrate:postgres": "DB_TYPE=postgres tsx scripts/migrate.ts"

@@ -626,7 +626,7 @@ export function ShortlistWorkspace({
               <div className="rounded-[1.75rem] bg-white p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Average score</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.averageScore}/100</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">A blend of price, freshness, and how complete this shortlist is.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">A blend of price, recent checks, and how complete this shortlist is.</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Compared now</p>

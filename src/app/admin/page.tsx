@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { ArrowRight, Boxes, FileText, GitBranch, Settings, Wand2 } from 'lucide-react'
+import { ArrowRight, Boxes, FileText, GitBranch, Globe2, Settings, Wand2 } from 'lucide-react'
 import { MetricCard } from '@/components/admin/MetricCard'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { getArticlePath } from '@/lib/article-path'
@@ -55,6 +55,10 @@ export default async function AdminDashboardPage() {
                 <Link href="/admin/settings" className="inline-flex items-center justify-between rounded-[1rem] bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15">
                   Runtime settings
                   <ArrowRight className="h-4 w-4" />
+                </Link>
+                <Link href="/admin/seo-ops" className="inline-flex items-center justify-between rounded-[1rem] bg-white/10 px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-white/15">
+                  SEO ops
+                  <Globe2 className="h-4 w-4" />
                 </Link>
               </div>
             </div>

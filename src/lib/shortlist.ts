@@ -105,7 +105,7 @@ type CategoryDecisionProfile = {
 const GENERIC_DECISION_PROFILE: CategoryDecisionProfile = {
   id: 'generic',
   label: 'General buyer fit',
-  decisionLens: 'Bes3 uses price proof, store availability, user reviews, freshness, and clear tradeoffs to judge whether a saved pick is strong enough for compare.',
+  decisionLens: 'Bes3 weighs price proof, store availability, buyer reviews, recent checks, and clear tradeoffs before deciding whether a saved pick is strong enough for compare.',
   compareFocus: 'Compare the clearest tradeoffs first.',
   categoryMatchers: [],
   specKeywords: [],
@@ -349,7 +349,7 @@ export function getShortlistDecisionState(
     score += 15
     pushUnique(whySaved, 'Verified price')
   } else {
-    pushUnique(gaps, 'Price snapshot still missing')
+    pushUnique(gaps, 'Current price still missing')
   }
 
   if (item.resolvedUrl) {
@@ -370,7 +370,7 @@ export function getShortlistDecisionState(
     pushUnique(whySaved, 'Review-backed')
   } else if (rating >= 4.4) {
     score += 12
-    pushUnique(whySaved, 'High rating signal')
+    pushUnique(whySaved, 'High buyer rating')
   } else if (reviewCount >= 1000) {
     score += 12
     pushUnique(whySaved, 'Heavy review volume')
@@ -424,7 +424,7 @@ export function getShortlistDecisionState(
       pushUnique(gaps, 'Snapshot needs a fresher check')
     }
   } else {
-    pushUnique(gaps, 'Freshness still unclear')
+    pushUnique(gaps, 'Recent update still unclear')
   }
 
   if (inCompare) {
@@ -544,13 +544,13 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
   const topGap = missingMerchantCount
     ? `${missingMerchantCount} ${missingMerchantCount === 1 ? 'pick still lacks' : 'picks still lack'} a working store link.`
     : missingPriceCount
-      ? `${missingPriceCount} ${missingPriceCount === 1 ? 'pick is still missing' : 'picks are still missing'} a price snapshot.`
+      ? `${missingPriceCount} ${missingPriceCount === 1 ? 'pick is still missing' : 'picks are still missing'} a current price.`
       : missingSpecCount
         ? `${missingSpecCount} ${missingSpecCount === 1 ? 'pick still needs' : 'picks still need'} category-specific spec context.`
       : thinProofCount
         ? `${thinProofCount} ${thinProofCount === 1 ? 'pick still needs' : 'picks still need'} stronger review proof.`
         : staleCheckCount
-          ? `${staleCheckCount} ${staleCheckCount === 1 ? 'pick needs' : 'picks need'} a fresher verification pass.`
+          ? `${staleCheckCount} ${staleCheckCount === 1 ? 'pick needs' : 'picks need'} a newer check.`
           : noMajorGapLabel
 
   if (finalistCount >= 2) {
@@ -806,7 +806,7 @@ function formatShortlistPriceRange(items: ShortlistItem[]) {
   if (!pricedItems.length) {
     return {
       label: 'Price pending',
-      note: 'Bes3 is still waiting on stable price snapshots.'
+      note: 'Bes3 is still waiting on a stable current price.'
     }
   }
 

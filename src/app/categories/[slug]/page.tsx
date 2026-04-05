@@ -8,6 +8,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
@@ -37,6 +38,7 @@ export async function generateMetadata({
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
       `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
     path: `/categories/${slug}`,
+    locale: getRequestLocale(),
     image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
     category: categoryLabel,
     freshnessDate,
@@ -212,7 +214,7 @@ export default async function CategoryPage({
                 <p className="mt-3 text-3xl font-black">{reviewCount + comparisonCount}</p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Latest refresh</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Last checked</p>
                 <p className="mt-3 text-lg font-black">{formatEditorialDate(latestRefresh, 'Building coverage')}</p>
               </div>
             </div>

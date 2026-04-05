@@ -6,16 +6,20 @@ import { ContactSupportForm } from '@/components/site/ContactSupportForm'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Contact Bes3',
-  description:
-    'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
-  path: '/contact',
-  keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    title: 'Contact Bes3',
+    description:
+      'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
+    path: '/contact',
+    locale: getRequestLocale(),
+    keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
+  })
+}
 
 export default async function ContactPage() {
   const [categories, articles] = await Promise.all([listCategories(), listPublishedArticles()])

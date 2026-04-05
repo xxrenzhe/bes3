@@ -19,7 +19,7 @@ const INQUIRY_OPTIONS = [
   {
     id: 'correction',
     label: 'Correction',
-    description: 'Use this when a factual detail, price snapshot, or page cue on the public site looks wrong.'
+    description: 'Use this when a factual detail, listed price, or page cue on the public site looks wrong.'
   },
   {
     id: 'partnership',

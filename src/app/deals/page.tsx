@@ -7,6 +7,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listPublishedProducts } from '@/lib/site-data'
@@ -20,6 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Browse live deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
     path: '/deals',
+    locale: getRequestLocale(),
     image: leadProduct?.heroImageUrl,
     freshnessDate: leadProduct?.updatedAt || leadProduct?.publishedAt,
     freshnessInTitle: true,
@@ -163,7 +165,7 @@ export default async function DealsPage() {
                   <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">{product.productName}</h2>
                   <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Current pricing with a direct path to the latest store page.'}</p>
                   <div className="rounded-[1.5rem] bg-muted p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price</p>
                     <p className="mt-3 text-3xl font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
                     <p className="mt-2 text-sm text-muted-foreground">
                       {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews tracked` : 'Review count unavailable'} · Checked {formatEditorialDate(product.updatedAt || product.publishedAt)}

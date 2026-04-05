@@ -20,13 +20,13 @@ export function formatEditorialDate(value: string | null | undefined, fallback: 
 
 export function getFreshnessLabel(value: string | null | undefined) {
   const date = parseDate(value)
-  if (!date) return 'Freshness tracking starts after first publish.'
+  if (!date) return 'The first check date appears after publish.'
 
   const days = Math.max(0, Math.floor((Date.now() - date.getTime()) / 86_400_000))
-  if (days <= 7) return 'Updated this week'
-  if (days <= 30) return 'Updated this month'
-  if (days <= 60) return 'Review this quarter'
-  return `${days} days since latest refresh`
+  if (days <= 7) return 'Checked this week'
+  if (days <= 30) return 'Checked this month'
+  if (days <= 60) return 'Checked in the last two months'
+  return `${days} days since the last check`
 }
 
 export function getCategoryLabel(category: string | null | undefined) {
@@ -83,27 +83,27 @@ export function buildNotFor(product?: ProductRecord | null, articleType: 'review
 
 export function buildConfidenceSignals(product?: ProductRecord | null) {
   if (!product) {
-    return ['Editorial review refreshed', 'Decision criteria summarized', 'Affiliate disclosure visible']
+    return ['Recently reviewed', 'Key tradeoffs summarized', 'Affiliate disclosure visible']
   }
 
   const signals = []
   if (product.rating) {
-    signals.push(`${product.rating.toFixed(1)} / 5 rating signal`)
+    signals.push(`${product.rating.toFixed(1)} / 5 average buyer rating`)
   }
   if (product.reviewCount) {
     signals.push(`${product.reviewCount.toLocaleString()} buyer reviews`)
   }
   if (product.priceAmount !== null) {
-    signals.push(`Current price snapshot ${formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}`)
+    signals.push(`Current listed price ${formatCurrency(product.priceAmount, product.priceCurrency || 'USD')}`)
   }
 
-  return signals.length ? signals : ['Price and buyer signals are still being gathered']
+  return signals.length ? signals : ['Price and review details are still coming in']
 }
 
 export function buildDecisionChecklist(product?: ProductRecord | null) {
   const base = [
     'Use category fit first, not price alone, to narrow the shortlist.',
-    'Treat rating and review count as confidence signals, not automatic proof.',
+    'Treat rating and review count as supporting proof, not automatic proof.',
     'Click through only after you know whether this pick matches your actual use case.'
   ]
 

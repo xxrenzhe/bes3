@@ -71,7 +71,21 @@ const FIELD_META: Record<string, { label: string; placeholder?: string; rows?: n
   'seo.siteName': { label: 'Site Name', placeholder: 'Bes3' },
   'seo.siteTagline': { label: 'Site Tagline', placeholder: 'The Best 3 Tech Picks, Decoded.' },
   'seo.appUrl': { label: 'Public Site URL', placeholder: 'https://bes3.example.com' },
-  'seo.pingomaticEnabled': { label: 'Ping-O-Matic Enabled' }
+  'seo.pingomaticEnabled': { label: 'Ping-O-Matic Enabled' },
+  'seo.googleIndexingEnabled': { label: 'Google Indexing Enabled' },
+  'seo.googleServiceAccountJson': {
+    label: 'Google Service Account JSON',
+    placeholder: '{"client_email":"...","private_key":"-----BEGIN PRIVATE KEY-----\\n..."}',
+    rows: 6
+  },
+  'seo.syndicationEnabled': { label: 'Syndication Enabled' },
+  'seo.syndicationTargetsJson': {
+    label: 'Syndication Targets JSON',
+    placeholder: '[{"id":"medium","platformName":"Medium","type":"webhook","endpoint":"https://example.com/hook","authToken":"token","enabled":true}]',
+    rows: 8
+  },
+  'seo.linkInspectorEnabled': { label: 'Link Inspector Enabled' },
+  'seo.linkInspectorMaxUrls': { label: 'Link Inspector Max URLs', placeholder: '60' }
 }
 
 function serializeItems(items: SettingItem[]) {

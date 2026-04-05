@@ -10,6 +10,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
@@ -33,6 +34,7 @@ export async function generateMetadata({
       title: 'Review Not Found',
       description: 'This Bes3 review page is unavailable.',
       path: `/reviews/${slug}`,
+      locale: getRequestLocale(),
       robots: {
         index: false,
         follow: false
@@ -49,6 +51,7 @@ export async function generateMetadata({
       pickMetadataDescription(article.seoDescription, article.summary) ||
       buildFallbackNote(article.product?.productName || article.title),
     path: `/reviews/${article.slug}`,
+    locale: getRequestLocale(),
     image: article.heroImageUrl || article.product?.heroImageUrl,
     type: 'article',
     category: categoryLabel || undefined,
@@ -103,7 +106,7 @@ export default async function ReviewPage({
   const howToSteps = [
     {
       name: 'Read the buyer fit first',
-      text: 'Use the summary, freshness, best-for, and skip-if notes to decide whether this product deserves deeper attention.'
+      text: 'Use the summary, last-checked note, buyer fit, and watch-out note to decide whether this product deserves deeper attention.'
     },
     {
       name: 'Validate against product details',
@@ -250,7 +253,7 @@ export default async function ReviewPage({
             </p>
             <div className="grid gap-4 md:grid-cols-3">
               <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Freshness</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Last checked</p>
                 <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
               </div>
@@ -259,7 +262,7 @@ export default async function ReviewPage({
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildBestFor(article.product, 'review')}</p>
               </div>
               <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Skip if</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Watch out</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(article.product, 'review')}</p>
               </div>
             </div>

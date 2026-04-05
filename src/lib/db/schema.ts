@@ -226,6 +226,38 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS link_inspector_runs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      total_checked INTEGER NOT NULL DEFAULT 0,
+      issues_found INTEGER NOT NULL DEFAULT 0,
+      broken_count INTEGER NOT NULL DEFAULT 0,
+      out_of_stock_count INTEGER NOT NULL DEFAULT 0,
+      payload_json TEXT,
+      started_at TEXT,
+      finished_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS link_inspector_results (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      run_id INTEGER NOT NULL,
+      product_id INTEGER,
+      product_name TEXT,
+      source_url TEXT NOT NULL,
+      final_url TEXT,
+      http_status INTEGER,
+      status TEXT NOT NULL DEFAULT 'ok',
+      issue_type TEXT,
+      issue_detail TEXT,
+      response_snippet TEXT,
+      checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (run_id) REFERENCES link_inspector_runs(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS merchant_click_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -382,6 +414,43 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
   )
 }
 
+async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'link_inspector_runs', 'status', "TEXT NOT NULL DEFAULT 'queued'")
+  await ensureColumn(db, 'link_inspector_runs', 'total_checked', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'link_inspector_runs', 'issues_found', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'link_inspector_runs', 'broken_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'link_inspector_runs', 'out_of_stock_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'link_inspector_runs', 'payload_json', 'TEXT')
+  await ensureColumn(db, 'link_inspector_runs', 'started_at', 'TEXT')
+  await ensureColumn(db, 'link_inspector_runs', 'finished_at', 'TEXT')
+  await ensureColumn(db, 'link_inspector_runs', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'link_inspector_results', 'product_id', 'INTEGER')
+  await ensureColumn(db, 'link_inspector_results', 'product_name', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'source_url', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'final_url', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'http_status', 'INTEGER')
+  await ensureColumn(db, 'link_inspector_results', 'status', "TEXT NOT NULL DEFAULT 'ok'")
+  await ensureColumn(db, 'link_inspector_results', 'issue_type', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'issue_detail', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'response_snippet', 'TEXT')
+  await ensureColumn(db, 'link_inspector_results', 'checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureIndex(
+    db,
+    'idx_link_inspector_runs_created_at',
+    'CREATE INDEX idx_link_inspector_runs_created_at ON link_inspector_runs (created_at, id)'
+  )
+  await ensureIndex(
+    db,
+    'idx_link_inspector_results_run_id',
+    'CREATE INDEX idx_link_inspector_results_run_id ON link_inspector_results (run_id, status, issue_type)'
+  )
+  await ensureIndex(
+    db,
+    'idx_publish_events_event_type_created_at',
+    'CREATE INDEX idx_publish_events_event_type_created_at ON publish_events (event_type, created_at)'
+  )
+}
+
 async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'buyer_decision_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'event_type', 'TEXT')
@@ -414,6 +483,7 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
     await db.exec(statement)
   }
   await ensurePipelineRunSchema(db)
+  await ensureLinkInspectorSchema(db)
   await ensureMerchantClickSchema(db)
   await ensureDecisionEventSchema(db)
   await ensureNewsletterSubscriberSchema(db)

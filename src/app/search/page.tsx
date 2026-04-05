@@ -6,6 +6,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, searchArticles, searchProducts } from '@/lib/site-data'
 
@@ -59,6 +60,7 @@ export async function generateMetadata({
       ? `Search Bes3 ${scopeLabel}${categorySuffix} to find the most useful next page faster.`
       : 'Search Bes3 products, reviews, comparisons, and guides to find the right option faster.',
     path: '/search',
+    locale: getRequestLocale(),
     robots: {
       index: false,
       follow: true

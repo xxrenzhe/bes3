@@ -8,6 +8,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { getBrandSlug, listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
@@ -24,6 +25,7 @@ export async function generateMetadata({
       title: 'Brand Not Found',
       description: 'This Bes3 brand page is unavailable.',
       path: `/brands/${slug}`,
+      locale: getRequestLocale(),
       robots: {
         index: false,
         follow: false
@@ -37,6 +39,7 @@ export async function generateMetadata({
       pickMetadataDescription(brand.description) ||
       `Browse ${brand.name} products, reviews, comparisons, and active categories on Bes3 without reopening broad search.`,
     path: `/brands/${brand.slug}`,
+    locale: getRequestLocale(),
     image: brand.heroImageUrl,
     category: brand.categories[0] ? getCategoryLabel(brand.categories[0]) : undefined,
     freshnessDate: brand.latestUpdate,
@@ -213,7 +216,7 @@ export default async function BrandPage({
                   <p className="mt-2 text-2xl font-black text-foreground">{brand.articleCount}</p>
                 </div>
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Latest refresh</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Last checked</p>
                   <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(brand.latestUpdate, 'Building coverage')}</p>
                 </div>
               </div>

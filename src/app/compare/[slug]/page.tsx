@@ -11,6 +11,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
@@ -45,6 +46,7 @@ export async function generateMetadata({
       title: 'Comparison Not Found',
       description: 'This Bes3 comparison page is unavailable.',
       path: `/compare/${slug}`,
+      locale: getRequestLocale(),
       robots: {
         index: false,
         follow: false
@@ -61,6 +63,7 @@ export async function generateMetadata({
       pickMetadataDescription(article.seoDescription, article.summary) ||
       'Use this comparison to settle a shortlist, understand the tradeoffs, and choose the better fit with less second-guessing.',
     path: `/compare/${article.slug}`,
+    locale: getRequestLocale(),
     image: article.heroImageUrl || article.product?.heroImageUrl,
     type: 'article',
     category: categoryLabel || undefined,
@@ -267,7 +270,7 @@ export default async function ComparisonPage({
               <p className="mt-5 max-w-3xl text-lg leading-8 text-muted-foreground">{article.summary}</p>
               <div className="mt-8 grid gap-4 md:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-border/60 bg-muted/40 p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Freshness</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Last checked</p>
                   <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
                 </div>
@@ -306,7 +309,7 @@ export default async function ComparisonPage({
                 </p>
                 <div className="mt-5 grid gap-3">
                   <div className="rounded-[1.25rem] bg-white p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current price snapshot</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current price</p>
                     <p className="mt-2 text-2xl font-black text-foreground">{priceLabel}</p>
                   </div>
                   <div className="rounded-[1.25rem] bg-white p-4">

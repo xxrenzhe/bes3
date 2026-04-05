@@ -7,6 +7,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
@@ -33,6 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Browse Bes3 by category to find good products, read reviews, compare options, and set alerts without starting over.',
     path: '/directory',
+    locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
