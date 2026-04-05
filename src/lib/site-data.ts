@@ -49,6 +49,17 @@ export interface BrandRecord {
   description: string | null
 }
 
+export interface BrandCategoryRecord {
+  brandName: string
+  brandSlug: string
+  category: string
+  productCount: number
+  articleCount: number
+  latestUpdate: string | null
+  heroImageUrl: string | null
+  description: string | null
+}
+
 function parseJsonObject(value: string | null): Record<string, string> {
   if (!value) return {}
   try {
@@ -392,7 +403,103 @@ export async function listBrands(): Promise<BrandRecord[]> {
     })
 }
 
+export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
+  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const hubs = new Map<
+    string,
+    {
+      brandName: string
+      category: string
+      products: ProductRecord[]
+      articles: ArticleRecord[]
+    }
+  >()
+
+  for (const product of products) {
+    const brandName = normalizeBrandName(product.brand)
+    const category = product.category?.trim() || ''
+    const brandSlug = getBrandSlug(brandName)
+
+    if (!brandName || !brandSlug || !category) continue
+
+    const key = `${brandSlug}::${category}`
+    const existing = hubs.get(key)
+
+    if (existing) {
+      existing.products.push(product)
+      continue
+    }
+
+    hubs.set(key, {
+      brandName,
+      category,
+      products: [product],
+      articles: []
+    })
+  }
+
+  for (const article of articles) {
+    const brandName = normalizeBrandName(article.product?.brand)
+    const category = article.product?.category?.trim() || ''
+    const brandSlug = getBrandSlug(brandName)
+
+    if (!brandName || !brandSlug || !category) continue
+
+    const key = `${brandSlug}::${category}`
+    const existing = hubs.get(key)
+
+    if (existing) {
+      existing.articles.push(article)
+      continue
+    }
+
+    hubs.set(key, {
+      brandName,
+      category,
+      products: [],
+      articles: [article]
+    })
+  }
+
+  return Array.from(hubs.values())
+    .map((hub) => {
+      const featuredProduct = hub.products[0] || hub.articles.find((article) => article.product)?.product || null
+      const featuredArticle = hub.articles[0] || null
+
+      return {
+        brandName: hub.brandName,
+        brandSlug: getBrandSlug(hub.brandName),
+        category: hub.category,
+        productCount: hub.products.length,
+        articleCount: hub.articles.length,
+        latestUpdate: pickLatestDate([
+          ...hub.products.flatMap((product) => [product.updatedAt, product.publishedAt]),
+          ...hub.articles.flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt])
+        ]),
+        heroImageUrl: featuredProduct?.heroImageUrl || featuredArticle?.heroImageUrl || null,
+        description: featuredArticle?.summary || featuredProduct?.description || null
+      }
+    })
+    .sort((left, right) => {
+      const coverageDelta = right.productCount + right.articleCount - (left.productCount + left.articleCount)
+      if (coverageDelta !== 0) return coverageDelta
+
+      const freshnessDelta = toTimestamp(right.latestUpdate) - toTimestamp(left.latestUpdate)
+      if (freshnessDelta !== 0) return freshnessDelta
+
+      const brandDelta = left.brandName.localeCompare(right.brandName)
+      if (brandDelta !== 0) return brandDelta
+
+      return left.category.localeCompare(right.category)
+    })
+}
+
 export async function getBrandBySlug(slug: string): Promise<BrandRecord | null> {
   const brands = await listBrands()
   return brands.find((brand) => brand.slug === slug) || null
+}
+
+export async function getBrandCategoryHub(brandSlug: string, category: string): Promise<BrandCategoryRecord | null> {
+  const hubs = await listBrandCategoryHubs()
+  return hubs.find((hub) => hub.brandSlug === brandSlug && hub.category === category) || null
 }

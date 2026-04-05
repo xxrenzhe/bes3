@@ -15,6 +15,7 @@ export interface AdminArticleListItem {
   seo_title: string | null
   seo_description: string | null
   product_name: string | null
+  product_brand: string | null
   product_category: string | null
   published_at: string | null
   updated_at: string
@@ -93,7 +94,7 @@ export async function listAdminArticles(): Promise<AdminArticleListItem[]> {
     `
       SELECT a.id, a.product_id, a.article_type, a.title, a.slug, a.status, a.summary, a.keyword,
         a.hero_image_url, a.seo_title, a.seo_description, a.published_at, a.updated_at,
-        p.product_name, p.category AS product_category
+        p.product_name, p.brand AS product_brand, p.category AS product_category
       FROM articles a
       LEFT JOIN products p ON p.id = a.product_id
       ORDER BY a.updated_at DESC, a.id DESC
@@ -107,7 +108,7 @@ export async function getAdminArticle(articleId: number): Promise<AdminArticleDe
     `
       SELECT a.id, a.product_id, a.article_type, a.title, a.slug, a.status, a.summary, a.keyword,
         a.hero_image_url, a.content_md, a.content_html, a.seo_title, a.seo_description, a.schema_json,
-        a.published_at, a.updated_at, p.product_name, p.category AS product_category
+        a.published_at, a.updated_at, p.product_name, p.brand AS product_brand, p.category AS product_category
       FROM articles a
       LEFT JOIN products p ON p.id = a.product_id
       WHERE a.id = ?

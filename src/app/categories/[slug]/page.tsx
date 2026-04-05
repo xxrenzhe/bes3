@@ -285,15 +285,17 @@ export default async function CategoryPage({
               {topBrands.map((brand) => (
                 <Link
                   key={brand.slug}
-                  href={`/brands/${brand.slug}`}
+                  href={`/brands/${brand.slug}/categories/${slug}`}
                   className="rounded-[1.75rem] bg-muted p-6 transition-colors hover:bg-emerald-50"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
-                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{brand.name}</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Lane</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                    {brand.name} {categoryLabel}
+                  </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already connect this brand back into the {categoryLabel} lane.
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category lane without breaking the current decision path.
                   </p>
-                  <p className="mt-5 text-sm font-semibold text-primary">Open {brand.name} →</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">Open exact lane →</p>
                 </Link>
               ))}
             </div>
