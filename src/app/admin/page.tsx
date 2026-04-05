@@ -14,9 +14,27 @@ function formatPercent(value: number) {
   return `${value}%`
 }
 
+function formatScore(value: number) {
+  return `${Math.round(value * 100)}%`
+}
+
+function getFreshnessBadgeClass(value: 'fresh' | 'recent' | 'stale' | 'unknown') {
+  switch (value) {
+    case 'fresh':
+      return 'bg-emerald-100 text-emerald-800'
+    case 'recent':
+      return 'bg-sky-100 text-sky-800'
+    case 'stale':
+      return 'bg-amber-100 text-amber-800'
+    default:
+      return 'bg-slate-100 text-slate-700'
+  }
+}
+
 export default async function AdminDashboardPage() {
   const [summary, workerConfig] = await Promise.all([getAdminDashboardSummary(), Promise.resolve(getPipelineWorkerRuntimeConfig())])
   const decisionFunnel = summary.conversionSignals.decisionFunnel
+  const commerceQuality = summary.commerceQuality
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
@@ -254,6 +272,139 @@ export default async function AdminDashboardPage() {
                 {summary.conversionSignals.topMerchantSource ? `${summary.conversionSignals.topMerchantSourceClicks} clicks from the strongest public CTA surface.` : 'Once buyers start clicking through, Bes3 will surface the strongest path here.'}
               </p>
             </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Commerce QA</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Data quality signals that decide what Bes3 should fix next</h2>
+            </div>
+            <StatusBadge value={commerceQuality.lowConfidenceProducts === 0 && commerceQuality.staleOfferProducts === 0 ? 'configured' : 'partial'} />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.lowConfidenceProducts)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Low Confidence</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.lowConfidenceProducts}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Products below the current data confidence threshold and most likely to weaken recommendations.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.staleOfferProducts)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Stale Offers</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.staleOfferProducts}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Products whose live-offer freshness has already fallen out of the current decision window.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.productsWithoutOffers)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">No Offers</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.productsWithoutOffers}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">These products still lack tracked offer rows, so merchant handoff confidence is weaker.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.productsWithoutEvidence)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">No Evidence</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.productsWithoutEvidence}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Products that still lack attribute facts and need fact extraction or a rescrape first.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.productsWithoutOfferCompetition)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Thin Offer Coverage</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.productsWithoutOfferCompetition}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Products with fewer than two tracked offers and weak merchant-side competitive context.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Priority Rule</p>
+              <p className="mt-3 text-lg font-black text-slate-950">Clicks + quality gaps</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Bes3 now prioritizes fixes where buyer demand and data weakness overlap, instead of blindly generating more content.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Freshness Distribution</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between"><span>Fresh</span><span className="font-semibold text-slate-950">{commerceQuality.freshnessDistribution.fresh}</span></div>
+                <div className="flex items-center justify-between"><span>Recent</span><span className="font-semibold text-slate-950">{commerceQuality.freshnessDistribution.recent}</span></div>
+                <div className="flex items-center justify-between"><span>Stale</span><span className="font-semibold text-slate-950">{commerceQuality.freshnessDistribution.stale}</span></div>
+                <div className="flex items-center justify-between"><span>Unknown</span><span className="font-semibold text-slate-950">{commerceQuality.freshnessDistribution.unknown}</span></div>
+              </div>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Attribute Completeness</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between"><span>High</span><span className="font-semibold text-slate-950">{commerceQuality.completenessDistribution.high}</span></div>
+                <div className="flex items-center justify-between"><span>Medium</span><span className="font-semibold text-slate-950">{commerceQuality.completenessDistribution.medium}</span></div>
+                <div className="flex items-center justify-between"><span>Low</span><span className="font-semibold text-slate-950">{commerceQuality.completenessDistribution.low}</span></div>
+              </div>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Offer Coverage</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between"><span>No offers</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.none}</span></div>
+                <div className="flex items-center justify-between"><span>Single offer</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.single}</span></div>
+                <div className="flex items-center justify-between"><span>Multi offer</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.multi}</span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Priority Queue</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Products to rescrape or regenerate first</h2>
+            </div>
+            <StatusBadge value={commerceQuality.topPriorityProducts.length ? 'partial' : 'configured'} />
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {commerceQuality.topPriorityProducts.length ? (
+              commerceQuality.topPriorityProducts.map((product) => (
+                <div key={product.id} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-slate-950">{product.productName}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {product.brand || 'Unknown brand'}{product.category ? ` · ${product.category.replace(/-/g, ' ')}` : ''}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Priority score</p>
+                      <p className="mt-2 text-2xl font-black text-slate-950">{product.priorityScore}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
+                    <span className={`inline-flex rounded-full px-3 py-1 ${getFreshnessBadgeClass(product.freshness)}`}>{product.freshness}</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{product.offerCount} offers</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{product.evidenceCount} evidence</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{formatScore(product.dataConfidenceScore)} confidence</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{formatScore(product.attributeCompletenessScore)} completeness</span>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {product.reasons.map((reason) => (
+                      <p key={reason} className="text-sm leading-7 text-slate-600">- {reason}</p>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link href={`/admin/products/${product.id}`} className="inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                      Open product workspace
+                    </Link>
+                    {product.slug ? (
+                      <Link href={`/products/${product.slug}`} target="_blank" className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50">
+                        Open public page
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
+                No product currently needs urgent data-quality intervention.
+              </div>
+            )}
           </div>
         </div>
       </section>
