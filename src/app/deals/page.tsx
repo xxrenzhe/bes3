@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
+import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -383,7 +384,7 @@ export default async function DealsPage({
 
           {products.length ? (
             <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
-              {products.map(({ product, summary, signal }) => {
+              {products.map(({ product, summary, signal, priceHistory }) => {
                 const effectivePrice = product.bestOffer?.priceAmount ?? product.priceAmount
                 const effectiveCurrency = product.bestOffer?.priceCurrency || product.priceCurrency || 'USD'
                 const alertHref = product.category
@@ -431,6 +432,14 @@ export default async function DealsPage({
                         <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Price window</p>
                         <h3 className="mt-3 text-lg font-black text-foreground">{signal.title}</h3>
                         <p className="mt-2 text-sm leading-7 text-muted-foreground">{signal.description}</p>
+                        <PriceTrendSparkline
+                          priceHistory={priceHistory}
+                          fallbackPrice={effectivePrice}
+                          fallbackCurrency={effectiveCurrency}
+                          className="mt-4"
+                          tone={signal.id === 'buy-now' ? 'positive' : signal.id === 'watch' ? 'warning' : 'default'}
+                          showSummary={false}
+                        />
                         <div className="mt-4 grid gap-3 sm:grid-cols-3">
                           <div className="rounded-[1rem] bg-muted px-4 py-3">
                             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Lowest</p>
