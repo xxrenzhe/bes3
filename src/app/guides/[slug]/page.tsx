@@ -6,6 +6,7 @@ import { GuideTableOfContents } from '@/components/site/GuideTableOfContents'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
@@ -73,17 +74,17 @@ export default async function GuidePage({
   const relatedReview = allArticles.find((candidate) => {
     if (candidate.type !== 'review') return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const relatedComparison = allArticles.find((candidate) => {
     if (candidate.type !== 'comparison') return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const peerProducts = allProducts
-    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/guides/${article.slug}`
   const guideDescription =
@@ -92,7 +93,7 @@ export default async function GuidePage({
   const guideDocument = prepareEditorialHtmlWithToc(article.contentHtml)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
-    { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
+    { name: category ? categoryLabel : 'Directory', path: buildCategoryPath(category) },
     { name: article.title, path }
   ]
   const howToSteps = [
@@ -173,7 +174,7 @@ export default async function GuidePage({
       description: relatedReview
         ? 'Once the guide helped you frame what matters, move into the strongest product review for a final fit check.'
         : 'Use the category page when you are ready to turn general guidance into concrete product options.',
-      href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : category ? `/categories/${category}` : '/directory',
+      href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : buildCategoryPath(category),
       label: relatedReview ? 'Open review' : 'Visit category page'
     },
     {
@@ -182,7 +183,7 @@ export default async function GuidePage({
       description: relatedComparison
         ? 'Use the comparison only after the guide has clarified which tradeoffs actually matter to you.'
         : 'If you still need concrete options, move into a shortlist or category page before trying to compare.',
-      href: relatedComparison ? getArticlePath(relatedComparison.type, relatedComparison.slug) : category ? `/categories/${category}#category-shortlist` : '/shortlist',
+      href: relatedComparison ? getArticlePath(relatedComparison.type, relatedComparison.slug) : buildCategoryPath(category, 'category-shortlist'),
       label: relatedComparison ? 'Open comparison' : 'Open shortlist'
     },
     {
@@ -203,7 +204,7 @@ export default async function GuidePage({
         <section className="overflow-hidden rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
             <div className="space-y-5">
-              <Link href={category ? `/categories/${category}` : '/directory'} className="inline-flex text-sm font-medium text-white/70 transition-colors hover:text-white">
+              <Link href={buildCategoryPath(category)} className="inline-flex text-sm font-medium text-white/70 transition-colors hover:text-white">
                 {category ? `Category / ${categoryLabel}` : 'Guide Library'}
               </Link>
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Buying Guide</p>
@@ -298,7 +299,7 @@ export default async function GuidePage({
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Category</p>
                 <div className="mt-5 space-y-3">
                   {category ? (
-                    <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                    <Link href={buildCategoryPath(category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the full category page if you need more reviews, comparisons, and shortlist options.</p>

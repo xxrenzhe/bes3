@@ -4,6 +4,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { SeoTrustSignalsPanel } from '@/components/site/SeoTrustSignalsPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildDatasetSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -37,13 +38,13 @@ export default async function HtmlSitemapPage() {
   const articleByCategory = new Map(
     categories.map((category) => [
       category,
-      articles.filter((article) => article.product?.category === category).slice(0, 6)
+      articles.filter((article) => categoryMatches(article.product?.category, category)).slice(0, 6)
     ])
   )
   const productByCategory = new Map(
     categories.map((category) => [
       category,
-      products.filter((product) => product.category === category).slice(0, 6)
+      products.filter((product) => categoryMatches(product.category, category)).slice(0, 6)
     ])
   )
 
@@ -66,7 +67,7 @@ export default async function HtmlSitemapPage() {
         { name: 'Directory', path: '/directory' },
         { name: 'Brands', path: '/brands' },
         { name: 'Tools', path: '/tools' },
-        ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: `/categories/${category}` })),
+        ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: buildCategoryPath(category) })),
         ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` }))
       ]
     }),
@@ -110,7 +111,7 @@ export default async function HtmlSitemapPage() {
         <section className="grid gap-6 lg:grid-cols-3">
           {categories.map((category) => (
             <div key={category} className="rounded-[2rem] bg-white p-6 shadow-panel">
-              <Link href={`/categories/${category}`} className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+              <Link href={buildCategoryPath(category)} className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
                 {category.replace(/-/g, ' ')}
               </Link>
               <div className="mt-4 space-y-2 text-sm text-muted-foreground">

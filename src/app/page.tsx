@@ -8,6 +8,7 @@ import { SectionHeader } from '@/components/site/SectionHeader'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath } from '@/lib/category'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
@@ -94,7 +95,7 @@ export default async function HomePage() {
       })),
       ...directoryCategories.map((category) => ({
         name: category.replace(/-/g, ' '),
-        path: `/categories/${category}`
+        path: buildCategoryPath(category)
       })),
       ...featuredBrands.map((brand) => ({
         name: brand.name,
@@ -248,7 +249,7 @@ export default async function HomePage() {
             {directoryCategories.map((category) => (
               <Link
                 key={category}
-                href={`/categories/${category}`}
+                href={buildCategoryPath(category)}
                 className="editorial-shadow group rounded-[2rem] bg-white p-8 transition-transform hover:-translate-y-1"
               >
                 <div className="mb-6 flex h-12 w-12 items-center justify-center rounded-2xl bg-secondary text-primary">

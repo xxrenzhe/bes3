@@ -24,6 +24,7 @@ export type GeminiGenerateParams = {
   temperature?: number
   maxOutputTokens?: number
   timeoutMs?: number
+  maxRetries?: number
   responseMimeType?: string
   responseSchema?: GeminiResponseSchema
 }
@@ -36,6 +37,11 @@ export type GeminiGenerateResult = {
     outputTokens: number
     totalTokens: number
   }
+  latencyMs?: number
+}
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
 export function normalizeGeminiModel(model?: string | null): string {
@@ -129,53 +135,70 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
 
   const model = normalizeGeminiModel(params.model || config.model)
   const timeoutMs = Math.max(5000, params.timeoutMs || config.timeoutMs)
-  const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  const maxRetries = Math.max(0, params.maxRetries ?? 2)
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: params.prompt }] }],
-          generationConfig: {
-            temperature: params.temperature ?? 0.4,
-            maxOutputTokens: params.maxOutputTokens ?? 4096,
-            ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
-            ...(params.responseSchema ? { responseSchema: params.responseSchema } : {})
-          }
-        }),
-        signal: controller.signal
+  for (let attempt = 0; attempt <= maxRetries; attempt += 1) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), timeoutMs)
+    const startedAt = Date.now()
+
+    try {
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`,
+        {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: params.prompt }] }],
+            generationConfig: {
+              temperature: params.temperature ?? 0.4,
+              maxOutputTokens: params.maxOutputTokens ?? 4096,
+              ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
+              ...(params.responseSchema ? { responseSchema: params.responseSchema } : {})
+            }
+          }),
+          signal: controller.signal
+        }
+      )
+
+      const payload = await response.json().catch(() => null)
+      if (!response.ok) {
+        const message =
+          payload?.error?.message ||
+          payload?.error?.status ||
+          `Gemini request failed with ${response.status}`
+        if ((response.status === 429 || response.status >= 500) && attempt < maxRetries) {
+          await sleep(400 * (attempt + 1))
+          continue
+        }
+        console.warn(`[ai] Gemini request failed: ${message}`)
+        return null
       }
-    )
 
-    const payload = await response.json().catch(() => null)
-    if (!response.ok) {
-      const message =
-        payload?.error?.message ||
-        payload?.error?.status ||
-        `Gemini request failed with ${response.status}`
-      console.warn(`[ai] Gemini request failed: ${message}`)
+      const text = extractGeminiText(payload)
+      if (!text) {
+        const finishReason = payload?.candidates?.[0]?.finishReason || 'unknown'
+        console.warn(`[ai] Gemini returned no text candidates (finish: ${finishReason})`)
+        return null
+      }
+
+      return {
+        text,
+        model,
+        usage: extractUsage(payload),
+        latencyMs: Date.now() - startedAt
+      }
+    } catch (error: any) {
+      if (attempt < maxRetries) {
+        await sleep(400 * (attempt + 1))
+        continue
+      }
+      console.warn(`[ai] Gemini request error: ${error?.message || error}`)
       return null
+    } finally {
+      clearTimeout(timeout)
     }
-
-    const text = extractGeminiText(payload)
-    if (!text) {
-      console.warn('[ai] Gemini returned no text candidates')
-      return null
-    }
-
-    return {
-      text,
-      model,
-      usage: extractUsage(payload)
-    }
-  } catch (error: any) {
-    console.warn(`[ai] Gemini request error: ${error?.message || error}`)
-    return null
-  } finally {
-    clearTimeout(timeout)
   }
+
+  return null
 }

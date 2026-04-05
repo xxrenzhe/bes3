@@ -1,3 +1,4 @@
+import { categoryMatches } from '@/lib/category'
 import { buildShortlistSharePath } from '@/lib/shortlist'
 import {
   getBrandSlug,
@@ -123,7 +124,7 @@ function buildReasonsAndConcerns(input: {
   const corpus = buildSearchCorpus(input.product)
   const effectivePrice = input.product.bestOffer?.priceAmount ?? input.product.priceAmount
 
-  if (input.inferredCategory && input.product.category === input.inferredCategory) {
+  if (input.inferredCategory && categoryMatches(input.product.category, input.inferredCategory)) {
     reasons.push(`Matches the ${input.inferredCategory.replace(/-/g, ' ')} category`)
   }
 
@@ -174,7 +175,7 @@ function scoreProduct(input: {
   const effectivePrice = product.bestOffer?.priceAmount ?? product.priceAmount
   let score = 0
 
-  if (inferredCategory && product.category === inferredCategory) score += 26
+  if (inferredCategory && categoryMatches(product.category, inferredCategory)) score += 26
   if (!inferredCategory && product.category) score += 6
 
   if (budget != null) {

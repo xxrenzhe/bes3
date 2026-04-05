@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { buildCategoryPath } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
@@ -341,7 +342,7 @@ export default async function StartPage() {
                 eyebrow: 'Browse',
                 title: leadCategory ? `Open ${leadCategoryLabel}` : 'Open the directory',
                 description: 'Return to the category page after saving the alert, so the next useful step is still in front of you.',
-                href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+                href: buildCategoryPath(leadCategory),
                 label: leadCategory ? 'Open category page' : 'Browse the directory'
               },
               {

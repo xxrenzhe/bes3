@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
@@ -20,7 +21,7 @@ export default async function NotFound() {
     {
       title: leadCategory ? `Browse ${getCategoryLabel(leadCategory)}` : 'Browse the directory',
       description: 'Best when the exact page is gone but the broader category page is still the right place to continue.',
-      href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+      href: buildCategoryPath(leadCategory),
       label: leadCategory ? 'Open category page' : 'Open directory'
     },
     {

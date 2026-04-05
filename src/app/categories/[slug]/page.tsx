@@ -7,6 +7,7 @@ import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -20,11 +21,12 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const slug = (await params).slug
   const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
-  const articles = allArticles.filter((article) => article.product?.category === slug)
-  const products = allProducts.filter((product) => product.category === slug)
+  const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
+  const products = allProducts.filter((product) => categoryMatches(product.category, slug))
+  const resolvedCategory = products[0]?.category || articles[0]?.product?.category || slug
   const leadArticle = articles.find((article) => article.type === 'review') || articles[0] || null
   const leadProduct = products[0] || null
-  const categoryLabel = getCategoryLabel(slug)
+  const categoryLabel = getCategoryLabel(resolvedCategory)
   const freshnessDate =
     leadArticle?.updatedAt ||
     leadArticle?.publishedAt ||
@@ -38,7 +40,7 @@ export async function generateMetadata({
     description:
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
       `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
-    path: `/categories/${slug}`,
+    path: buildCategoryPath(resolvedCategory),
     locale: getRequestLocale(),
     image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
     category: categoryLabel,
@@ -55,8 +57,8 @@ export default async function CategoryPage({
 }) {
   const slug = (await params).slug
   const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
-  const articles = allArticles.filter((article) => article.product?.category === slug)
-  const products = allProducts.filter((product) => product.category === slug)
+  const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
+  const products = allProducts.filter((product) => categoryMatches(product.category, slug))
   const [featured, ...rest] = articles
   const featuredReview = articles.find((article) => article.type === 'review') || featured || null
   const featuredComparison = articles.find((article) => article.type === 'comparison') || null
@@ -67,7 +69,8 @@ export default async function CategoryPage({
   ].find(Boolean)
   const reviewCount = articles.filter((article) => article.type === 'review').length
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
-  const categoryLabel = getCategoryLabel(slug)
+  const resolvedCategory = products[0]?.category || articles[0]?.product?.category || slug
+  const categoryLabel = getCategoryLabel(resolvedCategory)
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
   const topBrands = Array.from(
     products.reduce((brands, product) => {
@@ -94,7 +97,7 @@ export default async function CategoryPage({
   )
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
     .slice(0, 4)
-  const path = `/categories/${slug}`
+  const path = buildCategoryPath(resolvedCategory)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: 'Directory', path: '/directory' },
@@ -207,7 +210,7 @@ export default async function CategoryPage({
       description: 'These spokes turn the category page into the hub for brand-specific and editorial-intent paths.',
       links: [
         ...topBrands.slice(0, 2).map((brand) => ({
-          href: `/brands/${brand.slug}/categories/${slug}`,
+          href: buildBrandCategoryPath(brand.slug, resolvedCategory),
           label: `${brand.name} ${categoryLabel}`,
           note: 'Open the exact brand-and-category hub.'
         })),
@@ -325,7 +328,7 @@ export default async function CategoryPage({
               {topBrands.map((brand) => (
                 <Link
                   key={brand.slug}
-                  href={`/brands/${brand.slug}/categories/${slug}`}
+                  href={buildBrandCategoryPath(brand.slug, resolvedCategory)}
                   className="rounded-[1.75rem] bg-muted p-6 transition-colors hover:bg-emerald-50"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>

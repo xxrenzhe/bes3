@@ -1,4 +1,3 @@
-import { ProxyAgent } from 'undici'
 import { getSettingValueOrEnv } from '@/lib/settings'
 
 type ProxySettingItem = {
@@ -117,6 +116,21 @@ async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
   }
 }
 
+let proxyAgentConstructorPromise: Promise<((url: string) => unknown) | null> | null = null
+
+async function getProxyAgentConstructor(): Promise<((url: string) => unknown) | null> {
+  if (!proxyAgentConstructorPromise) {
+    proxyAgentConstructorPromise = import('undici')
+      .then((module) => {
+        if (typeof module.ProxyAgent !== 'function') return null
+        return (url: string) => new module.ProxyAgent(url)
+      })
+      .catch(() => null)
+  }
+
+  return proxyAgentConstructorPromise
+}
+
 export async function resolveBrowserProxy(countryCode?: string | null): Promise<ParsedProxyEndpoint | null> {
   const proxies = await loadBrowserProxySettings()
   if (!proxies.length) return null
@@ -136,17 +150,22 @@ export async function fetchWithBrowserProxy(input: string, init?: RequestInit, c
     return fetch(input, init)
   }
 
+  const createProxyAgent = await getProxyAgentConstructor()
+  if (!createProxyAgent) {
+    return fetch(input, init)
+  }
+
   const auth =
     proxy.username || proxy.password
       ? `${encodeURIComponent(proxy.username || '')}:${encodeURIComponent(proxy.password || '')}@`
       : ''
-  const dispatcher = new ProxyAgent(`${proxy.protocol}://${auth}${proxy.host}:${proxy.port}`)
+  const dispatcher = createProxyAgent(`${proxy.protocol}://${auth}${proxy.host}:${proxy.port}`)
 
   try {
     return await fetch(input, {
       ...(init || {}),
       dispatcher
-    } as RequestInit & { dispatcher: ProxyAgent })
+    } as RequestInit & { dispatcher: unknown })
   } catch (error: any) {
     console.warn(`[proxy] request via ${proxy.host}:${proxy.port} failed, falling back to direct fetch: ${error?.message || error}`)
     return fetch(input, init)

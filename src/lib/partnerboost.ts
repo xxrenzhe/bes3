@@ -69,15 +69,47 @@ type DtcResponse = {
 const DEFAULT_SYNC_PAGE_SIZE = 20
 const MAX_SYNC_PAGES = 5
 const DEFAULT_LINK_BATCH_SIZE = 20
+const DEFAULT_FETCH_TIMEOUT_MS = 15_000
+const MAX_FETCH_RETRIES = 3
+
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms))
+}
 
 function normalizeUrl(value: unknown): string | null {
   const text = String(value || '').trim()
   return text || null
 }
 
+function normalizeText(value: unknown): string | null {
+  const text = String(value || '').replace(/\s+/g, ' ').trim()
+  return text || null
+}
+
 function normalizeAsin(value: unknown): string | null {
   const text = String(value || '').trim().toUpperCase()
   return text || null
+}
+
+function parseNumber(value: unknown): number | null {
+  const normalized = String(value ?? '').replace(/[^\d.-]/g, '')
+  if (!normalized) return null
+  const parsed = Number(normalized)
+  return Number.isFinite(parsed) ? parsed : null
+}
+
+function dedupeItems<T>(items: T[], getKey: (item: T) => string): T[] {
+  const seen = new Set<string>()
+  const result: T[] = []
+
+  for (const item of items) {
+    const key = getKey(item)
+    if (!key || seen.has(key)) continue
+    seen.add(key)
+    result.push(item)
+  }
+
+  return result
 }
 
 function isPartnerboostShortLink(value: string | null): boolean {
@@ -132,17 +164,37 @@ async function getAffiliateConfig() {
 }
 
 async function fetchPartnerboostJson<T>(url: string, init: RequestInit, errorPrefix: string): Promise<T> {
-  const response = await fetch(url, init)
-  const text = await response.text().catch(() => '')
-  if (!response.ok) {
-    throw new Error(`${errorPrefix} (${response.status}): ${text.trim().slice(0, 220) || 'request failed'}`)
+  let lastError: Error | null = null
+
+  for (let attempt = 0; attempt < MAX_FETCH_RETRIES; attempt += 1) {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), DEFAULT_FETCH_TIMEOUT_MS)
+
+    try {
+      const response = await fetch(url, {
+        ...init,
+        signal: controller.signal
+      })
+      const text = await response.text().catch(() => '')
+      if (!response.ok) {
+        throw new Error(`${errorPrefix} (${response.status}): ${text.trim().slice(0, 220) || 'request failed'}`)
+      }
+
+      if (!text.trim()) {
+        throw new Error(`${errorPrefix}: Empty response body`)
+      }
+
+      return JSON.parse(text) as T
+    } catch (error: any) {
+      lastError = error instanceof Error ? error : new Error(String(error))
+      if (attempt >= MAX_FETCH_RETRIES - 1) break
+      await sleep(300 * (attempt + 1))
+    } finally {
+      clearTimeout(timeout)
+    }
   }
 
-  if (!text.trim()) {
-    throw new Error(`${errorPrefix}: Empty response body`)
-  }
-
-  return JSON.parse(text) as T
+  throw lastError || new Error(errorPrefix)
 }
 
 async function fetchAmazonProductLinkMap(baseUrl: string, token: string, productIds: string[]): Promise<Map<string, string>> {
@@ -347,7 +399,7 @@ export async function syncPartnerboostAmazonProducts(pageSize: number = DEFAULT_
       throw new Error(payload.status?.msg || 'Failed to sync PartnerBoost Amazon products')
     }
 
-    const list = payload.data?.list || []
+    const list = dedupeItems(payload.data?.list || [], (item) => String(item.product_id || '').trim() || normalizeAsin(item.asin) || '')
     total += list.length
     pagesFetched += 1
     hasMore = payload.data?.has_more === true
@@ -382,18 +434,18 @@ export async function syncPartnerboostAmazonProducts(pageSize: number = DEFAULT_
         externalId: productId,
         merchantId: String(item.brand_id || ''),
         asin,
-        brand: item.brand_name || null,
-        productName: item.product_name || null,
-        productUrl: item.url || null,
+        brand: normalizeText(item.brand_name),
+        productName: normalizeText(item.product_name),
+        productUrl: normalizeUrl(item.url),
         promoLink: resolvedLinks.promoLink,
         shortPromoLink: resolvedLinks.shortPromoLink,
-        imageUrl: item.image || null,
-        priceAmount: Number(String(item.discount_price || item.original_price || '').replace(/[^\d.]/g, '')) || null,
-        priceCurrency: item.currency || 'USD',
-        commissionRate: Number(String(item.commission || '').replace(/[^\d.]/g, '')) || null,
-        reviewCount: Number(item.reviews || 0) || null,
-        rating: Number(item.rating || 0) || null,
-        countryCode: item.country_code || 'US',
+        imageUrl: normalizeUrl(item.image),
+        priceAmount: parseNumber(item.discount_price) ?? parseNumber(item.original_price),
+        priceCurrency: normalizeText(item.currency) || 'USD',
+        commissionRate: parseNumber(item.commission),
+        reviewCount: parseNumber(item.reviews),
+        rating: parseNumber(item.rating),
+        countryCode: normalizeText(item.country_code) || 'US',
         rawPayload: {
           ...item,
           resolvedPromoLink: resolvedLinks.promoLink,
@@ -442,22 +494,25 @@ export async function syncPartnerboostDtcProducts(limit: number = DEFAULT_SYNC_P
   let remoteTotal: number | null = null
 
   while (page <= Math.max(1, maxPages)) {
-    const response = await fetch(`${dtcBaseUrl.replace(/\/$/, '')}/api.php?mod=datafeed&op=list`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        token: dtcToken,
-        brand_type: 'DTC',
-        page,
-        limit
-      })
-    })
-    const payload = (await response.json()) as DtcResponse
+    const payload = await fetchPartnerboostJson<DtcResponse>(
+      `${dtcBaseUrl.replace(/\/$/, '')}/api.php?mod=datafeed&op=list`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          token: dtcToken,
+          brand_type: 'DTC',
+          page,
+          limit
+        })
+      },
+      'Failed to sync PartnerBoost DTC products'
+    )
     if (payload.status?.code !== 0) {
       throw new Error(payload.status?.msg || 'Failed to sync PartnerBoost DTC products')
     }
 
-    const list = payload.data?.list || []
+    const list = dedupeItems(payload.data?.list || [], (item) => String(item.creative_id || item.sku || item.url || '').trim())
     total += list.length
     pagesFetched += 1
     remoteTotal = Number(payload.data?.total || 0) || null
@@ -468,14 +523,14 @@ export async function syncPartnerboostDtcProducts(limit: number = DEFAULT_SYNC_P
         platform: 'partnerboost_dtc',
         externalId: String(item.creative_id || item.sku || item.url),
         merchantId: String(item.brand_id || item.mcid || ''),
-        brand: item.brand || item.merchant_name || null,
-        productName: item.name || null,
-        productUrl: item.url || null,
-        promoLink: item.tracking_url || item.tracking_url_short || item.tracking_url_smart || null,
-        shortPromoLink: item.tracking_url_short || item.tracking_url_smart || null,
-        imageUrl: item.image || null,
-        priceAmount: Number(item.price || 0) || null,
-        priceCurrency: item.currency || 'USD',
+        brand: normalizeText(item.brand || item.merchant_name),
+        productName: normalizeText(item.name),
+        productUrl: normalizeUrl(item.url),
+        promoLink: normalizeUrl(item.tracking_url || item.tracking_url_short || item.tracking_url_smart),
+        shortPromoLink: normalizeUrl(item.tracking_url_short || item.tracking_url_smart),
+        imageUrl: normalizeUrl(item.image),
+        priceAmount: parseNumber(item.price),
+        priceCurrency: normalizeText(item.currency) || 'USD',
         countryCode: 'US',
         rawPayload: item
       })

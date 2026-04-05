@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
@@ -54,7 +55,7 @@ function buildCurrentSearchPath(input: {
   if (input.mode === 'intent') {
     params.set('mode', 'intent')
     if (input.intent) params.set('intent', input.intent)
-    if (input.category) params.set('category', input.category)
+    if (input.category) params.set('category', getCategorySlug(input.category))
     if (input.budget) params.set('budget', input.budget)
     if (input.must) params.set('must', input.must)
     if (input.avoid) params.set('avoid', input.avoid)
@@ -62,7 +63,7 @@ function buildCurrentSearchPath(input: {
   } else {
     if (input.q) params.set('q', input.q)
     if (input.scope && input.scope !== 'all') params.set('scope', input.scope)
-    if (input.category) params.set('category', input.category)
+    if (input.category) params.set('category', getCategorySlug(input.category))
   }
   return `/search${params.size ? `?${params.toString()}` : ''}`
 }
@@ -77,7 +78,7 @@ export async function generateMetadata({
   const intentInput = parseIntentInputFromSearchParams(resolvedParams)
   const query = mode === 'intent' ? intentInput.query : resolvedParams.q?.trim() || ''
   const categories = await listCategories()
-  const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
+  const selectedCategory = categories.find((category) => categoryMatches(category, resolvedParams.category || '')) || ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
   const scopeLabel =
     selectedScope === 'all'
@@ -139,7 +140,7 @@ function buildSearchHref(query: string, scope: SearchScope, category: string) {
   const params = new URLSearchParams()
   if (query) params.set('q', query)
   if (scope !== 'all') params.set('scope', scope)
-  if (category) params.set('category', category)
+  if (category) params.set('category', getCategorySlug(category))
   return `/search${params.size ? `?${params.toString()}` : ''}`
 }
 
@@ -160,18 +161,18 @@ export default async function SearchPage({
     mode === 'intent' && intentInput.query ? resolveIntentSearch(intentInput) : Promise.resolve(null)
   ])
 
-  const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
+  const selectedCategory = categories.find((category) => categoryMatches(category, resolvedParams.category || '')) || ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
   const intentQuery = intentInput.query
   const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
 
   const filteredProducts =
     mode === 'keyword' && (selectedScope === 'all' || selectedScope === 'products')
-      ? productMatches.filter((product) => !selectedCategory || product.category === selectedCategory)
+      ? productMatches.filter((product) => !selectedCategory || categoryMatches(product.category, selectedCategory))
       : []
 
   const filteredArticles = (mode === 'keyword' ? articleMatches : []).filter((article) => {
-    if (selectedCategory && article.product?.category !== selectedCategory) return false
+    if (selectedCategory && !categoryMatches(article.product?.category, selectedCategory)) return false
     if (selectedScope === 'all') return true
     if (selectedScope === 'products') return false
     return article.type === selectedScope
@@ -336,10 +337,10 @@ export default async function SearchPage({
             </label>
             <label className="flex min-h-[64px] items-center rounded-[1.5rem] bg-muted px-4">
               <span className="sr-only">Category</span>
-              <select name="category" defaultValue={selectedCategory} className="w-full border-none bg-transparent text-sm text-foreground outline-none">
+              <select name="category" defaultValue={getCategorySlug(selectedCategory)} className="w-full border-none bg-transparent text-sm text-foreground outline-none">
                 <option value="">Any category</option>
                 {categories.map((category) => (
-                  <option key={category} value={category}>
+                  <option key={category} value={getCategorySlug(category)}>
                     {category.replace(/-/g, ' ')}
                   </option>
                 ))}
@@ -500,7 +501,7 @@ export default async function SearchPage({
 
               <div className="grid gap-6 lg:grid-cols-3">
                 {fallbackCategories.map((category) => (
-                  <Link key={category} href={`/categories/${category}`} className="rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
+                  <Link key={category} href={buildCategoryPath(category)} className="rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Closest Match</p>
                     <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h3>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">Open the category page if the exact model is missing but the product type is still right.</p>

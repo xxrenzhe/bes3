@@ -8,6 +8,7 @@ import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBrandCategoryPath } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -178,7 +179,7 @@ export default async function BrandPage({
             eyebrow: 'Explore',
             title: `Open ${brand.name} in ${getCategoryLabel(leadCategory)}`,
             description: 'Use the brand-and-category view when both filters already matter and you want the shortest path into exact-match products and next steps.',
-            href: `/brands/${brand.slug}/categories/${leadCategory}`,
+            href: buildBrandCategoryPath(brand.slug, leadCategory),
             label: 'Open this view'
           }
         : null,
@@ -205,7 +206,7 @@ export default async function BrandPage({
       title: `Brand + category paths for ${brand.name}`,
       description: 'These exact-match hubs catch narrower long-tail searches without fragmenting the underlying brand coverage.',
       links: brand.categories.slice(0, 4).map((category) => ({
-        href: `/brands/${brand.slug}/categories/${category}`,
+        href: buildBrandCategoryPath(brand.slug, category),
         label: `${brand.name} ${getCategoryLabel(category)}`,
         note: 'Open the exact brand-and-category hub.'
       }))
@@ -318,7 +319,7 @@ export default async function BrandPage({
               {brand.categories.map((category) => (
                 <Link
                   key={category}
-                  href={`/brands/${brand.slug}/categories/${category}`}
+                  href={buildBrandCategoryPath(brand.slug, category)}
                   className="rounded-[1.5rem] bg-muted p-5 transition-colors hover:bg-emerald-50"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>

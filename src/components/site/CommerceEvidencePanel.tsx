@@ -5,7 +5,7 @@ import { useEffect, useState } from 'react'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
-import { summarizePriceHistoryWindow } from '@/lib/price-insights'
+import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
 import type {
   CommerceProductRecord,
   ProductAttributeFactRecord,
@@ -75,6 +75,7 @@ export function CommerceEvidencePanel({
     bestOffer?.priceAmount ?? product.priceAmount,
     bestOffer?.priceCurrency || product.priceCurrency || 'USD'
   )
+  const timingSignal = historySummary ? buildDealDecisionSignal(historySummary) : null
   const visibleHistory = priceHistory.slice(0, showPriceHistory ? (compact ? 6 : 8) : 3)
   const historyCurrency = historySummary?.currency || bestOffer?.priceCurrency || product.priceCurrency || 'USD'
 
@@ -115,6 +116,13 @@ export function CommerceEvidencePanel({
 
       {historySummary ? (
         <div className="mt-6 rounded-[1.5rem] border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5">
+          {timingSignal ? (
+            <div className="mb-4 rounded-[1.25rem] bg-white/90 px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{timingSignal.badge}</p>
+              <p className="mt-2 text-base font-black text-foreground">{timingSignal.title}</p>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">{timingSignal.description}</p>
+            </div>
+          ) : null}
           <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Price history window</p>

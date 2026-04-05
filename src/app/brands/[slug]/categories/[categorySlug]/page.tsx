@@ -7,6 +7,7 @@ import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildBrandCategoryPath, buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -35,7 +36,7 @@ export async function generateStaticParams() {
 
   return hubs.map((hub) => ({
     slug: hub.brandSlug,
-    categorySlug: hub.category
+    categorySlug: getCategorySlug(hub.category)
   }))
 }
 
@@ -45,11 +46,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string; categorySlug: string }>
 }): Promise<Metadata> {
   const { slug, categorySlug } = await params
-  const path = `/brands/${slug}/categories/${categorySlug}`
+  const path = buildBrandCategoryPath(slug, categorySlug)
   const [brand, categories, hubs] = await Promise.all([getBrandBySlug(slug), listCategories(), listBrandCategoryHubs()])
-  const hasCategory = categories.includes(categorySlug)
-  const hub = hubs.find((entry) => entry.brandSlug === slug && entry.category === categorySlug) || null
-  const categoryLabel = getCategoryLabel(categorySlug)
+  const matchedCategory = categories.find((category) => categoryMatches(category, categorySlug)) || null
+  const hasCategory = Boolean(matchedCategory)
+  const hub = hubs.find((entry) => entry.brandSlug === slug && categoryMatches(entry.category, categorySlug)) || null
+  const categoryLabel = getCategoryLabel(hub?.category || matchedCategory || categorySlug)
 
   if (!brand || !hasCategory) {
     return buildPageMetadata({
@@ -95,33 +97,35 @@ export default async function BrandCategoryPage({
   params: Promise<{ slug: string; categorySlug: string }>
 }) {
   const { slug, categorySlug } = await params
-  const path = `/brands/${slug}/categories/${categorySlug}`
-  const [brand, categories, hubs, allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
+  const path = buildBrandCategoryPath(slug, categorySlug)
+  const [brand, categories, hubs, allArticles, allProducts, brandPolicy] = await Promise.all([
     getBrandBySlug(slug),
     listCategories(),
     listBrandCategoryHubs(),
     listPublishedArticles(),
     listPublishedProducts(),
-    getBrandPolicyBySlug(slug),
-    listBrandCompatibilityFacts(slug, { category: categorySlug, limit: 6 })
+    getBrandPolicyBySlug(slug)
   ])
-  const hasCategory = categories.includes(categorySlug)
+  const matchedCategory = categories.find((category) => categoryMatches(category, categorySlug)) || null
+  const hasCategory = Boolean(matchedCategory)
 
   if (!brand || !hasCategory) notFound()
 
-  const hub = hubs.find((entry) => entry.brandSlug === slug && entry.category === categorySlug) || null
-  const categoryLabel = getCategoryLabel(categorySlug)
-  const directProducts = allProducts.filter((product) => product.category === categorySlug && getBrandSlug(product.brand) === slug)
-  const directArticles = allArticles.filter((article) => article.product?.category === categorySlug && getBrandSlug(article.product?.brand) === slug)
-  const sameBrandLanes = hubs.filter((entry) => entry.brandSlug === slug && entry.category !== categorySlug).slice(0, 4)
-  const sameCategoryLanes = hubs.filter((entry) => entry.category === categorySlug && entry.brandSlug !== slug).slice(0, 4)
+  const hub = hubs.find((entry) => entry.brandSlug === slug && categoryMatches(entry.category, categorySlug)) || null
+  const resolvedCategory = hub?.category || matchedCategory || categorySlug
+  const categoryLabel = getCategoryLabel(resolvedCategory)
+  const compatibilityFacts = await listBrandCompatibilityFacts(slug, { category: resolvedCategory, limit: 6 })
+  const directProducts = allProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
+  const directArticles = allArticles.filter((article) => categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) === slug)
+  const sameBrandLanes = hubs.filter((entry) => entry.brandSlug === slug && getCategorySlug(entry.category) !== getCategorySlug(resolvedCategory)).slice(0, 4)
+  const sameCategoryLanes = hubs.filter((entry) => categoryMatches(entry.category, resolvedCategory) && entry.brandSlug !== slug).slice(0, 4)
   const fallbackProducts = [
-    ...allProducts.filter((product) => product.category === categorySlug && getBrandSlug(product.brand) !== slug),
-    ...allProducts.filter((product) => product.category !== categorySlug && getBrandSlug(product.brand) === slug)
+    ...allProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) !== slug),
+    ...allProducts.filter((product) => !categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
   ].slice(0, 3)
   const fallbackArticles = [
-    ...allArticles.filter((article) => article.product?.category === categorySlug && getBrandSlug(article.product?.brand) !== slug),
-    ...allArticles.filter((article) => article.product?.category !== categorySlug && getBrandSlug(article.product?.brand) === slug)
+    ...allArticles.filter((article) => categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) !== slug),
+    ...allArticles.filter((article) => !categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) === slug)
   ].slice(0, 4)
   const hasDirectCoverage = directProducts.length > 0 || directArticles.length > 0
   const leadProduct = directProducts[0] || fallbackProducts[0] || null
@@ -225,14 +229,14 @@ export default async function BrandCategoryPage({
               eyebrow: 'Compare',
               title: `Browse ${categoryLabel}`,
               description: `Return to the broader ${categoryLabel} category page when you need to widen the field across brands before deciding whether ${brand.name} still belongs in the shortlist.`,
-              href: `/categories/${categorySlug}`,
+              href: buildCategoryPath(resolvedCategory),
               label: 'Open category page'
             },
         {
           eyebrow: 'Watch',
           title: `Track ${categoryLabel}`,
           description: 'If price is the only thing holding you back, keep this category active through alerts instead of forcing a decision today.',
-          href: `/newsletter?intent=price-alert&category=${encodeURIComponent(categorySlug)}&brand=${encodeURIComponent(brand.name)}&cadence=priority`,
+          href: `/newsletter?intent=price-alert&category=${encodeURIComponent(getCategorySlug(resolvedCategory))}&brand=${encodeURIComponent(brand.name)}&cadence=priority`,
           label: 'Start price watch'
         }
       ]
@@ -248,14 +252,14 @@ export default async function BrandCategoryPage({
           eyebrow: 'Widen',
           title: `Reopen ${categoryLabel}`,
           description: `Return to the full ${categoryLabel} category page when the category matters more than the brand and you need the strongest alternatives now.`,
-          href: `/categories/${categorySlug}`,
+          href: buildCategoryPath(resolvedCategory),
           label: 'Open category page'
         },
         {
           eyebrow: 'Track',
           title: `Track ${categoryLabel}`,
           description: 'If the exact overlap is not ready, keep the broader category active so new coverage or price movement does not disappear from your radar.',
-          href: `/newsletter?intent=category-brief&category=${encodeURIComponent(categorySlug)}&brand=${encodeURIComponent(brand.name)}&cadence=weekly`,
+          href: `/newsletter?intent=category-brief&category=${encodeURIComponent(getCategorySlug(resolvedCategory))}&brand=${encodeURIComponent(brand.name)}&cadence=weekly`,
           label: 'Start category alerts'
         },
         {
@@ -422,7 +426,7 @@ export default async function BrandCategoryPage({
               {sameBrandLanes.map((lane) => (
                 <Link
                   key={lane.category}
-                  href={`/brands/${brand.slug}/categories/${lane.category}`}
+                  href={buildBrandCategoryPath(brand.slug, lane.category)}
                   className="block rounded-[1.5rem] bg-muted px-5 py-4 transition-colors hover:bg-emerald-50"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>
@@ -447,7 +451,7 @@ export default async function BrandCategoryPage({
               {sameCategoryLanes.map((lane) => (
                 <Link
                   key={lane.brandSlug}
-                  href={`/brands/${lane.brandSlug}/categories/${categorySlug}`}
+                  href={buildBrandCategoryPath(lane.brandSlug, resolvedCategory)}
                   className="block rounded-[1.5rem] bg-muted px-5 py-4 transition-colors hover:bg-emerald-50"
                 >
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Match</p>

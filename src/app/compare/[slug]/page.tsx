@@ -13,6 +13,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
@@ -130,18 +131,18 @@ export default async function ComparisonPage({
   const relatedReview = allArticles.find((candidate) => {
     if (candidate.type !== 'review') return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const relatedGuide = allArticles.find((candidate) => {
     if (candidate.type !== 'guide') return false
     if (candidate.id === article.id) return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const peerProducts = allProducts
-    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/compare/${article.slug}`
   const comparisonDescription =
@@ -149,7 +150,7 @@ export default async function ComparisonPage({
     'Use this comparison to settle a shortlist, understand the tradeoffs, and choose the better fit with less second-guessing.'
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
-    { name: article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons', path: article.product?.category ? `/categories/${article.product.category}` : '/directory' },
+    { name: article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons', path: buildCategoryPath(article.product?.category) },
     { name: article.title, path }
   ]
   const howToSteps = [
@@ -247,7 +248,7 @@ export default async function ComparisonPage({
       description: relatedReview
         ? 'Use the review when you want the strongest product-level rationale behind the winner before clicking through.'
         : 'Go back to the category page if the current picks still do not feel grounded in your actual use case.',
-      href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : category ? `/categories/${category}` : '/shortlist',
+      href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : buildCategoryPath(category),
       label: relatedReview ? 'Open review' : 'Browse category page'
     },
     {
@@ -263,7 +264,7 @@ export default async function ComparisonPage({
       eyebrow: 'Return',
       title: 'Keep the shortlist clean',
       description: 'If neither option feels quite right, go back to the shortlist or category page instead of branching into unrelated products.',
-      href: category ? `/categories/${category}#category-shortlist` : '/shortlist',
+      href: category ? buildCategoryPath(category, 'category-shortlist') : '/shortlist',
       label: 'Reopen shortlist'
     }
   ]
@@ -333,7 +334,7 @@ export default async function ComparisonPage({
               note: 'Read the supporting review if one more rationale is still needed.'
             }
           : null,
-        ...(category ? [{ href: `/categories/${category}#category-shortlist`, label: `${categoryLabel} shortlist hub`, note: 'Reopen the category shortlist only if neither finalist truly fits.' }] : [])
+        ...(category ? [{ href: buildCategoryPath(category, 'category-shortlist'), label: `${categoryLabel} shortlist hub`, note: 'Reopen the category shortlist only if neither finalist truly fits.' }] : [])
       ])
     },
     {
@@ -380,7 +381,7 @@ export default async function ComparisonPage({
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             <Link href="/" className="transition-colors hover:text-primary">Home</Link>
             <span>/</span>
-            <Link href={article.product?.category ? `/categories/${article.product.category}` : '/directory'} className="transition-colors hover:text-primary">
+            <Link href={buildCategoryPath(article.product?.category)} className="transition-colors hover:text-primary">
               {article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons'}
             </Link>
             <span>/</span>
@@ -578,7 +579,7 @@ export default async function ComparisonPage({
                     </Link>
                   ) : null}
                   {category ? (
-                    <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                    <Link href={buildCategoryPath(category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the main category page if you need more context before accepting the winner.</p>

@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
+import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { requireAdmin } from '@/lib/auth'
 import { getArticlePath } from '@/lib/article-path'
 import { getBrandSlug } from '@/lib/site-data'
@@ -60,13 +61,13 @@ export async function PUT(
     revalidatePath('/brands')
     revalidatePath('/directory')
     if (existing.product_category) {
-      revalidatePath(`/categories/${existing.product_category}`)
+      revalidatePath(buildCategoryPath(existing.product_category))
     }
     if (previousBrandSlug) {
       revalidatePath(`/brands/${previousBrandSlug}`)
     }
     if (previousBrandSlug && existing.product_category) {
-      revalidatePath(`/brands/${previousBrandSlug}/categories/${existing.product_category}`)
+      revalidatePath(buildBrandCategoryPath(previousBrandSlug, existing.product_category))
     }
 
     return NextResponse.json(article)

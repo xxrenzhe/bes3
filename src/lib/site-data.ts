@@ -1,3 +1,4 @@
+import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/category'
 import { getDatabase } from '@/lib/db'
 import { slugify } from '@/lib/slug'
 
@@ -94,6 +95,36 @@ const SEARCH_STOP_WORDS = new Set([
   'under',
   'with'
 ])
+
+const SITE_DATA_CACHE_TTL_MS = Math.max(
+  1000,
+  Number.parseInt(process.env.SITE_DATA_CACHE_TTL_MS || '15000', 10) || 15000
+)
+
+type AsyncCacheEntry<T> = {
+  expiresAt: number
+  value: Promise<T>
+}
+
+const asyncCache = new Map<string, AsyncCacheEntry<unknown>>()
+
+function withCachedPromise<T>(key: string, factory: () => Promise<T>, ttlMs: number = SITE_DATA_CACHE_TTL_MS): Promise<T> {
+  const now = Date.now()
+  const existing = asyncCache.get(key) as AsyncCacheEntry<T> | undefined
+  if (existing && existing.expiresAt > now) {
+    return existing.value
+  }
+
+  const value = factory().catch((error) => {
+    asyncCache.delete(key)
+    throw error
+  })
+  asyncCache.set(key, {
+    expiresAt: now + ttlMs,
+    value
+  })
+  return value
+}
 
 function tokenizeSearchTerms(value: string): string[] {
   return Array.from(
@@ -395,7 +426,7 @@ function mapPriceHistoryRow(row: any): ProductPriceHistoryRecord {
   }
 }
 
-export async function listPublishedArticles(): Promise<ArticleRecord[]> {
+const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCachedPromise('listPublishedArticles', async () => {
   const db = await getDatabase()
   const rows = await db.query(
     `
@@ -417,9 +448,13 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
     `
   )
   return rows.map(mapArticleRow)
+})
+
+export async function listPublishedArticles(): Promise<ArticleRecord[]> {
+  return listPublishedArticlesCached()
 }
 
-export async function getArticleBySlug(slug: string): Promise<ArticleRecord | null> {
+const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | null> => withCachedPromise(`getArticleBySlug:${slug}`, async () => {
   const db = await getDatabase()
   const row = await db.queryOne(
     `
@@ -442,6 +477,10 @@ export async function getArticleBySlug(slug: string): Promise<ArticleRecord | nu
     [slug]
   )
   return row ? mapArticleRow(row) : null
+})
+
+export async function getArticleBySlug(slug: string): Promise<ArticleRecord | null> {
+  return getArticleBySlugCached(slug)
 }
 
 export async function listArticlesByType(type: string): Promise<ArticleRecord[]> {
@@ -449,7 +488,7 @@ export async function listArticlesByType(type: string): Promise<ArticleRecord[]>
   return articles.filter((article) => article.type === type)
 }
 
-export async function listProducts(): Promise<ProductRecord[]> {
+const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromise('listProducts', async () => {
   const db = await getDatabase()
   const rows = await db.query<any>(
     `
@@ -470,9 +509,13 @@ export async function listProducts(): Promise<ProductRecord[]> {
   )
 
   return rows.map(mapProductRow)
+})
+
+export async function listProducts(): Promise<ProductRecord[]> {
+  return listProductsCached()
 }
 
-export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
+const getProductBySlugCached = async (slug: string): Promise<ProductRecord | null> => withCachedPromise(`getProductBySlug:${slug}`, async () => {
   const db = await getDatabase()
   const row = await db.queryOne<any>(
     `
@@ -497,6 +540,10 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
   if (!row) return null
 
   return mapProductRow(row)
+})
+
+export async function getProductBySlug(slug: string): Promise<ProductRecord | null> {
+  return getProductBySlugCached(slug)
 }
 
 export async function getProductById(productId: number): Promise<ProductRecord | null> {
@@ -530,16 +577,20 @@ export async function getProductById(productId: number): Promise<ProductRecord |
 
 export async function listProductsByCategory(category: string): Promise<ProductRecord[]> {
   const products = await listProducts()
-  return products.filter((product) => product.category === category)
+  return products.filter((product) => categoryMatches(product.category, category))
 }
 
 export function isPublicProduct(product: ProductRecord) {
   return Boolean(product.slug)
 }
 
-export async function listPublishedProducts(): Promise<ProductRecord[]> {
+const listPublishedProductsCached = async (): Promise<ProductRecord[]> => withCachedPromise('listPublishedProducts', async () => {
   const products = await listProducts()
   return products.filter(isPublicProduct)
+})
+
+export async function listPublishedProducts(): Promise<ProductRecord[]> {
+  return listPublishedProductsCached()
 }
 
 export async function listPublishedProductsByIds(ids: number[]): Promise<ProductRecord[]> {
@@ -758,12 +809,16 @@ export async function getOpenCommerceProductById(productId: number): Promise<Com
   }
 }
 
-export async function getOpenCommerceProductBySlug(slug: string): Promise<CommerceProductRecord | null> {
+const getOpenCommerceProductBySlugCached = async (slug: string): Promise<CommerceProductRecord | null> => withCachedPromise(`getOpenCommerceProductBySlug:${slug}`, async () => {
   if (!slug.trim()) return null
 
   const product = await getProductBySlug(slug)
   if (!product) return null
   return getOpenCommerceProductById(product.id)
+})
+
+export async function getOpenCommerceProductBySlug(slug: string): Promise<CommerceProductRecord | null> {
+  return getOpenCommerceProductBySlugCached(slug)
 }
 
 export async function searchOpenCommerceProducts(query: string, options?: {
@@ -798,7 +853,7 @@ export async function searchOpenCommerceProducts(query: string, options?: {
       }
     })
     .filter(({ product, matchedTerms }) => {
-      if (options?.category && product.category !== options.category) return false
+      if (options?.category && !categoryMatches(product.category, options.category)) return false
       if (typeof options?.minPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? -Infinity) < options.minPrice) return false
       if (typeof options?.maxPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? Infinity) > options.maxPrice) return false
       if (!lowered) return true
@@ -841,17 +896,21 @@ export async function searchProducts(query: string): Promise<ProductRecord[]> {
   })
 }
 
-export async function listCategories(): Promise<string[]> {
+const listCategoriesCached = async (): Promise<string[]> => withCachedPromise('listCategories', async () => {
   const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
   return Array.from(
     new Set([
-      ...products.map((product) => product.category).filter(Boolean),
-      ...articles.map((article) => article.product?.category).filter(Boolean)
+      ...products.map((product) => normalizeCategoryName(product.category)).filter(Boolean),
+      ...articles.map((article) => normalizeCategoryName(article.product?.category)).filter(Boolean)
     ] as string[])
-  ).sort()
+  ).sort((left, right) => left.localeCompare(right))
+})
+
+export async function listCategories(): Promise<string[]> {
+  return listCategoriesCached()
 }
 
-export async function listBrands(): Promise<BrandRecord[]> {
+const listBrandsCached = async (): Promise<BrandRecord[]> => withCachedPromise('listBrands', async () => {
   const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
   const brands = new Map<
     string,
@@ -904,10 +963,10 @@ export async function listBrands(): Promise<BrandRecord[]> {
     .map((brand) => {
       const categories = Array.from(
         new Set([
-          ...brand.products.map((product) => product.category).filter(Boolean),
-          ...brand.articles.map((article) => article.product?.category).filter(Boolean)
+          ...brand.products.map((product) => normalizeCategoryName(product.category)).filter(Boolean),
+          ...brand.articles.map((article) => normalizeCategoryName(article.product?.category)).filter(Boolean)
         ] as string[])
-      ).sort()
+      ).sort((left, right) => left.localeCompare(right))
       const featuredProduct = brand.products[0] || brand.articles.find((article) => article.product)?.product || null
       const featuredArticle = brand.articles[0] || null
 
@@ -934,6 +993,10 @@ export async function listBrands(): Promise<BrandRecord[]> {
 
       return left.name.localeCompare(right.name)
     })
+})
+
+export async function listBrands(): Promise<BrandRecord[]> {
+  return listBrandsCached()
 }
 
 export async function listBrandPolicies(): Promise<BrandPolicyRecord[]> {
@@ -1051,7 +1114,7 @@ export async function getBrandKnowledgeByProduct(input: {
   }
 }
 
-export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
+const listBrandCategoryHubsCached = async (): Promise<BrandCategoryRecord[]> => withCachedPromise('listBrandCategoryHubs', async () => {
   const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
   const hubs = new Map<
     string,
@@ -1065,7 +1128,7 @@ export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
 
   for (const product of products) {
     const brandName = normalizeBrandName(product.brand)
-    const category = product.category?.trim() || ''
+    const category = normalizeCategoryName(product.category)
     const brandSlug = getBrandSlug(brandName)
 
     if (!brandName || !brandSlug || !category) continue
@@ -1088,7 +1151,7 @@ export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
 
   for (const article of articles) {
     const brandName = normalizeBrandName(article.product?.brand)
-    const category = article.product?.category?.trim() || ''
+    const category = normalizeCategoryName(article.product?.category)
     const brandSlug = getBrandSlug(brandName)
 
     if (!brandName || !brandSlug || !category) continue
@@ -1140,14 +1203,22 @@ export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
 
       return left.category.localeCompare(right.category)
     })
+})
+
+export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {
+  return listBrandCategoryHubsCached()
 }
 
-export async function getBrandBySlug(slug: string): Promise<BrandRecord | null> {
+const getBrandBySlugCached = async (slug: string): Promise<BrandRecord | null> => withCachedPromise(`getBrandBySlug:${slug}`, async () => {
   const brands = await listBrands()
   return brands.find((brand) => brand.slug === slug) || null
+})
+
+export async function getBrandBySlug(slug: string): Promise<BrandRecord | null> {
+  return getBrandBySlugCached(slug)
 }
 
 export async function getBrandCategoryHub(brandSlug: string, category: string): Promise<BrandCategoryRecord | null> {
   const hubs = await listBrandCategoryHubs()
-  return hubs.find((hub) => hub.brandSlug === brandSlug && hub.category === category) || null
+  return hubs.find((hub) => hub.brandSlug === brandSlug && categoryMatches(hub.category, category)) || null
 }

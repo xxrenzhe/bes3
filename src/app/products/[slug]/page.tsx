@@ -13,6 +13,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
@@ -107,9 +108,9 @@ export default async function ProductPage({
   const guideArticle = articles.find((article) => {
     if (article.type !== 'guide') return false
     if (article.productId === product.id) return true
-    return Boolean(product.category && article.product?.category === product.category)
+    return Boolean(product.category && categoryMatches(article.product?.category, product.category))
   }) || null
-  const peerProducts = allProducts.filter((candidate) => candidate.id !== product.id && candidate.category === product.category).slice(0, 3)
+  const peerProducts = allProducts.filter((candidate) => candidate.id !== product.id && categoryMatches(candidate.category, product.category)).slice(0, 3)
   const heroImageUrl = product.heroImageUrl || reviewArticle?.heroImageUrl || null
   const productGallery = Array.from(new Set([heroImageUrl, ...galleryImages].filter(Boolean) as string[]))
   const specs = Object.entries(product.specs).slice(0, 6)
@@ -124,7 +125,7 @@ export default async function ProductPage({
     `${product.productName} on Bes3 includes specs, shortlist context, and fit notes before you click through to a store.`
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
-    { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: product.category ? `/categories/${product.category}` : '/directory' },
+    { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: buildCategoryPath(product.category) },
     { name: product.productName, path }
   ]
   const howToSteps = [
@@ -223,7 +224,7 @@ export default async function ProductPage({
       eyebrow: 'Explore',
       title: 'Browse the category',
       description: 'Return to the category page if you still need Bes3 to narrow the field before comparing or checking price.',
-      href: product.category ? `/categories/${product.category}` : '/directory',
+      href: buildCategoryPath(product.category),
       label: 'Open category page'
     }
   ].filter(Boolean) as Array<{
@@ -248,7 +249,7 @@ export default async function ProductPage({
       links: compactSeoHubLinks([
         product.category
           ? {
-              href: `/categories/${product.category}`,
+              href: buildCategoryPath(product.category),
               label: `Browse ${categoryLabel}`,
               note: 'Return to the category hub without widening the search.'
             }
@@ -306,7 +307,7 @@ export default async function ProductPage({
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             <Link href="/" className="transition-colors hover:text-primary">Home</Link>
             <span>/</span>
-            <Link href={product.category ? `/categories/${product.category}` : '/directory'} className="transition-colors hover:text-primary">
+            <Link href={buildCategoryPath(product.category)} className="transition-colors hover:text-primary">
               {product.category ? product.category.replace(/-/g, ' ') : 'Products'}
             </Link>
             <span>/</span>
@@ -496,7 +497,7 @@ export default async function ProductPage({
                     </Link>
                   ) : null}
                   {product.category ? (
-                    <Link href={`/categories/${product.category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                    <Link href={buildCategoryPath(product.category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main category page if you need adjacent coverage before committing to this product.</p>

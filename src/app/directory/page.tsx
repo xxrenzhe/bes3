@@ -5,6 +5,7 @@ import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -84,7 +85,7 @@ export default async function DirectoryPage() {
     dateModified: latestRefresh,
     items: categories.map((category) => ({
       name: category.replace(/-/g, ' '),
-      path: `/categories/${category}`
+      path: buildCategoryPath(category)
     }))
   })
   const directoryRoutes = [
@@ -99,7 +100,7 @@ export default async function DirectoryPage() {
       eyebrow: 'Browse',
       title: leadCategory ? `Open ${getCategoryLabel(leadCategory)}` : 'Open a category page',
       description: 'Category pages work best once you know what kind of product you need and want the strongest picks in one place.',
-      href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+      href: buildCategoryPath(leadCategory),
       label: leadCategory ? 'Open category page' : 'Browse categories'
     },
     {
@@ -183,8 +184,8 @@ export default async function DirectoryPage() {
         </section>
         <div className="grid gap-8 xl:grid-cols-3">
           {categories.map((category) => {
-            const categoryArticles = articles.filter((article) => article.product?.category === category)
-            const categoryProducts = products.filter((product) => product.category === category)
+            const categoryArticles = articles.filter((article) => categoryMatches(article.product?.category, category))
+            const categoryProducts = products.filter((product) => categoryMatches(product.category, category))
             const featuredArticle = categoryArticles[0] || null
             const featuredProduct = categoryProducts[0] || null
             const featuredReview = categoryArticles.find((article) => article.type === 'review') || null
@@ -217,7 +218,7 @@ export default async function DirectoryPage() {
                     </p>
                     <p className="mt-3 text-sm font-semibold text-foreground">{bestRouteLabel}</p>
                   </div>
-                  <Link href={`/categories/${category}`} className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
+                  <Link href={buildCategoryPath(category)} className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
                     Open page →
                   </Link>
                 </div>
@@ -253,7 +254,7 @@ export default async function DirectoryPage() {
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
-                  <Link href={`/categories/${category}#category-shortlist`} className="rounded-[1.25rem] bg-muted px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
+                  <Link href={buildCategoryPath(category, 'category-shortlist')} className="rounded-[1.25rem] bg-muted px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
                     Open shortlist →
                   </Link>
                   <Link

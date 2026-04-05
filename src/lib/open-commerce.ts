@@ -1,4 +1,5 @@
 import { buildArticleDecisionContent, buildProductDecisionContent } from '@/lib/decision-content'
+import { buildCategoryPath } from '@/lib/category'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
 import { normalizeMerchantSource, buildMerchantExitPath } from '@/lib/merchant-links'
 import type {
@@ -68,7 +69,7 @@ function buildProductPath(product: CommerceProductRecord) {
 }
 
 function getCategoryPath(category: string | null | undefined) {
-  return category ? `/categories/${category}` : '/directory'
+  return buildCategoryPath(category)
 }
 
 function getAlertPath(product: CommerceProductRecord) {
