@@ -293,7 +293,7 @@ export default async function CategoryPage({
                     {brand.name} {categoryLabel}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category view without breaking your shopping flow.
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category view without making you restart your research.
                   </p>
                   <p className="mt-5 text-sm font-semibold text-primary">Open this view →</p>
                 </Link>

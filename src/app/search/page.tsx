@@ -382,7 +382,7 @@ export default async function SearchPage({
               <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
                 <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No exact match yet.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  We have not reviewed "{query}" yet. But do not worry, here are the closest trusted alternatives.
+                  We have not reviewed "{query}" yet. But do not worry, here are the closest solid alternatives.
                 </p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
                   {selectedScope !== 'all' ? (

@@ -75,7 +75,7 @@ export default async function AboutPage() {
     {
       eyebrow: 'Search',
       title: 'Use search when the need is concrete',
-      description: 'Search is the fastest route when you already know the product type, brand, or use case and want Bes3 to narrow the options.',
+      description: 'Search is the fastest way to start when you already know the product type, brand, or use case and want Bes3 to narrow the options.',
       href: '/search?scope=products',
       label: 'Search products'
     },
@@ -112,7 +112,7 @@ export default async function AboutPage() {
   const antiPatterns = [
     'We do not pad the page with 20 nearly identical picks to simulate coverage.',
     'We do not treat raw review count as automatic proof without category and fit context.',
-    'We do not push compare before the shortlist is narrow enough to support a real decision.',
+    'We do not push compare before the shortlist is narrow enough to support a real choice.',
     'We do not turn alerts into generic blasts that lose the original shopping context.'
   ]
 
@@ -127,7 +127,7 @@ export default async function AboutPage() {
       title: `Browse ${leadCategoryLabel}`,
       description: 'Best when the category is already obvious and you want the strongest pages grouped in one place.',
       href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-      label: leadCategory ? 'Open category hub' : 'Open directory'
+      label: leadCategory ? 'Open category page' : 'Open directory'
     },
     {
       title: 'Keep a shortlist alive',
@@ -139,7 +139,7 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What does Bes3 actually publish?',
-      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category pages, and alerts for different stages of a real buying decision.'
+      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category pages, and alerts for different moments in a real purchase.'
     },
     {
       question: 'When should you use a review instead of a comparison?',
@@ -195,8 +195,8 @@ export default async function AboutPage() {
               <div className="mt-5 space-y-4">
                 {[
                   'Why Bes3 only keeps a few picks instead of publishing giant “best of” grids.',
-                  'How reviews, comparisons, category pages, and alerts fit together in one shopping flow.',
-                  'What rules stop the public site from turning into a low-trust affiliate funnel.'
+                  'How reviews, comparisons, category pages, and alerts fit together in one simple shopping process.',
+                  'What rules stop the public site from turning into a pile of low-trust affiliate links.'
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -328,7 +328,7 @@ export default async function AboutPage() {
                 <p className="editorial-kicker">Use Bes3 Live</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Trust is only useful if it leads to a cleaner next action.</h2>
                 <p className="mt-4 max-w-2xl text-sm leading-8 text-muted-foreground">
-                  The public site is built to turn trust into action. Use one of these routes instead of reading this page and then reopening the same research problem from scratch.
+                  The public site is built to turn trust into action. Use one of these next steps instead of reading this page and then reopening the same research problem from scratch.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
