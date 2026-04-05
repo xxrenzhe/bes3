@@ -616,7 +616,8 @@ async function updateProductFromScrape(productId: number, scraped: ReturnType<ty
       UPDATE products
       SET resolved_url = ?, canonical_url = ?, slug = ?, brand = ?, product_name = ?, category = ?, description = ?,
           price_amount = ?, price_currency = ?, rating = ?, review_count = ?, specs_json = ?, review_highlights_json = ?,
-          source_payload_json = ?, updated_at = CURRENT_TIMESTAMP
+          source_payload_json = ?, price_last_checked_at = ?, offer_last_checked_at = ?, attribute_completeness_score = ?,
+          data_confidence_score = ?, source_count = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
     [
@@ -634,9 +635,132 @@ async function updateProductFromScrape(productId: number, scraped: ReturnType<ty
       JSON.stringify(scraped.specs),
       JSON.stringify(scraped.reviewHighlights),
       JSON.stringify(scraped),
+      scraped.priceLastCheckedAt,
+      scraped.offerLastCheckedAt,
+      scraped.attributeCompletenessScore,
+      scraped.dataConfidenceScore,
+      scraped.sourceCount,
       productId
     ]
   )
+}
+
+async function ensureMerchantRecord(input: {
+  name: string
+  websiteUrl?: string | null
+}): Promise<number | null> {
+  const name = input.name.trim()
+  if (!name) return null
+
+  const db = await getDatabase()
+  const slug = slugify(name)
+  const existing = await db.queryOne<{ id: number }>('SELECT id FROM merchants WHERE slug = ? LIMIT 1', [slug])
+
+  if (existing?.id) {
+    await db.exec(
+      `
+        UPDATE merchants
+        SET name = ?, website_url = COALESCE(?, website_url), updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [name, input.websiteUrl || null, existing.id]
+    )
+    return existing.id
+  }
+
+  const result = await db.exec(
+    `
+      INSERT INTO merchants (name, slug, website_url)
+      VALUES (?, ?, ?)
+    `,
+    [name, slug, input.websiteUrl || null]
+  )
+
+  return Number(result.lastInsertRowid)
+}
+
+async function persistProductGraphFromScrape(productId: number, scraped: ReturnType<typeof scrapeProductPage>) {
+  const db = await getDatabase()
+
+  await db.transaction(async () => {
+    await db.exec('DELETE FROM product_offers WHERE product_id = ?', [productId])
+    await db.exec('DELETE FROM product_attribute_facts WHERE product_id = ?', [productId])
+
+    for (const offer of scraped.offers) {
+      const merchantId = await ensureMerchantRecord({
+        name: offer.merchantName,
+        websiteUrl: offer.websiteUrl
+      })
+
+      const insertResult = await db.exec(
+        `
+          INSERT INTO product_offers (
+            product_id, merchant_id, offer_url, availability_status, price_amount, price_currency, shipping_cost,
+            coupon_text, coupon_type, condition_label, source_type, source_url, confidence_score, raw_payload_json,
+            last_checked_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          productId,
+          merchantId,
+          offer.offerUrl,
+          offer.availabilityStatus,
+          offer.priceAmount,
+          offer.priceCurrency,
+          offer.shippingCost,
+          offer.couponText,
+          offer.couponType,
+          offer.conditionLabel,
+          offer.sourceType,
+          offer.sourceUrl,
+          offer.confidenceScore,
+          offer.rawPayload ? JSON.stringify(offer.rawPayload) : null,
+          scraped.offerLastCheckedAt
+        ]
+      )
+
+      const offerId = Number(insertResult.lastInsertRowid || 0)
+      if (offerId && (offer.priceAmount != null || offer.availabilityStatus)) {
+        await db.exec(
+          `
+            INSERT INTO product_price_history (
+              product_id, product_offer_id, price_amount, price_currency, availability_status, captured_at
+            ) VALUES (?, ?, ?, ?, ?, ?)
+          `,
+          [
+            productId,
+            offerId,
+            offer.priceAmount,
+            offer.priceCurrency,
+            offer.availabilityStatus,
+            scraped.offerLastCheckedAt
+          ]
+        )
+      }
+    }
+
+    for (const fact of scraped.attributeFacts) {
+      await db.exec(
+        `
+          INSERT INTO product_attribute_facts (
+            product_id, attribute_key, attribute_label, attribute_value, source_url, source_type, confidence_score,
+            is_verified, last_checked_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `,
+        [
+          productId,
+          fact.key,
+          fact.label,
+          fact.value,
+          fact.sourceUrl,
+          fact.sourceType,
+          fact.confidenceScore,
+          fact.isVerified ? 1 : 0,
+          scraped.priceLastCheckedAt
+        ]
+      )
+    }
+  })
 }
 
 async function saveKeywords(productId: number, keywords: Awaited<ReturnType<typeof generateKeywordIdeas>>) {
@@ -790,7 +914,10 @@ async function loadStoredProductRecord(productId: number): Promise<StoredProduct
     `
       SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount,
         price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json,
-        resolved_url AS resolvedUrl, source_affiliate_link AS sourceAffiliateLink, affiliate_product_id AS affiliateProductId
+        resolved_url AS resolvedUrl, source_affiliate_link AS sourceAffiliateLink, affiliate_product_id AS affiliateProductId,
+        price_last_checked_at AS priceLastCheckedAt, offer_last_checked_at AS offerLastCheckedAt,
+        attribute_completeness_score AS attributeCompletenessScore, data_confidence_score AS dataConfidenceScore,
+        source_count AS sourceCount
       FROM products
       WHERE id = ?
       LIMIT 1
@@ -850,7 +977,9 @@ async function loadComparisonAlternatives(productId: number): Promise<ProductRec
     `
       SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount,
         price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json,
-        resolved_url AS resolvedUrl
+        resolved_url AS resolvedUrl, price_last_checked_at AS priceLastCheckedAt, offer_last_checked_at AS offerLastCheckedAt,
+        attribute_completeness_score AS attributeCompletenessScore, data_confidence_score AS dataConfidenceScore,
+        source_count AS sourceCount
       FROM products
       WHERE id <> ?
       ORDER BY updated_at DESC
@@ -1408,6 +1537,7 @@ async function executeFullPipelineRun(
     const normalizeJob = await createJob(runId, 'normalizeProduct')
     await markRun(runId, 'running', 'normalizeProduct')
     await updateProductFromScrape(productId, scraped)
+    await persistProductGraphFromScrape(productId, scraped)
     await assertRunNotCancelled(runId)
     await finishJob(normalizeJob, 'completed', 'Product normalized', { productId })
 
@@ -1416,7 +1546,9 @@ async function executeFullPipelineRun(
       `
         SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount,
           price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json,
-          resolved_url AS resolvedUrl
+          resolved_url AS resolvedUrl, price_last_checked_at AS priceLastCheckedAt, offer_last_checked_at AS offerLastCheckedAt,
+          attribute_completeness_score AS attributeCompletenessScore, data_confidence_score AS dataConfidenceScore,
+          source_count AS sourceCount
         FROM products WHERE id = ? LIMIT 1
       `,
       [productId]
@@ -1460,7 +1592,7 @@ async function executeFullPipelineRun(
     const comparisonJob = await createJob(runId, 'generateComparisonArticle')
     await markRun(runId, 'running', 'generateComparisonArticle')
     const allProducts = await db.query<any>(
-      'SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount, price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json, resolved_url AS resolvedUrl FROM products WHERE id <> ? ORDER BY updated_at DESC LIMIT 2',
+      'SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount, price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json, resolved_url AS resolvedUrl, price_last_checked_at AS priceLastCheckedAt, offer_last_checked_at AS offerLastCheckedAt, attribute_completeness_score AS attributeCompletenessScore, data_confidence_score AS dataConfidenceScore, source_count AS sourceCount FROM products WHERE id <> ? ORDER BY updated_at DESC LIMIT 2',
       [productId]
     )
     const alternatives = allProducts.map((item) => ({

@@ -16,8 +16,54 @@ export interface ProductRecord {
   specs: Record<string, string>
   reviewHighlights: string[]
   resolvedUrl: string | null
+  priceLastCheckedAt: string | null
+  offerLastCheckedAt: string | null
+  attributeCompletenessScore: number
+  dataConfidenceScore: number
+  sourceCount: number
   publishedAt: string | null
   updatedAt: string | null
+}
+
+export interface ProductOfferRecord {
+  id: number
+  productId: number
+  merchantId: number | null
+  merchantName: string | null
+  merchantSlug: string | null
+  websiteUrl: string | null
+  offerUrl: string
+  availabilityStatus: string | null
+  priceAmount: number | null
+  priceCurrency: string | null
+  shippingCost: number | null
+  couponText: string | null
+  couponType: string | null
+  conditionLabel: string | null
+  sourceType: string
+  sourceUrl: string | null
+  confidenceScore: number
+  lastCheckedAt: string | null
+}
+
+export interface ProductAttributeFactRecord {
+  id: number
+  productId: number
+  attributeKey: string
+  attributeLabel: string
+  attributeValue: string
+  sourceUrl: string | null
+  sourceType: string
+  confidenceScore: number
+  isVerified: boolean
+  lastCheckedAt: string | null
+}
+
+export interface CommerceProductRecord extends ProductRecord {
+  bestOffer: ProductOfferRecord | null
+  offerCount: number
+  evidenceCount: number
+  freshness: 'fresh' | 'recent' | 'stale' | 'unknown'
 }
 
 export async function getProductGalleryImageUrls(productId: number, limit: number = 6): Promise<string[]> {
@@ -104,6 +150,10 @@ function parseJsonArray(value: string | null): string[] {
   }
 }
 
+function parseBoolean(value: unknown): boolean {
+  return value === true || value === 1 || value === '1'
+}
+
 function normalizeBrandName(value: string | null | undefined) {
   return value?.replace(/\s+/g, ' ').trim() || ''
 }
@@ -126,6 +176,15 @@ export function getBrandSlug(value: string | null | undefined) {
   return normalized ? slugify(normalized) : ''
 }
 
+function getFreshnessBucket(value: string | null | undefined): CommerceProductRecord['freshness'] {
+  if (!value) return 'unknown'
+  const deltaMs = Date.now() - Date.parse(value)
+  if (!Number.isFinite(deltaMs)) return 'unknown'
+  if (deltaMs <= 36 * 60 * 60 * 1000) return 'fresh'
+  if (deltaMs <= 7 * 24 * 60 * 60 * 1000) return 'recent'
+  return 'stale'
+}
+
 function mapProductRow(row: any): ProductRecord {
   return {
     id: row.id,
@@ -142,6 +201,11 @@ function mapProductRow(row: any): ProductRecord {
     specs: parseJsonObject(row.specs_json),
     reviewHighlights: parseJsonArray(row.review_highlights_json),
     resolvedUrl: row.resolved_url,
+    priceLastCheckedAt: row.price_last_checked_at || null,
+    offerLastCheckedAt: row.offer_last_checked_at || null,
+    attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
+    dataConfidenceScore: Number(row.data_confidence_score || 0),
+    sourceCount: Number(row.source_count || 0),
     publishedAt: row.published_at || null,
     updatedAt: row.updated_at || null
   }
@@ -164,6 +228,11 @@ function mapArticleRow(row: any): ArticleRecord {
         specs: parseJsonObject(row.specs_json),
         reviewHighlights: parseJsonArray(row.review_highlights_json),
         resolvedUrl: row.resolved_url,
+        priceLastCheckedAt: row.price_last_checked_at || null,
+        offerLastCheckedAt: row.offer_last_checked_at || null,
+        attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
+        dataConfidenceScore: Number(row.data_confidence_score || 0),
+        sourceCount: Number(row.source_count || 0),
         publishedAt: row.product_published_at || row.product_created_at || null,
         updatedAt: row.product_updated_at || null
       }
@@ -194,6 +263,7 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
         p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
           SELECT public_url
@@ -217,6 +287,7 @@ export async function getArticleBySlug(slug: string): Promise<ArticleRecord | nu
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
         p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
           SELECT public_url
@@ -245,7 +316,9 @@ export async function listProducts(): Promise<ProductRecord[]> {
   const rows = await db.query<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url, published_at, updated_at,
+        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
+        published_at, updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -266,7 +339,9 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url, published_at, updated_at,
+        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
+        published_at, updated_at,
         (
           SELECT public_url
           FROM product_media_assets m
@@ -307,6 +382,214 @@ export async function listPublishedProductsByIds(ids: number[]): Promise<Product
   const byId = new Map(products.map((product) => [product.id, product]))
 
   return ids.map((id) => byId.get(id)).filter(Boolean) as ProductRecord[]
+}
+
+function buildInClause(values: number[]) {
+  return values.map(() => '?').join(', ')
+}
+
+function rankAvailability(value: string | null | undefined) {
+  switch (value) {
+    case 'in_stock':
+      return 0
+    case 'limited':
+      return 1
+    case 'preorder':
+      return 2
+    case 'backorder':
+      return 3
+    case 'out_of_stock':
+      return 4
+    default:
+      return 5
+  }
+}
+
+function compareOffers(left: ProductOfferRecord, right: ProductOfferRecord) {
+  const availabilityDelta = rankAvailability(left.availabilityStatus) - rankAvailability(right.availabilityStatus)
+  if (availabilityDelta !== 0) return availabilityDelta
+  if (left.priceAmount == null && right.priceAmount != null) return 1
+  if (left.priceAmount != null && right.priceAmount == null) return -1
+  if (left.priceAmount != null && right.priceAmount != null && left.priceAmount !== right.priceAmount) {
+    return left.priceAmount - right.priceAmount
+  }
+  if (left.confidenceScore !== right.confidenceScore) return right.confidenceScore - left.confidenceScore
+  return toTimestamp(right.lastCheckedAt) - toTimestamp(left.lastCheckedAt)
+}
+
+function mapOfferRow(row: any): ProductOfferRecord {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    merchantId: row.merchant_id ?? null,
+    merchantName: row.merchant_name || null,
+    merchantSlug: row.merchant_slug || null,
+    websiteUrl: row.website_url || null,
+    offerUrl: row.offer_url,
+    availabilityStatus: row.availability_status || null,
+    priceAmount: row.price_amount,
+    priceCurrency: row.price_currency || null,
+    shippingCost: row.shipping_cost,
+    couponText: row.coupon_text || null,
+    couponType: row.coupon_type || null,
+    conditionLabel: row.condition_label || null,
+    sourceType: row.source_type || 'scrape',
+    sourceUrl: row.source_url || null,
+    confidenceScore: Number(row.confidence_score || 0),
+    lastCheckedAt: row.last_checked_at || null
+  }
+}
+
+function mapAttributeFactRow(row: any): ProductAttributeFactRecord {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    attributeKey: row.attribute_key,
+    attributeLabel: row.attribute_label,
+    attributeValue: row.attribute_value,
+    sourceUrl: row.source_url || null,
+    sourceType: row.source_type || 'scrape',
+    confidenceScore: Number(row.confidence_score || 0),
+    isVerified: parseBoolean(row.is_verified),
+    lastCheckedAt: row.last_checked_at || null
+  }
+}
+
+async function listOffersForProductIds(productIds: number[]): Promise<Map<number, ProductOfferRecord[]>> {
+  if (!productIds.length) return new Map()
+
+  const db = await getDatabase()
+  const rows = await db.query<any>(
+    `
+      SELECT po.*, m.name AS merchant_name, m.slug AS merchant_slug, m.website_url
+      FROM product_offers po
+      LEFT JOIN merchants m ON m.id = po.merchant_id
+      WHERE po.product_id IN (${buildInClause(productIds)})
+      ORDER BY po.product_id ASC, po.last_checked_at DESC, po.id DESC
+    `,
+    productIds
+  )
+
+  const grouped = new Map<number, ProductOfferRecord[]>()
+  for (const row of rows) {
+    const mapped = mapOfferRow(row)
+    const existing = grouped.get(mapped.productId) || []
+    existing.push(mapped)
+    grouped.set(mapped.productId, existing)
+  }
+
+  for (const [productId, offers] of grouped) {
+    grouped.set(productId, offers.sort(compareOffers))
+  }
+
+  return grouped
+}
+
+async function listAttributeFactCountsForProductIds(productIds: number[]): Promise<Map<number, number>> {
+  if (!productIds.length) return new Map()
+
+  const db = await getDatabase()
+  const rows = await db.query<{ product_id: number; count: number }>(
+    `
+      SELECT product_id, COUNT(*) AS count
+      FROM product_attribute_facts
+      WHERE product_id IN (${buildInClause(productIds)})
+      GROUP BY product_id
+    `,
+    productIds
+  )
+
+  return new Map(rows.map((row) => [row.product_id, Number(row.count || 0)]))
+}
+
+export async function listProductOffers(productId: number): Promise<ProductOfferRecord[]> {
+  const offersByProductId = await listOffersForProductIds([productId])
+  return offersByProductId.get(productId) || []
+}
+
+export async function listProductAttributeFacts(productId: number, limit: number = 40): Promise<ProductAttributeFactRecord[]> {
+  if (!Number.isInteger(productId) || productId <= 0) return []
+
+  const db = await getDatabase()
+  const rows = await db.query<any>(
+    `
+      SELECT id, product_id, attribute_key, attribute_label, attribute_value, source_url, source_type, confidence_score,
+        is_verified, last_checked_at
+      FROM product_attribute_facts
+      WHERE product_id = ?
+      ORDER BY confidence_score DESC, last_checked_at DESC, id DESC
+      LIMIT ?
+    `,
+    [productId, limit]
+  )
+
+  return rows.map(mapAttributeFactRow)
+}
+
+export async function listOpenCommerceProducts(): Promise<CommerceProductRecord[]> {
+  const products = await listPublishedProducts()
+  if (!products.length) return []
+
+  const productIds = products.map((product) => product.id)
+  const [offersByProductId, evidenceCounts] = await Promise.all([
+    listOffersForProductIds(productIds),
+    listAttributeFactCountsForProductIds(productIds)
+  ])
+
+  return products.map((product) => {
+    const offers = offersByProductId.get(product.id) || []
+    return {
+      ...product,
+      bestOffer: offers[0] || null,
+      offerCount: offers.length,
+      evidenceCount: evidenceCounts.get(product.id) || 0,
+      freshness: getFreshnessBucket(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)
+    }
+  })
+}
+
+export async function getOpenCommerceProductById(productId: number): Promise<CommerceProductRecord | null> {
+  if (!Number.isInteger(productId) || productId <= 0) return null
+
+  const products = await listOpenCommerceProducts()
+  return products.find((product) => product.id === productId) || null
+}
+
+export async function searchOpenCommerceProducts(query: string, options?: {
+  category?: string
+  minPrice?: number
+  maxPrice?: number
+  limit?: number
+}): Promise<CommerceProductRecord[]> {
+  const lowered = query.trim().toLowerCase()
+  const products = await listOpenCommerceProducts()
+
+  const filtered = products.filter((product) => {
+    if (options?.category && product.category !== options.category) return false
+    if (typeof options?.minPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? -Infinity) < options.minPrice) return false
+    if (typeof options?.maxPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? Infinity) > options.maxPrice) return false
+    if (!lowered) return true
+
+    return [
+      product.productName,
+      product.brand || '',
+      product.category || '',
+      product.description || '',
+      product.reviewHighlights.join(' '),
+      ...Object.values(product.specs)
+    ]
+      .join(' ')
+      .toLowerCase()
+      .includes(lowered)
+  })
+
+  return filtered
+    .sort((left, right) => {
+      const freshnessDelta = toTimestamp(right.offerLastCheckedAt || right.updatedAt) - toTimestamp(left.offerLastCheckedAt || left.updatedAt)
+      if (freshnessDelta !== 0) return freshnessDelta
+      return (right.dataConfidenceScore || 0) - (left.dataConfidenceScore || 0)
+    })
+    .slice(0, Math.max(1, options?.limit || 12))
 }
 
 export async function searchArticles(query: string): Promise<ArticleRecord[]> {
