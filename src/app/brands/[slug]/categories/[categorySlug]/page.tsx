@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -10,7 +11,16 @@ import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { getBrandSlug, listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import {
+  getBrandBySlug,
+  getBrandPolicyBySlug,
+  getBrandSlug,
+  listBrandCategoryHubs,
+  listBrandCompatibilityFacts,
+  listCategories,
+  listPublishedArticles,
+  listPublishedProducts
+} from '@/lib/site-data'
 
 interface RouteCard {
   eyebrow: string
@@ -36,8 +46,7 @@ export async function generateMetadata({
 }): Promise<Metadata> {
   const { slug, categorySlug } = await params
   const path = `/brands/${slug}/categories/${categorySlug}`
-  const [brands, categories, hubs] = await Promise.all([listBrands(), listCategories(), listBrandCategoryHubs()])
-  const brand = brands.find((entry) => entry.slug === slug) || null
+  const [brand, categories, hubs] = await Promise.all([getBrandBySlug(slug), listCategories(), listBrandCategoryHubs()])
   const hasCategory = categories.includes(categorySlug)
   const hub = hubs.find((entry) => entry.brandSlug === slug && entry.category === categorySlug) || null
   const categoryLabel = getCategoryLabel(categorySlug)
@@ -87,14 +96,15 @@ export default async function BrandCategoryPage({
 }) {
   const { slug, categorySlug } = await params
   const path = `/brands/${slug}/categories/${categorySlug}`
-  const [brands, categories, hubs, allArticles, allProducts] = await Promise.all([
-    listBrands(),
+  const [brand, categories, hubs, allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
+    getBrandBySlug(slug),
     listCategories(),
     listBrandCategoryHubs(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listPublishedProducts(),
+    getBrandPolicyBySlug(slug),
+    listBrandCompatibilityFacts(slug, { category: categorySlug, limit: 6 })
   ])
-  const brand = brands.find((entry) => entry.slug === slug) || null
   const hasCategory = categories.includes(categorySlug)
 
   if (!brand || !hasCategory) notFound()
@@ -369,6 +379,15 @@ export default async function BrandCategoryPage({
             </div>
           </div>
         </section>
+
+        <BrandPolicyPanel
+          brandName={brand.name}
+          policy={brandPolicy}
+          compatibilityFacts={compatibilityFacts}
+          compact
+          title="Brand policy knowledge"
+          description={`Bes3 keeps brand-level policy and compatibility context here so ${brand.name} ${categoryLabel} buyers can resolve shipping, warranty, and setup questions without reopening broad search.`}
+        />
 
         {(directProducts.length || fallbackProducts.length) ? (
           <section className="space-y-6">

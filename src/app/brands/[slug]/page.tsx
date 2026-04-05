@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -10,7 +11,14 @@ import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { getBrandSlug, listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import {
+  getBrandBySlug,
+  getBrandSlug,
+  getBrandPolicyBySlug,
+  listBrandCompatibilityFacts,
+  listPublishedArticles,
+  listPublishedProducts
+} from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -18,7 +26,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const slug = (await params).slug
-  const brand = (await listBrands()).find((entry) => entry.slug === slug) || null
+  const brand = await getBrandBySlug(slug)
 
   if (!brand) {
     return buildPageMetadata({
@@ -54,12 +62,13 @@ export default async function BrandPage({
   params: Promise<{ slug: string }>
 }) {
   const slug = (await params).slug
-  const [brands, allArticles, allProducts] = await Promise.all([
-    listBrands(),
+  const [brand, allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
+    getBrandBySlug(slug),
     listPublishedArticles(),
-    listPublishedProducts()
+    listPublishedProducts(),
+    getBrandPolicyBySlug(slug),
+    listBrandCompatibilityFacts(slug, { limit: 6 })
   ])
-  const brand = brands.find((entry) => entry.slug === slug) || null
 
   if (!brand) notFound()
 
@@ -237,6 +246,14 @@ export default async function BrandPage({
             </div>
           </div>
         </section>
+
+        <BrandPolicyPanel
+          brandName={brand.name}
+          policy={brandPolicy}
+          compatibilityFacts={compatibilityFacts}
+          title="Brand policy knowledge"
+          description="Bes3 uses these stored policy and compatibility notes to answer the questions product specs alone cannot settle: shipping, returns, warranty, and setup fit."
+        />
 
         {brandProducts.length ? (
           <section className="space-y-6">
