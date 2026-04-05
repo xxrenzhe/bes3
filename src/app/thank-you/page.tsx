@@ -152,7 +152,7 @@ export default async function ThankYouPage({
           title: `Browse ${leadCategoryLabel}`,
           description: 'Stay close to the category where the page structure and buying cues can be judged in context.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-          label: leadCategory ? 'Open category hub' : 'Open directory'
+          label: leadCategory ? 'Open category page' : 'Open directory'
         }
       ]
     },
@@ -174,7 +174,7 @@ export default async function ThankYouPage({
           title: 'Browse current category coverage',
           description: 'Stay in the same category so you can re-check the updated context once the fix lands.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-          label: leadCategory ? 'Open category hub' : 'Open directory'
+          label: leadCategory ? 'Open category page' : 'Open directory'
         },
         {
           title: 'Return to shortlist',
@@ -202,10 +202,10 @@ export default async function ThankYouPage({
           title: `Browse ${leadCategoryLabel}`,
           description: 'See a live category page instead of a static brand deck to understand how Bes3 serves real shoppers.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-          label: leadCategory ? 'Open category hub' : 'Open directory'
+          label: leadCategory ? 'Open category page' : 'Open directory'
         },
         {
-          title: 'Browse verified deals',
+          title: 'Browse live deals',
           description: 'Browse real, verified deals without the usual spam.',
           href: '/deals',
           label: 'Open deals'

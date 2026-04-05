@@ -57,7 +57,7 @@ export default async function ContactPage() {
 
   const bestUseCases = [
     'A real buyer edge case still feels unresolved after search, shortlist, and review pages.',
-    'You spotted a factual issue, stale price cue, or routing bug on a public Bes3 page.',
+    'You spotted a factual issue, stale price cue, or navigation problem on a public Bes3 page.',
     'You want to discuss editorial partnerships, content distribution, or platform collaboration.'
   ]
 
