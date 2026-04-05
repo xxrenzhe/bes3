@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -34,8 +35,14 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function DirectoryPage() {
-  const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])
+  const [brands, categories, articles, products] = await Promise.all([
+    listBrands(),
+    listCategories(),
+    listPublishedArticles(),
+    listPublishedProducts()
+  ])
   const leadCategory = categories[0] || ''
+  const leadBrand = brands[0] || null
   const latestRefresh =
     articles[0]?.updatedAt ||
     articles[0]?.publishedAt ||
@@ -88,6 +95,13 @@ export default async function DirectoryPage() {
       label: leadCategory ? 'Open lead hub' : 'Browse hubs'
     },
     {
+      eyebrow: 'Brands',
+      title: leadBrand ? `Open ${leadBrand.name}` : 'Browse by manufacturer',
+      description: 'Brand hubs catch manufacturer-first search intent and keep products, reviews, and categories grouped around one brand.',
+      href: leadBrand ? `/brands/${leadBrand.slug}` : '/brands',
+      label: leadBrand ? `Open ${leadBrand.name}` : 'Browse brands'
+    },
+    {
       eyebrow: 'Watch',
       title: 'Start category briefs',
       description: 'If you are researching now but buying later, save the category context as an alert flow instead of reopening the whole search later.',
@@ -102,10 +116,31 @@ export default async function DirectoryPage() {
       label: 'Browse deals'
     }
   ]
+  const faqEntries = [
+    {
+      question: 'When should I use the directory instead of search?',
+      answer: 'Use the directory when the lane is already clear and you want a structured entry into category or brand hubs. Use search when the need is still query-shaped.'
+    },
+    {
+      question: 'What is the difference between category hubs and brand hubs?',
+      answer: 'Category hubs compare across the market. Brand hubs compress coverage around one manufacturer. They solve different intent states and should not replace each other.'
+    },
+    {
+      question: 'Why does each card point to a next move instead of just listing pages?',
+      answer: 'The directory is designed as a routing layer, not an archive. Each card tries to send buyers into the strongest next decision page rather than forcing another round of broad browsing.'
+    }
+  ]
 
   return (
     <PublicShell>
-      <StructuredData data={[buildBreadcrumbSchema('/directory', breadcrumbItems), structuredData, buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category lane, shortlist credible products, and track the lane if timing is the blocker.', howToSteps)]} />
+      <StructuredData
+        data={[
+          buildBreadcrumbSchema('/directory', breadcrumbItems),
+          structuredData,
+          buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category lane, shortlist credible products, and track the lane if timing is the blocker.', howToSteps),
+          buildFaqSchema('/directory', faqEntries)
+        ]}
+      />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
@@ -236,6 +271,12 @@ export default async function DirectoryPage() {
             )
           })}
         </div>
+
+        <SeoFaqSection
+          title="Directory routing questions, answered clearly."
+          entries={faqEntries}
+          description="This page now exposes the directory logic explicitly so search engines and buyers can see the difference between category entry, brand entry, and search-driven entry."
+        />
       </div>
     </PublicShell>
   )

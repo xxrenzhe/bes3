@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -10,9 +11,9 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildFallbackNote(productName: string) {
@@ -73,6 +74,7 @@ export default async function ReviewPage({
   const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
   const confidenceSignals = buildConfidenceSignals(article.product)
+  const brandSlug = getBrandSlug(article.product?.brand)
   const relatedComparison = articles.find((candidate) => {
     if (candidate.type !== 'comparison') return false
     if (article.productId && candidate.productId === article.productId) return true
@@ -148,6 +150,24 @@ export default async function ReviewPage({
     buildReviewSchema(article, path),
     buildHowToSchema(path, `How to use the ${article.title} review`, 'Use the review to confirm buyer fit, validate the product details, and choose the next decision step.', howToSteps)
   ]
+  const faqEntries = [
+    {
+      question: 'What should this review help me decide?',
+      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once the fit is credible, the next step is usually the product page, a comparison, or a watch flow.'
+    },
+    {
+      question: 'When should I open the brand hub from a review?',
+      answer: article.product?.brand
+        ? `Open the ${article.product.brand} hub when the manufacturer itself looks promising and you want the rest of that brand's Bes3 coverage without broadening the lane too early.`
+        : 'Use the category hub instead when you still need nearby context before comparing or clicking through.'
+    },
+    {
+      question: 'Should I compare now or keep reading?',
+      answer: relatedComparison
+        ? 'If this product already feels credible, move into the comparison next. Keep reading only if you still need the deeper rationale behind the verdict.'
+        : 'If no comparison is live yet, use the product page or category hub next instead of reopening broad research.'
+    }
+  ]
 
   const reviewPicks = [
     article,
@@ -203,7 +223,7 @@ export default async function ReviewPage({
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -412,6 +432,13 @@ export default async function ReviewPage({
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category lane if you still need adjacent verdicts, comparisons, or shortlist coverage.</p>
                 </Link>
               ) : null}
+              {brandSlug && article.product?.brand ? (
+                <Link href={`/brands/${brandSlug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{article.product.brand}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay inside the same manufacturer lane if the brand is already plausible and you want related Bes3 coverage in one place.</p>
+                </Link>
+              ) : null}
               {relatedGuide ? (
                 <Link href={getArticlePath(relatedGuide.type, relatedGuide.slug)} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Supporting Guide</p>
@@ -438,6 +465,12 @@ export default async function ReviewPage({
             </div>
           </section>
         ) : null}
+
+        <SeoFaqSection
+          title="Review-page questions, answered clearly."
+          entries={faqEntries}
+          description="This FAQ exposes the review's intended job in the decision flow: validate fit, route to the next best page, and avoid reopening the full research loop."
+        />
       </div>
     </PublicShell>
   )

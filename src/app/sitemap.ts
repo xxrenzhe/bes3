@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getArticlePath } from '@/lib/article-path'
 import { getSiteUrl } from '@/lib/site-url'
-import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 function toDate(value: string | null | undefined) {
   if (!value) return null
@@ -19,14 +19,21 @@ function maxDate(values: Array<string | null | undefined>) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl()
-  const [articles, categories, products] = await Promise.all([listPublishedArticles(), listCategories(), listPublishedProducts()])
+  const [articles, brands, categories, products] = await Promise.all([
+    listPublishedArticles(),
+    listBrands(),
+    listCategories(),
+    listPublishedProducts()
+  ])
   const siteFreshness = maxDate([
     ...articles.flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt]),
-    ...products.flatMap((product) => [product.updatedAt, product.publishedAt])
+    ...products.flatMap((product) => [product.updatedAt, product.publishedAt]),
+    ...brands.map((brand) => brand.latestUpdate)
   ])
   const routes: MetadataRoute.Sitemap = [
     '',
     '/about',
+    '/brands',
     '/contact',
     '/deals',
     '/directory',
@@ -62,6 +69,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     routes.push({
       url: `${siteUrl}/categories/${category}`,
       lastModified: categoryFreshness || siteFreshness
+    })
+  }
+
+  for (const brand of brands) {
+    routes.push({
+      url: `${siteUrl}/brands/${brand.slug}`,
+      lastModified: maxDate([brand.latestUpdate])
     })
   }
 

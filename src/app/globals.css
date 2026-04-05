@@ -4,6 +4,17 @@
 
 @layer base {
   :root {
+    --font-body:
+      "Avenir Next",
+      "Segoe UI",
+      "Helvetica Neue",
+      sans-serif;
+    --font-display:
+      "Avenir Next Condensed",
+      "Arial Narrow",
+      "Avenir Next",
+      "Segoe UI",
+      sans-serif;
     --background: 220 50% 98%;
     --foreground: 214 37% 12%;
     --card: 0 0% 100%;
