@@ -146,6 +146,11 @@ export function NewsletterSignup({
                 body: JSON.stringify({ email, intent, cadence, categorySlug, source })
               })
               if (response.ok) {
+                try {
+                  window.localStorage.setItem('bes3-exit-intent-captured', 'true')
+                } catch {
+                  // Storage is optional for this UX preference.
+                }
                 setDone(true)
               }
             })

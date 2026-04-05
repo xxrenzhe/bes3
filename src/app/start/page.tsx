@@ -8,6 +8,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
@@ -26,6 +27,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Use Bes3 to search by need, read a full review, compare top picks, or set a price alert without starting over.',
     path: '/start',
+    locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,

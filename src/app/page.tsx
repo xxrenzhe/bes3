@@ -9,6 +9,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { listBrands, listCategories, listPublishedArticles } from '@/lib/site-data'
@@ -23,6 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
     path: '/',
+    locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,

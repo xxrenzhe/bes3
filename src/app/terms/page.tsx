@@ -3,13 +3,17 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Terms of Service',
-  description:
-    'Understand how Bes3 works as a shopping guide, where affiliate links fit, and when store terms take over.',
-  path: '/terms'
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    title: 'Terms of Service',
+    description:
+      'Understand how Bes3 works as a shopping guide, where affiliate links fit, and when store terms take over.',
+    path: '/terms',
+    locale: getRequestLocale()
+  })
+}
 
 export default function TermsPage() {
   const summaryCards = [

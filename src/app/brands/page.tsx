@@ -5,6 +5,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { listBrands } from '@/lib/site-data'
 
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each brand.',
     path: '/brands',
+    locale: getRequestLocale(),
     image: brands[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,

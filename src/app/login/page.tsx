@@ -3,16 +3,20 @@ import Link from 'next/link'
 import { LoginForm } from '@/components/admin/LoginForm'
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Internal Login',
-  description: 'Internal-only Bes3 CMS login for the team managing products, editorial pages, and operational settings.',
-  path: '/login',
-  robots: {
-    index: false,
-    follow: false
-  }
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    title: 'Internal Login',
+    description: 'Internal-only Bes3 CMS login for the team managing products, editorial pages, and operational settings.',
+    path: '/login',
+    locale: getRequestLocale(),
+    robots: {
+      index: false,
+      follow: false
+    }
+  })
+}
 
 export default function LoginPage() {
   const publicRoutes = [
