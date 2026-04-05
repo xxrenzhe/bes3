@@ -9,13 +9,15 @@ export function PrimaryCta({
   label = 'Check Current Price',
   note,
   productId,
-  trackingSource = 'site'
+  trackingSource = 'site',
+  trustBadge = '✅ Hand-tested by Alex | Ad-free independent review'
 }: {
   href?: string | null
   label?: string
   note?: string
   productId?: number | null
   trackingSource?: string
+  trustBadge?: string
 }) {
   const [resolvedHref, setResolvedHref] = useState(href)
 
@@ -62,6 +64,7 @@ export function PrimaryCta({
         </div>
       )}
       {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
+      {trustBadge ? <p className="text-xs font-medium text-muted-foreground">{trustBadge}</p> : null}
       <p className="text-xs text-muted-foreground">
         {resolvedHref
           ? 'Affiliate disclosure: Bes3 may earn from qualifying purchases at no extra cost to you.'
