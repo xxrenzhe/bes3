@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { getArticlePath } from '@/lib/article-path'
 import { getSiteUrl } from '@/lib/site-url'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 function toDate(value: string | null | undefined) {
   if (!value) return null
@@ -19,9 +19,10 @@ function maxDate(values: Array<string | null | undefined>) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl()
-  const [articles, brands, categories, products] = await Promise.all([
+  const [articles, brands, brandCategoryHubs, categories, products] = await Promise.all([
     listPublishedArticles(),
     listBrands(),
+    listBrandCategoryHubs(),
     listCategories(),
     listPublishedProducts()
   ])
@@ -76,6 +77,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     routes.push({
       url: `${siteUrl}/brands/${brand.slug}`,
       lastModified: maxDate([brand.latestUpdate])
+    })
+  }
+
+  for (const hub of brandCategoryHubs) {
+    routes.push({
+      url: `${siteUrl}/brands/${hub.brandSlug}/categories/${hub.category}`,
+      lastModified: maxDate([hub.latestUpdate])
     })
   }
 

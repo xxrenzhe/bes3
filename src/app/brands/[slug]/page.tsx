@@ -163,10 +163,10 @@ export default async function BrandPage({
       : leadCategory
         ? {
             eyebrow: 'Explore',
-            title: `Return to ${getCategoryLabel(leadCategory)}`,
-            description: 'Go back to the category hub if you need to widen the lane across brands before you decide whether this manufacturer is right.',
-            href: `/categories/${leadCategory}`,
-            label: 'Open category hub'
+            title: `Open ${brand.name} in ${getCategoryLabel(leadCategory)}`,
+            description: 'Use the brand-category lane when both constraints already matter and you want the shortest route into exact-match products, verdicts, and next steps.',
+            href: `/brands/${brand.slug}/categories/${leadCategory}`,
+            label: 'Open exact lane'
           }
         : null,
     leadCategory
@@ -260,13 +260,15 @@ export default async function BrandPage({
               {brand.categories.map((category) => (
                 <Link
                   key={category}
-                  href={`/categories/${category}`}
+                  href={`/brands/${brand.slug}/categories/${category}`}
                   className="rounded-[1.5rem] bg-muted p-5 transition-colors hover:bg-emerald-50"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
-                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h3>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Lane</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                    {brand.name} {getCategoryLabel(category)}
+                  </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    Compare {brand.name} against the wider field once you need honest cross-brand tradeoffs in this lane.
+                    Move into the exact {brand.name} + {getCategoryLabel(category)} lane before reopening the broader category hub for cross-brand tradeoffs.
                   </p>
                 </Link>
               ))}
