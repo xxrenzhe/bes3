@@ -4,13 +4,13 @@ import { ShortlistDock } from '@/components/site/ShortlistDock'
 import { ShortlistNav } from '@/components/site/ShortlistNav'
 
 const NAV_ITEMS = [
-  { href: '/', label: 'Home' },
+  { href: '/start', label: 'Start Here' },
   { href: '/search', label: 'Search' },
-  { href: '/deals', label: 'Deals' },
   { href: '/directory', label: 'Directory' },
   { href: '/brands', label: 'Brands' },
-  { href: '/about', label: 'How We Test' },
-  { href: '/newsletter', label: 'Newsletter' }
+  { href: '/deals', label: 'Deals' },
+  { href: '/about', label: 'Method' },
+  { href: '/newsletter', label: 'Alerts' }
 ]
 
 export function PublicShell({
@@ -33,7 +33,7 @@ export function PublicShell({
               B3
             </div>
             <div className="hidden sm:block">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Digital Curator</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Buyer Decision System</p>
               <p className="font-[var(--font-display)] text-xl font-extrabold tracking-tight text-foreground">{DEFAULT_SITE_NAME}</p>
             </div>
           </Link>
@@ -84,13 +84,14 @@ export function PublicShell({
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Tech Buying Intelligence</p>
             <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h2>
             <p className="max-w-xl text-sm leading-7 text-muted-foreground">
-              {DEFAULT_SITE_TAGLINE} Bes3 is a buyer-first consumer guide that turns noisy research into shortlists, comparisons, deep dives, and price-aware next steps.
+              {DEFAULT_SITE_TAGLINE} Bes3 is a structured buyer decision system that turns noisy research into shortlists, verdicts, comparisons, and price-aware next steps.
             </p>
           </div>
           <div>
             <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground">Explore</h3>
             <nav aria-label="Explore Bes3" className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
               <Link href="/">Home</Link>
+              <Link href="/start">Start Here</Link>
               <Link href="/search">Search</Link>
               <Link href="/categories/home-office">Categories</Link>
               <Link href="/brands">Brands</Link>

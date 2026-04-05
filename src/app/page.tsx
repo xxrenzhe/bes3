@@ -19,14 +19,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const freshnessDate = articles[0]?.updatedAt || articles[0]?.publishedAt || articles[0]?.createdAt || null
 
   return buildPageMetadata({
-    title: 'Buyer-First Tech Buying Guide',
+    title: 'Buyer Decision System for Tech Picks',
     description:
-      'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
+      'Bes3 helps shoppers move from need to shortlist, verdict, comparison, and price-aware next step without reopening noisy product research.',
     path: '/',
     image: articles[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['tech buying guide', 'product reviews', 'comparisons', 'shortlist']
+    keywords: ['buyer decision system', 'tech buying guide', 'product reviews', 'comparisons', 'shortlist']
   })
 }
 
@@ -39,11 +39,11 @@ export default async function HomePage() {
   const featuredComparison = articles.find((article) => article.type === 'comparison') || featured[1] || featuredReview
   const intentRoutes = [
     {
-      eyebrow: 'Start narrow',
-      title: 'Build a shortlist',
-      description: 'Use product-first search when you already know the use case and want Bes3 to narrow the field into a few serious options.',
-      href: '/search?scope=products',
-      label: 'Search products'
+      eyebrow: 'Start here',
+      title: 'Use the decision system',
+      description: 'Open the structured entry page when you want Bes3 to route you by buying state instead of dropping you into a generic archive.',
+      href: '/start',
+      label: 'Open start page'
     },
     {
       eyebrow: 'Go deep',
@@ -68,16 +68,20 @@ export default async function HomePage() {
     }
   ]
   const decisionPrinciples = [
-    ['Intent first', 'Pick the route that matches where you are in the buying journey instead of sifting through raw archives.'],
-    ['Same-category compare', 'Bes3 keeps comparisons inside one product lane so the tradeoffs stay honest and useful.'],
-    ['Low-pressure next step', 'Save, compare, or check price only when the decision is mature enough to justify the click.']
+    ['System first', 'Bes3 treats the product as a sequence of buyer states, not as an archive of equal-weight pages.'],
+    ['Same-lane compare', 'Comparisons stay inside one credible product lane so the tradeoffs remain honest and decision-ready.'],
+    ['Wait without reset', 'If timing changes, alerts and shortlist preserve the lane so you do not restart from zero.']
   ]
   const structuredData = buildCollectionPageSchema({
     path: '/',
-    title: 'Buyer-First Tech Buying Guide',
-    description: 'Bes3 helps shoppers shortlist real tech products, read verdicts, compare finalists, and track price shifts without losing the buying lane.',
+    title: 'Buyer Decision System for Tech Picks',
+    description: 'Bes3 helps shoppers move from need to shortlist, verdict, comparison, and price-aware next step without reopening noisy product research.',
     image: featured[0]?.heroImageUrl,
     items: [
+      {
+        name: 'Start Here',
+        path: '/start'
+      },
       ...featured.map((article) => ({
         name: article.title,
         path: getArticlePath(article.type, article.slug)
@@ -95,7 +99,7 @@ export default async function HomePage() {
   const faqEntries = [
     {
       question: 'What is Bes3 actually optimized for?',
-      answer: 'Bes3 is optimized for buyer intent, not page depth. It tries to move shoppers into the cleanest next step: shortlist, review, comparison, brand hub, or wait flow.'
+      answer: 'Bes3 is optimized for buyer progress, not page depth. It tries to move shoppers into the cleanest next step: start route, shortlist, review, comparison, brand hub, or wait flow.'
     },
     {
       question: 'When should I use a brand hub instead of a category hub?',
@@ -114,22 +118,22 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
             <div className="inline-flex items-center rounded-full bg-secondary px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-secondary-foreground">
-              Expert Selection
+              Structured Buyer System
             </div>
             <div className="space-y-6">
               <h1 className="max-w-4xl font-[var(--font-display)] text-5xl font-black tracking-tight text-balance text-foreground sm:text-7xl">
-                The Best 3 Tech Picks, <span className="text-primary">decoded.</span>
+                A buyer decision system for your next <span className="text-primary">tech pick.</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-                Bes3 is a buyer-first consumer guide for tech and home-office gear. We turn noisy product research into shortlists, deep-dive verdicts, cleaner comparisons, and price-aware next steps.
+                Bes3 is a structured buyer guide for tech and home-office gear. We turn noisy research into shortlists, deep-dive verdicts, cleaner comparisons, and wait flows that keep the same decision lane alive.
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
               <Link
-                href={featured[0] ? getArticlePath(featured[0].type, featured[0].slug) : '/directory'}
+                href="/start"
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
               >
-                Explore the Top 3
+                Start here
               </Link>
               <Link
                 href="/shortlist"
@@ -191,8 +195,8 @@ export default async function HomePage() {
             <div>
               <SectionHeader
                 eyebrow="Buyer Intent Routes"
-                title="Choose the route that matches your buying moment."
-                description="Bes3 works best when it meets shoppers where they are: finding candidates, reading a verdict, comparing finalists, or waiting for the right price."
+                title="Choose the route that matches your buying state."
+                description="Bes3 works best when it meets shoppers where they actually are: naming the lane, validating one pick, comparing finalists, or waiting without losing context."
               />
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 {decisionPrinciples.map(([title, description]) => (
