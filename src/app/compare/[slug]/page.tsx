@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatrix'
+import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -17,7 +18,15 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import {
+  getArticleBySlug,
+  getBrandSlug,
+  getOpenCommerceProductBySlug,
+  listProductAttributeFacts,
+  listProductOffers,
+  listPublishedArticles,
+  listPublishedProducts
+} from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function splitComparisonTitle(title: string) {
@@ -86,7 +95,13 @@ export default async function ComparisonPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'comparison') notFound()
 
-  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [allArticles, allProducts, commerceProduct, offers, attributeFacts] = await Promise.all([
+    listPublishedArticles(),
+    listPublishedProducts(),
+    article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
+    article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
+    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([])
+  ])
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
   const category = article.product?.category || null
@@ -410,6 +425,14 @@ export default async function ComparisonPage({
           rightTitle={contenders.right}
           winner={winner}
           rows={comparisonMatrixRows}
+        />
+
+        <CommerceEvidencePanel
+          product={commerceProduct}
+          offers={offers}
+          attributeFacts={attributeFacts}
+          title="Comparison evidence"
+          description="This comparison now carries the live offer and verified-fact signals behind the current winner, instead of relying on copy alone."
         />
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">

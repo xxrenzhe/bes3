@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -17,7 +18,15 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import {
+  getArticleBySlug,
+  getBrandSlug,
+  getOpenCommerceProductBySlug,
+  listProductAttributeFacts,
+  listProductOffers,
+  listPublishedArticles,
+  listPublishedProducts
+} from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function buildFallbackNote(productName: string) {
@@ -75,7 +84,13 @@ export default async function ReviewPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'review') notFound()
 
-  const [articles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, allProducts, commerceProduct, offers, attributeFacts] = await Promise.all([
+    listPublishedArticles(),
+    listPublishedProducts(),
+    article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
+    article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
+    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([])
+  ])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
@@ -312,6 +327,14 @@ export default async function ReviewPage({
             </div>
           </div>
         </section>
+
+        <CommerceEvidencePanel
+          product={commerceProduct}
+          offers={offers}
+          attributeFacts={attributeFacts}
+          title="Review evidence"
+          description="These are the concrete offer and fact signals Bes3 checked before turning this product into a review recommendation."
+        />
 
         <section className="grid gap-10">
           {reviewPicks.map((pick, index) => {
