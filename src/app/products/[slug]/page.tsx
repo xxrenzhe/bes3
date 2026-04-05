@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
@@ -19,7 +20,7 @@ import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import {
-  getBrandSlug,
+  getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
   getProductBySlug,
   getProductGalleryImageUrls,
@@ -84,14 +85,19 @@ export default async function ProductPage({
   const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
 
-  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
+  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     getProductGalleryImageUrls(product.id),
     getOpenCommerceProductBySlug(product.slug || ''),
     listProductOffers(product.id),
     listProductAttributeFacts(product.id),
-    listProductPriceHistory(product.id)
+    listProductPriceHistory(product.id),
+    getBrandKnowledgeByProduct({
+      brandName: product.brand,
+      category: product.category,
+      compatibilityLimit: 6
+    })
   ])
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
@@ -108,7 +114,7 @@ export default async function ProductPage({
   const confidenceSignals = buildConfidenceSignals(product)
   const shortlistItem = toShortlistItem(product)
   const categoryLabel = product.category ? product.category.replace(/-/g, ' ') : 'this category'
-  const brandSlug = getBrandSlug(product.brand)
+  const brandSlug = brandKnowledge.brandSlug
   const path = `/products/${product.slug}`
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
@@ -396,6 +402,14 @@ export default async function ProductPage({
               title="Offer and fact evidence"
               description="These are the live offer and product-fact signals behind the current product recommendation."
               source="product-page-evidence"
+            />
+            <BrandPolicyPanel
+              brandName={product.brand || product.productName}
+              policy={brandKnowledge.brandPolicy}
+              compatibilityFacts={brandKnowledge.compatibilityFacts}
+              compact
+              title="Brand policy and compatibility"
+              description="Bring shipping, warranty, returns, and fit notes into the product decision before the merchant click."
             />
             {guideArticle || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">

@@ -216,6 +216,12 @@ export interface CompatibilityFactRecord {
   lastCheckedAt: string | null
 }
 
+export interface BrandKnowledgeRecord {
+  brandSlug: string
+  brandPolicy: BrandPolicyRecord | null
+  compatibilityFacts: CompatibilityFactRecord[]
+}
+
 function parseJsonObject(value: string | null): Record<string, string> {
   if (!value) return {}
   try {
@@ -1014,6 +1020,35 @@ export async function listBrandCompatibilityFacts(brandSlug: string, options?: {
     category: options?.category,
     limit: options?.limit
   })
+}
+
+export async function getBrandKnowledgeByProduct(input: {
+  brandName: string | null | undefined
+  category?: string | null
+  compatibilityLimit?: number
+}): Promise<BrandKnowledgeRecord> {
+  const brandSlug = getBrandSlug(input.brandName)
+  if (!brandSlug) {
+    return {
+      brandSlug: '',
+      brandPolicy: null,
+      compatibilityFacts: []
+    }
+  }
+
+  const [brandPolicy, compatibilityFacts] = await Promise.all([
+    getBrandPolicyBySlug(brandSlug),
+    listBrandCompatibilityFacts(brandSlug, {
+      category: input.category || undefined,
+      limit: input.compatibilityLimit
+    })
+  ])
+
+  return {
+    brandSlug,
+    brandPolicy,
+    compatibilityFacts
+  }
 }
 
 export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {

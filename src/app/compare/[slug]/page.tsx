@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatrix'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
@@ -20,7 +21,7 @@ import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSc
 import { toShortlistItem } from '@/lib/shortlist'
 import {
   getArticleBySlug,
-  getBrandSlug,
+  getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
   listProductAttributeFacts,
   listProductOffers,
@@ -96,19 +97,30 @@ export default async function ComparisonPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'comparison') notFound()
 
-  const [allArticles, allProducts, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
+  const category = article.product?.category || null
+  const [allArticles, allProducts, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
     article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
     article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([]),
-    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([])
+    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([]),
+    article.product
+      ? getBrandKnowledgeByProduct({
+          brandName: article.product.brand,
+          category,
+          compatibilityLimit: 6
+        })
+      : Promise.resolve({
+          brandSlug: '',
+          brandPolicy: null,
+          compatibilityFacts: []
+        })
   ])
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
-  const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
-  const brandSlug = getBrandSlug(article.product?.brand)
+  const brandSlug = brandKnowledge.brandSlug
   const priceLabel = formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
   const snapshotDate = getSnapshotDate(article, article.product)
   const decisionChecklist = buildDecisionChecklist(article.product)
@@ -438,6 +450,16 @@ export default async function ComparisonPage({
           description="This comparison now carries the live offer and verified-fact signals behind the current winner, instead of relying on copy alone."
           source="comparison-page-evidence"
         />
+
+        {article.product ? (
+          <BrandPolicyPanel
+            brandName={article.product.brand || article.product.productName}
+            policy={brandKnowledge.brandPolicy}
+            compatibilityFacts={brandKnowledge.compatibilityFacts}
+            title="Winner brand policy context"
+            description="Before treating the winner as final, fold in warranty, returns, support, and compatibility facts that can still change the decision."
+          />
+        ) : null}
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">

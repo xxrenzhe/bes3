@@ -13,7 +13,8 @@ import {
   buildDealDecisionSignal,
   getDealDecisionSignalRank,
   summarizePriceHistoryWindow,
-  type DealDecisionSignalId
+  type DealDecisionSignalId,
+  type PriceHistoryWindowSummary
 } from '@/lib/price-insights'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
@@ -25,7 +26,10 @@ type DealsSearchParams = {
   category?: string
   maxPrice?: string
   signal?: string
+  distance?: string
 }
+
+type PriceWindowDistanceFilter = '' | 'within-5' | 'within-10' | 'above-10' | 'needs-data'
 
 function parseMaxPrice(value: string | undefined) {
   if (!value) return null
@@ -37,15 +41,21 @@ function normalizeSignal(value: string | undefined): DealDecisionSignalId | '' {
   return value === 'buy-now' || value === 'good-value' || value === 'watch' || value === 'needs-data' ? value : ''
 }
 
+function normalizeDistanceFilter(value: string | undefined): PriceWindowDistanceFilter {
+  return value === 'within-5' || value === 'within-10' || value === 'above-10' || value === 'needs-data' ? value : ''
+}
+
 function buildDealsPath(input: {
   category?: string
   maxPrice?: number | null
   signal?: DealDecisionSignalId | ''
+  distance?: PriceWindowDistanceFilter
 }) {
   const params = new URLSearchParams()
   if (input.category) params.set('category', input.category)
   if (input.maxPrice != null) params.set('maxPrice', String(input.maxPrice))
   if (input.signal) params.set('signal', input.signal)
+  if (input.distance) params.set('distance', input.distance)
   return `/deals${params.size ? `?${params.toString()}` : ''}`
 }
 
@@ -66,6 +76,33 @@ function formatDelta(value: number | null | undefined, currency: string) {
   if (typeof value !== 'number' || !Number.isFinite(value) || value === 0) return 'No recent move'
   const prefix = value > 0 ? '+' : '-'
   return `${prefix}${formatPriceSnapshot(Math.abs(value), currency)}`
+}
+
+function getDistanceFromTrackedLowPercent(currentPrice: number | null | undefined, lowestPrice: number | null | undefined) {
+  if (typeof currentPrice !== 'number' || !Number.isFinite(currentPrice)) return null
+  if (typeof lowestPrice !== 'number' || !Number.isFinite(lowestPrice) || lowestPrice <= 0) return null
+  return ((currentPrice - lowestPrice) / lowestPrice) * 100
+}
+
+function classifyDistanceFilter(summary: PriceHistoryWindowSummary): Exclude<PriceWindowDistanceFilter, ''> {
+  if (summary.totalPoints <= 0) return 'needs-data'
+  const distance = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
+  if (distance == null) return 'needs-data'
+  if (distance <= 5) return 'within-5'
+  if (distance <= 10) return 'within-10'
+  return 'above-10'
+}
+
+function formatDistanceFromTrackedLow(summary: PriceHistoryWindowSummary, value: number | null | undefined) {
+  if (summary.totalPoints <= 0) return 'Tracked low unknown'
+  if (typeof value !== 'number' || !Number.isFinite(value)) return 'Tracked low unknown'
+  if (value <= 0.25) return 'At tracked low'
+  return `${value.toFixed(value < 10 ? 1 : 0)}% above low`
+}
+
+function matchesDistanceFilter(summary: PriceHistoryWindowSummary, filter: PriceWindowDistanceFilter) {
+  if (!filter) return true
+  return classifyDistanceFilter(summary) === filter
 }
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -92,6 +129,7 @@ export default async function DealsPage({
   const params = await searchParams
   const selectedCategory = params.category?.trim() || ''
   const selectedSignal = normalizeSignal(params.signal)
+  const selectedDistance = normalizeDistanceFilter(params.distance)
   const maxPrice = parseMaxPrice(params.maxPrice)
 
   const allDeals = (await listOpenCommerceProducts()).filter((product) => product.resolvedUrl)
@@ -111,18 +149,43 @@ export default async function DealsPage({
       const effectiveCurrency = product.bestOffer?.priceCurrency || product.priceCurrency || 'USD'
       const summary = summarizePriceHistoryWindow(priceHistory, effectivePrice, effectiveCurrency)
       const signal = buildDealDecisionSignal(summary)
+      const distanceFromLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
 
       return {
         product,
         priceHistory,
         summary,
-        signal
+        signal,
+        distanceFromLowPercent
       }
     })
   )
 
+  const categoryAlternatives = dealsWithInsights.reduce<Map<string, typeof dealsWithInsights>>((result, item) => {
+    if (!item.product.category) return result
+    const existing = result.get(item.product.category) || []
+    existing.push(item)
+    result.set(item.product.category, existing)
+    return result
+  }, new Map())
+
+  for (const [category, items] of categoryAlternatives.entries()) {
+    categoryAlternatives.set(
+      category,
+      [...items].sort(
+        (left, right) =>
+          (left.product.bestOffer?.priceAmount ?? left.product.priceAmount ?? Infinity) -
+          (right.product.bestOffer?.priceAmount ?? right.product.priceAmount ?? Infinity)
+      )
+    )
+  }
+
   const filteredDeals = dealsWithInsights
-    .filter((item) => (selectedSignal ? item.signal.id === selectedSignal : true))
+    .filter((item) => {
+      if (selectedSignal && item.signal.id !== selectedSignal) return false
+      if (!matchesDistanceFilter(item.summary, selectedDistance)) return false
+      return true
+    })
     .sort((left, right) => {
       const signalDelta = getDealDecisionSignalRank(left.signal.id) - getDealDecisionSignalRank(right.signal.id)
       if (signalDelta !== 0) return signalDelta
@@ -178,6 +241,19 @@ export default async function DealsPage({
       'buy-now': 0,
       'good-value': 0,
       watch: 0,
+      'needs-data': 0
+    }
+  )
+
+  const distanceCounts = dealsWithInsights.reduce<Record<Exclude<PriceWindowDistanceFilter, ''>, number>>(
+    (result, item) => {
+      result[classifyDistanceFilter(item.summary)] += 1
+      return result
+    },
+    {
+      'within-5': 0,
+      'within-10': 0,
+      'above-10': 0,
       'needs-data': 0
     }
   )
@@ -294,7 +370,7 @@ export default async function DealsPage({
                 <p className="editorial-kicker">Filter The Window</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Narrow deals by category, price ceiling, and timing signal.</h2>
               </div>
-              <form action="/deals" className="grid gap-3 sm:grid-cols-4">
+              <form action="/deals" className="grid gap-3 sm:grid-cols-5">
                 <select
                   name="category"
                   defaultValue={selectedCategory}
@@ -327,6 +403,17 @@ export default async function DealsPage({
                   <option value="watch">Wait if you can</option>
                   <option value="needs-data">Needs more tracking</option>
                 </select>
+                <select
+                  name="distance"
+                  defaultValue={selectedDistance}
+                  className="min-h-[44px] rounded-full border border-border bg-background px-4 text-sm text-foreground"
+                >
+                  <option value="">Any distance from low</option>
+                  <option value="within-5">Within 5% of tracked low</option>
+                  <option value="within-10">Within 10% of tracked low</option>
+                  <option value="above-10">More than 10% above low</option>
+                  <option value="needs-data">Needs more price history</option>
+                </select>
                 <div className="flex gap-2">
                   <button
                     type="submit"
@@ -356,10 +443,35 @@ export default async function DealsPage({
                   href={buildDealsPath({
                     category: selectedCategory || undefined,
                     maxPrice,
-                    signal: selectedSignal === signal ? '' : signal
+                    signal: selectedSignal === signal ? '' : signal,
+                    distance: selectedDistance
                   })}
                   className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${
                     selectedSignal === signal ? 'bg-slate-950 text-white' : 'bg-muted text-muted-foreground'
+                  }`}
+                >
+                  {label} · {count}
+                </Link>
+              ))}
+            </div>
+
+            <div className="mt-4 flex flex-wrap gap-3">
+              {([
+                ['within-5', distanceCounts['within-5'], 'Near tracked low'],
+                ['within-10', distanceCounts['within-10'], 'Within 10% of low'],
+                ['above-10', distanceCounts['above-10'], 'Far from low'],
+                ['needs-data', distanceCounts['needs-data'], 'Needs price data']
+              ] as Array<[Exclude<PriceWindowDistanceFilter, ''>, number, string]>).map(([distance, count, label]) => (
+                <Link
+                  key={distance}
+                  href={buildDealsPath({
+                    category: selectedCategory || undefined,
+                    maxPrice,
+                    signal: selectedSignal,
+                    distance: selectedDistance === distance ? '' : distance
+                  })}
+                  className={`rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.16em] ${
+                    selectedDistance === distance ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
                   }`}
                 >
                   {label} · {count}
@@ -387,9 +499,13 @@ export default async function DealsPage({
               {products.map(({ product, summary, signal, priceHistory }) => {
                 const effectivePrice = product.bestOffer?.priceAmount ?? product.priceAmount
                 const effectiveCurrency = product.bestOffer?.priceCurrency || product.priceCurrency || 'USD'
+                const distanceFromLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
                 const alertHref = product.category
                   ? `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category)}&cadence=priority`
                   : '/newsletter?intent=deals&cadence=priority'
+                const alternatives = product.category
+                  ? (categoryAlternatives.get(product.category) || []).filter((item) => item.product.id !== product.id).slice(0, 2)
+                  : []
 
                 return (
                   <div key={product.id} className="editorial-shadow group overflow-hidden rounded-[2rem] bg-white">
@@ -454,7 +570,43 @@ export default async function DealsPage({
                             <p className="mt-2 text-base font-black text-foreground">{formatDelta(summary.deltaFromPrevious, summary.currency || effectiveCurrency)}</p>
                           </div>
                         </div>
+                        <p className="mt-4 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                          {formatDistanceFromTrackedLow(summary, distanceFromLowPercent)}
+                        </p>
                       </div>
+
+                      {alternatives.length ? (
+                        <div className="rounded-[1.5rem] border border-border/60 p-5">
+                          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Same-category alternatives</p>
+                          <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                            Use nearby prices in the same category to judge whether this offer is truly competitive right now.
+                          </p>
+                          <div className="mt-4 space-y-3">
+                            {alternatives.map((alternative) => {
+                              const alternativePrice = alternative.product.bestOffer?.priceAmount ?? alternative.product.priceAmount
+                              const alternativeCurrency = alternative.product.bestOffer?.priceCurrency || alternative.product.priceCurrency || effectiveCurrency
+
+                              return (
+                                <Link
+                                  key={alternative.product.id}
+                                  href={alternative.product.slug ? `/products/${alternative.product.slug}` : '/deals'}
+                                  className="flex items-start justify-between gap-4 rounded-[1rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50"
+                                >
+                                  <div>
+                                    <p className="text-sm font-semibold text-foreground">{alternative.product.productName}</p>
+                                    <p className="mt-1 text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                                      {alternative.signal.badge} · {formatDistanceFromTrackedLow(alternative.summary, alternative.distanceFromLowPercent)}
+                                    </p>
+                                  </div>
+                                  <p className="text-sm font-black text-foreground">
+                                    {formatPriceSnapshot(alternativePrice, alternativeCurrency)}
+                                  </p>
+                                </Link>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      ) : null}
 
                       <div className="flex flex-wrap gap-3">
                         {product.slug ? (
