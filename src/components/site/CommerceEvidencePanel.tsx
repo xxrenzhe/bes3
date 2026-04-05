@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { summarizePriceHistoryWindow } from '@/lib/price-insights'
 import type {
   CommerceProductRecord,
   ProductAttributeFactRecord,
@@ -12,6 +13,7 @@ import type {
   ProductPriceHistoryRecord
 } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
+import { PriceTrendSparkline } from './PriceTrendSparkline'
 
 function formatPercentScore(value: number | null | undefined) {
   const normalized = Number(value || 0)
@@ -21,37 +23,6 @@ function formatPercentScore(value: number | null | undefined) {
 function formatAvailabilityLabel(value: string | null | undefined) {
   if (!value) return 'Unknown'
   return value.replace(/_/g, ' ')
-}
-
-function summarizePriceHistory(priceHistory: ProductPriceHistoryRecord[]) {
-  if (!priceHistory.length) return null
-
-  const points = [...priceHistory]
-    .filter((point) => point.capturedAt)
-    .sort((left, right) => Date.parse(left.capturedAt || '') - Date.parse(right.capturedAt || ''))
-
-  if (!points.length) return null
-
-  const pricedPoints = points.filter((point) => typeof point.priceAmount === 'number')
-  const current = pricedPoints[pricedPoints.length - 1] || null
-  const previous = pricedPoints.length > 1 ? pricedPoints[pricedPoints.length - 2] : null
-  const lowest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
-    if (!best) return point
-    return Number(point.priceAmount) < Number(best.priceAmount) ? point : best
-  }, null)
-  const highest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
-    if (!best) return point
-    return Number(point.priceAmount) > Number(best.priceAmount) ? point : best
-  }, null)
-
-  return {
-    current,
-    previous,
-    lowest,
-    highest,
-    deltaAmount: current && previous ? Number(current.priceAmount) - Number(previous.priceAmount) : null,
-    totalPoints: points.length
-  }
 }
 
 function formatPriceDelta(value: number | null | undefined, currency: string) {
@@ -99,9 +70,13 @@ export function CommerceEvidencePanel({
   const defaultVisibleOffers = compact ? 2 : 4
   const visibleOffers = showAllOffers ? offers : offers.slice(0, defaultVisibleOffers)
   const visibleFacts = attributeFacts.slice(0, compact ? 4 : 6)
-  const historySummary = summarizePriceHistory(priceHistory)
+  const historySummary = summarizePriceHistoryWindow(
+    priceHistory,
+    bestOffer?.priceAmount ?? product.priceAmount,
+    bestOffer?.priceCurrency || product.priceCurrency || 'USD'
+  )
   const visibleHistory = priceHistory.slice(0, showPriceHistory ? (compact ? 6 : 8) : 3)
-  const historyCurrency = historySummary?.current?.priceCurrency || bestOffer?.priceCurrency || product.priceCurrency || 'USD'
+  const historyCurrency = historySummary?.currency || bestOffer?.priceCurrency || product.priceCurrency || 'USD'
 
   return (
     <section className="rounded-[2rem] bg-white p-6 shadow-panel">
@@ -157,9 +132,9 @@ export function CommerceEvidencePanel({
                     productId: product.id,
                     metadata: {
                       snapshotCount: historySummary.totalPoints,
-                      currentPrice: historySummary.current?.priceAmount ?? null,
-                      lowestPrice: historySummary.lowest?.priceAmount ?? null,
-                      highestPrice: historySummary.highest?.priceAmount ?? null
+                      currentPrice: historySummary.currentPrice ?? null,
+                      lowestPrice: historySummary.lowestPrice ?? null,
+                      highestPrice: historySummary.highestPrice ?? null
                     }
                   })
                 }
@@ -171,29 +146,37 @@ export function CommerceEvidencePanel({
             </button>
           </div>
 
+          <PriceTrendSparkline
+            priceHistory={priceHistory}
+            fallbackPrice={bestOffer?.priceAmount ?? product.priceAmount}
+            fallbackCurrency={historyCurrency}
+            className="mt-4"
+            tone={historySummary.currentPrice != null && historySummary.lowestPrice != null && historySummary.currentPrice <= historySummary.lowestPrice * 1.02 ? 'positive' : 'default'}
+          />
+
           <div className="mt-5 grid gap-3 md:grid-cols-4">
             <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current tracked</p>
               <p className="mt-2 text-lg font-black text-foreground">
-                {formatPriceSnapshot(historySummary.current?.priceAmount, historySummary.current?.priceCurrency || historyCurrency)}
+                {formatPriceSnapshot(historySummary.currentPrice, historyCurrency)}
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Lowest seen</p>
               <p className="mt-2 text-lg font-black text-foreground">
-                {formatPriceSnapshot(historySummary.lowest?.priceAmount, historySummary.lowest?.priceCurrency || historyCurrency)}
+                {formatPriceSnapshot(historySummary.lowestPrice, historyCurrency)}
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Highest seen</p>
               <p className="mt-2 text-lg font-black text-foreground">
-                {formatPriceSnapshot(historySummary.highest?.priceAmount, historySummary.highest?.priceCurrency || historyCurrency)}
+                {formatPriceSnapshot(historySummary.highestPrice, historyCurrency)}
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Last move</p>
               <p className="mt-2 text-lg font-black text-foreground">
-                {formatPriceDelta(historySummary.deltaAmount, historyCurrency)}
+                {formatPriceDelta(historySummary.deltaFromPrevious, historyCurrency)}
               </p>
             </div>
           </div>
