@@ -7,6 +7,7 @@ import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
@@ -238,6 +239,57 @@ export default async function ProductPage({
       ? 'Validate this product, then compare it or switch into a price watch instead of reopening a broad search.'
       : 'Use the product page to validate fit, then either click through or keep the category on watch.'
   })
+  const seoHubSections: SeoHubSection[] = [
+    {
+      id: 'category',
+      eyebrow: 'Category hub',
+      title: `Stay inside ${categoryLabel}`,
+      description: 'Use the category layer to keep adjacent products, reviews, and comparisons tightly grouped around the same buying intent.',
+      links: compactSeoHubLinks([
+        product.category
+          ? {
+              href: `/categories/${product.category}`,
+              label: `Browse ${categoryLabel}`,
+              note: 'Return to the category hub without widening the search.'
+            }
+          : null,
+        comparisonArticle
+          ? {
+              href: getArticlePath(comparisonArticle.type, comparisonArticle.slug),
+              label: comparisonArticle.title,
+              note: 'Open the most relevant side-by-side tradeoff page next.'
+            }
+          : null,
+        guideArticle
+          ? {
+              href: getArticlePath(guideArticle.type, guideArticle.slug),
+              label: guideArticle.title,
+              note: 'Use the supporting guide when one more category-level explanation still matters.'
+            }
+          : null
+      ])
+    },
+    {
+      id: 'brand-and-peers',
+      eyebrow: 'Adjacent nodes',
+      title: 'Brand and peer paths',
+      description: 'These spokes keep the current product connected to its closest brand and category alternatives.',
+      links: compactSeoHubLinks([
+        brandSlug && product.brand
+          ? {
+              href: `/brands/${brandSlug}`,
+              label: `${product.brand} brand page`,
+              note: 'See every related product and editorial page from the same brand.'
+            }
+          : null,
+        ...peerProducts.slice(0, 3).map((candidate) => ({
+          href: `/products/${candidate.slug}`,
+          label: candidate.productName,
+          note: candidate.description || `Another ${categoryLabel} option worth checking.`
+        }))
+      ])
+    }
+  ]
 
   return (
     <PublicShell>
@@ -339,6 +391,12 @@ export default async function ProductPage({
           title="Reusable product decision blocks"
           description="These structured modules turn the product page into more than one long read: they can also support search, feeds, and assistant answers."
           compact
+        />
+
+        <SeoHubLinksPanel
+          title="Product hub and spoke links"
+          description="This page is not an SEO dead end. It stays wired into the surrounding category, brand, and adjacent-product graph."
+          sections={seoHubSections}
         />
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">

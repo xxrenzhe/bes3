@@ -1,14 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoTrustSignalsPanel } from '@/components/site/SeoTrustSignalsPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { buildDatasetSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -22,12 +23,23 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function AboutPage() {
-  const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])
+  const [brandCategoryHubs, brands, categories, articles, products] = await Promise.all([
+    listBrandCategoryHubs(),
+    listBrands(),
+    listCategories(),
+    listPublishedArticles(),
+    listPublishedProducts()
+  ])
   const leadReview = articles.find((article) => article.type === 'review') || null
   const leadComparison = articles.find((article) => article.type === 'comparison') || null
   const leadGuide = articles.find((article) => article.type === 'guide') || null
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
+  const latestRefresh = [
+    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
+    ...products.map((product) => product.updatedAt || product.publishedAt),
+    ...brands.map((brand) => brand.latestUpdate)
+  ].find(Boolean) || null
 
   const trustStats = [
     {
@@ -41,14 +53,19 @@ export default async function AboutPage() {
       description: 'Reviews, comparisons, and guides already live.'
     },
     {
+      label: 'Brand hubs',
+      value: String(brands.length),
+      description: 'Brands with dedicated discovery and buying coverage.'
+    },
+    {
       label: 'Product deep-dives',
       value: String(products.length),
       description: 'Product pages with pricing, specs, and save actions.'
     },
     {
-      label: 'Helpful formats',
-      value: '4',
-      description: 'Search, reviews, comparisons, and alerts for different shopping moments.'
+      label: 'Brand-category hubs',
+      value: String(brandCategoryHubs.length),
+      description: 'Programmatic hub pages that connect exact brand + category intent.'
     }
   ]
 
@@ -161,6 +178,14 @@ export default async function AboutPage() {
       description: 'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
       type: 'AboutPage'
     }),
+    buildDatasetSchema({
+      path: '/about',
+      name: 'Bes3 coverage and decision dataset',
+      description: 'Structured coverage map for Bes3 categories, brands, product pages, and editorial buying assets.',
+      dateModified: latestRefresh,
+      keywords: ['product review dataset', 'buying guide coverage', 'brand-category hubs', 'price-aware commerce graph'],
+      variableMeasured: ['categories', 'brands', 'brand-category hubs', 'product pages', 'editorial pages']
+    }),
     buildFaqSchema('/about', faqEntries)
   ]
 
@@ -221,6 +246,43 @@ export default async function AboutPage() {
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{stat.description}</p>
               </div>
             ))}
+          </div>
+        </section>
+
+        <section className="px-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <SeoTrustSignalsPanel
+              title="What makes the Bes3 SEO layer trustworthy"
+              description="The site is designed like a structured coverage graph: every category, brand, product, and editorial page exists to support a concrete buying step."
+              stats={[
+                {
+                  label: 'Categories',
+                  value: String(categories.length),
+                  note: 'Category hubs keep broad intent crawlable before the buyer narrows further.'
+                },
+                {
+                  label: 'Brands',
+                  value: String(brands.length),
+                  note: 'Brand hubs create exact-match long-tail entry points without duplicating product pages.'
+                },
+                {
+                  label: 'Products',
+                  value: String(products.length),
+                  note: 'Product pages hold pricing, evidence, next steps, and merchant handoff context.'
+                },
+                {
+                  label: 'Editorial pages',
+                  value: String(articles.length),
+                  note: 'Reviews, comparisons, and guides capture different search intents without collapsing them into one template.'
+                }
+              ]}
+              points={[
+                'Freshness is pushed into titles, descriptions, and structured data so crawlers can see when coverage was last checked.',
+                'HTML sitemaps, segmented XML sitemaps, and brand-category hubs create a denser internal crawl graph than a flat archive.',
+                'Decision modules, evidence blocks, and how-to schemas make the public pages machine-readable instead of just visually readable.',
+                'The goal is not page count. The goal is to intercept narrow intent with a page that naturally leads to the next buying action.'
+              ]}
+            />
           </div>
         </section>
 

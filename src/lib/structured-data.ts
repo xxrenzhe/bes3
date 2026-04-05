@@ -72,6 +72,15 @@ interface SearchResultsSchemaOptions {
   items: ItemListEntry[]
 }
 
+interface DatasetSchemaOptions {
+  path: string
+  name: string
+  description: string
+  dateModified?: string | null
+  keywords?: string[]
+  variableMeasured?: string[]
+}
+
 const SCHEMA_CONTEXT = 'https://schema.org'
 
 function buildOrganizationReference() {
@@ -231,6 +240,35 @@ export function buildArticleSchema({
     author: buildOrganizationReference(),
     publisher: buildOrganizationReference(),
     about
+  }
+}
+
+export function buildDatasetSchema({
+  path,
+  name,
+  description,
+  dateModified,
+  keywords,
+  variableMeasured
+}: DatasetSchemaOptions): SchemaNode {
+  const url = toAbsoluteUrl(path)
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'Dataset',
+    '@id': `${url}#dataset`,
+    url,
+    name,
+    description,
+    creator: buildOrganizationReference(),
+    publisher: buildOrganizationReference(),
+    isPartOf: buildWebsiteReference(),
+    keywords,
+    variableMeasured: variableMeasured?.map((item) => ({
+      '@type': 'PropertyValue',
+      name: item
+    })),
+    dateModified: dateModified || undefined
   }
 }
 

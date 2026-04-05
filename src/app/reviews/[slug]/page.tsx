@@ -7,6 +7,7 @@ import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
@@ -263,6 +264,58 @@ export default async function ReviewPage({
       ? 'The fit is already clear enough to move toward a comparison or merchant check, rather than reading adjacent filler pages.'
       : 'Use the product page or a price watch next if the main question is no longer product fit.'
   })
+  const seoHubSections: SeoHubSection[] = [
+    {
+      id: 'review-paths',
+      eyebrow: 'Review paths',
+      title: 'Where this review should lead next',
+      description: 'These links keep the review inside the same buyer journey rather than restarting generic search.',
+      links: compactSeoHubLinks([
+        article.product?.slug
+          ? {
+              href: `/products/${article.product.slug}`,
+              label: `${article.product.productName} product page`,
+              note: 'Open specs, pricing, shortlist actions, and current merchant context.'
+            }
+          : null,
+        relatedComparison
+          ? {
+              href: getArticlePath(relatedComparison.type, relatedComparison.slug),
+              label: relatedComparison.title,
+              note: 'Move into the category comparison once the fit looks close enough.'
+            }
+          : null,
+        relatedGuide
+          ? {
+              href: getArticlePath(relatedGuide.type, relatedGuide.slug),
+              label: relatedGuide.title,
+              note: 'Use the guide when one more category-level explanation still matters.'
+            }
+          : null
+      ])
+    },
+    {
+      id: 'review-neighbors',
+      eyebrow: 'Nearby nodes',
+      title: 'Brand and peer coverage around this review',
+      description: 'These spokes keep the reviewed product connected to its brand and closest alternatives.',
+      links: compactSeoHubLinks([
+        brandSlug && article.product?.brand
+          ? {
+              href: `/brands/${brandSlug}`,
+              label: `${article.product.brand} brand page`,
+              note: 'See the rest of the same-brand coverage without broadening the market too early.'
+            }
+          : null,
+        ...(category ? [{ href: `/categories/${category}`, label: `${categoryLabel} category page`, note: 'Return to the category hub when cross-brand comparison matters again.' }] : []),
+        ...peerProducts.slice(0, 2).map((candidate) => ({
+          href: `/products/${candidate.slug}`,
+          label: candidate.productName,
+          note: candidate.description || `Another ${categoryLabel} option worth checking.`
+        }))
+      ])
+    }
+  ]
 
   return (
     <PublicShell>
@@ -364,6 +417,12 @@ export default async function ReviewPage({
           modules={decisionModules}
           title="Reusable review decision blocks"
           description="These modules compress the review into structured reasoning Bes3 can reuse in assistant answers, search, and feeds."
+        />
+
+        <SeoHubLinksPanel
+          title="Review hub and spoke links"
+          description="The review stays tied to the surrounding product, category, brand, and comparison graph so long-tail traffic keeps moving toward a decision."
+          sections={seoHubSections}
         />
 
         {article.product ? (

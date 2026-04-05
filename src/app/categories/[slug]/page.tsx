@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -187,6 +188,37 @@ export default async function CategoryPage({
       label: 'Start category alerts'
     }
   ]
+  const seoHubSections = [
+    {
+      id: 'category-products',
+      eyebrow: 'Category products',
+      title: `Lead ${categoryLabel} product paths`,
+      description: 'These links preserve a tight product cluster around the category instead of sending searchers back into a broad archive.',
+      links: products.slice(0, 4).map((product) => ({
+        href: product.slug ? `/products/${product.slug}` : path,
+        label: product.productName,
+        note: product.description || `Open the ${categoryLabel} product page.`
+      }))
+    },
+    {
+      id: 'category-spokes',
+      eyebrow: 'Category spokes',
+      title: 'Brand and editorial spokes around this category',
+      description: 'These spokes turn the category page into the hub for brand-specific and editorial-intent paths.',
+      links: [
+        ...topBrands.slice(0, 2).map((brand) => ({
+          href: `/brands/${brand.slug}/categories/${slug}`,
+          label: `${brand.name} ${categoryLabel}`,
+          note: 'Open the exact brand-and-category hub.'
+        })),
+        ...articles.slice(0, 2).map((article) => ({
+          href: getArticlePath(article.type, article.slug),
+          label: article.title,
+          note: article.summary || 'Open the strongest supporting editorial page.'
+        }))
+      ]
+    }
+  ]
 
   return (
     <PublicShell>
@@ -254,6 +286,12 @@ export default async function CategoryPage({
             </div>
           </div>
         </section>
+
+        <SeoHubLinksPanel
+          title="Category hub and spoke links"
+          description="This category page is the hub for broad intent. From here, Bes3 fans out into product pages, editorial validation, and narrower brand-category spokes."
+          sections={seoHubSections}
+        />
 
         {products.length ? (
           <section id="category-shortlist" className="space-y-6">
