@@ -35,7 +35,7 @@ export async function generateMetadata({
     title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
     description:
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
-      `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
+      `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare finalists, and start alerts without starting over.`,
     path: `/categories/${slug}`,
     image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
     category: categoryLabel,
@@ -103,14 +103,14 @@ export default async function CategoryPage({
       text: 'Start with the strongest product cards when you still need the category narrowed into a few options worth saving.'
     },
     {
-      name: 'Validate with a live verdict',
+      name: 'Validate with a full review',
       text: featuredReview
-        ? 'Open the lead review once one candidate already looks plausible and you want product-fit context before comparing.'
-        : 'Use the strongest available page in the category to validate whether the lane is mature enough to act on.'
+        ? 'Open the lead review once one candidate already looks promising and you want product-fit context before comparing.'
+        : 'Use the strongest available page in the category to see whether the coverage is strong enough to act on.'
     },
     {
-      name: 'Compare or track the lane',
-      text: 'Move into comparisons when the shortlist is tight. If timing is the blocker, switch to category alerts without losing the same buying context.'
+      name: 'Compare or track the category',
+      text: 'Move into comparisons when the shortlist is tight. If timing is the blocker, switch to category alerts without losing your place.'
     }
   ]
   const structuredData = [
@@ -120,7 +120,7 @@ export default async function CategoryPage({
       title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
       description:
         pickMetadataDescription(featuredReview?.seoDescription, featuredReview?.summary, featured?.summary) ||
-        `Browse ${categoryLabel} on Bes3 to shortlist products, read verdicts, compare finalists, and start alerts without losing the buying lane.`,
+        `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare finalists, and start alerts without starting over.`,
       image: featured?.heroImageUrl || products[0]?.heroImageUrl,
       breadcrumbItems,
       about: {
@@ -139,20 +139,20 @@ export default async function CategoryPage({
         }))
       ]
     }),
-    buildHowToSchema(path, `How to use the ${categoryLabel} category hub`, 'Use the category hub to shortlist credible products, validate the lead verdict, and compare or track the lane.', howToSteps)
+    buildHowToSchema(path, `How to use the ${categoryLabel} category page`, 'Use the category page to shortlist good products, read the lead review, and compare or track the category.', howToSteps)
   ]
   const faqEntries = [
     {
       question: `What should this ${categoryLabel} page help me do?`,
-      answer: `It should help you stay inside one ${categoryLabel} buying lane: shortlist credible products, open the lead verdict, compare finalists, and switch to alerts if timing is the blocker.`
+      answer: `It should help you shop inside one ${categoryLabel} category: shortlist good products, open the lead review, compare finalists, and switch to alerts if timing is the blocker.`
     },
     {
-      question: 'When should I use a brand hub from here?',
-      answer: 'Open a brand hub when one manufacturer is already plausible and you want every related product and editorial page in one place. Stay here when cross-brand comparison still matters.'
+      question: 'When should I use a brand page from here?',
+      answer: 'Open a brand page when one manufacturer is already promising and you want every related product and page in one place. Stay here when cross-brand comparison still matters.'
     },
     {
       question: 'Why does this page push next moves instead of dumping every result?',
-      answer: 'Because category hubs work best as routing layers. They should reduce the decision tree, not recreate a noisy archive that forces you to reopen broad research.'
+      answer: 'Because category pages should help you move forward. They should cut down the noise, not recreate a giant archive that sends you back into broad research.'
     }
   ]
   const buyerRoutes = [
@@ -165,22 +165,22 @@ export default async function CategoryPage({
     },
     {
       eyebrow: 'Validate',
-      title: 'Read the lead verdict',
-      description: 'Use the strongest review when one product is already catching your eye and you want buyer fit before comparing.',
+      title: 'Read the lead review',
+      description: 'Use the strongest review when one product is already catching your eye and you want fit and tradeoffs before comparing.',
       href: featuredReview ? getArticlePath(featuredReview.type, featuredReview.slug) : '/search',
       label: featuredReview ? 'Open lead review' : 'Search review archive'
     },
     {
       eyebrow: 'Decide',
       title: 'Compare finalists',
-      description: 'Keep compare inside one category lane so tradeoffs stay honest, especially once you already have two credible options.',
+      description: 'Compare products that really belong together so the tradeoffs stay honest, especially once you already have two credible options.',
       href: featuredComparison ? getArticlePath(featuredComparison.type, featuredComparison.slug) : '/shortlist',
       label: featuredComparison ? 'Open category comparison' : 'Use shortlist compare'
     },
     {
       eyebrow: 'Watch',
       title: 'Track this category',
-      description: 'If the purchase is not happening today, turn this category into a price watch or briefing flow instead of losing the decision context.',
+      description: 'If the purchase is not happening today, turn this category into a price alert or weekly update instead of losing your place.',
       href: `/newsletter?intent=category-brief&category=${encodeURIComponent(slug)}&cadence=weekly`,
       label: 'Start category alerts'
     }
@@ -196,10 +196,10 @@ export default async function CategoryPage({
               <Link href="/directory" className="inline-flex text-sm font-medium text-white/70 transition-colors hover:text-white">
                 Directory / {categoryLabel}
               </Link>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Category Hub</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Category Page</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">{categoryLabel}</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                Bes3 uses this hub to narrow the category into real product options, current editorial verdicts, and the shortest path from research mode to an informed click.
+                Bes3 uses this page to narrow the category into real product options, useful reviews, and the shortest path from research mode to an informed click.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -223,16 +223,16 @@ export default async function CategoryPage({
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">How To Use This Category</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Move from browsing to a real buying lane.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Move from browsing to a shortlist you can actually use.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                {categoryLabel} works best when you treat it as one clean decision lane: shortlist credible candidates, validate one product with a verdict page, compare only real finalists, and switch to alerts if the purchase is still waiting.
+                {categoryLabel} works best when you use it to shortlist credible candidates, validate one product with a review, compare only real finalists, and switch to alerts if the purchase is still waiting.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {products.length >= 2
-                    ? 'This category already has enough product coverage to shortlist and compare inside one lane. Start with the top candidates below, then use a review or comparison page once the field is smaller.'
-                    : 'Coverage here is still early. Start with the strongest available product or verdict, then use alerts to wait for deeper category coverage if needed.'}
+                    ? 'This category already has enough product coverage to shortlist and compare. Start with the top candidates below, then use a review or comparison page once the field is smaller.'
+                    : 'Coverage here is still early. Start with the strongest available product or review, then use alerts to wait for deeper category coverage if needed.'}
                 </p>
               </div>
             </div>
@@ -259,7 +259,7 @@ export default async function CategoryPage({
               <p className="editorial-kicker">Shortlist</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Start with the strongest buying options.</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These product pages give buyers the fastest path into price context, specs, and merchant-ready decisions without losing the category view.
+                These product pages give buyers the fastest path into price context, specs, and store links without losing the category view.
               </p>
             </div>
             <div className="grid gap-6 xl:grid-cols-3">
@@ -275,10 +275,10 @@ export default async function CategoryPage({
             <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
               <div>
                 <p className="editorial-kicker">Top Brands</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Open the brand hubs already active in this lane.</h2>
+                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Open the brand pages already active in this category.</h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                These brand pages capture manufacturer-first search intent without breaking the current {categoryLabel} decision path.
+                These brand pages help when shoppers search by manufacturer without breaking the current {categoryLabel} category view.
               </p>
             </div>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -288,14 +288,14 @@ export default async function CategoryPage({
                   href={`/brands/${brand.slug}/categories/${slug}`}
                   className="rounded-[1.75rem] bg-muted p-6 transition-colors hover:bg-emerald-50"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Lane</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
                     {brand.name} {categoryLabel}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category lane without breaking the current decision path.
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category view without breaking your shopping flow.
                   </p>
-                  <p className="mt-5 text-sm font-semibold text-primary">Open exact lane →</p>
+                  <p className="mt-5 text-sm font-semibold text-primary">Open this view →</p>
                 </Link>
               ))}
             </div>
@@ -321,7 +321,7 @@ export default async function CategoryPage({
               <div className="space-y-5 p-10">
                 <div className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
                   <span className="rounded-full bg-secondary px-3 py-1 text-secondary-foreground">{featured.type}</span>
-                  <span>Featured verdict</span>
+                  <span>Featured page</span>
                 </div>
                 <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">{featured.title}</h2>
                 <p className="max-w-3xl text-base leading-8 text-muted-foreground">{featured.summary}</p>
@@ -361,9 +361,9 @@ export default async function CategoryPage({
         )}
 
         <SeoFaqSection
-          title={`${categoryLabel} hub questions, answered clearly.`}
+          title={`${categoryLabel} page questions, answered clearly.`}
           entries={faqEntries}
-          description="This FAQ now makes the category-page routing logic explicit for both buyers and search engines, rather than leaving it implied by the visual layout."
+          description="This FAQ explains what this category page is for and which next step makes sense from here."
         />
       </div>
     </PublicShell>

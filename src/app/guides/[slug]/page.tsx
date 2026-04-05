@@ -39,7 +39,7 @@ export async function generateMetadata({
     title: article.seoTitle || article.title,
     description:
       pickMetadataDescription(article.seoDescription, article.summary) ||
-      'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.',
+      'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.',
     path: `/guides/${article.slug}`,
     image: article.heroImageUrl || article.product?.heroImageUrl,
     type: 'article',
@@ -84,7 +84,7 @@ export default async function GuidePage({
   const path = `/guides/${article.slug}`
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
-    'Use this Bes3 guide to narrow category fit, shortlist better candidates, and avoid reopening the same research loop later.'
+    'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.'
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
@@ -92,18 +92,18 @@ export default async function GuidePage({
   ]
   const howToSteps = [
     {
-      name: 'Frame the category first',
-      text: 'Use the guide to understand the category logic, compatibility concerns, and the heuristics that matter before you compare products.'
+      name: 'Start with what matters',
+      text: 'Use the guide to understand the category basics, compatibility concerns, and the details that matter before you compare products.'
     },
     {
-      name: 'Move into a live verdict',
+      name: 'Move into a real review',
       text: relatedReview
         ? 'Open the strongest review once the guide has narrowed what matters for your actual use case.'
-        : 'Use the category hub or shortlist when you are ready to move from abstract guidance into concrete candidates.'
+        : 'Use the category page or shortlist when you are ready to move from general guidance into real options.'
     },
     {
-      name: 'Keep the lane active',
-      text: 'If you are not ready to buy yet, turn the category into a briefing or alert flow instead of reopening the same research loop later.'
+      name: 'Keep your place',
+      text: 'If you are not ready to buy yet, turn the category into a briefing or alert instead of repeating the same research later.'
     }
   ]
   const structuredData = [
@@ -141,49 +141,49 @@ export default async function GuidePage({
           }
         : undefined
     }),
-    buildHowToSchema(path, `How to use the ${article.title} guide`, 'Use the guide to frame the category, move into a live verdict, and keep the same buying lane active.', howToSteps)
+    buildHowToSchema(path, `How to use the ${article.title} guide`, 'Use the guide to understand the category, move into a real review, and keep your place if you are not ready to buy yet.', howToSteps)
   ]
   const faqEntries = [
     {
       question: 'What is this guide supposed to solve?',
-      answer: 'Guides reduce ambiguity before the shortlist is tight enough for a review or comparison. They should help you understand the lane, not trap you in abstract research.'
+      answer: 'Guides reduce confusion before your shortlist is tight enough for a review or comparison. They should help you understand the category, not trap you in abstract research.'
     },
     {
-      question: 'When should I open a brand hub from a guide?',
+      question: 'When should I open a brand page from a guide?',
       answer: article.product?.brand
-        ? `Open the ${article.product.brand} hub when the manufacturer already looks promising and you want the rest of its related Bes3 coverage in one place.`
-        : 'Use the category hub when you still need broader discovery before a brand becomes credible.'
+        ? `Open the ${article.product.brand} page when the brand already looks promising and you want its related Bes3 coverage in one place.`
+        : 'Use the category page when you still need broader discovery before focusing on one brand.'
     },
     {
       question: 'What is the best next step after reading this guide?',
       answer: relatedReview
-        ? 'Move into the strongest review next so the guidance becomes a real product decision.'
-        : 'Go to the category hub or shortlist route next so the guide turns into concrete candidates instead of more abstract browsing.'
+        ? 'Move into the strongest review next so the guidance becomes a real product choice.'
+        : 'Go to the category page or shortlist next so the guide turns into concrete options instead of more abstract browsing.'
     }
   ]
   const guideRoutes = [
     {
       eyebrow: 'Validate',
-      title: relatedReview ? 'Open the lead review' : 'Browse the category hub',
+      title: relatedReview ? 'Open the lead review' : 'Browse the category page',
       description: relatedReview
-        ? 'Once the guide helped you frame the decision, move into the strongest product verdict for buyer-fit confirmation.'
-        : 'Use the category lane when you are ready to narrow general guidance into concrete product candidates.',
+        ? 'Once the guide helped you frame what matters, move into the strongest product review for a final fit check.'
+        : 'Use the category page when you are ready to turn general guidance into concrete product options.',
       href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : category ? `/categories/${category}` : '/directory',
-      label: relatedReview ? 'Open review verdict' : 'Visit category hub'
+      label: relatedReview ? 'Open review' : 'Visit category page'
     },
     {
       eyebrow: 'Decide',
       title: relatedComparison ? 'Compare real finalists' : 'Build a shortlist',
       description: relatedComparison
-        ? 'Use the comparison only after the guide has clarified what tradeoffs actually matter for your decision.'
-        : 'If you still need concrete options, move into shortlist or category coverage before trying to compare.',
+        ? 'Use the comparison only after the guide has clarified which tradeoffs actually matter to you.'
+        : 'If you still need concrete options, move into a shortlist or category page before trying to compare.',
       href: relatedComparison ? getArticlePath(relatedComparison.type, relatedComparison.slug) : category ? `/categories/${category}#category-shortlist` : '/shortlist',
-      label: relatedComparison ? 'Open comparison' : 'Open shortlist lane'
+      label: relatedComparison ? 'Open comparison' : 'Open shortlist'
     },
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track market changes',
-      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the context alive with a category briefing flow.',
+      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the context alive with a category briefing or alert.',
       href: category
         ? `/newsletter?intent=category-brief&category=${encodeURIComponent(category)}&cadence=weekly`
         : '/newsletter?intent=deals&cadence=weekly',
@@ -216,15 +216,15 @@ export default async function GuidePage({
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Best use</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Use this guide when you still need category logic, compatibility context, or buying heuristics before comparing products.
+                  Use this guide when you still need category basics, compatibility context, or shopping advice before comparing products.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Next route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedReview
                     ? 'Move into the strongest review once the category logic is clear.'
-                    : 'Use the category hub or shortlist once you are ready to narrow candidates.'}
+                    : 'Use the category page or shortlist once you are ready to narrow candidates.'}
                 </p>
               </div>
             </div>
@@ -235,16 +235,16 @@ export default async function GuidePage({
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">How To Use This Guide</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Turn category knowledge into a cleaner buying lane.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Turn category knowledge into a clearer shortlist.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Guides exist to reduce ambiguity before you compare or click through. Once the category rules are clear, move into a verdict, a shortlist, or an alert flow instead of staying in pure research mode.
+                Guides exist to reduce ambiguity before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of staying in pure research mode.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedReview
-                    ? 'This guide already has enough nearby editorial coverage to hand you into a real verdict next. Use it to narrow what matters, then move on.'
-                    : 'Use this guide as decision framing. The next useful move is a category hub, shortlist, or alert flow rather than another abstract explainer.'}
+                    ? 'This guide already has enough nearby coverage to hand you into a real review next. Use it to narrow what matters, then move on.'
+                    : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or alert rather than another abstract explainer.'}
                 </p>
               </div>
             </div>
@@ -276,7 +276,7 @@ export default async function GuidePage({
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Lead Review</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{relatedReview.title}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{relatedReview.summary}</p>
-                <p className="mt-5 text-sm font-semibold text-primary">Open review verdict →</p>
+                <p className="mt-5 text-sm font-semibold text-primary">Open review →</p>
               </Link>
             ) : null}
             {relatedComparison ? (
@@ -289,28 +289,28 @@ export default async function GuidePage({
             ) : null}
             {category || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Category</p>
                 <div className="mt-5 space-y-3">
                   {category ? (
                     <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the full category lane if you need more live verdicts, comparisons, and shortlist coverage.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the full category page if you need more reviews, comparisons, and shortlist options.</p>
                     </Link>
                   ) : null}
                   {brandSlug && article.product?.brand ? (
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand hub if one manufacturer now looks credible and you want the rest of its Bes3 coverage in one place.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand page if one manufacturer now looks credible and you want the rest of its Bes3 coverage in one place.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Similar Product</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {candidate.description || `Another ${categoryLabel} option inside the same decision lane.`}
+                        {candidate.description || `Another ${categoryLabel} option worth checking.`}
                       </p>
                     </Link>
                   ))}
@@ -329,7 +329,7 @@ export default async function GuidePage({
         <SeoFaqSection
           title="Guide-page questions, answered clearly."
           entries={faqEntries}
-          description="This FAQ clarifies the role of a guide inside the Bes3 journey: reduce ambiguity, then hand the buyer into a product, review, category, or brand route."
+          description="This FAQ explains the role of a guide in the Bes3 journey: reduce ambiguity, then move the buyer into a product, review, category, or brand page."
         />
       </div>
     </PublicShell>
