@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoTrustSignalsPanel } from '@/components/site/SeoTrustSignalsPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { buildCollectionPageSchema, buildDatasetSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -19,12 +20,19 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HtmlSitemapPage() {
-  const [categories, brands, articles, products] = await Promise.all([
+  const [brandCategoryHubs, categories, brands, articles, products] = await Promise.all([
+    listBrandCategoryHubs(),
     listCategories(),
     listBrands(),
     listPublishedArticles(),
     listPublishedProducts()
   ])
+  const latestRefresh = [
+    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
+    ...products.map((product) => product.updatedAt || product.publishedAt),
+    ...brands.map((brand) => brand.latestUpdate),
+    ...brandCategoryHubs.map((hub) => hub.latestUpdate)
+  ].find(Boolean) || null
 
   const articleByCategory = new Map(
     categories.map((category) => [
@@ -61,6 +69,14 @@ export default async function HtmlSitemapPage() {
         ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: `/categories/${category}` })),
         ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` }))
       ]
+    }),
+    buildDatasetSchema({
+      path: '/site-map',
+      name: 'Bes3 public URL graph',
+      description: 'Machine-readable directory of Bes3 categories, brands, brand-category hubs, product pages, and editorial pages.',
+      dateModified: latestRefresh,
+      keywords: ['html sitemap', 'xml sitemap', 'brand-category hubs', 'public URL graph'],
+      variableMeasured: ['categories', 'brands', 'brand-category hubs', 'products', 'reviews', 'comparisons', 'guides']
     })
   ]
 
@@ -112,6 +128,23 @@ export default async function HtmlSitemapPage() {
             </div>
           ))}
         </section>
+
+        <SeoTrustSignalsPanel
+          title="Why this sitemap exists as more than a crawler afterthought"
+          description="Bes3 uses the HTML sitemap as a public text-first crawl surface that reinforces the structured URL graph created by category hubs, brand hubs, and decision pages."
+          stats={[
+            { label: 'Categories', value: String(categories.length), note: 'Top-level hubs for broad buyer intent.' },
+            { label: 'Brands', value: String(brands.length), note: 'Exact-match brand entry points with product and editorial coverage.' },
+            { label: 'Brand-category hubs', value: String(brandCategoryHubs.length), note: 'Programmatic spokes for narrow long-tail intent.' },
+            { label: 'Public pages', value: String(products.length + articles.length), note: 'Product and editorial URLs already feeding the public crawl graph.' }
+          ]}
+          points={[
+            'The XML sitemaps are now segmented by core pages, products, editorial pages, and taxonomy hubs.',
+            'This HTML sitemap mirrors the same graph in plain text links, making deeper pages easier to discover and revisit.',
+            'Brand-category hubs capture long-tail intent without flattening everything into one directory layer.',
+            'The page is intentionally lightweight so both users and crawlers can traverse the site structure quickly.'
+          ]}
+        />
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[2rem] bg-white p-6 shadow-panel">
