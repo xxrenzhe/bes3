@@ -56,8 +56,56 @@ function normalizePrice(raw: string | null | undefined): number | null {
   return match ? Number(match[1]) : null
 }
 
+function normalizeReviewCount(raw: unknown): number | null {
+  if (raw == null) return null
+  if (typeof raw === 'number') return Number.isFinite(raw) ? Math.max(0, Math.trunc(raw)) : null
+
+  const text = String(raw).trim()
+  if (!text) return null
+  const compact = text.toLowerCase().replace(/[\s,，]/g, '')
+  const shortMatch = compact.match(/^(\d+(?:\.\d+)?)([kmb])$/i)
+  if (shortMatch) {
+    const base = Number(shortMatch[1])
+    const multiplier = shortMatch[2].toLowerCase() === 'k' ? 1000 : shortMatch[2].toLowerCase() === 'm' ? 1000000 : 1000000000
+    return Number.isFinite(base) ? Math.trunc(base * multiplier) : null
+  }
+
+  const digits = compact.match(/\d+/g)
+  if (!digits?.length) return null
+  const longest = digits.sort((left, right) => right.length - left.length)[0]
+  const parsed = Number(longest)
+  return Number.isFinite(parsed) ? Math.max(0, Math.trunc(parsed)) : null
+}
+
 function unique<T>(values: T[]): T[] {
   return Array.from(new Set(values))
+}
+
+function normalizeImageUrl(raw: string | null | undefined, finalUrl?: string): string | null {
+  const text = String(raw || '').trim()
+  if (!text || text.startsWith('data:')) return null
+
+  try {
+    const normalized = text.startsWith('//') ? `https:${text}` : new URL(text, finalUrl).toString()
+    const pathname = new URL(normalized).pathname.toLowerCase()
+
+    if (pathname.endsWith('.css') || pathname.endsWith('.js')) return null
+    if (normalized.includes('AUIClients/')) return null
+    if (/\.(?:jpe?g|png|webp|gif|avif|bmp)(?:$|\?)/i.test(pathname) || /\/files\//i.test(pathname) || /\/images\//i.test(pathname)) {
+      return normalized
+    }
+  } catch {
+    return null
+  }
+
+  return null
+}
+
+function normalizeTextSnippet(raw: string | null | undefined): string {
+  return String(raw || '')
+    .replace(/\u00a0/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim()
 }
 
 function normalizeAvailabilityStatus(raw: string | null | undefined): string | null {
@@ -170,16 +218,316 @@ function extractAmazonImages(html: string): string[] {
 
   for (const pattern of patterns) {
     for (const match of html.match(pattern) || []) {
-      urls.add(match.replace(/\\u0026/g, '&'))
+      const normalized = normalizeImageUrl(match.replace(/\\u0026/g, '&'))
+      if (normalized) urls.add(normalized)
     }
   }
 
   return Array.from(urls).slice(0, 12)
 }
 
+function normalizeAmazonBrand(raw: string | null | undefined): string | null {
+  const text = String(raw || '').trim()
+  if (!text) return null
+
+  return text
+    .replace(/^Visit\s+the\s+/i, '')
+    .replace(/\s+Store$/i, '')
+    .replace(/^Brand:\s*/i, '')
+    .replace(/^Marca:\s*/i, '')
+    .replace(/^Marque:\s*/i, '')
+    .replace(/^Marke:\s*/i, '')
+    .replace(/\s+出品者のストアにアクセス$/i, '')
+    .trim() || null
+}
+
 function extractAmazonReviewImages(html: string): string[] {
   const matches = html.match(/https:\/\/m\.media-amazon\.com\/images\/I\/[^"'\\\s]+/g) || []
-  return unique(matches.filter((url) => url.includes('images/I/')).slice(0, 8))
+  return unique(matches.map((url) => normalizeImageUrl(url)).filter((url): url is string => Boolean(url)).slice(0, 8))
+}
+
+function extractInlineJsonObject<T>(html: string, marker: string): T | null {
+  const start = html.indexOf(marker)
+  if (start < 0) return null
+
+  const objectStart = html.indexOf('{', start)
+  if (objectStart < 0) return null
+
+  let depth = 0
+  let inString = false
+  let quoteChar = ''
+  let escaped = false
+
+  for (let index = objectStart; index < html.length; index += 1) {
+    const char = html[index]
+
+    if (inString) {
+      if (escaped) {
+        escaped = false
+        continue
+      }
+      if (char === '\\') {
+        escaped = true
+        continue
+      }
+      if (char === quoteChar) {
+        inString = false
+        quoteChar = ''
+      }
+      continue
+    }
+
+    if (char === '"' || char === "'") {
+      inString = true
+      quoteChar = char
+      continue
+    }
+
+    if (char === '{') depth += 1
+    if (char === '}') {
+      depth -= 1
+      if (depth === 0) {
+        const objectLiteral = html.slice(objectStart, index + 1)
+        try {
+          return JSON.parse(objectLiteral) as T
+        } catch {
+          return null
+        }
+      }
+    }
+  }
+
+  return null
+}
+
+function extractAreviewsAggregate(html: string): { rating: number | null; reviewCount: number | null } {
+  const marker = 'AreviewsproductLdJsonSchema'
+  const start = html.indexOf(marker)
+  if (start < 0) return { rating: null, reviewCount: null }
+
+  const snippet = html.slice(start, start + 1200)
+  const rating = snippet.match(/"ratingValue"\s*:\s*"([^"]+)"/)?.[1]
+  const reviewCount = snippet.match(/"reviewCount"\s*:\s*"([^"]+)"/)?.[1]
+
+  return {
+    rating: rating ? Number(rating) || null : null,
+    reviewCount: normalizeReviewCount(reviewCount)
+  }
+}
+
+function extractFaqPairs(text: string): string[] {
+  const normalized = text.replace(/<br\s*\/?>/gi, '\n').replace(/&quot;/g, '"').replace(/&#39;/g, "'")
+  const matches = Array.from(
+    normalized.matchAll(/Q\d+[:：]\s*([\s\S]+?)\s*A\d+[:：]\s*([\s\S]+?)(?=(?:Q\d+[:：])|$)/gi)
+  )
+
+  return matches
+    .map((match) => `${normalizeTextSnippet(match[1])} ${normalizeTextSnippet(match[2])}`.trim())
+    .filter((item) => item.length >= 24)
+    .slice(0, 5)
+}
+
+function extractShopifySpecs($: ReturnType<typeof load>): Record<string, string> {
+  const specs: Record<string, string> = {}
+
+  $('table[class*="spec"], table[class*="technical"], [class*="spec"] table').each((_, table) => {
+    $(table)
+      .find('tr')
+      .each((__, row) => {
+        const cells = $(row).find('td, th')
+        if (cells.length < 2) return
+        const label = normalizeTextSnippet($(cells[0]).text())
+        const value = normalizeTextSnippet($(cells[1]).text())
+        if (label && value && label !== value && !specs[label]) {
+          specs[label] = value
+        }
+      })
+  })
+
+  $('dl[class*="spec"], [class*="spec"] dl').each((_, dl) => {
+    $(dl)
+      .find('dt')
+      .each((__, dt) => {
+        const label = normalizeTextSnippet($(dt).text())
+        const value = normalizeTextSnippet($(dt).next('dd').text())
+        if (label && value && label !== value && !specs[label]) {
+          specs[label] = value
+        }
+      })
+  })
+
+  $('.specs-item').each((_, node) => {
+    const label = normalizeTextSnippet($(node).find('.col-12.col-sm-6').first().text())
+    const valueParts = $(node)
+      .find('.specs-content')
+      .first()
+      .find('strong, p, li')
+      .map((__, element) => normalizeTextSnippet($(element).text()))
+      .get()
+      .filter(Boolean)
+    const value = unique(valueParts).join(' | ')
+    if (label && value && !specs[label]) {
+      specs[label] = value
+    }
+  })
+
+  return specs
+}
+
+function scrapeShopifyProduct(finalUrl: string, html: string): ScrapedProduct {
+  const $ = load(html)
+  const ldJson = extractLdJson(html)
+  const productSchema = ldJson.find((item) => item['@type'] === 'Product') || {}
+  const offers = Array.isArray(productSchema.offers) ? productSchema.offers[0] : productSchema.offers || {}
+  const aggregate = productSchema.aggregateRating || {}
+  const tfxProduct = extractInlineJsonObject<{
+    title?: string
+    vendor?: string
+    type?: string
+    description?: string
+    available?: boolean
+    tags?: string[]
+    price?: number
+    compare_at_price?: number
+    featured_image?: string
+    images?: string[]
+    variants?: Array<{ sku?: string; available?: boolean; option1?: string | null; option2?: string | null; option3?: string | null }>
+    media?: Array<{ src?: string; preview_image?: { src?: string } }>
+  }>(html, 'window.tfxProduct') || {}
+  const areviews = extractAreviewsAggregate(html)
+  const specs = extractShopifySpecs($)
+
+  const firstVariant = tfxProduct.variants?.[0]
+  if (firstVariant?.sku && !specs.SKU) specs.SKU = firstVariant.sku
+  if (tfxProduct.type && !specs['Product Type']) specs['Product Type'] = tfxProduct.type
+  if (Array.isArray(tfxProduct.tags) && tfxProduct.tags.length && !specs.Tags) specs.Tags = tfxProduct.tags.join(', ')
+  if (!specs.Availability) specs.Availability = tfxProduct.available === false ? 'Out of stock' : tfxProduct.available === true ? 'In stock' : ''
+
+  const imageUrls = unique(
+    [
+      tfxProduct.featured_image || '',
+      ...(tfxProduct.images || []),
+      ...((tfxProduct.media || []).flatMap((item) => [item.src || '', item.preview_image?.src || '']))
+    ]
+      .map((url) => normalizeImageUrl(url, finalUrl))
+      .filter((url): url is string => Boolean(url))
+      .slice(0, 12)
+  )
+
+  const reviewHighlights = unique([
+    ...extractFaqPairs($('.metafield-multi_line_text_field').html() || '')
+  ]).slice(0, 6)
+
+  const description =
+    normalizeTextSnippet(productSchema.description) ||
+    normalizeTextSnippet($('meta[name="description"]').attr('content')) ||
+    normalizeTextSnippet(tfxProduct.description) ||
+    normalizeTextSnippet($('.product-meta__description, .product-description').first().text()) ||
+    null
+
+  const domPriceAmount =
+    normalizePrice(String(offers.price || '')) ??
+    (typeof tfxProduct.price === 'number' ? Number((tfxProduct.price / 100).toFixed(2)) : null) ??
+    normalizePrice($('[class*="price"]').first().text())
+  const priceCurrency = String(offers.priceCurrency || $('[itemprop="priceCurrency"]').attr('content') || 'USD')
+  const availabilityStatus = normalizeAvailabilityStatus(
+    String(offers.availability || (tfxProduct.available === false ? 'out of stock' : tfxProduct.available === true ? 'in stock' : ''))
+  )
+  const merchantName = normalizeTextSnippet(tfxProduct.vendor) || buildMerchantNameFromUrl(finalUrl)
+
+  const schemaOffer: ScrapedOffer | null =
+    offers.price || offers.priceCurrency || offers.url
+      ? {
+          merchantName,
+          websiteUrl: `${new URL(finalUrl).protocol}//${new URL(finalUrl).host}`,
+          offerUrl: String(offers.url || finalUrl),
+          availabilityStatus,
+          priceAmount: normalizePrice(String(offers.price || '')),
+          priceCurrency,
+          shippingCost: null,
+          couponText: null,
+          couponType: null,
+          conditionLabel: String(offers.itemCondition || '').trim() || null,
+          sourceType: 'schema',
+          sourceUrl: finalUrl,
+          confidenceScore: 0.92,
+          rawPayload: offers && typeof offers === 'object' ? (offers as Record<string, unknown>) : null
+        }
+      : null
+  const domOffer: ScrapedOffer | null =
+    domPriceAmount != null || availabilityStatus
+      ? {
+          merchantName,
+          websiteUrl: `${new URL(finalUrl).protocol}//${new URL(finalUrl).host}`,
+          offerUrl: finalUrl,
+          availabilityStatus,
+          priceAmount: domPriceAmount,
+          priceCurrency,
+          shippingCost: null,
+          couponText: null,
+          couponType: null,
+          conditionLabel: null,
+          sourceType: 'dom',
+          sourceUrl: finalUrl,
+          confidenceScore: schemaOffer ? 0.86 : 0.9,
+          rawPayload: null
+        }
+      : null
+  const offerCandidates = [schemaOffer, domOffer].filter(Boolean) as ScrapedOffer[]
+  const dedupedOffers = unique(offerCandidates.map((offer) => JSON.stringify(offer))).map((offer) => JSON.parse(offer) as ScrapedOffer)
+  const attributeFacts = buildAttributeFacts(finalUrl, specs, 'spec_table', 0.9)
+  const priceLastCheckedAt = new Date().toISOString()
+  const rating = Number(aggregate.ratingValue || areviews.rating || 0) || null
+  const reviewCount = normalizeReviewCount(aggregate.reviewCount || areviews.reviewCount)
+  const attributeCompletenessScore = calculateAttributeCompletenessScore({
+    specs,
+    description,
+    priceAmount: domPriceAmount,
+    rating,
+    reviewCount,
+    imageCount: imageUrls.length
+  })
+  const dataConfidenceScore = calculateDataConfidenceScore({
+    hasSchemaOffer: Boolean(schemaOffer),
+    hasDomOffer: Boolean(domOffer),
+    specsCount: attributeFacts.length,
+    reviewHighlightCount: reviewHighlights.length
+  })
+
+  return {
+    finalUrl,
+    productName:
+      normalizeTextSnippet(productSchema.name) ||
+      normalizeTextSnippet(tfxProduct.title) ||
+      normalizeTextSnippet($('meta[property="og:title"]').attr('content')) ||
+      normalizeTextSnippet($('h1').first().text()) ||
+      'Unknown Shopify Product',
+    brand:
+      normalizeTextSnippet(productSchema.brand?.name) ||
+      normalizeTextSnippet(tfxProduct.vendor) ||
+      normalizeTextSnippet($('meta[property="og:site_name"]').attr('content')) ||
+      null,
+    category:
+      normalizeTextSnippet(productSchema.category) ||
+      normalizeTextSnippet(tfxProduct.type) ||
+      null,
+    description,
+    priceAmount: domPriceAmount,
+    priceCurrency,
+    rating,
+    reviewCount,
+    imageUrls,
+    reviewImageUrls: [],
+    specs,
+    reviewHighlights,
+    offers: dedupedOffers,
+    attributeFacts,
+    priceLastCheckedAt,
+    offerLastCheckedAt: priceLastCheckedAt,
+    attributeCompletenessScore,
+    dataConfidenceScore,
+    sourceCount: 2
+  }
 }
 
 function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
@@ -206,6 +554,8 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
 
   const priceText =
     $('#corePrice_feature_div .a-offscreen').first().text().trim() ||
+    $('.priceToPay .a-offscreen').first().text().trim() ||
+    $('#twister-plus-price-data-price').attr('value') ||
     $('#priceblock_ourprice, #priceblock_dealprice').first().text().trim() ||
     `${offers.price ?? ''}`
 
@@ -263,7 +613,7 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
       null,
     priceAmount: normalizePrice(priceText),
     rating: Number(aggregate.ratingValue || $('#acrPopover').attr('title')?.match(/(\d+(\.\d+)?)/)?.[1] || 0) || null,
-    reviewCount: Number(aggregate.reviewCount || $('#acrCustomerReviewText').text().replace(/[^\d]/g, '') || 0) || null,
+    reviewCount: normalizeReviewCount(aggregate.reviewCount || $('#acrCustomerReviewText').first().text()) || null,
     imageCount: extractAmazonImages(html).length
   })
   const dataConfidenceScore = calculateDataConfidenceScore({
@@ -281,7 +631,7 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
       $('title').text().replace(/\s*\|\s*Amazon.*$/, '').trim() ||
       'Unknown Amazon Product',
     brand:
-      $('#bylineInfo').text().trim().replace(/^Brand:\s*/i, '') ||
+      normalizeAmazonBrand($('#bylineInfo').first().text()) ||
       productSchema.brand?.name ||
       null,
     category:
@@ -296,8 +646,7 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
     priceAmount: normalizePrice(priceText),
     priceCurrency: String(offers.priceCurrency || 'USD'),
     rating: Number(aggregate.ratingValue || $('#acrPopover').attr('title')?.match(/(\d+(\.\d+)?)/)?.[1] || 0) || null,
-    reviewCount:
-      Number(aggregate.reviewCount || $('#acrCustomerReviewText').text().replace(/[^\d]/g, '') || 0) || null,
+    reviewCount: normalizeReviewCount(aggregate.reviewCount || $('#acrCustomerReviewText').first().text()) || null,
     imageUrls: extractAmazonImages(html),
     reviewImageUrls: extractAmazonReviewImages(html),
     specs,
@@ -326,6 +675,12 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
     if (label && value && label !== value) specs[label] = value
   })
 
+  $('dl dt').each((_, node) => {
+    const label = $(node).text().trim()
+    const value = $(node).next('dd').text().trim()
+    if (label && value && label !== value) specs[label] = value
+  })
+
   const rawImages = [
     ...$('img')
       .map((_, img) => $(img).attr('src') || $(img).attr('data-src') || '')
@@ -335,14 +690,8 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
 
   const imageUrls = unique(
     rawImages
-      .map((url) => {
-        try {
-          return new URL(url, finalUrl).toString()
-        } catch {
-          return ''
-        }
-      })
-      .filter(Boolean)
+      .map((url) => normalizeImageUrl(String(url || ''), finalUrl))
+      .filter((url): url is string => Boolean(url))
       .slice(0, 12)
   )
 
@@ -358,17 +707,20 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
     $('[class*="review"] img, [data-review] img')
       .map((_, img) => $(img).attr('src') || $(img).attr('data-src') || '')
       .get()
-      .map((url) => {
-        try {
-          return new URL(url, finalUrl).toString()
-        } catch {
-          return ''
-        }
-      })
-      .filter(Boolean)
+      .map((url) => normalizeImageUrl(String(url || ''), finalUrl))
+      .filter((url): url is string => Boolean(url))
       .slice(0, 8)
   )
   const domPriceAmount = normalizePrice(String($('[itemprop="price"]').attr('content') || ''))
+  const fallbackDomPriceAmount = domPriceAmount ??
+    normalizePrice(
+      String(
+        $('meta[property="product:price:amount"]').attr('content') ||
+        $('meta[property="og:price:amount"]').attr('content') ||
+        $('[class*="price"]').first().text() ||
+        ''
+      )
+    )
   const availabilityStatus = normalizeAvailabilityStatus(
     String(productSchema.offers?.availability || $('[itemprop="availability"]').attr('href') || $('[itemprop="availability"]').attr('content') || '')
   )
@@ -425,9 +777,9 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
   const attributeCompletenessScore = calculateAttributeCompletenessScore({
     specs,
     description: productDescription,
-    priceAmount: normalizePrice(String(offers.price || $('[itemprop="price"]').attr('content') || '')),
+    priceAmount: normalizePrice(String(offers.price || $('[itemprop="price"]').attr('content') || '')) ?? fallbackDomPriceAmount,
     rating: productRating,
-    reviewCount: productReviewCount,
+    reviewCount: normalizeReviewCount(productReviewCount),
     imageCount: imageUrls.length
   })
   const dataConfidenceScore = calculateDataConfidenceScore({
@@ -456,10 +808,10 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
       null,
     description:
       productDescription,
-    priceAmount: normalizePrice(String(offers.price || $('[itemprop="price"]').attr('content') || '')),
+    priceAmount: normalizePrice(String(offers.price || $('[itemprop="price"]').attr('content') || '')) ?? fallbackDomPriceAmount,
     priceCurrency: String(offers.priceCurrency || $('[itemprop="priceCurrency"]').attr('content') || 'USD'),
     rating: productRating,
-    reviewCount: productReviewCount,
+    reviewCount: normalizeReviewCount(productReviewCount),
     imageUrls,
     reviewImageUrls,
     specs,
@@ -478,6 +830,9 @@ export function scrapeProductPage(finalUrl: string, html: string): ScrapedProduc
   const hostname = new URL(finalUrl).hostname
   if (hostname.includes('amazon.')) {
     return scrapeAmazonProduct(finalUrl, html)
+  }
+  if (/shopify|cdn\.shopify\.com|shopify-features|ShopifyAnalytics|window\.tfxProduct/i.test(html)) {
+    return scrapeShopifyProduct(finalUrl, html)
   }
   return scrapeGenericProduct(finalUrl, html)
 }
