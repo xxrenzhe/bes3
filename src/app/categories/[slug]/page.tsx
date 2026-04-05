@@ -3,12 +3,13 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
-import { listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
+import { getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -65,6 +66,31 @@ export default async function CategoryPage({
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
   const categoryLabel = getCategoryLabel(slug)
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
+  const topBrands = Array.from(
+    products.reduce((brands, product) => {
+      const brandName = product.brand?.trim()
+      const brandSlug = getBrandSlug(product.brand)
+
+      if (!brandName || !brandSlug) return brands
+
+      const existing = brands.get(brandSlug)
+      if (existing) {
+        existing.count += 1
+        return brands
+      }
+
+      brands.set(brandSlug, {
+        name: brandName,
+        slug: brandSlug,
+        count: 1
+      })
+
+      return brands
+    }, new Map<string, { name: string; slug: string; count: number }>())
+      .values()
+  )
+    .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
+    .slice(0, 4)
   const path = `/categories/${slug}`
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
@@ -115,6 +141,20 @@ export default async function CategoryPage({
     }),
     buildHowToSchema(path, `How to use the ${categoryLabel} category hub`, 'Use the category hub to shortlist credible products, validate the lead verdict, and compare or track the lane.', howToSteps)
   ]
+  const faqEntries = [
+    {
+      question: `What should this ${categoryLabel} page help me do?`,
+      answer: `It should help you stay inside one ${categoryLabel} buying lane: shortlist credible products, open the lead verdict, compare finalists, and switch to alerts if timing is the blocker.`
+    },
+    {
+      question: 'When should I use a brand hub from here?',
+      answer: 'Open a brand hub when one manufacturer is already plausible and you want every related product and editorial page in one place. Stay here when cross-brand comparison still matters.'
+    },
+    {
+      question: 'Why does this page push next moves instead of dumping every result?',
+      answer: 'Because category hubs work best as routing layers. They should reduce the decision tree, not recreate a noisy archive that forces you to reopen broad research.'
+    }
+  ]
   const buyerRoutes = [
     {
       eyebrow: 'Start',
@@ -148,7 +188,7 @@ export default async function CategoryPage({
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
@@ -230,6 +270,36 @@ export default async function CategoryPage({
           </section>
         ) : null}
 
+        {topBrands.length ? (
+          <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+            <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="editorial-kicker">Top Brands</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Open the brand hubs already active in this lane.</h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                These brand pages capture manufacturer-first search intent without breaking the current {categoryLabel} decision path.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+              {topBrands.map((brand) => (
+                <Link
+                  key={brand.slug}
+                  href={`/brands/${brand.slug}`}
+                  className="rounded-[1.75rem] bg-muted p-6 transition-colors hover:bg-emerald-50"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{brand.name}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already connect this brand back into the {categoryLabel} lane.
+                  </p>
+                  <p className="mt-5 text-sm font-semibold text-primary">Open {brand.name} →</p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        ) : null}
+
         {featured ? (
           <div className="grid gap-8 lg:grid-cols-12">
             <Link href={getArticlePath(featured.type, featured.slug)} className="group overflow-hidden rounded-[2.5rem] bg-white shadow-panel lg:col-span-8">
@@ -287,6 +357,12 @@ export default async function CategoryPage({
             </p>
           </div>
         )}
+
+        <SeoFaqSection
+          title={`${categoryLabel} hub questions, answered clearly.`}
+          entries={faqEntries}
+          description="This FAQ now makes the category-page routing logic explicit for both buyers and search engines, rather than leaving it implied by the visual layout."
+        />
       </div>
     </PublicShell>
   )

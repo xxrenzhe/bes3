@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -11,9 +12,9 @@ import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate,
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function splitComparisonTitle(title: string) {
@@ -85,6 +86,7 @@ export default async function ComparisonPage({
   const winner = article.product?.productName || contenders.left
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
+  const brandSlug = getBrandSlug(article.product?.brand)
   const priceLabel = formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
   const snapshotDate = getSnapshotDate(article, article.product)
   const decisionChecklist = buildDecisionChecklist(article.product)
@@ -174,6 +176,24 @@ export default async function ComparisonPage({
     }),
     buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the finalists, pick the cleanest winner, and decide whether to buy, watch, or reopen the shortlist.', howToSteps)
   ]
+  const faqEntries = [
+    {
+      question: 'What should I do after this comparison?',
+      answer: article.product?.slug
+        ? 'If the winner is clear, move into the product page next for specs, pricing, and merchant context. Reopen the shortlist only if neither finalist feels right.'
+        : 'Treat the editorial winner as the default answer unless a real fit blocker remains.'
+    },
+    {
+      question: 'When does a brand hub help after a comparison?',
+      answer: article.product?.brand
+        ? `Use the ${article.product.brand} hub when the manufacturer looks right but you want the rest of its products and editorial coverage before buying.`
+        : 'Use the category hub instead when you still need broader market context.'
+    },
+    {
+      question: 'Why keep this page tightly scoped to finalists?',
+      answer: 'Because comparisons only stay trustworthy when the lane is already narrow. Pulling in unrelated products makes the verdict weaker and the page less useful.'
+    }
+  ]
   const comparisonRoutes = [
     {
       eyebrow: 'Winner',
@@ -225,7 +245,7 @@ export default async function ComparisonPage({
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -396,6 +416,13 @@ export default async function ComparisonPage({
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the main category lane if you need adjacent context before accepting the winner.</p>
                     </Link>
                   ) : null}
+                  {brandSlug && article.product?.brand ? (
+                    <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Open the brand hub if the manufacturer looks right and you want the rest of that lane without widening the field too early.</p>
+                    </Link>
+                  ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
@@ -410,6 +437,12 @@ export default async function ComparisonPage({
             ) : null}
           </aside>
         </section>
+
+        <SeoFaqSection
+          title="Comparison-page questions, answered fast."
+          entries={faqEntries}
+          description="The comparison now exposes its intent clearly on-page and in schema: keep the shortlist narrow, pick the winner, and route to the next action without starting over."
+        />
       </div>
     </PublicShell>
   )

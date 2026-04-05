@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/search', label: 'Search' },
   { href: '/deals', label: 'Deals' },
   { href: '/directory', label: 'Directory' },
+  { href: '/brands', label: 'Brands' },
   { href: '/about', label: 'How We Test' },
   { href: '/newsletter', label: 'Newsletter' }
 ]
@@ -92,6 +93,7 @@ export function PublicShell({
               <Link href="/">Home</Link>
               <Link href="/search">Search</Link>
               <Link href="/categories/home-office">Categories</Link>
+              <Link href="/brands">Brands</Link>
               <Link href="/deals">Deals</Link>
               <Link href="/directory">Directory</Link>
               <Link href="/shortlist">Shortlist</Link>

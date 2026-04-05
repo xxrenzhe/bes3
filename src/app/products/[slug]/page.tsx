@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -12,9 +13,9 @@ import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate,
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildBreadcrumbSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getProductBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getBrandSlug, getProductBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getCategoryLabelValue(category: string | null) {
@@ -83,6 +84,7 @@ export default async function ProductPage({
   const confidenceSignals = buildConfidenceSignals(product)
   const shortlistItem = toShortlistItem(product)
   const categoryLabel = product.category ? product.category.replace(/-/g, ' ') : 'this category'
+  const brandSlug = getBrandSlug(product.brand)
   const path = `/products/${product.slug}`
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
@@ -131,6 +133,24 @@ export default async function ProductPage({
     buildProductSchema(product, path, productDescription, heroImageUrl),
     buildHowToSchema(path, `How to use ${product.productName} on Bes3`, 'Use the product page to validate fit, pressure-test the verdict, and choose the cleanest next move.', howToSteps)
   ]
+  const faqEntries = [
+    {
+      question: `What is this ${product.productName} page for?`,
+      answer: 'It is meant to be the clean product-level checkpoint: confirm fit, verify specs and pricing, and choose whether to compare, click through, or keep watching the category.'
+    },
+    {
+      question: 'When should I use the brand hub from here?',
+      answer: product.brand
+        ? `Use the ${product.brand} hub when you want to see nearby products and editorial pages from the same manufacturer without reopening site-wide search.`
+        : 'Use the category hub when you still need adjacent products and articles around this product before comparing or buying.'
+    },
+    {
+      question: 'What should I do if this product looks good but not final?',
+      answer: comparisonArticle
+        ? 'Open the related comparison next if you are down to finalists. If timing is the blocker instead of fit, switch to the category price watch.'
+        : 'Return to the category hub or start a price watch so you can keep the same lane active without forcing the purchase today.'
+    }
+  ]
   const nextMoves = [
     reviewArticle
       ? {
@@ -148,6 +168,15 @@ export default async function ProductPage({
           description: 'Open the comparison once this product is good enough to become a finalist against nearby substitutes.',
           href: getArticlePath(comparisonArticle.type, comparisonArticle.slug),
           label: 'Open comparison'
+        }
+      : null,
+    brandSlug && product.brand
+      ? {
+          eyebrow: 'Brand',
+          title: `More from ${product.brand}`,
+          description: 'Open the brand hub when you want adjacent products and editorial pages from the same manufacturer without broadening the lane too early.',
+          href: `/brands/${brandSlug}`,
+          label: `Open ${product.brand} hub`
         }
       : null,
     {
@@ -174,7 +203,7 @@ export default async function ProductPage({
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -359,6 +388,13 @@ export default async function ProductPage({
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main hub if you need adjacent coverage before committing to this product.</p>
                     </Link>
                   ) : null}
+                  {brandSlug && product.brand ? (
+                    <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{product.brand}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Stay inside the same manufacturer graph if you want adjacent products and brand-level editorial context.</p>
+                    </Link>
+                  ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
@@ -373,6 +409,12 @@ export default async function ProductPage({
             ) : null}
           </aside>
         </section>
+
+        <SeoFaqSection
+          title={`${product.productName} buyer questions, answered fast.`}
+          entries={faqEntries}
+          description="This FAQ matches the product-page intent that was already present in the page flow, and now exposes it as explicit on-page content plus matching JSON-LD."
+        />
       </div>
     </PublicShell>
   )

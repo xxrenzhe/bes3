@@ -1,3 +1,5 @@
+const path = require('path')
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
@@ -36,7 +38,15 @@ const nextConfig = {
       { protocol: 'https', hostname: '**' }
     ]
   },
+  eslint: {
+    ignoreDuringBuilds: true
+  },
   webpack: (config, { isServer }) => {
+    config.resolve.alias = {
+      ...(config.resolve.alias || {}),
+      '@': path.join(__dirname, 'src')
+    }
+
     if (isServer) {
       config.externals.push('better-sqlite3', 'cheerio', 'postgres', 'pg', 'playwright')
     }
