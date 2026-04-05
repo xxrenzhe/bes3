@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
-import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { ProductImageGallery } from '@/components/site/ProductImageGallery'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -17,7 +17,7 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getBrandSlug, getProductBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getBrandSlug, getProductBySlug, getProductGalleryImageUrls, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getCategoryLabelValue(category: string | null) {
@@ -73,7 +73,11 @@ export default async function ProductPage({
   const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
 
-  const [articles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, allProducts, galleryImages] = await Promise.all([
+    listPublishedArticles(),
+    listPublishedProducts(),
+    getProductGalleryImageUrls(product.id)
+  ])
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
   const guideArticle = articles.find((article) => {
@@ -83,6 +87,7 @@ export default async function ProductPage({
   }) || null
   const peerProducts = allProducts.filter((candidate) => candidate.id !== product.id && candidate.category === product.category).slice(0, 3)
   const heroImageUrl = product.heroImageUrl || reviewArticle?.heroImageUrl || null
+  const productGallery = Array.from(new Set([heroImageUrl, ...galleryImages].filter(Boolean) as string[]))
   const specs = Object.entries(product.specs).slice(0, 6)
   const snapshotDate = getSnapshotDate(reviewArticle, product)
   const confidenceSignals = buildConfidenceSignals(product)
@@ -268,21 +273,7 @@ export default async function ProductPage({
             </div>
 
             <div className="space-y-6">
-              <div className="overflow-hidden rounded-[2rem] bg-[linear-gradient(135deg,#e5eeff,#dfe9fa)] shadow-panel">
-                <div className="relative aspect-[4/3]">
-                  {heroImageUrl ? (
-                    <Image
-                      src={heroImageUrl}
-                      alt={product.productName}
-                      fill
-                      sizes="(max-width: 1024px) 100vw, 40vw"
-                      className="object-cover"
-                    />
-                  ) : (
-                    <div className="bg-grid absolute inset-0" />
-                  )}
-                </div>
-              </div>
+              <ProductImageGallery images={productGallery} title={product.productName} />
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 <ShortlistActionBar item={shortlistItem} className="mb-5" source="product-page" />
                 <PrimaryCta
