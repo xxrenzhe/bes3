@@ -3,13 +3,16 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
+import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -227,6 +230,13 @@ export default async function ReviewPage({
   return (
     <PublicShell>
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
+      <StickyMobileCta
+        href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'review-page-sticky-cta') : null}
+        productId={article.product?.id || null}
+        trackingSource="review-page-sticky-cta"
+        label="Check Current Price"
+        eyebrow="Top pick ready?"
+      />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
@@ -373,18 +383,28 @@ export default async function ReviewPage({
                       </div>
                     </div>
 
-                    <Link
-                      href={productHref}
-                      className="inline-flex rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
-                    >
-                      Open Deep-Dive
-                    </Link>
+                    <div className="flex flex-wrap gap-3">
+                      <Link
+                        href={productHref}
+                        className="inline-flex rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
+                      >
+                        Open Deep-Dive
+                      </Link>
+                      {product?.resolvedUrl ? (
+                        <PrimaryCta
+                          href={buildMerchantExitPath(product.id, `review-page-pick-${index + 1}-cta`)}
+                          productId={product.id}
+                          trackingSource={`review-page-pick-${index + 1}-cta`}
+                          label="Check Current Price"
+                          note={
+                            index === 0
+                              ? `Why this looks strong: ${confidenceSignals.join(' · ')}`
+                              : 'Use the product page first if you still want specs, fit notes, or the full Bes3 read.'
+                          }
+                        />
+                      ) : null}
+                    </div>
                     {product ? <ShortlistActionBar item={toShortlistItem(product)} compact source="review-page" /> : null}
-                    {index === 0 ? (
-                      <p className="text-xs leading-6 text-muted-foreground">
-                        Why this looks strong: {confidenceSignals.join(' · ')}
-                      </p>
-                    ) : null}
                   </div>
 
                   <div className={index % 2 === 1 ? 'md:order-1' : ''}>

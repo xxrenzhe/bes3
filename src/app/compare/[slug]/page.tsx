@@ -5,6 +5,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
+import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
@@ -249,6 +250,13 @@ export default async function ComparisonPage({
   return (
     <PublicShell>
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
+      <StickyMobileCta
+        href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-sticky-cta') : null}
+        productId={article.product?.id || null}
+        trackingSource="comparison-page-sticky-cta"
+        label="Check Current Price"
+        eyebrow="Winner picked?"
+      />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="space-y-8">
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
