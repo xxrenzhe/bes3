@@ -34,8 +34,8 @@ export async function generateMetadata({
     selectedIntent === 'price-alert'
       ? `Set Bes3 price alerts${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without restarting research.`
       : selectedIntent === 'category-brief'
-        ? `Subscribe to Bes3 category briefs${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} to keep one buying lane current while you wait.`
-        : 'Subscribe to Bes3 updates for deal alerts, shortlist-friendly watch flows, and buyer guidance that stays tied to real product decisions.'
+        ? `Subscribe to Bes3 category briefs${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so you can keep up with that category while you wait.`
+        : 'Subscribe to Bes3 updates for deal alerts, category updates, and shopping advice tied to real products.'
 
   return buildPageMetadata({
     title,
@@ -69,7 +69,7 @@ export default async function NewsletterPage({
   const relatedGuide = categoryCoverage.find((article) => article.type === 'guide') || null
   const alertGuideCards = [
     {
-      label: 'Signal type',
+      label: 'Alert type',
       value:
         selectedIntent === 'price-alert'
           ? 'Price watch'
@@ -79,24 +79,24 @@ export default async function NewsletterPage({
       description:
         selectedIntent === 'price-alert'
           ? `Wait for worthwhile price movement${selectedCategory ? ` in ${selectedCategoryLabel}` : ''}, not every tiny dip.`
-          : selectedIntent === 'category-brief'
-            ? `Stay current on what changed in ${selectedCategory ? selectedCategoryLabel : 'the categories you follow'} without restarting research.`
-            : 'Get the strongest live promotions Bes3 can verify without turning the feed into noise.'
+        : selectedIntent === 'category-brief'
+            ? `Stay current on what changed in ${selectedCategory ? selectedCategoryLabel : 'the categories you follow'} without restarting your research.`
+            : 'Get the strongest live promotions Bes3 can verify without turning your inbox into noise.'
     },
     {
       label: 'Cadence',
       value: selectedCadence === 'priority' ? 'Priority' : 'Weekly',
       description:
         selectedCadence === 'priority'
-          ? 'Best when timing matters and you want the signal as soon as it deserves action.'
+          ? 'Best when timing matters and you want the alert as soon as it matters.'
           : 'Best when you are researching steadily and want one cleaner digest instead of frequent pings.'
     },
     {
       label: 'While you wait',
-      value: selectedCategory ? selectedCategoryLabel : 'Stay in lane',
+      value: selectedCategory ? selectedCategoryLabel : 'Keep your place',
       description: selectedCategory
-        ? `Keep researching inside ${selectedCategoryLabel} so the alert supports the same buying lane you are already in.`
-        : 'Keep shortlist, search, and deals aligned so you do not lose your decision context while waiting.'
+        ? `Keep researching inside ${selectedCategoryLabel} so the alert supports the same category you are already considering.`
+        : 'Keep shortlist, search, and deals aligned so you do not lose your shopping context while waiting.'
     }
   ]
   const followUpRoutes = [
@@ -104,16 +104,16 @@ export default async function NewsletterPage({
       ? {
           eyebrow: 'Return',
           title: `Browse ${selectedCategoryLabel}`,
-          description: 'Keep the same category lane open while Bes3 monitors the market in the background.',
+          description: 'Keep the same category open while Bes3 monitors the market in the background.',
           href: `/categories/${selectedCategory}`,
-          label: 'Open category hub'
+          label: 'Open category page'
         }
       : {
           eyebrow: 'Search',
           title: 'Keep narrowing candidates',
           description: 'Use product search when you still need Bes3 to turn the broad market into a tighter shortlist.',
           href: '/search?scope=products',
-          label: 'Search product lanes'
+          label: 'Search products'
         },
     {
       eyebrow: 'Shortlist',
@@ -126,23 +126,23 @@ export default async function NewsletterPage({
       ? {
           eyebrow: 'Compare',
           title: 'Open the lead comparison',
-          description: 'Use the strongest nearby comparison if your buying lane is already mature enough for a finalist decision.',
+          description: 'Use the strongest nearby comparison if your shortlist is already ready for a finalist decision.',
           href: getArticlePath(relatedComparison.type, relatedComparison.slug),
           label: 'Open comparison'
         }
       : relatedReview
         ? {
-            eyebrow: 'Validate',
-            title: 'Read the lead verdict',
-            description: 'Return to the clearest review when you still need product-level confidence before clicking through.',
+            eyebrow: 'Review',
+            title: 'Read the lead review',
+            description: 'Return to the clearest review when you still need more confidence before clicking through.',
             href: getArticlePath(relatedReview.type, relatedReview.slug),
-            label: 'Open review verdict'
+            label: 'Open review'
           }
         : relatedGuide
           ? {
               eyebrow: 'Learn',
               title: 'Use the category guide',
-              description: 'Stay inside one lane and use the guide only to sharpen what matters before you buy.',
+              description: 'Use the guide to sharpen what matters before you buy.',
               href: getArticlePath(relatedGuide.type, relatedGuide.slug),
               label: 'Open guide'
             }
@@ -161,15 +161,15 @@ export default async function NewsletterPage({
         <div className="space-y-8">
           <p className="editorial-kicker">The Newsletter</p>
           <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-7xl">
-            Get alerts shaped like a buying tool, not a generic newsletter.
+            Get useful alerts, not a generic newsletter.
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-            Bes3 updates are preference-aware: deal alerts, category briefs, and watchlist signals that match what you are actually considering buying{selectedCategory ? ` in ${selectedCategory.replace(/-/g, ' ')}` : ''}.
+            Bes3 updates are tailored to what you are actually considering buying: deal alerts, category briefs, and price watches{selectedCategory ? ` for ${selectedCategory.replace(/-/g, ' ')}` : ''}.
           </p>
           <div className="rounded-[1.5rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Prefill-friendly flow</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Smart defaults</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Category and product pages can send buyers here with a preselected watch intent, so waiting on a better price or category shift becomes part of the decision flow instead of a dead end.
+              Category and product pages can send you here with the right alert already selected, so waiting for a better price or a category update never becomes a dead end.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -185,7 +185,7 @@ export default async function NewsletterPage({
             <p className="editorial-kicker">After You Subscribe</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Waiting should still leave you with a next move.</h2>
             <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              Bes3 treats alerts as a pause inside the same decision lane, not as a detached marketing list. Subscribe, then keep browsing, comparing, or saving inside the same category context.
+              Bes3 treats alerts as a pause in your shopping process, not as a detached marketing list. Subscribe, then keep browsing, comparing, or saving in the same category.
             </p>
             <div className="mt-5 grid gap-3 sm:grid-cols-3">
               {followUpRoutes.map((route) => (

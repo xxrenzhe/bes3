@@ -12,7 +12,7 @@ import { listCategories, listPublishedArticles } from '@/lib/site-data'
 export const metadata: Metadata = buildPageMetadata({
   title: 'Contact Bes3',
   description:
-    'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
+    'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
   path: '/contact',
   keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
 })
@@ -28,9 +28,9 @@ export default async function ContactPage() {
     {
       eyebrow: 'Search',
       title: 'Start with a concrete need',
-      description: 'Most buyer questions are faster through product search than through email because Bes3 already knows how to route known use cases.',
+      description: 'Most shopping questions are answered faster through product search than through email.',
       href: '/search?scope=products',
-      label: 'Search product lanes'
+      label: 'Search products'
     },
     {
       eyebrow: 'Shortlist',
@@ -41,22 +41,22 @@ export default async function ContactPage() {
     },
     {
       eyebrow: 'Review',
-      title: 'Read the clearest live verdict',
-      description: 'When one product is already plausible, a review answers buyer-fit questions faster than a custom reply.',
+      title: 'Read the clearest review',
+      description: 'When one product is already promising, a review usually answers your fit questions faster than a custom reply.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
       label: leadReview ? 'Open live review' : 'Browse review archive'
     },
     {
       eyebrow: 'Wait',
       title: `Track ${leadCategoryLabel}`,
-      description: 'If timing is the real blocker, a watch flow preserves the decision lane without forcing you to buy or email prematurely.',
+      description: 'If timing is the real blocker, alerts help you wait without forcing you to buy or email too early.',
       href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
   ]
 
   const bestUseCases = [
-    'A real buyer edge case still feels unresolved after search, shortlist, and review routes.',
+    'A real buyer edge case still feels unresolved after search, shortlist, and review pages.',
     'You spotted a factual issue, stale price cue, or routing bug on a public Bes3 page.',
     'You want to discuss editorial partnerships, content distribution, or platform collaboration.'
   ]
@@ -75,28 +75,28 @@ export default async function ContactPage() {
     {
       label: 'Partnerships path',
       value: 'Choose “Partnership” in the form',
-      note: 'Best for collaboration, media, and commercial conversations that do not fit the public buyer journey.'
+      note: 'Best for collaboration, media, and commercial conversations that do not fit the public site experience.'
     }
   ]
   const faqEntries = [
     {
       question: 'When should I contact Bes3 instead of using the public pages?',
-      answer: 'Use contact when a real buyer edge case still feels unresolved after search, shortlist, reviews, and comparisons, or when you need to report a factual problem on a public page.'
+      answer: 'Use contact when a real edge case still feels unresolved after search, shortlist, reviews, and comparisons, or when you need to report a factual problem on a public page.'
     },
     {
-      question: 'Is email the main support route?',
-      answer: 'No. The public contact form is the primary route because it keeps the inquiry type structured and lets Bes3 send you back into the right public path while the note is reviewed.'
+      question: 'Is email the main support option?',
+      answer: 'No. The contact form is the main support option because it keeps the request organized and helps Bes3 respond in the right context.'
     },
     {
       question: 'What gets the fastest answer?',
-      answer: 'Questions tied to a specific product, category, or public page route more cleanly than vague requests, because Bes3 can keep the same decision lane intact.'
+      answer: 'Questions tied to a specific product, category, or page usually get the fastest answer because they are easier to review than vague requests.'
     }
   ]
   const structuredData = [
     buildWebPageSchema({
       path: '/contact',
       title: 'Contact Bes3',
-      description: 'Reach Bes3 for buyer support edge cases, correction requests, and partnership conversations when the public decision flow is not enough.',
+      description: 'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
       type: 'ContactPage'
     }),
     buildFaqSchema('/contact', faqEntries)
@@ -111,15 +111,15 @@ export default async function ContactPage() {
             <div>
               <p className="editorial-kicker">Contact Bes3</p>
               <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">
-                Get help without leaving the buying lane.
+                Get help when the site is not enough.
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                Contact should be the backup path, not the first one. Bes3 already answers most buying questions through search, verdict pages, shortlist, comparisons, and wait flows. Use this page when the decision still feels blocked after those routes.
+                Contact should be the backup path, not the first one. Bes3 already answers most shopping questions through search, reviews, shortlist, comparisons, and alerts. Use this page when you still feel blocked after those pages.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  If your question is about which product to buy, start with search or the live review flow first. Contact is most valuable for edge cases, factual corrections, and conversations that do not fit a standard buying path.
+                  If your question is about which product to buy, start with search or a review first. Contact is most useful for edge cases, factual corrections, and conversations that do not fit a standard shopping path.
                 </p>
               </div>
             </div>
@@ -145,7 +145,7 @@ export default async function ContactPage() {
           <div className="space-y-6">
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <p className="editorial-kicker">Best Reasons To Contact</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Use a human pass only when the standard route is not enough.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Use a human review only when the standard route is not enough.</h2>
               <div className="mt-6 space-y-4">
                 {bestUseCases.map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
