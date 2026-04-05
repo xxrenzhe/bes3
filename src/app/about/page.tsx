@@ -12,9 +12,9 @@ import { listCategories, listPublishedArticles, listPublishedProducts } from '@/
 export const metadata: Metadata = buildPageMetadata({
   title: 'Bes3 Method',
   description:
-    'Learn how Bes3 uses structured buyer routes to turn noisy product research into shortlists, verdicts, comparisons, and wait flows.',
+    'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
   path: '/about',
-  keywords: ['bes3 method', 'buyer decision system', 'comparison methodology', 'buying guides']
+  keywords: ['bes3 method', 'product review process', 'comparison methodology', 'buying guides']
 })
 
 export default async function AboutPage() {
@@ -29,45 +29,45 @@ export default async function AboutPage() {
     {
       label: 'Live categories',
       value: String(categories.length),
-      description: 'Active decision lanes buyers can browse today.'
+      description: 'Categories shoppers can browse right now.'
     },
     {
       label: 'Published pages',
       value: String(articles.length),
-      description: 'Reviews, comparisons, and guides already wired into the public journey.'
+      description: 'Reviews, comparisons, and guides already live.'
     },
     {
       label: 'Product deep-dives',
       value: String(products.length),
-      description: 'Concrete product pages that carry pricing, specs, and shortlist actions.'
+      description: 'Product pages with pricing, specs, and save actions.'
     },
     {
-      label: 'Decision formats',
+      label: 'Helpful formats',
       value: '4',
-      description: 'Search, verdicts, comparisons, and wait flows that map to buying stage.'
+      description: 'Search, reviews, comparisons, and alerts for different shopping moments.'
     }
   ]
 
   const methodologySteps = [
     {
       step: '01',
-      title: 'Narrow the lane first',
-      description: 'Bes3 starts by identifying the real category lane and use case, so buyers do not compare unrelated products or over-shop the wrong market.'
+      title: 'Start with the right category',
+      description: 'Bes3 starts by figuring out the right product type and use case, so you do not compare things that do not belong together.'
     },
     {
       step: '02',
-      title: 'Compress the shortlist',
-      description: 'We cut noisy product grids down to a few credible candidates worth deeper attention instead of rewarding volume for its own sake.'
+      title: 'Cut the list to a few good picks',
+      description: 'We narrow noisy product grids down to a few credible options instead of rewarding volume for its own sake.'
     },
     {
       step: '03',
-      title: 'Explain the tradeoffs',
-      description: 'Reviews and comparisons focus on fit, regret risk, and practical buyer signals so the recommendation can survive a real purchase decision.'
+      title: 'Show what you gain and lose',
+      description: 'Reviews and comparisons focus on fit, tradeoffs, and real downsides so you can buy with fewer surprises.'
     },
     {
       step: '04',
-      title: 'Keep timing in context',
-      description: 'When now is not the right moment to buy, Bes3 shifts the same lane into alerts or shortlist storage instead of forcing a premature click.'
+      title: 'Keep watching if the timing is off',
+      description: 'When now is not the right moment to buy, Bes3 helps you save the product or category instead of pushing you into a rushed click.'
     }
   ]
 
@@ -75,28 +75,28 @@ export default async function AboutPage() {
     {
       eyebrow: 'Search',
       title: 'Use search when the need is concrete',
-      description: 'Search is the fastest route when you already know the product type, brand, or use case and want Bes3 to narrow candidates.',
+      description: 'Search is the fastest route when you already know the product type, brand, or use case and want Bes3 to narrow the options.',
       href: '/search?scope=products',
-      label: 'Search product lanes'
+      label: 'Search products'
     },
     {
       eyebrow: 'Review',
       title: 'Use a review when one product is close',
-      description: 'Reviews exist to answer buyer-fit, reasons to skip, and whether a product deserves to stay on the shortlist at all.',
+      description: 'Reviews answer whether a product really fits, what can go wrong, and whether it deserves a place on your shortlist.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
       label: leadReview ? 'Open a live review' : 'Browse review coverage'
     },
     {
       eyebrow: 'Compare',
       title: 'Use comparisons only for finalists',
-      description: 'Bes3 comparisons work best after the lane is already narrow enough that tradeoffs can stay honest and decision-ready.',
+      description: 'Comparisons work best after the list is already short enough that the tradeoffs stay clear and useful.',
       href: leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist',
       label: leadComparison ? 'Open a live comparison' : 'Use shortlist compare'
     },
     {
       eyebrow: 'Wait',
       title: 'Use alerts when timing is the blocker',
-      description: 'Newsletter and watch flows keep the same category context alive when price or market timing matters more than buying today.',
+      description: 'Alerts keep the same category in view when price or timing matters more than buying today.',
       href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
@@ -104,8 +104,8 @@ export default async function AboutPage() {
 
   const guardrails = [
     'No sponsored placement inside the Bes3 shortlist.',
-    'Affiliate intent stays adjacent to buying actions instead of shaping the editorial ranking.',
-    'Every route is meant to reduce buyer noise, not increase page depth for its own sake.',
+    'Affiliate links stay next to buying actions instead of deciding our rankings.',
+    'Every page is meant to reduce buyer noise, not increase page count for its own sake.',
     'Price is treated as a final accelerant, not the first filter for product fit.'
   ]
 
@@ -113,7 +113,7 @@ export default async function AboutPage() {
     'We do not pad the page with 20 nearly identical picks to simulate coverage.',
     'We do not treat raw review count as automatic proof without category and fit context.',
     'We do not push compare before the shortlist is narrow enough to support a real decision.',
-    'We do not turn wait flows into generic blasts that lose the original buying lane.'
+    'We do not turn alerts into generic blasts that lose the original shopping context.'
   ]
 
   const nextActions = [
@@ -125,13 +125,13 @@ export default async function AboutPage() {
     },
     {
       title: `Browse ${leadCategoryLabel}`,
-      description: 'Best when the category lane is already obvious and you want the strongest pages grouped in one place.',
+      description: 'Best when the category is already obvious and you want the strongest pages grouped in one place.',
       href: leadCategory ? `/categories/${leadCategory}` : '/directory',
       label: leadCategory ? 'Open category hub' : 'Open directory'
     },
     {
       title: 'Keep a shortlist alive',
-      description: 'Best when you already have credible candidates and need to preserve the decision instead of starting over later.',
+      description: 'Best when you already have good candidates and want to keep them saved instead of starting over later.',
       href: '/shortlist',
       label: 'Open shortlist'
     }
@@ -139,22 +139,22 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What does Bes3 actually publish?',
-      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category hubs, and alert flows that map to different stages of a real buying decision.'
+      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category pages, and alerts for different stages of a real buying decision.'
     },
     {
       question: 'When should you use a review instead of a comparison?',
-      answer: 'Use a review when one product already looks plausible and you want buyer-fit validation. Use a comparison only after the shortlist is tight enough for a head-to-head decision.'
+      answer: 'Use a review when one product already looks promising and you want to know if it really fits. Use a comparison once your shortlist is tight enough for a head-to-head decision.'
     },
     {
       question: 'How does Bes3 try to stay trustworthy?',
-      answer: 'Bes3 keeps sponsored intent next to buying actions instead of inside the ranking logic, avoids giant filler lists, and treats price as a final accelerant rather than the first filter.'
+      answer: 'We analyze thousands of real buyer reviews, track price history, and double-check specs. We also keep sponsored links outside the ranking itself so ads do not decide the recommendation.'
     }
   ]
   const structuredData = [
     buildWebPageSchema({
       path: '/about',
       title: 'Bes3 Method',
-      description: 'Learn how Bes3 uses structured buyer routes to turn noisy product research into shortlists, verdicts, comparisons, and wait flows.',
+      description: 'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
       type: 'AboutPage'
     }),
     buildFaqSchema('/about', faqEntries)
@@ -169,10 +169,10 @@ export default async function AboutPage() {
             <div className="space-y-7">
               <p className="editorial-kicker">How Bes3 Works</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-7xl">
-                The Bes3 method turns noisy research into a decision system.
+                How Bes3 helps you buy with more confidence.
               </h1>
               <p className="max-w-3xl text-xl leading-9 text-muted-foreground">
-                Bes3 is not a generic review archive. It is a structured buyer system that narrows noisy categories into a few serious options, explains the tradeoffs that actually matter, and gives buyers a clean next step when the timing is not right yet.
+                Bes3 is not a generic review archive. We narrow noisy categories into a few serious options, explain the tradeoffs that matter, and help you act when the timing is right.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -195,8 +195,8 @@ export default async function AboutPage() {
               <div className="mt-5 space-y-4">
                 {[
                   'Why Bes3 only keeps a few picks instead of publishing giant “best of” grids.',
-                  'How reviews, comparisons, category hubs, and alerts fit together in one buyer journey.',
-                  'What editorial guardrails stop the public site from behaving like a low-trust affiliate funnel.'
+                  'How reviews, comparisons, category pages, and alerts fit together in one shopping flow.',
+                  'What rules stop the public site from turning into a low-trust affiliate funnel.'
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -225,7 +225,7 @@ export default async function AboutPage() {
             <SectionHeader
               eyebrow="Method"
               title="The Bes3 method is built for decisions, not page depth."
-              description="Every public format exists to move the buyer into a cleaner next state: understand the lane, shortlist candidates, validate one product, compare finalists, or wait without losing context."
+              description="Every public format exists to help you do one useful thing next: understand the category, save strong picks, validate one product, compare finalists, or wait without losing your place."
             />
             <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {methodologySteps.map((step) => (
@@ -246,12 +246,12 @@ export default async function AboutPage() {
                 <SectionHeader
                   eyebrow="Formats"
                   title="Use the format that matches the buying moment."
-                  description="The public site works best when buyers choose the route that matches what is still unresolved. That is why Bes3 separates discovery, verdict, comparison, and watch flows instead of blending everything into one archive."
+                  description="The public site works best when you choose the page that matches what is still unclear. That is why Bes3 separates discovery, reviews, comparisons, and alerts instead of blending everything into one archive."
                 />
                 <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                   <p className="mt-3 text-sm leading-7 text-slate-200">
-                    If you only know the need, start with search. If one product already looks plausible, use the review first. If the shortlist is tight, compare. If timing is the only blocker, switch into alerts without reopening the whole research loop.
+                    If you only know the need, start with search. If one product already looks promising, open the review first. If the shortlist is tight, compare. If timing is the only blocker, switch into alerts.
                   </p>
                 </div>
               </div>
@@ -308,7 +308,7 @@ export default async function AboutPage() {
             <SectionHeader
               eyebrow="Trust FAQ"
               title="Questions people should be able to answer before trusting the site."
-              description="These are the practical methodology questions that matter most if you are deciding whether Bes3 is worth using as part of a live purchase decision."
+              description="These are the practical questions that matter if you want to know whether Bes3 is worth trusting."
             />
             <div className="mt-8 grid gap-4 md:grid-cols-3">
               {faqEntries.map((entry) => (
@@ -328,7 +328,7 @@ export default async function AboutPage() {
                 <p className="editorial-kicker">Use Bes3 Live</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Trust is only useful if it leads to a cleaner next action.</h2>
                 <p className="mt-4 max-w-2xl text-sm leading-8 text-muted-foreground">
-                  The public site is already structured to turn trust into action. Use one of these routes to start in the right lane instead of reading methodology and then reopening the same research problem from scratch.
+                  The public site is built to turn trust into action. Use one of these routes instead of reading this page and then reopening the same research problem from scratch.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">
