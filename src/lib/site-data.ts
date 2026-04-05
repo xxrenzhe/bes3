@@ -59,11 +59,64 @@ export interface ProductAttributeFactRecord {
   lastCheckedAt: string | null
 }
 
+export interface ProductPriceHistoryRecord {
+  id: number
+  productId: number
+  productOfferId: number | null
+  merchantName: string | null
+  priceAmount: number | null
+  priceCurrency: string | null
+  availabilityStatus: string | null
+  capturedAt: string | null
+}
+
 export interface CommerceProductRecord extends ProductRecord {
   bestOffer: ProductOfferRecord | null
   offerCount: number
   evidenceCount: number
   freshness: 'fresh' | 'recent' | 'stale' | 'unknown'
+}
+
+const SEARCH_STOP_WORDS = new Set([
+  'a',
+  'an',
+  'and',
+  'best',
+  'buy',
+  'for',
+  'from',
+  'i',
+  'in',
+  'of',
+  'or',
+  'the',
+  'to',
+  'under',
+  'with'
+])
+
+function tokenizeSearchTerms(value: string): string[] {
+  return Array.from(
+    new Set(
+      value
+        .toLowerCase()
+        .split(/[^a-z0-9]+/i)
+        .map((term) => term.trim())
+        .filter((term) => term.length >= 2 && !SEARCH_STOP_WORDS.has(term))
+    )
+  )
+}
+
+function countMatchedSearchTerms(corpus: string, query: string): number {
+  const loweredCorpus = corpus.toLowerCase()
+  const loweredQuery = query.trim().toLowerCase()
+  if (!loweredQuery) return 0
+  if (loweredCorpus.includes(loweredQuery)) return 999
+
+  const terms = tokenizeSearchTerms(loweredQuery)
+  if (!terms.length) return 0
+
+  return terms.reduce((total, term) => total + (loweredCorpus.includes(term) ? 1 : 0), 0)
 }
 
 export async function getProductGalleryImageUrls(productId: number, limit: number = 6): Promise<string[]> {
@@ -320,6 +373,19 @@ function mapCompatibilityFactRow(row: any): CompatibilityFactRecord {
     confidenceScore: Number(row.confidence_score || 0),
     isVerified: parseBoolean(row.is_verified),
     lastCheckedAt: row.last_checked_at || null
+  }
+}
+
+function mapPriceHistoryRow(row: any): ProductPriceHistoryRecord {
+  return {
+    id: row.id,
+    productId: row.product_id,
+    productOfferId: row.product_offer_id || null,
+    merchantName: row.merchant_name || null,
+    priceAmount: row.price_amount,
+    priceCurrency: row.price_currency || null,
+    availabilityStatus: row.availability_status || null,
+    capturedAt: row.captured_at || null
   }
 }
 
@@ -602,6 +668,27 @@ export async function listProductOffers(productId: number): Promise<ProductOffer
   return offersByProductId.get(productId) || []
 }
 
+export async function listProductPriceHistory(productId: number, limit: number = 30): Promise<ProductPriceHistoryRecord[]> {
+  if (!Number.isInteger(productId) || productId <= 0) return []
+
+  const db = await getDatabase()
+  const rows = await db.query<any>(
+    `
+      SELECT h.id, h.product_id, h.product_offer_id, h.price_amount, h.price_currency, h.availability_status, h.captured_at,
+        m.name AS merchant_name
+      FROM product_price_history h
+      LEFT JOIN product_offers o ON o.id = h.product_offer_id
+      LEFT JOIN merchants m ON m.id = o.merchant_id
+      WHERE h.product_id = ?
+      ORDER BY h.captured_at DESC, h.id DESC
+      LIMIT ?
+    `,
+    [productId, Math.max(1, limit)]
+  )
+
+  return rows.map(mapPriceHistoryRow)
+}
+
 export async function listProductAttributeFacts(productId: number, limit: number = 40): Promise<ProductAttributeFactRecord[]> {
   if (!Number.isInteger(productId) || productId <= 0) return []
 
@@ -680,34 +767,47 @@ export async function searchOpenCommerceProducts(query: string, options?: {
   limit?: number
 }): Promise<CommerceProductRecord[]> {
   const lowered = query.trim().toLowerCase()
+  const queryTerms = tokenizeSearchTerms(lowered)
+  const requiredMatches = lowered ? Math.min(3, Math.max(1, Math.ceil(queryTerms.length / 2))) : 0
   const products = await listOpenCommerceProducts()
 
-  const filtered = products.filter((product) => {
-    if (options?.category && product.category !== options.category) return false
-    if (typeof options?.minPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? -Infinity) < options.minPrice) return false
-    if (typeof options?.maxPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? Infinity) > options.maxPrice) return false
-    if (!lowered) return true
+  const ranked = products
+    .map((product) => {
+      const corpus = [
+        product.productName,
+        product.brand || '',
+        product.category || '',
+        product.description || '',
+        product.reviewHighlights.join(' '),
+        ...Object.keys(product.specs),
+        ...Object.values(product.specs)
+      ]
+        .join(' ')
+        .toLowerCase()
+      const matchedTerms = lowered ? countMatchedSearchTerms(corpus, lowered) : 0
 
-    return [
-      product.productName,
-      product.brand || '',
-      product.category || '',
-      product.description || '',
-      product.reviewHighlights.join(' '),
-      ...Object.values(product.specs)
-    ]
-      .join(' ')
-      .toLowerCase()
-      .includes(lowered)
-  })
+      return {
+        product,
+        matchedTerms
+      }
+    })
+    .filter(({ product, matchedTerms }) => {
+      if (options?.category && product.category !== options.category) return false
+      if (typeof options?.minPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? -Infinity) < options.minPrice) return false
+      if (typeof options?.maxPrice === 'number' && (product.bestOffer?.priceAmount ?? product.priceAmount ?? Infinity) > options.maxPrice) return false
+      if (!lowered) return true
+      return matchedTerms === 999 || matchedTerms >= requiredMatches
+    })
 
-  return filtered
+  return ranked
     .sort((left, right) => {
-      const freshnessDelta = toTimestamp(right.offerLastCheckedAt || right.updatedAt) - toTimestamp(left.offerLastCheckedAt || left.updatedAt)
+      if (right.matchedTerms !== left.matchedTerms) return right.matchedTerms - left.matchedTerms
+      const freshnessDelta = toTimestamp(right.product.offerLastCheckedAt || right.product.updatedAt) - toTimestamp(left.product.offerLastCheckedAt || left.product.updatedAt)
       if (freshnessDelta !== 0) return freshnessDelta
-      return (right.dataConfidenceScore || 0) - (left.dataConfidenceScore || 0)
+      return (right.product.dataConfidenceScore || 0) - (left.product.dataConfidenceScore || 0)
     })
     .slice(0, Math.max(1, options?.limit || 12))
+    .map(({ product }) => product)
 }
 
 export async function searchArticles(query: string): Promise<ArticleRecord[]> {

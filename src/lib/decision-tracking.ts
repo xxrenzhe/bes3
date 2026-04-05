@@ -33,8 +33,8 @@ export function getDecisionVisitorId() {
   }
 }
 
-export function buildTrackedMerchantExitPath(productId: number, source: string) {
-  return buildMerchantExitPath(productId, source, getDecisionVisitorId())
+export function buildTrackedMerchantExitPath(productId: number, source: string, offerId?: number | null) {
+  return buildMerchantExitPath(productId, source, getDecisionVisitorId(), offerId)
 }
 
 export function trackDecisionEvent({

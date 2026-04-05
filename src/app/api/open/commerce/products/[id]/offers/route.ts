@@ -1,6 +1,11 @@
 import { NextResponse } from 'next/server'
-import { COMMERCE_PROTOCOL_VERSION, buildCommerceDisclaimers, buildCommerceActions } from '@/lib/open-commerce'
-import { getOpenCommerceProductById, listProductOffers } from '@/lib/site-data'
+import {
+  COMMERCE_PROTOCOL_VERSION,
+  buildCommerceDisclaimers,
+  buildCommerceActions,
+  summarizePriceHistory
+} from '@/lib/open-commerce'
+import { getOpenCommerceProductById, listProductOffers, listProductPriceHistory } from '@/lib/site-data'
 
 export async function GET(
   _request: Request,
@@ -16,7 +21,7 @@ export async function GET(
     return NextResponse.json({ error: 'Product not found' }, { status: 404 })
   }
 
-  const offers = await listProductOffers(productId)
+  const [offers, priceHistory] = await Promise.all([listProductOffers(productId), listProductPriceHistory(productId)])
   const bestOffer = product.bestOffer || offers[0] || null
   const alternativeOffers = offers.filter((offer) => !bestOffer || offer.id !== bestOffer.id).slice(0, 3)
 
@@ -28,6 +33,8 @@ export async function GET(
     alternativeOffers,
     total: offers.length,
     offers,
+    priceHistory,
+    priceHistorySummary: summarizePriceHistory(priceHistory, bestOffer?.priceCurrency || product.priceCurrency),
     actions: buildCommerceActions(product, {
       source: 'open-commerce-offers'
     }),

@@ -8,6 +8,19 @@ function getFallbackPath(product: { slug: string | null } | null) {
   return product?.slug ? `/products/${product.slug}` : '/directory'
 }
 
+function pickAbsoluteDestination(...candidates: Array<string | null | undefined>) {
+  for (const candidate of candidates) {
+    if (!candidate) continue
+    try {
+      return new URL(candidate).toString()
+    } catch {
+      continue
+    }
+  }
+
+  return null
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ productId: string }> }
@@ -32,7 +45,26 @@ export async function GET(
     return NextResponse.redirect(new URL('/directory', request.url))
   }
 
-  const destination = product.resolved_url || product.source_affiliate_link
+  const requestedOfferId = Number.parseInt(request.nextUrl.searchParams.get('offerId') || '', 10)
+  const selectedOffer =
+    Number.isInteger(requestedOfferId) && requestedOfferId > 0
+      ? await db.queryOne<{ offer_url: string | null; source_url: string | null }>(
+          `
+            SELECT offer_url, source_url
+            FROM product_offers
+            WHERE id = ? AND product_id = ?
+            LIMIT 1
+          `,
+          [requestedOfferId, productId]
+        )
+      : null
+
+  const destination = pickAbsoluteDestination(
+    selectedOffer?.offer_url,
+    selectedOffer?.source_url,
+    product.resolved_url,
+    product.source_affiliate_link
+  )
   if (!destination) {
     return NextResponse.redirect(new URL(getFallbackPath(product), request.url))
   }
@@ -51,7 +83,7 @@ export async function GET(
   }
 
   try {
-    const response = NextResponse.redirect(new URL(destination), 307)
+    const response = NextResponse.redirect(destination, 307)
     response.headers.set('Cache-Control', 'no-store')
     response.headers.set('Referrer-Policy', 'origin')
     return response

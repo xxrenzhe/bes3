@@ -13,11 +13,14 @@ export function normalizeMerchantSource(source: string | null | undefined) {
   return normalized.slice(0, MAX_SOURCE_LENGTH) || 'site'
 }
 
-export function buildMerchantExitPath(productId: number, source: string, visitorId?: string | null) {
+export function buildMerchantExitPath(productId: number, source: string, visitorId?: string | null, offerId?: number | null) {
   const params = new URLSearchParams({ source: normalizeMerchantSource(source) })
   const normalizedVisitorId = normalizeDecisionVisitorId(visitorId)
   if (normalizedVisitorId) {
     params.set(DECISION_VISITOR_QUERY_PARAM, normalizedVisitorId)
+  }
+  if (Number.isInteger(offerId) && Number(offerId) > 0) {
+    params.set('offerId', String(offerId))
   }
   return `/go/${productId}?${params.toString()}`
 }

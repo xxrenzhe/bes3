@@ -5,7 +5,8 @@ import {
   getBrandPolicyBySlug,
   getOpenCommerceProductById,
   listBrandCompatibilityFacts,
-  listProductAttributeFacts
+  listProductAttributeFacts,
+  listProductPriceHistory
 } from '@/lib/site-data'
 
 export async function GET(
@@ -23,10 +24,11 @@ export async function GET(
   }
 
   const brandSlug = getBrandSlug(product.brand)
-  const [attributeFacts, brandPolicy, compatibilityFacts] = await Promise.all([
+  const [attributeFacts, brandPolicy, compatibilityFacts, priceHistory] = await Promise.all([
     listProductAttributeFacts(productId),
     brandSlug ? getBrandPolicyBySlug(brandSlug) : Promise.resolve(null),
-    brandSlug ? listBrandCompatibilityFacts(brandSlug, { category: product.category || undefined, limit: 6 }) : Promise.resolve([])
+    brandSlug ? listBrandCompatibilityFacts(brandSlug, { category: product.category || undefined, limit: 6 }) : Promise.resolve([]),
+    listProductPriceHistory(productId)
   ])
 
   return NextResponse.json({
@@ -36,10 +38,12 @@ export async function GET(
     attributeFacts,
     brandPolicy,
     compatibilityFacts,
+    priceHistory,
     result: serializeCommerceProduct(product, {
       attributeFacts,
       brandPolicy,
       compatibilityFacts,
+      priceHistory,
       source: 'open-commerce-product'
     })
   })

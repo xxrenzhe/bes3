@@ -24,6 +24,7 @@ import {
   getOpenCommerceProductBySlug,
   listProductAttributeFacts,
   listProductOffers,
+  listProductPriceHistory,
   listPublishedArticles,
   listPublishedProducts
 } from '@/lib/site-data'
@@ -84,12 +85,13 @@ export default async function ReviewPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'review') notFound()
 
-  const [articles, allProducts, commerceProduct, offers, attributeFacts] = await Promise.all([
+  const [articles, allProducts, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
     article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
-    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([])
+    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([]),
+    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([])
   ])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
@@ -332,8 +334,10 @@ export default async function ReviewPage({
           product={commerceProduct}
           offers={offers}
           attributeFacts={attributeFacts}
+          priceHistory={priceHistory}
           title="Review evidence"
           description="These are the concrete offer and fact signals Bes3 checked before turning this product into a review recommendation."
+          source="review-page-evidence"
         />
 
         <section className="grid gap-10">

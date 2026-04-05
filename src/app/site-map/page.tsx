@@ -51,6 +51,7 @@ export default async function HtmlSitemapPage() {
       title: 'Site Map',
       description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and deal pages from one lightweight directory.',
       items: [
+        { name: 'Assistant', path: '/assistant' },
         { name: 'Start Here', path: '/start' },
         { name: 'Search', path: '/search' },
         { name: 'Deals', path: '/deals' },
@@ -75,6 +76,7 @@ export default async function HtmlSitemapPage() {
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
+              { href: '/assistant', label: 'Assistant' },
               { href: '/start', label: 'Start here' },
               { href: '/search', label: 'Search' },
               { href: '/deals', label: 'Deals' },

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
 
 export async function GET(request: NextRequest) {
@@ -20,6 +21,7 @@ export async function GET(request: NextRequest) {
   const result = await resolveIntentSearch(input)
 
   return NextResponse.json({
+    protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
     result
   })

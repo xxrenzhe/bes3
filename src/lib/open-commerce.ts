@@ -6,13 +6,15 @@ import type {
   CommerceProductRecord,
   CompatibilityFactRecord,
   ProductAttributeFactRecord,
-  ProductOfferRecord
+  ProductOfferRecord,
+  ProductPriceHistoryRecord
 } from '@/lib/site-data'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 export const COMMERCE_PROTOCOL_VERSION = 'commerce.v2'
 const MAX_ALTERNATIVE_OFFERS = 3
 const MAX_EVIDENCE_FACTS = 6
+const MAX_PRICE_HISTORY_POINTS = 12
 
 export interface CommerceAction {
   type: string
@@ -25,6 +27,39 @@ export interface CommerceAction {
 export interface CommerceDisclaimer {
   type: string
   message: string
+}
+
+export function summarizePriceHistory(priceHistory: ProductPriceHistoryRecord[], fallbackCurrency?: string | null) {
+  if (!priceHistory.length) return null
+
+  const points = [...priceHistory]
+    .filter((point) => point.capturedAt)
+    .sort((left, right) => Date.parse(left.capturedAt || '') - Date.parse(right.capturedAt || ''))
+
+  if (!points.length) return null
+
+  const pricedPoints = points.filter((point) => typeof point.priceAmount === 'number')
+  const current = pricedPoints[pricedPoints.length - 1] || null
+  const previous = pricedPoints.length > 1 ? pricedPoints[pricedPoints.length - 2] : null
+  const lowest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
+    if (!best) return point
+    return Number(point.priceAmount) < Number(best.priceAmount) ? point : best
+  }, null)
+  const highest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
+    if (!best) return point
+    return Number(point.priceAmount) > Number(best.priceAmount) ? point : best
+  }, null)
+
+  return {
+    totalPoints: points.length,
+    latestCapturedAt: points[points.length - 1]?.capturedAt || null,
+    currency: current?.priceCurrency || lowest?.priceCurrency || highest?.priceCurrency || fallbackCurrency || null,
+    currentPrice: current?.priceAmount ?? null,
+    previousPrice: previous?.priceAmount ?? null,
+    deltaFromPrevious: current && previous ? Number(current.priceAmount) - Number(previous.priceAmount) : null,
+    lowestPrice: lowest?.priceAmount ?? null,
+    highestPrice: highest?.priceAmount ?? null
+  }
 }
 
 function buildProductPath(product: CommerceProductRecord) {
@@ -157,6 +192,7 @@ export function serializeCommerceProduct(
   options?: {
     offers?: ProductOfferRecord[]
     attributeFacts?: ProductAttributeFactRecord[]
+    priceHistory?: ProductPriceHistoryRecord[]
     brandPolicy?: BrandPolicyRecord | null
     compatibilityFacts?: CompatibilityFactRecord[]
     source?: string | null
@@ -165,11 +201,13 @@ export function serializeCommerceProduct(
 ) {
   const offers = options?.offers || []
   const attributeFacts = options?.attributeFacts || []
+  const priceHistory = options?.priceHistory || []
   const path = buildProductPath(product)
   const bestOffer = product.bestOffer || offers[0] || null
   const alternativeOffers = dedupeAlternativeOffers(bestOffer, offers)
   const fitSummary = buildBestFor(product, 'product')
   const notForSummary = buildNotFor(product, 'product')
+  const priceHistorySummary = summarizePriceHistory(priceHistory, bestOffer?.priceCurrency || product.priceCurrency)
 
   return {
     entity: {
@@ -215,6 +253,8 @@ export function serializeCommerceProduct(
       freshnessLabel: getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt),
       priceLastCheckedAt: product.priceLastCheckedAt,
       offerLastCheckedAt: product.offerLastCheckedAt,
+      priceHistorySummary,
+      priceHistory: priceHistory.slice(0, MAX_PRICE_HISTORY_POINTS),
       facts: attributeFacts.slice(0, MAX_EVIDENCE_FACTS),
       offers: offers.slice(0, MAX_ALTERNATIVE_OFFERS + 1)
     },

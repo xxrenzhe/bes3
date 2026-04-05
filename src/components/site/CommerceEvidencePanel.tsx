@@ -1,5 +1,16 @@
+'use client'
+
+import Link from 'next/link'
+import { useEffect, useState } from 'react'
+import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import type { CommerceProductRecord, ProductAttributeFactRecord, ProductOfferRecord } from '@/lib/site-data'
+import { buildMerchantExitPath } from '@/lib/merchant-links'
+import type {
+  CommerceProductRecord,
+  ProductAttributeFactRecord,
+  ProductOfferRecord,
+  ProductPriceHistoryRecord
+} from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function formatPercentScore(value: number | null | undefined) {
@@ -12,26 +23,85 @@ function formatAvailabilityLabel(value: string | null | undefined) {
   return value.replace(/_/g, ' ')
 }
 
+function summarizePriceHistory(priceHistory: ProductPriceHistoryRecord[]) {
+  if (!priceHistory.length) return null
+
+  const points = [...priceHistory]
+    .filter((point) => point.capturedAt)
+    .sort((left, right) => Date.parse(left.capturedAt || '') - Date.parse(right.capturedAt || ''))
+
+  if (!points.length) return null
+
+  const pricedPoints = points.filter((point) => typeof point.priceAmount === 'number')
+  const current = pricedPoints[pricedPoints.length - 1] || null
+  const previous = pricedPoints.length > 1 ? pricedPoints[pricedPoints.length - 2] : null
+  const lowest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
+    if (!best) return point
+    return Number(point.priceAmount) < Number(best.priceAmount) ? point : best
+  }, null)
+  const highest = pricedPoints.reduce<ProductPriceHistoryRecord | null>((best, point) => {
+    if (!best) return point
+    return Number(point.priceAmount) > Number(best.priceAmount) ? point : best
+  }, null)
+
+  return {
+    current,
+    previous,
+    lowest,
+    highest,
+    deltaAmount: current && previous ? Number(current.priceAmount) - Number(previous.priceAmount) : null,
+    totalPoints: points.length
+  }
+}
+
+function formatPriceDelta(value: number | null | undefined, currency: string) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value === 0) return 'No change'
+  const prefix = value > 0 ? '+' : '-'
+  return `${prefix}${formatPriceSnapshot(Math.abs(value), currency)}`
+}
+
 export function CommerceEvidencePanel({
   product,
   offers,
   attributeFacts,
+  priceHistory = [],
   title = 'Decision evidence',
   description = 'These are the current offer and attribute signals Bes3 used to support the recommendation.',
-  compact = false
+  compact = false,
+  source = 'commerce-evidence-panel'
 }: {
   product: CommerceProductRecord | null
   offers: ProductOfferRecord[]
   attributeFacts: ProductAttributeFactRecord[]
+  priceHistory?: ProductPriceHistoryRecord[]
   title?: string
   description?: string
   compact?: boolean
+  source?: string
 }) {
+  const [showAllOffers, setShowAllOffers] = useState(false)
+  const [showPriceHistory, setShowPriceHistory] = useState(false)
+  const [resolvedOfferHrefs, setResolvedOfferHrefs] = useState<Record<number, string>>({})
+
+  useEffect(() => {
+    if (!product) return
+
+    setResolvedOfferHrefs(
+      Object.fromEntries(
+        offers.map((offer) => [offer.id, buildTrackedMerchantExitPath(product.id, `${source}-offer`, offer.id)])
+      )
+    )
+  }, [offers, product, source])
+
   if (!product) return null
 
   const bestOffer = product.bestOffer || offers[0] || null
-  const visibleOffers = offers.slice(0, compact ? 2 : 4)
+  const defaultVisibleOffers = compact ? 2 : 4
+  const visibleOffers = showAllOffers ? offers : offers.slice(0, defaultVisibleOffers)
   const visibleFacts = attributeFacts.slice(0, compact ? 4 : 6)
+  const historySummary = summarizePriceHistory(priceHistory)
+  const visibleHistory = priceHistory.slice(0, showPriceHistory ? (compact ? 6 : 8) : 3)
+  const historyCurrency = historySummary?.current?.priceCurrency || bestOffer?.priceCurrency || product.priceCurrency || 'USD'
 
   return (
     <section className="rounded-[2rem] bg-white p-6 shadow-panel">
@@ -68,28 +138,161 @@ export function CommerceEvidencePanel({
         </div>
       </div>
 
-      <div className={`mt-6 grid gap-6 ${compact ? 'lg:grid-cols-1' : 'lg:grid-cols-[1fr_1fr]'}`}>
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Tracked offers</p>
-          <div className="mt-4 space-y-3">
-            {visibleOffers.length ? visibleOffers.map((offer) => (
-              <div key={offer.id} className="rounded-[1.25rem] bg-muted px-4 py-4">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <p className="text-sm font-semibold text-foreground">{offer.merchantName || 'Merchant pending'}</p>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      {formatAvailabilityLabel(offer.availabilityStatus)} · checked {formatEditorialDate(offer.lastCheckedAt)}
+      {historySummary ? (
+        <div className="mt-6 rounded-[1.5rem] border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5">
+          <div className="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Price history window</p>
+              <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                Bes3 has {historySummary.totalPoints} tracked price snapshot{historySummary.totalPoints === 1 ? '' : 's'} for this product.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                if (!showPriceHistory) {
+                  trackDecisionEvent({
+                    eventType: 'price_history_view',
+                    source,
+                    productId: product.id,
+                    metadata: {
+                      snapshotCount: historySummary.totalPoints,
+                      currentPrice: historySummary.current?.priceAmount ?? null,
+                      lowestPrice: historySummary.lowest?.priceAmount ?? null,
+                      highestPrice: historySummary.highest?.priceAmount ?? null
+                    }
+                  })
+                }
+                setShowPriceHistory((current) => !current)
+              }}
+              className="inline-flex min-h-[40px] items-center justify-center rounded-full border border-border bg-white px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
+            >
+              {showPriceHistory ? 'Hide price history' : 'View price history'}
+            </button>
+          </div>
+
+          <div className="mt-5 grid gap-3 md:grid-cols-4">
+            <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current tracked</p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatPriceSnapshot(historySummary.current?.priceAmount, historySummary.current?.priceCurrency || historyCurrency)}
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Lowest seen</p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatPriceSnapshot(historySummary.lowest?.priceAmount, historySummary.lowest?.priceCurrency || historyCurrency)}
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Highest seen</p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatPriceSnapshot(historySummary.highest?.priceAmount, historySummary.highest?.priceCurrency || historyCurrency)}
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] bg-white/90 px-4 py-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Last move</p>
+              <p className="mt-2 text-lg font-black text-foreground">
+                {formatPriceDelta(historySummary.deltaAmount, historyCurrency)}
+              </p>
+            </div>
+          </div>
+
+          {showPriceHistory ? (
+            <div className="mt-4 space-y-3">
+              {visibleHistory.map((point) => (
+                <div key={point.id} className="rounded-[1.25rem] bg-white/90 px-4 py-4">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{point.merchantName || 'Tracked snapshot'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatAvailabilityLabel(point.availabilityStatus)} · captured {formatEditorialDate(point.capturedAt)}
+                      </p>
+                    </div>
+                    <p className="text-sm font-black text-foreground">
+                      {formatPriceSnapshot(point.priceAmount, point.priceCurrency || historyCurrency)}
                     </p>
                   </div>
-                  <p className="text-sm font-black text-foreground">
-                    {formatPriceSnapshot(offer.priceAmount, offer.priceCurrency || product.priceCurrency || 'USD')}
-                  </p>
                 </div>
-                {offer.couponText ? (
-                  <p className="mt-2 text-xs text-muted-foreground">Coupon: {offer.couponText}</p>
-                ) : null}
-              </div>
-            )) : (
+              ))}
+            </div>
+          ) : null}
+        </div>
+      ) : null}
+
+      <div className={`mt-6 grid gap-6 ${compact ? 'lg:grid-cols-1' : 'lg:grid-cols-[1fr_1fr]'}`}>
+        <div>
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Tracked offers</p>
+            {offers.length > defaultVisibleOffers ? (
+              <button
+                type="button"
+                onClick={() => {
+                  if (!showAllOffers) {
+                    trackDecisionEvent({
+                      eventType: 'offer_expand',
+                      source,
+                      productId: product.id,
+                      metadata: {
+                        offerCount: offers.length
+                      }
+                    })
+                  }
+                  setShowAllOffers((current) => !current)
+                }}
+                className="text-xs font-semibold text-primary transition-colors hover:text-emerald-700"
+              >
+                {showAllOffers ? 'Show fewer offers' : `Show all ${offers.length} offers`}
+              </button>
+            ) : null}
+          </div>
+          <div className="mt-4 space-y-3">
+            {visibleOffers.length ? visibleOffers.map((offer) => {
+              const offerHref = resolvedOfferHrefs[offer.id] || buildMerchantExitPath(product.id, `${source}-offer`, undefined, offer.id)
+
+              return (
+                <div key={offer.id} className="rounded-[1.25rem] bg-muted px-4 py-4">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{offer.merchantName || 'Merchant pending'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        {formatAvailabilityLabel(offer.availabilityStatus)} · checked {formatEditorialDate(offer.lastCheckedAt)}
+                      </p>
+                    </div>
+                    <p className="text-sm font-black text-foreground">
+                      {formatPriceSnapshot(offer.priceAmount, offer.priceCurrency || product.priceCurrency || 'USD')}
+                    </p>
+                  </div>
+                  {offer.couponText ? (
+                    <p className="mt-2 text-xs text-muted-foreground">Coupon: {offer.couponText}</p>
+                  ) : null}
+                  {offer.offerUrl ? (
+                    <Link
+                      href={offerHref}
+                      target="_blank"
+                      prefetch={false}
+                      onClick={() => {
+                        trackDecisionEvent({
+                          eventType: 'merchant_offer_select',
+                          source,
+                          productId: product.id,
+                          metadata: {
+                            offerId: offer.id,
+                            merchantName: offer.merchantName || null,
+                            availabilityStatus: offer.availabilityStatus || null,
+                            priceAmount: offer.priceAmount ?? null,
+                            couponText: offer.couponText || null
+                          }
+                        })
+                      }}
+                      className="mt-3 inline-flex text-sm font-semibold text-primary transition-colors hover:text-emerald-700"
+                    >
+                      Select this offer →
+                    </Link>
+                  ) : null}
+                </div>
+              )
+            }) : (
               <div className="rounded-[1.25rem] bg-muted px-4 py-4 text-sm text-muted-foreground">
                 No tracked offer rows yet.
               </div>
