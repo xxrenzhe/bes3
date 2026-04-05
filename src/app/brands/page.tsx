@@ -15,12 +15,12 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Brand Directory',
     description:
-      'Browse Bes3 brand hubs to see which products, reviews, comparisons, and categories already exist for each brand.',
+      'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each manufacturer.',
     path: '/brands',
     image: brands[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['brand directory', 'brand reviews', 'brand comparison hub', 'tech brands']
+    keywords: ['brand directory', 'brand reviews', 'brand comparisons', 'tech brands']
   })
 }
 
@@ -33,16 +33,16 @@ export default async function BrandsPage() {
   ]
   const faqEntries = [
     {
-      question: 'When should I use a brand hub instead of a category hub?',
-      answer: 'Use a brand hub when you already trust or prefer a specific brand and want Bes3 to show every relevant product, review, and comparison tied to that brand in one place.'
+      question: 'When should I use a brand page instead of a category page?',
+      answer: 'Use a brand page when you already trust or prefer a specific brand and want Bes3 to show every relevant product, review, and comparison for that brand in one place.'
     },
     {
-      question: 'Does a brand hub replace the category route?',
-      answer: 'No. Brand hubs compress coverage around one manufacturer, while category hubs keep the comparison lane broader and better for open-ended product discovery.'
+      question: 'Does a brand page replace category browsing?',
+      answer: 'No. Brand pages focus on one manufacturer, while category pages are better when you still need to compare across brands.'
     },
     {
       question: 'What makes a brand page useful for buyers?',
-      answer: 'It removes scattered navigation. Buyers can see the current product lineup, the strongest related editorial pages, and the categories where that brand already has live coverage.'
+      answer: 'It removes scattered navigation. You can see the current product lineup, the strongest related pages, and the categories where that brand already has live coverage.'
     }
   ]
   const structuredData = [
@@ -50,7 +50,7 @@ export default async function BrandsPage() {
     buildCollectionPageSchema({
       path: '/brands',
       title: 'Brand Directory',
-      description: 'Browse Bes3 brand hubs to see which products, reviews, comparisons, and categories already exist for each brand.',
+      description: 'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each manufacturer.',
       breadcrumbItems,
       dateModified: leadBrand?.latestUpdate || null,
       items: brands.map((brand) => ({
@@ -61,19 +61,19 @@ export default async function BrandsPage() {
     buildHowToSchema(
       '/brands',
       'How to use the Bes3 brand directory',
-      'Use the brand directory when you already have a preferred manufacturer and want to stay inside one brand-specific research lane.',
+      'Use the brand directory when you already have a preferred manufacturer and want to stay focused on that brand.',
       [
         {
-          name: 'Open the brand hub',
+          name: 'Open the brand page',
           text: 'Choose a brand once you already trust the manufacturer or want to see all Bes3 coverage tied to that brand.'
         },
         {
           name: 'Check the strongest products and pages',
-          text: 'Use the hub to jump into the most credible products, reviews, and comparisons without searching the full site again.'
+          text: 'Use the page to jump into the most credible products, reviews, and comparisons without searching the full site again.'
         },
         {
-          name: 'Return to categories if the lane broadens',
-          text: 'If the brand no longer feels right, move back into a category hub to compare across brands instead of staying inside a narrower brand path.'
+          name: 'Return to categories if the scope broadens',
+          text: 'If the brand no longer feels right, move back into a category page to compare across brands instead of staying too narrow.'
         }
       ]
     ),
@@ -90,10 +90,10 @@ export default async function BrandsPage() {
               <Link href="/directory" className="inline-flex text-sm font-medium text-white/70 transition-colors hover:text-white">
                 Directory / Brands
               </Link>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Brand Matrix</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Brand Directory</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">Browse Bes3 by brand.</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                This index mirrors the brand-first queries buyers actually make. Open a brand hub when you already trust the manufacturer and want the shortest route into its products, verdicts, and comparison pages.
+                This page mirrors the brand-first searches shoppers actually make. Open a brand page when you already trust the manufacturer and want the quickest path into its products, reviews, and comparisons.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -102,15 +102,15 @@ export default async function BrandsPage() {
                 <p className="mt-3 text-3xl font-black">{brands.length}</p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Lead route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Best use</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Use brand hubs once the manufacturer is already credible. Use category hubs first if you still need cross-brand discovery.
+                  Use brand pages once the manufacturer is already credible. Use category pages first if you still need cross-brand discovery.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Best current entry</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  {leadBrand ? `${leadBrand.name} has the strongest current cluster of products and editorial coverage.` : 'Brand hubs appear here as product coverage expands.'}
+                  {leadBrand ? `${leadBrand.name} has the strongest current group of products and related coverage.` : 'Brand pages appear here as product coverage expands.'}
                 </p>
               </div>
             </div>
@@ -124,10 +124,10 @@ export default async function BrandsPage() {
               href={`/brands/${brand.slug}`}
               className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1"
             >
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
               <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{brand.name}</h2>
               <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                {brand.description || `Browse the current ${brand.name} coverage on Bes3 without reopening the full site search.`}
+                {brand.description || `Browse the current ${brand.name} coverage on Bes3 without reopening a full site search.`}
               </p>
               <div className="mt-5 grid gap-3 sm:grid-cols-2">
                 <div className="rounded-[1.25rem] bg-muted px-4 py-3">
@@ -156,7 +156,7 @@ export default async function BrandsPage() {
         <SeoFaqSection
           title="Brand directory questions buyers actually have."
           entries={faqEntries}
-          description="These pages exist to catch brand-first search intent without forcing buyers back into generic category or site-wide search pages."
+          description="These pages explain when brand browsing helps and when you should go back to broader category browsing instead."
         />
       </div>
     </PublicShell>

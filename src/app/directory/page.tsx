@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Category Directory',
     description:
-      'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+      'Browse Bes3 by category to find good products, read reviews, compare options, and set alerts without starting over.',
     path: '/directory',
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
@@ -56,22 +56,22 @@ export default async function DirectoryPage() {
   ]
   const howToSteps = [
     {
-      name: 'Choose the category lane',
-      text: 'Open the category that matches your actual use case so Bes3 can keep reviews, comparisons, and products inside one clean decision lane.'
+      name: 'Choose the right category',
+      text: 'Open the category that matches what you actually want to buy, so Bes3 can show the most useful products, reviews, and comparisons.'
     },
     {
-      name: 'Shortlist the credible products',
-      text: 'Use the strongest products and live pages in that hub to narrow the field before you compare or click out.'
+      name: 'Shortlist the best options',
+      text: 'Use the strongest products and live pages in that category to narrow the field before you compare or click out.'
     },
     {
-      name: 'Track the lane if timing is the blocker',
-      text: 'If you are not buying today, switch the same category into an alert flow instead of reopening broad research later.'
+      name: 'Track the category if you wait',
+      text: 'If you are not buying today, turn the same category into an alert instead of reopening broad research later.'
     }
   ]
   const structuredData = buildCollectionPageSchema({
     path: '/directory',
     title: 'Category Directory',
-    description: 'Browse Bes3 category hubs to shortlist products, open reviews, compare finalists, and follow category alerts once the buying lane is clear.',
+    description: 'Browse Bes3 by category to find good products, read reviews, compare options, and set alerts without starting over.',
     breadcrumbItems,
     dateModified: latestRefresh,
     items: categories.map((category) => ({
@@ -85,33 +85,33 @@ export default async function DirectoryPage() {
       title: 'Search a concrete need',
       description: 'Use search when you already know the product type or use case and want Bes3 to narrow it fast.',
       href: '/search?scope=products',
-      label: 'Search candidates'
+      label: 'Search products'
     },
     {
       eyebrow: 'Browse',
-      title: leadCategory ? `Open ${getCategoryLabel(leadCategory)}` : 'Open a category hub',
-      description: 'Category hubs work best once the lane is clear and you want the strongest products, reviews, and comparisons in one place.',
+      title: leadCategory ? `Open ${getCategoryLabel(leadCategory)}` : 'Open a category page',
+      description: 'Category pages work best once you know what kind of product you need and want the strongest picks in one place.',
       href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-      label: leadCategory ? 'Open lead hub' : 'Browse hubs'
+      label: leadCategory ? 'Open category page' : 'Browse categories'
     },
     {
       eyebrow: 'Brands',
       title: leadBrand ? `Open ${leadBrand.name}` : 'Browse by manufacturer',
-      description: 'Brand hubs catch manufacturer-first search intent and keep products, reviews, and categories grouped around one brand.',
+      description: 'Brand pages are useful when you already trust one manufacturer and want everything grouped in one place.',
       href: leadBrand ? `/brands/${leadBrand.slug}` : '/brands',
       label: leadBrand ? `Open ${leadBrand.name}` : 'Browse brands'
     },
     {
       eyebrow: 'Watch',
       title: 'Start category briefs',
-      description: 'If you are researching now but buying later, save the category context as an alert flow instead of reopening the whole search later.',
+      description: 'If you are researching now but buying later, save the category as an alert instead of reopening the whole search later.',
       href: '/newsletter?intent=category-brief&cadence=weekly',
       label: 'Start alerts'
     },
     {
       eyebrow: 'Deals',
       title: 'Check live price opportunities',
-      description: 'Move into deals only after category fit is credible, so markdowns do not pull you into the wrong product lane.',
+      description: 'Open deals only after the category already looks right, so discounts do not pull you toward the wrong product.',
       href: '/deals',
       label: 'Browse deals'
     }
@@ -119,15 +119,15 @@ export default async function DirectoryPage() {
   const faqEntries = [
     {
       question: 'When should I use the directory instead of search?',
-      answer: 'Use the directory when the lane is already clear and you want a structured entry into category or brand hubs. Use search when the need is still query-shaped.'
+      answer: 'Use the directory when you already know the kind of product you need and want to browse by category or brand. Use search when your query is still more specific than the category.'
     },
     {
-      question: 'What is the difference between category hubs and brand hubs?',
-      answer: 'Category hubs compare across the market. Brand hubs compress coverage around one manufacturer. They solve different intent states and should not replace each other.'
+      question: 'What is the difference between category pages and brand pages?',
+      answer: 'Category pages help you compare across brands. Brand pages focus on one manufacturer. They solve different shopping needs and should not replace each other.'
     },
     {
       question: 'Why does each card point to a next move instead of just listing pages?',
-      answer: 'The directory is designed as a routing layer, not an archive. Each card tries to send buyers into the strongest next decision page rather than forcing another round of broad browsing.'
+      answer: 'Because the directory should help you move forward, not just show a pile of links. Each card points to the next page most likely to help.'
     }
   ]
 
@@ -137,7 +137,7 @@ export default async function DirectoryPage() {
         data={[
           buildBreadcrumbSchema('/directory', breadcrumbItems),
           structuredData,
-          buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category lane, shortlist credible products, and track the lane if timing is the blocker.', howToSteps),
+          buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category, shortlist good products, and set alerts if you are not ready to buy yet.', howToSteps),
           buildFaqSchema('/directory', faqEntries)
         ]}
       />
@@ -145,15 +145,15 @@ export default async function DirectoryPage() {
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
-              <p className="editorial-kicker">Buyer Directory</p>
-              <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse the Bes3 shortlist by category.</h1>
+              <p className="editorial-kicker">Category Directory</p>
+              <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse Bes3 by category.</h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                Use the directory once you know the general lane. Each category card now points buyers toward the cleanest next move instead of acting like a raw archive dump.
+                Use the directory once you know the general category. Each card points you toward the most useful next step instead of acting like a raw archive dump.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Start in a category hub when you already know the market lane, switch to search when the need is still query-shaped, and use alerts when price timing matters more than immediate action.
+                  Start in a category page when you already know the market. Switch to search when the need is still specific, and use alerts when price timing matters more than immediate action.
                 </p>
               </div>
             </div>
@@ -186,9 +186,9 @@ export default async function DirectoryPage() {
               categoryProducts.length >= 2
                 ? 'Shortlist this category'
                 : featuredComparison
-                  ? 'Compare inside this lane'
+                  ? 'Compare the top options'
                   : featuredReview
-                  ? 'Validate with the lead review'
+                  ? 'Read the lead review'
                   : featuredArticle
                     ? `Open the lead ${featuredArticle.type}`
                   : 'Use alerts while coverage builds'
@@ -210,7 +210,7 @@ export default async function DirectoryPage() {
                     <p className="mt-3 text-sm font-semibold text-foreground">{bestRouteLabel}</p>
                   </div>
                   <Link href={`/categories/${category}`} className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
-                    Open hub →
+                    Open page →
                   </Link>
                 </div>
 
@@ -219,7 +219,7 @@ export default async function DirectoryPage() {
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Start here</p>
                     <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{featuredProduct.productName}</h3>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {featuredProduct.description || 'Current price context and a clean path into the product-level Bes3 verdict.'}
+                      {featuredProduct.description || 'Current price context and a direct path to the product page.'}
                     </p>
                     <ShortlistActionBar item={toShortlistItem(featuredProduct)} compact className="mt-4" source="directory-category-start" />
                     <div className="mt-4 flex items-center justify-between gap-4">
@@ -246,7 +246,7 @@ export default async function DirectoryPage() {
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
                   <Link href={`/categories/${category}#category-shortlist`} className="rounded-[1.25rem] bg-muted px-4 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-emerald-50">
-                    Open shortlist lane →
+                    Open shortlist →
                   </Link>
                   <Link
                     href={
@@ -275,7 +275,7 @@ export default async function DirectoryPage() {
         <SeoFaqSection
           title="Directory routing questions, answered clearly."
           entries={faqEntries}
-          description="This page now exposes the directory logic explicitly so search engines and buyers can see the difference between category entry, brand entry, and search-driven entry."
+          description="This page explains when to use category browsing, brand browsing, or search so the next move feels obvious."
         />
       </div>
     </PublicShell>
