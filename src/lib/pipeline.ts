@@ -9,7 +9,7 @@ import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
 import { dispatchSeoNotifications } from '@/lib/seo-ops'
-import { scrapeProductPage } from '@/lib/scraper'
+import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getBrandSlug, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
@@ -610,11 +610,51 @@ async function ensureProductShell(input: {
   brand: string | null
 }): Promise<number> {
   const db = await getDatabase()
-  const existing = input.affiliateProductId
+  const slug = slugify(input.productName)
+  const existingByAffiliateId = input.affiliateProductId
     ? await db.queryOne<{ id: number }>('SELECT id FROM products WHERE affiliate_product_id = ? LIMIT 1', [input.affiliateProductId])
     : null
 
-  if (existing?.id) return existing.id
+  if (existingByAffiliateId?.id) return existingByAffiliateId.id
+
+  const existingByIdentity = await db.queryOne<{ id: number }>(
+    `
+      SELECT id
+      FROM products
+      WHERE resolved_url = ?
+         OR canonical_url = ?
+         OR source_affiliate_link = ?
+         OR slug = ?
+      LIMIT 1
+    `,
+    [input.finalUrl, input.finalUrl, input.sourceLink, slug]
+  )
+
+  if (existingByIdentity?.id) {
+    await db.exec(
+      `
+        UPDATE products
+        SET source_platform = ?,
+            source_affiliate_link = COALESCE(source_affiliate_link, ?),
+            resolved_url = COALESCE(resolved_url, ?),
+            canonical_url = COALESCE(canonical_url, ?),
+            brand = COALESCE(brand, ?),
+            product_name = COALESCE(product_name, ?),
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [
+        input.sourcePlatform,
+        input.sourceLink,
+        input.finalUrl,
+        input.finalUrl,
+        input.brand,
+        input.productName,
+        existingByIdentity.id
+      ]
+    )
+    return existingByIdentity.id
+  }
 
   const result = await db.exec(
     `
@@ -628,7 +668,7 @@ async function ensureProductShell(input: {
       input.sourceLink,
       input.finalUrl,
       input.finalUrl,
-      slugify(input.productName),
+      slug,
       input.brand,
       input.productName
     ]
@@ -645,6 +685,70 @@ async function findProductIdByAffiliateProductId(affiliateProductId: number | nu
     [affiliateProductId]
   )
   return row?.id || null
+}
+
+function parseAffiliateRawPayload(affiliateProduct: AffiliateProductRecord | null): Record<string, any> {
+  if (!affiliateProduct?.raw_payload) return {}
+  if (typeof affiliateProduct.raw_payload === 'string') {
+    try {
+      return JSON.parse(affiliateProduct.raw_payload) as Record<string, any>
+    } catch {
+      return {}
+    }
+  }
+  return {}
+}
+
+function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductRecord | null, scraped: ScrapedProduct): ScrapedProduct {
+  if (!affiliateProduct) return scraped
+
+  const rawPayload = parseAffiliateRawPayload(affiliateProduct)
+  const specs = { ...scraped.specs }
+  const assignSpec = (label: string, value: unknown) => {
+    const text = String(value || '').trim()
+    if (!text || specs[label]) return
+    specs[label] = text
+  }
+
+  assignSpec('ASIN', affiliateProduct.asin)
+  assignSpec('Brand', affiliateProduct.brand)
+  assignSpec('Category', rawPayload.category || rawPayload.subcategory)
+  assignSpec('Availability', rawPayload.availability)
+  assignSpec('Merchant', rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name)
+
+  const fallbackImage = affiliateProduct.image_url ? [affiliateProduct.image_url] : []
+  const fallbackCategory = String(rawPayload.category || rawPayload.subcategory || '').trim() || null
+
+  return {
+    ...scraped,
+    productName:
+      scraped.productName && !/^unknown\b/i.test(scraped.productName)
+        ? scraped.productName
+        : affiliateProduct.product_name || String(rawPayload.product_name || rawPayload.name || '').trim() || scraped.productName,
+    brand: scraped.brand || affiliateProduct.brand || String(rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name || '').trim() || null,
+    category: scraped.category || fallbackCategory,
+    description:
+      scraped.description ||
+      String(rawPayload.description || rawPayload.promotion_title || '').trim() ||
+      null,
+    priceAmount: scraped.priceAmount ?? affiliateProduct.price_amount ?? null,
+    priceCurrency: scraped.priceCurrency || affiliateProduct.price_currency || String(rawPayload.currency || '').trim() || 'USD',
+    rating: scraped.rating ?? affiliateProduct.rating ?? null,
+    reviewCount: scraped.reviewCount ?? affiliateProduct.review_count ?? null,
+    imageUrls: scraped.imageUrls.length ? scraped.imageUrls : fallbackImage,
+    specs,
+    attributeFacts: scraped.attributeFacts.length ? scraped.attributeFacts : Object.entries(specs).map(([label, value]) => ({
+      key: label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
+      label,
+      value,
+      sourceUrl: scraped.finalUrl,
+      sourceType: 'dom' as const,
+      confidenceScore: 0.72,
+      isVerified: false
+    })),
+    attributeCompletenessScore: Math.max(scraped.attributeCompletenessScore, Object.keys(specs).length >= 3 ? 0.6 : scraped.attributeCompletenessScore),
+    sourceCount: Math.max(scraped.sourceCount, 2)
+  }
 }
 
 async function updateProductFromScrape(productId: number, scraped: ReturnType<typeof scrapeProductPage>) {
@@ -1523,18 +1627,19 @@ async function executeFullPipelineRun(
     await assertRunNotCancelled(runId)
     const affiliateProduct = affiliateProductId ? await getAffiliateProductById(affiliateProductId) : null
     const sourcePlatform = affiliateProduct?.platform || 'manual'
+    const sourceCountryCode = affiliateProduct?.country_code || 'US'
 
     await assertRunNotCancelled(runId)
     const resolveJob = await createJob(runId, 'resolveAffiliateLink')
     await markRun(runId, 'running', 'resolveAffiliateLink')
-    const resolved = await resolveAffiliateLink(sourceLink)
+    const resolved = await resolveAffiliateLink(sourceLink, sourceCountryCode)
     await assertRunNotCancelled(runId)
     await finishJob(resolveJob, 'completed', 'Affiliate link resolved', resolved)
 
     await assertRunNotCancelled(runId)
     const scrapeJob = await createJob(runId, 'scrapeProductFacts')
     await markRun(runId, 'running', 'scrapeProductFacts')
-    const scraped = scrapeProductPage(resolved.finalUrl, resolved.landingHtml)
+    const scraped = mergeAffiliateFallbackIntoScrape(affiliateProduct, scrapeProductPage(resolved.finalUrl, resolved.landingHtml))
     await assertRunNotCancelled(runId)
     await finishJob(scrapeJob, 'completed', 'Product page scraped', {
       productName: scraped.productName,
@@ -1557,7 +1662,7 @@ async function executeFullPipelineRun(
       await assertRunNotCancelled(runId)
       try {
         const assetRole = index === 0 ? 'hero' : 'gallery'
-        const publicUrl = await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole, index })
+        const publicUrl = await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole, index, countryCode: sourceCountryCode })
         persistedMediaUrls.push(publicUrl)
       } catch (error: any) {
         persistedMediaUrls.push(imageUrl)
@@ -1567,7 +1672,7 @@ async function executeFullPipelineRun(
     for (const [index, imageUrl] of scraped.reviewImageUrls.slice(0, 6).entries()) {
       await assertRunNotCancelled(runId)
       try {
-        await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole: 'review', index })
+        await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole: 'review', index, countryCode: sourceCountryCode })
       } catch {
         // Review images are best effort.
       }

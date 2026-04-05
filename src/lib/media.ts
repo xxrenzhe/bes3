@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
 import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { fetchWithBrowserProxy } from '@/lib/browser-proxy'
 import { getDatabase } from '@/lib/db'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import type { MediaAssetRole, MediaStorageProvider } from '@/lib/types'
@@ -74,8 +75,18 @@ export async function persistMediaAsset(input: {
   sourceUrl: string
   assetRole: MediaAssetRole
   index: number
+  countryCode?: string | null
 }): Promise<string> {
-  const response = await fetch(input.sourceUrl)
+  const response = await fetchWithBrowserProxy(
+    input.sourceUrl,
+    {
+      headers: {
+        'user-agent':
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36'
+      }
+    },
+    input.countryCode
+  )
   if (!response.ok) {
     throw new Error(`Failed to download media: ${response.status}`)
   }
