@@ -123,7 +123,7 @@ export default async function ComparisonPage({
     {
       name: 'Pick the winner',
       text: article.product?.slug
-        ? 'Open the winning product page when you need pricing, specs, and merchant context before clicking through.'
+        ? 'Open the winning product page when you need pricing, specs, and current store details before clicking through.'
         : 'Treat the editorial winner as the default answer unless you still have a product-fit blocker.'
     },
     {
@@ -180,7 +180,7 @@ export default async function ComparisonPage({
     {
       question: 'What should I do after this comparison?',
       answer: article.product?.slug
-        ? 'If the winner is clear, move into the product page next for specs, pricing, and merchant context. Reopen the shortlist only if neither finalist feels right.'
+        ? 'If the winner is clear, move into the product page next for specs, pricing, and current store details. Reopen the shortlist only if neither finalist feels right.'
         : 'Treat the editorial winner as the default answer unless a real fit blocker remains.'
     },
     {
@@ -344,7 +344,7 @@ export default async function ComparisonPage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {article.product?.slug
-                    ? 'This comparison already gave you a likely winner. The cleanest next move is the product page, where price, specs, and merchant readiness can be checked without reopening the whole choice.'
+                    ? 'This comparison already gave you a likely winner. The cleanest next move is the product page, where price, specs, and current store details can be checked without reopening the whole choice.'
                     : 'This page already carries the main recommendation. Use a review or shortlist next only if you still need one more reason before buying.'}
                 </p>
               </div>

@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     default: DEFAULT_SITE_NAME,
     template: `%s | ${DEFAULT_SITE_NAME}`
   },
-  description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.',
+  description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live deals worth checking.',
   applicationName: DEFAULT_SITE_NAME,
   publisher: DEFAULT_SITE_NAME,
   metadataBase: new URL(getSiteUrl()),
@@ -41,12 +41,12 @@ export const metadata: Metadata = {
     siteName: DEFAULT_SITE_NAME,
     locale: 'en_US',
     title: DEFAULT_SITE_NAME,
-    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.'
+    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live deals worth checking.'
   },
   twitter: {
     card: 'summary',
     title: DEFAULT_SITE_NAME,
-    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.'
+    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live deals worth checking.'
   }
 }
 

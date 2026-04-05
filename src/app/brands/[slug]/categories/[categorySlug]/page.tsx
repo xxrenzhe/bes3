@@ -151,7 +151,7 @@ export default async function BrandCategoryPage({
         },
         {
           question: 'Why create a dedicated brand-category page instead of linking only to brand and category pages?',
-          answer: 'Because long-tail buyers often search with both constraints already in mind. This page matches that intent directly and keeps the next click closer to a real decision.'
+          answer: 'Because many shoppers search by both brand and category at the same time. This page meets that need directly and keeps the next click closer to a real choice.'
         }
       ]
     : [
@@ -164,8 +164,8 @@ export default async function BrandCategoryPage({
           answer: `Use the broader ${brand.name} page if brand preference is still strong, or reopen the ${categoryLabel} category page if the category matters more than the manufacturer right now.`
         },
         {
-          question: 'Will this page become a full landing page later?',
-          answer: 'Yes. Once direct products or editorial coverage appear for this combination, the same page can grow into an indexed long-tail landing page without changing the information architecture.'
+          question: 'Will this page grow over time?',
+          answer: 'Yes. As more direct products and editorial coverage appear for this combination, this page can grow naturally without changing where you shop.'
         }
       ]
   const routeCards: RouteCard[] = hasDirectCoverage
@@ -196,7 +196,7 @@ export default async function BrandCategoryPage({
           : {
               eyebrow: 'Validate',
               title: `Reopen ${brand.name} coverage`,
-              description: 'If editorial is still thin in this exact page, return to the brand page to recover the strongest brand-level buying context.',
+              description: 'If coverage is still thin here, return to the brand page to see the strongest brand-level options and reviews.',
               href: `/brands/${slug}`,
               label: 'Open brand page'
             },
@@ -248,7 +248,7 @@ export default async function BrandCategoryPage({
         {
           eyebrow: 'Search',
           title: 'Search adjacent coverage',
-          description: 'Use search when your actual need may sit one level above this exact page and you want the fastest recovery path.',
+          description: 'Use search when your need may be broader than this page and you want the fastest way back to useful results.',
           href: `/search?q=${encodeURIComponent(`${brand.name} ${categoryLabel}`)}&scope=products`,
           label: 'Search the archive'
         }
@@ -326,14 +326,14 @@ export default async function BrandCategoryPage({
               <Link href={`/brands/${brand.slug}`} className="inline-flex text-sm font-medium text-white/75 transition-colors hover:text-white">
                 Brands / {brand.name} / {toTitleCaseWords(categoryLabel)}
               </Link>
-              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Brand × Category Page</p>
+              <p className="mt-4 text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Brand + Category</p>
               <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">
                 {brand.name} {toTitleCaseWords(categoryLabel)}
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
                 {hasDirectCoverage
-                  ? hub?.description || `This page helps buyers who already know both the brand and the category they want move into the cleanest next step without reopening broad search.`
-                  : `Direct ${brand.name} ${categoryLabel} coverage is still building. This page stays available as a recovery layer so the research path never collapses into a dead end.`}
+                  ? hub?.description || `This page helps buyers who already know both the brand and the category move straight to the most useful next step without reopening a broad search.`
+                  : `Direct ${brand.name} ${categoryLabel} coverage is still building. This page still gives you the nearest next steps so your research does not hit a dead end.`}
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
@@ -376,8 +376,8 @@ export default async function BrandCategoryPage({
               </h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
                 {hasDirectCoverage
-                  ? 'These products already match this exact brand-and-category search. Start here when you want the shortest path from intent to a product choice.'
-                  : 'These fallback options keep this page useful even before the exact overlap is fully populated. They preserve either the brand signal or the category signal instead of sending buyers back to broad search.'}
+                  ? 'These products already match this exact brand-and-category search. Start here when you want the shortest path from this search to a product choice.'
+                  : 'These fallback options keep this page useful even before the exact match is fully populated. They keep either the brand or the category in view instead of sending buyers back to a broad search.'}
               </p>
             </div>
             <div className="grid gap-6 xl:grid-cols-3">
@@ -406,7 +406,7 @@ export default async function BrandCategoryPage({
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>
                   <h3 className="mt-2 text-lg font-semibold text-foreground">{brand.name} {toTitleCaseWords(getCategoryLabel(lane.category))}</h3>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                    {lane.productCount} published product {lane.productCount === 1 ? 'page' : 'pages'} and {lane.articleCount} editorial {lane.articleCount === 1 ? 'page' : 'pages'} already support this adjacent match.
+                    {lane.productCount} published product {lane.productCount === 1 ? 'page' : 'pages'} and {lane.articleCount} editorial {lane.articleCount === 1 ? 'page' : 'pages'} already support this nearby option.
                   </p>
                 </Link>
               ))}
@@ -431,13 +431,13 @@ export default async function BrandCategoryPage({
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Match</p>
                   <h3 className="mt-2 text-lg font-semibold text-foreground">{lane.brandName} {toTitleCaseWords(categoryLabel)}</h3>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                    {lane.productCount} published product {lane.productCount === 1 ? 'page' : 'pages'} and {lane.articleCount} editorial {lane.articleCount === 1 ? 'page' : 'pages'} give this category another option if you widen beyond {brand.name}.
+                    {lane.productCount} published product {lane.productCount === 1 ? 'page' : 'pages'} and {lane.articleCount} editorial {lane.articleCount === 1 ? 'page' : 'pages'} give you another option if you look beyond {brand.name}.
                   </p>
                 </Link>
               ))}
               {!sameCategoryLanes.length ? (
                 <p className="text-sm leading-7 text-muted-foreground">
-                  No other brand-category page is available here yet. Use the broader category page to keep your options open while Bes3 adds more direct overlap pages.
+                  No other brand + category page is available here yet. Use the broader category page to keep your options open while Bes3 adds more coverage.
                 </p>
               ) : null}
             </div>
@@ -454,8 +454,8 @@ export default async function BrandCategoryPage({
             </div>
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
               {hasDirectCoverage
-                ? 'These pages reinforce the exact brand-and-category query instead of forcing buyers back into generic archive navigation.'
-                : 'Even when the exact overlap is not ready, Bes3 can still recover intent with the nearest reviews instead of dropping the user into an empty page.'}
+                ? 'These pages support this exact brand-and-category search instead of forcing buyers back into a broad archive.'
+                : 'Even when this exact combination is not ready, Bes3 can still show the nearest reviews instead of dropping you into an empty page.'}
             </p>
           </div>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -481,7 +481,7 @@ export default async function BrandCategoryPage({
         <SeoFaqSection
           title={`${brand.name} ${toTitleCaseWords(categoryLabel)} questions, answered fast.`}
           entries={faqEntries}
-          description="This page turns exact brand-and-category intent into a structured, machine-readable entry instead of leaving it split across separate brand and category pages."
+          description="This page explains when this brand-and-category view is useful and where to go next."
         />
       </div>
     </PublicShell>

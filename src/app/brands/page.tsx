@@ -98,7 +98,7 @@ export default async function BrandsPage() {
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Brands indexed</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Brands covered</p>
                 <p className="mt-3 text-3xl font-black">{brands.length}</p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
