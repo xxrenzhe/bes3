@@ -1127,20 +1127,24 @@ async function revalidateGeneratedPaths(paths: string[], category: string | null
     // Fall back to direct revalidation when a request context exists.
   }
 
-  revalidatePath('/')
-  revalidatePath('/brands')
-  revalidatePath('/directory')
-  if (category) {
-    revalidatePath(`/categories/${category}`)
-  }
-  if (brandSlug) {
-    revalidatePath(`/brands/${brandSlug}`)
-  }
-  if (brandSlug && category) {
-    revalidatePath(`/brands/${brandSlug}/categories/${category}`)
-  }
-  for (const item of uniquePaths) {
-    revalidatePath(item)
+  try {
+    revalidatePath('/')
+    revalidatePath('/brands')
+    revalidatePath('/directory')
+    if (category) {
+      revalidatePath(`/categories/${category}`)
+    }
+    if (brandSlug) {
+      revalidatePath(`/brands/${brandSlug}`)
+    }
+    if (brandSlug && category) {
+      revalidatePath(`/brands/${brandSlug}/categories/${category}`)
+    }
+    for (const item of uniquePaths) {
+      revalidatePath(item)
+    }
+  } catch (error: any) {
+    console.warn('[pipeline] revalidate skipped outside request context:', error?.message || error)
   }
 }
 
