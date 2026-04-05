@@ -3,9 +3,10 @@ import {
   COMMERCE_PROTOCOL_VERSION,
   buildCommerceDisclaimers,
   buildCommerceActions,
+  serializeCommerceProduct,
   summarizePriceHistory
 } from '@/lib/open-commerce'
-import { getOpenCommerceProductById, listProductOffers, listProductPriceHistory } from '@/lib/site-data'
+import { getBrandKnowledgeByProduct, getOpenCommerceProductById, listProductAttributeFacts, listProductOffers, listProductPriceHistory } from '@/lib/site-data'
 
 export async function GET(
   _request: Request,
@@ -21,20 +22,40 @@ export async function GET(
     return NextResponse.json({ error: 'Product not found' }, { status: 404 })
   }
 
-  const [offers, priceHistory] = await Promise.all([listProductOffers(productId), listProductPriceHistory(productId)])
+  const [offers, priceHistory, attributeFacts, brandKnowledge] = await Promise.all([
+    listProductOffers(productId),
+    listProductPriceHistory(productId),
+    listProductAttributeFacts(productId, 12),
+    getBrandKnowledgeByProduct({
+      brandName: product.brand,
+      category: product.category,
+      compatibilityLimit: 6
+    })
+  ])
   const bestOffer = product.bestOffer || offers[0] || null
   const alternativeOffers = offers.filter((offer) => !bestOffer || offer.id !== bestOffer.id).slice(0, 3)
+  const result = serializeCommerceProduct(product, {
+    offers,
+    attributeFacts,
+    priceHistory,
+    brandPolicy: brandKnowledge.brandPolicy,
+    compatibilityFacts: brandKnowledge.compatibilityFacts,
+    source: 'open-commerce-offers'
+  })
 
   return NextResponse.json({
     protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
     productId,
+    product,
     bestOffer,
     alternativeOffers,
     total: offers.length,
     offers,
     priceHistory,
     priceHistorySummary: summarizePriceHistory(priceHistory, bestOffer?.priceCurrency || product.priceCurrency),
+    brandKnowledge: result.brandKnowledge,
+    result,
     actions: buildCommerceActions(product, {
       source: 'open-commerce-offers'
     }),

@@ -3,9 +3,12 @@ import { COMMERCE_PROTOCOL_VERSION, serializeBrandKnowledge, serializeCommerceAr
 import {
   getBrandSlug,
   getBrandBySlug,
+  getBrandKnowledgeByProduct,
   getBrandPolicyBySlug,
   listBrandCompatibilityFacts,
   listOpenCommerceProducts,
+  listProductAttributeFacts,
+  listProductPriceHistory,
   listPublishedArticles
 } from '@/lib/site-data'
 
@@ -36,17 +39,34 @@ export async function GET(
   const brandArticles = articles
     .filter((article) => getBrandSlug(article.product?.brand) === slug)
     .slice(0, 8)
+  const productResults = await Promise.all(
+    brandProducts.map(async (product) => {
+      const [attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
+        listProductAttributeFacts(product.id, 12),
+        listProductPriceHistory(product.id, 12),
+        getBrandKnowledgeByProduct({
+          brandName: product.brand,
+          category: product.category,
+          compatibilityLimit: 6
+        })
+      ])
+
+      return serializeCommerceProduct(product, {
+        attributeFacts,
+        priceHistory,
+        brandPolicy: brandKnowledge.brandPolicy,
+        compatibilityFacts: brandKnowledge.compatibilityFacts,
+        source: 'open-commerce-brand'
+      })
+    })
+  )
 
   return NextResponse.json({
     protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
     brand,
     brandKnowledge: serializeBrandKnowledge(brand.name, policy, compatibilityFacts),
-    products: brandProducts.map((product) =>
-      serializeCommerceProduct(product, {
-        source: 'open-commerce-brand'
-      })
-    ),
+    products: productResults,
     articles: brandArticles.map(serializeCommerceArticle)
   })
 }
