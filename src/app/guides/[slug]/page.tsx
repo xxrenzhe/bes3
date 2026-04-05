@@ -2,14 +2,15 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildArticleSchema, buildBreadcrumbSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { getArticleBySlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -63,6 +64,7 @@ export default async function GuidePage({
   const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
+  const brandSlug = getBrandSlug(article.product?.brand)
   const snapshotDate = getSnapshotDate(article, article.product)
   const relatedReview = allArticles.find((candidate) => {
     if (candidate.type !== 'review') return false
@@ -141,6 +143,24 @@ export default async function GuidePage({
     }),
     buildHowToSchema(path, `How to use the ${article.title} guide`, 'Use the guide to frame the category, move into a live verdict, and keep the same buying lane active.', howToSteps)
   ]
+  const faqEntries = [
+    {
+      question: 'What is this guide supposed to solve?',
+      answer: 'Guides reduce ambiguity before the shortlist is tight enough for a review or comparison. They should help you understand the lane, not trap you in abstract research.'
+    },
+    {
+      question: 'When should I open a brand hub from a guide?',
+      answer: article.product?.brand
+        ? `Open the ${article.product.brand} hub when the manufacturer already looks promising and you want the rest of its related Bes3 coverage in one place.`
+        : 'Use the category hub when you still need broader discovery before a brand becomes credible.'
+    },
+    {
+      question: 'What is the best next step after reading this guide?',
+      answer: relatedReview
+        ? 'Move into the strongest review next so the guidance becomes a real product decision.'
+        : 'Go to the category hub or shortlist route next so the guide turns into concrete candidates instead of more abstract browsing.'
+    }
+  ]
   const guideRoutes = [
     {
       eyebrow: 'Validate',
@@ -173,7 +193,7 @@ export default async function GuidePage({
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="overflow-hidden rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
           <div className="grid gap-8 lg:grid-cols-[1.15fr_0.85fr]">
@@ -278,6 +298,13 @@ export default async function GuidePage({
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the full category lane if you need more live verdicts, comparisons, and shortlist coverage.</p>
                     </Link>
                   ) : null}
+                  {brandSlug && article.product?.brand ? (
+                    <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand hub if one manufacturer now looks credible and you want the rest of its Bes3 coverage in one place.</p>
+                    </Link>
+                  ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
@@ -298,6 +325,12 @@ export default async function GuidePage({
             </div>
           </aside>
         </section>
+
+        <SeoFaqSection
+          title="Guide-page questions, answered clearly."
+          entries={faqEntries}
+          description="This FAQ clarifies the role of a guide inside the Bes3 journey: reduce ambiguity, then hand the buyer into a product, review, category, or brand route."
+        />
       </div>
     </PublicShell>
   )

@@ -1,4 +1,5 @@
 import { getDatabase } from '@/lib/db'
+import { slugify } from '@/lib/slug'
 
 export interface ProductRecord {
   id: number
@@ -37,6 +38,17 @@ export interface ArticleRecord {
   product: ProductRecord | null
 }
 
+export interface BrandRecord {
+  name: string
+  slug: string
+  productCount: number
+  articleCount: number
+  categories: string[]
+  latestUpdate: string | null
+  heroImageUrl: string | null
+  description: string | null
+}
+
 function parseJsonObject(value: string | null): Record<string, string> {
   if (!value) return {}
   try {
@@ -53,6 +65,28 @@ function parseJsonArray(value: string | null): string[] {
   } catch {
     return []
   }
+}
+
+function normalizeBrandName(value: string | null | undefined) {
+  return value?.replace(/\s+/g, ' ').trim() || ''
+}
+
+function toTimestamp(value: string | null | undefined) {
+  if (!value) return Number.NEGATIVE_INFINITY
+
+  const parsed = Date.parse(value)
+  return Number.isNaN(parsed) ? Number.NEGATIVE_INFINITY : parsed
+}
+
+function pickLatestDate(values: Array<string | null | undefined>) {
+  return values.reduce<string | null>((latest, value) => {
+    return toTimestamp(value) > toTimestamp(latest) ? value || null : latest
+  }, null)
+}
+
+export function getBrandSlug(value: string | null | undefined) {
+  const normalized = normalizeBrandName(value)
+  return normalized ? slugify(normalized) : ''
 }
 
 function mapProductRow(row: any): ProductRecord {
@@ -271,4 +305,94 @@ export async function listCategories(): Promise<string[]> {
       ...articles.map((article) => article.product?.category).filter(Boolean)
     ] as string[])
   ).sort()
+}
+
+export async function listBrands(): Promise<BrandRecord[]> {
+  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const brands = new Map<
+    string,
+    {
+      name: string
+      products: ProductRecord[]
+      articles: ArticleRecord[]
+    }
+  >()
+
+  for (const product of products) {
+    const brandName = normalizeBrandName(product.brand)
+    if (!brandName) continue
+
+    const key = brandName.toLowerCase()
+    const existing = brands.get(key)
+
+    if (existing) {
+      existing.products.push(product)
+      continue
+    }
+
+    brands.set(key, {
+      name: brandName,
+      products: [product],
+      articles: []
+    })
+  }
+
+  for (const article of articles) {
+    const brandName = normalizeBrandName(article.product?.brand)
+    if (!brandName) continue
+
+    const key = brandName.toLowerCase()
+    const existing = brands.get(key)
+
+    if (existing) {
+      existing.articles.push(article)
+      continue
+    }
+
+    brands.set(key, {
+      name: brandName,
+      products: [],
+      articles: [article]
+    })
+  }
+
+  return Array.from(brands.values())
+    .map((brand) => {
+      const categories = Array.from(
+        new Set([
+          ...brand.products.map((product) => product.category).filter(Boolean),
+          ...brand.articles.map((article) => article.product?.category).filter(Boolean)
+        ] as string[])
+      ).sort()
+      const featuredProduct = brand.products[0] || brand.articles.find((article) => article.product)?.product || null
+      const featuredArticle = brand.articles[0] || null
+
+      return {
+        name: brand.name,
+        slug: getBrandSlug(brand.name),
+        productCount: brand.products.length,
+        articleCount: brand.articles.length,
+        categories,
+        latestUpdate: pickLatestDate([
+          ...brand.products.flatMap((product) => [product.updatedAt, product.publishedAt]),
+          ...brand.articles.flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt])
+        ]),
+        heroImageUrl: featuredProduct?.heroImageUrl || featuredArticle?.heroImageUrl || null,
+        description: featuredArticle?.summary || featuredProduct?.description || null
+      }
+    })
+    .sort((left, right) => {
+      const coverageDelta = right.productCount + right.articleCount - (left.productCount + left.articleCount)
+      if (coverageDelta !== 0) return coverageDelta
+
+      const freshnessDelta = toTimestamp(right.latestUpdate) - toTimestamp(left.latestUpdate)
+      if (freshnessDelta !== 0) return freshnessDelta
+
+      return left.name.localeCompare(right.name)
+    })
+}
+
+export async function getBrandBySlug(slug: string): Promise<BrandRecord | null> {
+  const brands = await listBrands()
+  return brands.find((brand) => brand.slug === slug) || null
 }

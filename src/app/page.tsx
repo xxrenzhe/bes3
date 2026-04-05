@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { SectionHeader } from '@/components/site/SectionHeader'
@@ -8,9 +9,9 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { buildPageMetadata } from '@/lib/metadata'
-import { buildCollectionPageSchema } from '@/lib/structured-data'
+import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { listCategories, listPublishedArticles } from '@/lib/site-data'
+import { listBrands, listCategories, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -30,8 +31,9 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const [articles, categories] = await Promise.all([listPublishedArticles(), listCategories()])
+  const [articles, brands, categories] = await Promise.all([listPublishedArticles(), listBrands(), listCategories()])
   const featured = articles.slice(0, 3)
+  const featuredBrands = brands.slice(0, 4)
   const directoryCategories = categories.slice(0, 3)
   const featuredReview = articles.find((article) => article.type === 'review') || featured[0] || null
   const featuredComparison = articles.find((article) => article.type === 'comparison') || featured[1] || featuredReview
@@ -83,13 +85,31 @@ export default async function HomePage() {
       ...directoryCategories.map((category) => ({
         name: category.replace(/-/g, ' '),
         path: `/categories/${category}`
+      })),
+      ...featuredBrands.map((brand) => ({
+        name: brand.name,
+        path: `/brands/${brand.slug}`
       }))
     ]
   })
+  const faqEntries = [
+    {
+      question: 'What is Bes3 actually optimized for?',
+      answer: 'Bes3 is optimized for buyer intent, not page depth. It tries to move shoppers into the cleanest next step: shortlist, review, comparison, brand hub, or wait flow.'
+    },
+    {
+      question: 'When should I use a brand hub instead of a category hub?',
+      answer: 'Use a brand hub when you already trust a specific manufacturer. Use a category hub when you still need honest cross-brand comparison inside one product lane.'
+    },
+    {
+      question: 'Why does Bes3 keep only a few routes on the homepage?',
+      answer: 'The homepage is meant to compress intent. Too many equal-weight routes make buyers reopen broad research instead of moving into the best next page.'
+    }
+  ]
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
+      <StructuredData data={[structuredData, buildFaqSchema('/', faqEntries)]} />
       <section className="overflow-hidden px-4 pb-16 pt-8 sm:px-6 lg:px-8 lg:pb-24">
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
@@ -236,6 +256,49 @@ export default async function HomePage() {
         </div>
       </section>
 
+      {featuredBrands.length ? (
+        <section className="px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="mb-12 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+              <SectionHeader
+                eyebrow="Brand Matrix"
+                title="Browse the brands already mapped into live buyer lanes."
+                description="This mirrors brand-first search behavior. Open a brand hub when the manufacturer is already credible and you want the shortest route into products, reviews, and comparisons."
+              />
+              <Link href="/brands" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform hover:translate-x-1">
+                View all brands <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
+              {featuredBrands.map((brand) => (
+                <Link
+                  key={brand.slug}
+                  href={`/brands/${brand.slug}`}
+                  className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{brand.name}</h2>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    {brand.description || `Browse ${brand.name} coverage without reopening the full site search.`}
+                  </p>
+                  <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                    <div className="rounded-[1.25rem] bg-muted px-4 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Products</p>
+                      <p className="mt-2 text-xl font-black text-foreground">{brand.productCount}</p>
+                    </div>
+                    <div className="rounded-[1.25rem] bg-muted px-4 py-3">
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Editorial</p>
+                      <p className="mt-2 text-xl font-black text-foreground">{brand.articleCount}</p>
+                    </div>
+                  </div>
+                  <p className="mt-5 text-sm font-semibold text-primary">Open {brand.name} →</p>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
+
       <section className="px-4 py-16 sm:px-6 lg:px-8 lg:py-24">
         <div className="mx-auto max-w-7xl">
           <div className="mb-14 text-center">
@@ -304,6 +367,16 @@ export default async function HomePage() {
             </p>
           </div>
           <NewsletterSignup categoryOptions={categories.slice(0, 6)} source="homepage-alert-module" />
+        </div>
+      </section>
+
+      <section className="px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SeoFaqSection
+            title="Homepage intent questions, answered clearly."
+            entries={faqEntries}
+            description="The homepage now exposes the same buyer-intent clarifications to both users and search engines, instead of leaving them implicit in visual layout alone."
+          />
         </div>
       </section>
     </PublicShell>
