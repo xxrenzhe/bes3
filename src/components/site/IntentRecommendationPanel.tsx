@@ -1,0 +1,129 @@
+import Link from 'next/link'
+import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import {
+  buildIntentContextChips,
+  buildIntentRecommendationNote,
+  type IntentSearchResult
+} from '@/lib/commerce-intent'
+
+export function IntentRecommendationPanel({
+  result
+}: {
+  result: IntentSearchResult
+}) {
+  const chips = buildIntentContextChips(result)
+  const note = buildIntentRecommendationNote(result)
+
+  return (
+    <div className="space-y-8">
+      <section className="rounded-[2rem] bg-white p-8 shadow-panel">
+        <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
+          <div>
+            <p className="editorial-kicker">Intent Result</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
+              Bes3 translated the need into a shortlist.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+            The system is optimizing for fit first, then price timing, then the shortest next move into compare, shortlist, or a store check.
+          </p>
+        </div>
+
+        <div className="mt-6 flex flex-wrap gap-3">
+          {chips.map((chip) => (
+            <span
+              key={chip}
+              className="rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground"
+            >
+              {chip}
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Lead recommendation</p>
+            <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{note.title}</h3>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{note.description}</p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link
+                href={result.nextAction.href}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+              >
+                {result.nextAction.label}
+              </Link>
+              <Link
+                href={result.shortlistPath}
+                className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
+              >
+                Save this shortlist
+              </Link>
+              {note.brandHref ? (
+                <Link
+                  href={note.brandHref}
+                  className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
+                >
+                  Open brand page
+                </Link>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="rounded-[1.5rem] bg-slate-950 p-6 text-white">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Best next move</p>
+            <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{result.nextAction.title}</h3>
+            <p className="mt-3 text-sm leading-7 text-slate-200">{result.nextAction.description}</p>
+            <div className="mt-5 rounded-[1.25rem] bg-white/10 p-4">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Fallback</p>
+              <p className="mt-2 text-sm leading-7 text-slate-200">{result.fallbackAction.description}</p>
+              <Link href={result.fallbackAction.href} className="mt-4 inline-flex text-sm font-semibold text-emerald-200">
+                {result.fallbackAction.label} →
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="space-y-5">
+        <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
+          <div>
+            <p className="editorial-kicker">Recommended products</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist</h2>
+          </div>
+          <span className="text-sm text-muted-foreground">{result.recommendations.length} recommended pick{result.recommendations.length === 1 ? '' : 's'}</span>
+        </div>
+        <div className="grid gap-6 xl:grid-cols-2">
+          {result.recommendations.map((item) => (
+            <div key={item.product.id} className="space-y-4">
+              <ProductSpotlightCard product={item.product} source="intent-search-results" />
+              <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it made the shortlist</p>
+                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                    Score {item.score}
+                  </span>
+                </div>
+                <div className="mt-4 space-y-2">
+                  {item.reasons.map((reason) => (
+                    <p key={reason} className="text-sm leading-7 text-muted-foreground">
+                      {reason}
+                    </p>
+                  ))}
+                  {item.concerns.length ? (
+                    <div className="rounded-[1rem] border border-amber-200 bg-amber-50 px-4 py-3">
+                      {item.concerns.map((concern) => (
+                        <p key={concern} className="text-sm leading-7 text-amber-900">
+                          {concern}
+                        </p>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  )
+}

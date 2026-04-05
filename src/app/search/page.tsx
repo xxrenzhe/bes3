@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
+import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -32,13 +35,47 @@ function normalizeSearchScope(value: string | undefined): SearchScope {
   return SEARCH_SCOPES.some((scope) => scope.id === value) ? (value as SearchScope) : 'all'
 }
 
+function normalizeSearchMode(value: string | undefined) {
+  return value === 'intent' ? 'intent' : 'keyword'
+}
+
+function buildCurrentSearchPath(input: {
+  mode: 'keyword' | 'intent'
+  q?: string
+  scope?: SearchScope
+  category?: string
+  intent?: string
+  budget?: string
+  must?: string
+  avoid?: string
+  urgency?: string
+}) {
+  const params = new URLSearchParams()
+  if (input.mode === 'intent') {
+    params.set('mode', 'intent')
+    if (input.intent) params.set('intent', input.intent)
+    if (input.category) params.set('category', input.category)
+    if (input.budget) params.set('budget', input.budget)
+    if (input.must) params.set('must', input.must)
+    if (input.avoid) params.set('avoid', input.avoid)
+    if (input.urgency) params.set('urgency', input.urgency)
+  } else {
+    if (input.q) params.set('q', input.q)
+    if (input.scope && input.scope !== 'all') params.set('scope', input.scope)
+    if (input.category) params.set('category', input.category)
+  }
+  return `/search${params.size ? `?${params.toString()}` : ''}`
+}
+
 export async function generateMetadata({
   searchParams
 }: {
-  searchParams: Promise<{ q?: string; scope?: string; category?: string }>
+  searchParams: Promise<{ q?: string; scope?: string; category?: string; mode?: string; intent?: string; budget?: string; must?: string; avoid?: string; urgency?: string }>
 }): Promise<Metadata> {
   const resolvedParams = await searchParams
-  const query = resolvedParams.q?.trim() || ''
+  const mode = normalizeSearchMode(resolvedParams.mode)
+  const intentInput = parseIntentInputFromSearchParams(resolvedParams)
+  const query = mode === 'intent' ? intentInput.query : resolvedParams.q?.trim() || ''
   const categories = await listCategories()
   const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
@@ -55,9 +92,11 @@ export async function generateMetadata({
   const categorySuffix = selectedCategory ? ` in ${getCategoryLabel(selectedCategory)}` : ''
 
   return buildPageMetadata({
-    title: query ? `Search "${query}"` : 'Search',
+    title: query ? `${mode === 'intent' ? 'Need-based search' : 'Search'} "${query}"` : 'Search',
     description: query
-      ? `Search Bes3 ${scopeLabel}${categorySuffix} to find the most useful next page faster.`
+      ? mode === 'intent'
+        ? `Tell Bes3 what you need and get a tighter shortlist${categorySuffix} with clearer next steps.`
+        : `Search Bes3 ${scopeLabel}${categorySuffix} to find the most useful next page faster.`
       : 'Search Bes3 products, reviews, comparisons, and guides to find the right option faster.',
     path: '/search',
     locale: getRequestLocale(),
@@ -107,26 +146,31 @@ function buildSearchHref(query: string, scope: SearchScope, category: string) {
 export default async function SearchPage({
   searchParams
 }: {
-  searchParams: Promise<{ q?: string; scope?: string; category?: string }>
+  searchParams: Promise<{ q?: string; scope?: string; category?: string; mode?: string; intent?: string; budget?: string; must?: string; avoid?: string; urgency?: string }>
 }) {
   const resolvedParams = await searchParams
+  const mode = normalizeSearchMode(resolvedParams.mode)
   const query = resolvedParams.q?.trim() || ''
-  const [categories, allArticles, articleMatches, productMatches] = await Promise.all([
+  const intentInput = parseIntentInputFromSearchParams(resolvedParams)
+  const [categories, allArticles, articleMatches, productMatches, intentResult] = await Promise.all([
     listCategories(),
     listPublishedArticles(),
-    query ? searchArticles(query) : Promise.resolve([]),
-    query ? searchProducts(query) : Promise.resolve([])
+    mode === 'keyword' && query ? searchArticles(query) : Promise.resolve([]),
+    mode === 'keyword' && query ? searchProducts(query) : Promise.resolve([]),
+    mode === 'intent' && intentInput.query ? resolveIntentSearch(intentInput) : Promise.resolve(null)
   ])
 
   const selectedCategory = categories.includes(resolvedParams.category || '') ? String(resolvedParams.category) : ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
+  const intentQuery = intentInput.query
+  const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
 
   const filteredProducts =
-    selectedScope === 'all' || selectedScope === 'products'
+    mode === 'keyword' && (selectedScope === 'all' || selectedScope === 'products')
       ? productMatches.filter((product) => !selectedCategory || product.category === selectedCategory)
       : []
 
-  const filteredArticles = articleMatches.filter((article) => {
+  const filteredArticles = (mode === 'keyword' ? articleMatches : []).filter((article) => {
     if (selectedCategory && article.product?.category !== selectedCategory) return false
     if (selectedScope === 'all') return true
     if (selectedScope === 'products') return false
@@ -134,7 +178,7 @@ export default async function SearchPage({
   })
 
   const totalResults = filteredProducts.length + filteredArticles.length
-  const suggestedCategory = selectedCategory || filteredProducts[0]?.category || filteredArticles[0]?.product?.category || ''
+  const suggestedCategory = effectiveCategory || filteredProducts[0]?.category || filteredArticles[0]?.product?.category || ''
   const firstReview = filteredArticles.find((article) => article.type === 'review') || null
   const firstComparison = filteredArticles.find((article) => article.type === 'comparison') || null
   const firstGuide = filteredArticles.find((article) => article.type === 'guide') || null
@@ -147,7 +191,7 @@ export default async function SearchPage({
     return label.includes(queryLower) || queryLower.includes(label)
   })
   const fallbackCategories = (matchedCategorySlugs.length ? matchedCategorySlugs : categories).slice(0, 3)
-  const resultRoutes = query
+  const resultRoutes = mode === 'keyword' && query
     ? [
         filteredProducts[0]
           ? {
@@ -206,7 +250,26 @@ export default async function SearchPage({
         label: string
       }>
     : []
-  const structuredData = query
+  const structuredData = mode === 'intent' && intentResult?.normalizedQuery
+    ? buildSearchResultsPageSchema({
+        path: buildCurrentSearchPath({
+          mode,
+          intent: intentResult.normalizedQuery,
+          category: effectiveCategory,
+          budget: resolvedParams.budget,
+          must: resolvedParams.must,
+          avoid: resolvedParams.avoid,
+          urgency: resolvedParams.urgency
+        }),
+        title: `Need-based search "${intentResult.normalizedQuery}"`,
+        description: 'Need-based Bes3 search results translated into a shortlist, next move, and product recommendations.',
+        query: intentResult.normalizedQuery,
+        items: intentResult.recommendations.map((item) => ({
+          name: item.product.productName,
+          path: item.product.slug ? `/products/${item.product.slug}` : '/search'
+        }))
+      })
+    : query
     ? buildSearchResultsPageSchema({
         path: buildSearchHref(query, selectedScope, selectedCategory),
         title: `Search "${query}"`,
@@ -241,8 +304,19 @@ export default async function SearchPage({
           </p>
         </section>
 
+        <IntentSearchPanel
+          categoryOptions={categories}
+          defaultIntent={intentQuery}
+          defaultCategory={effectiveCategory}
+          defaultBudget={resolvedParams.budget || ''}
+          defaultMust={resolvedParams.must || ''}
+          defaultAvoid={resolvedParams.avoid || ''}
+          defaultUrgency={intentInput.urgency}
+        />
+
         <form className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 shadow-panel">
           <p className="editorial-kicker">Search</p>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Or use classic keyword search.</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px_220px_auto]">
             <input
               name="q"
@@ -277,7 +351,7 @@ export default async function SearchPage({
           </div>
         </form>
 
-        {query ? (
+        {mode === 'keyword' && query ? (
           <div className="flex flex-wrap items-center gap-3">
             {SEARCH_SCOPES.map((scope) => (
               <Link
@@ -293,14 +367,37 @@ export default async function SearchPage({
           </div>
         ) : null}
 
-        {query ? (
+        {mode === 'keyword' && query ? (
           <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] px-6 py-5 shadow-panel">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Search mode</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{SEARCH_SCOPE_META[selectedScope]}</p>
           </div>
         ) : null}
 
-        {query && resultRoutes.length ? (
+        {mode === 'intent' && intentResult ? (
+          intentResult.recommendations.length ? (
+            <IntentRecommendationPanel result={intentResult} />
+          ) : (
+            <section className="space-y-8">
+              <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
+                <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No strong shortlist yet.</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Bes3 could not find enough evidence-backed matches for "{intentResult.normalizedQuery}" yet. Broaden the category or remove one blocker first.
+                </p>
+                <div className="mt-8 flex flex-wrap justify-center gap-3">
+                  <Link href="/directory" className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                    Browse categories
+                  </Link>
+                  <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Check deals
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )
+        ) : null}
+
+        {mode === 'keyword' && query && resultRoutes.length ? (
           <section className="rounded-[2rem] bg-white p-8 shadow-panel">
             <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
               <div>
@@ -328,7 +425,7 @@ export default async function SearchPage({
           </section>
         ) : null}
 
-        {query ? (
+        {mode === 'keyword' && query ? (
           totalResults ? (
             <section className="space-y-8">
               <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
@@ -433,7 +530,7 @@ export default async function SearchPage({
               </div>
             </section>
           )
-        ) : (
+        ) : mode === 'intent' ? null : (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
