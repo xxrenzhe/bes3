@@ -24,7 +24,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Start Here: Find the right product faster',
     description:
-      'Use Bes3 to search by need, read a full review, compare finalists, or set a price alert without starting over.',
+      'Use Bes3 to search by need, read a full review, compare top picks, or set a price alert without starting over.',
     path: '/start',
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
@@ -82,7 +82,7 @@ export default async function StartPage() {
     {
       eyebrow: 'Step 04',
       title: 'I want to wait for a better price',
-      description: 'Set an alert when timing is the blocker, so you can come back later without restarting all your research.',
+      description: 'Set an alert when price is the only thing holding you back, so you can come back later without restarting all your research.',
       href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
@@ -119,7 +119,7 @@ export default async function StartPage() {
     {
       step: '03',
       title: 'Compare the real tradeoffs',
-      description: 'Read a review or compare finalists once the list is small enough for a real choice.'
+      description: 'Read a review or compare top picks once the list is small enough for a real choice.'
     },
     {
       step: '04',
@@ -166,7 +166,7 @@ export default async function StartPage() {
     },
     {
       question: 'When should I go to shortlist instead of staying in search?',
-      answer: 'Go to shortlist after you have at least two credible candidates or one strong candidate you know you want to preserve across visits.'
+      answer: 'Go to shortlist after you have at least two good candidates or one strong candidate you know you want to preserve across visits.'
     },
     {
       question: 'Why does Bes3 include alerts as part of the product?',
@@ -178,7 +178,7 @@ export default async function StartPage() {
     buildCollectionPageSchema({
       path: '/start',
       title: 'Start Here: Find the right product faster',
-      description: 'Use Bes3 to search by need, read a full review, compare finalists, or set a price alert without starting over.',
+      description: 'Use Bes3 to search by need, read a full review, compare top picks, or set a price alert without starting over.',
       breadcrumbItems,
       dateModified: latestRefresh,
       items: stateRoutes.map((route) => ({
@@ -252,7 +252,7 @@ export default async function StartPage() {
               description="Bes3 works best when you start with the page that matches what is still unclear."
             />
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              Search if the need is still broad. Read a review if one product looks close. Compare if you already have finalists. Use alerts if timing is the only blocker left.
+              Search if the need is still broad. Read a review if one product looks close. Compare if you already have top picks. Use alerts if price is the only thing holding you back.
             </p>
           </div>
           <div className="mt-6 grid gap-4 xl:grid-cols-4">
@@ -338,7 +338,7 @@ export default async function StartPage() {
               {
                 eyebrow: 'Brand',
                 title: leadBrand ? `See ${leadBrand.name}` : 'Browse brands',
-                description: 'If one manufacturer already looks promising, jump back into that brand instead of reopening the whole market.',
+                description: 'If one brand already looks promising, jump back into that brand instead of reopening the whole market.',
                 href: leadBrand ? `/brands/${leadBrand.slug}` : '/brands',
                 label: leadBrand ? `Open ${leadBrand.name}` : 'Browse brands'
               }

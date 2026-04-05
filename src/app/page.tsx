@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
     image: articles[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'verified deals', 'best tech picks']
+    keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'live deals', 'best tech picks']
   })
 }
 
@@ -103,7 +103,7 @@ export default async function HomePage() {
     },
     {
       question: 'When should I use a brand page instead of a category page?',
-      answer: 'Use a brand page when you already trust a specific manufacturer. Use a category page when you still want to compare different brands fairly.'
+      answer: 'Use a brand page when you already trust a specific brand. Use a category page when you still want to compare different brands fairly.'
     },
     {
       question: 'Why does Bes3 keep only a few entry points on the homepage?',
@@ -267,7 +267,7 @@ export default async function HomePage() {
               <SectionHeader
                 eyebrow="Brands"
                 title="Browse brands you already trust."
-                description="Open a brand page when you already like a manufacturer and want the quickest path to products, reviews, and comparisons."
+                description="Open a brand page when you already like a brand and want the quickest path to products, reviews, and comparisons."
               />
               <Link href="/brands" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform hover:translate-x-1">
                 View all brands <span aria-hidden="true">→</span>

@@ -11,7 +11,7 @@ const INTENT_OPTIONS = [
   {
     id: 'deals',
     label: 'Deal Alerts',
-    description: 'Worthwhile price drops and timely promotions.'
+    description: 'Useful price drops and live deals worth checking.'
   },
   {
     id: 'price-alert',
@@ -20,14 +20,14 @@ const INTENT_OPTIONS = [
   },
   {
     id: 'category-brief',
-    label: 'Category Brief',
-    description: 'Weekly buyer notes on what changed and why.'
+    label: 'Category Updates',
+    description: 'A weekly summary of what changed in the category.'
   }
 ] as const
 
 const CADENCE_OPTIONS = [
   { id: 'weekly', label: 'Weekly' },
-  { id: 'priority', label: 'Priority' }
+  { id: 'priority', label: 'Right away' }
 ] as const
 
 type IntentId = (typeof INTENT_OPTIONS)[number]['id']
@@ -43,17 +43,17 @@ export type NewsletterFollowupRoute = {
 
 function buildAlertPreview(intent: IntentId, cadence: CadenceId, categorySlug: string) {
   const categoryLabel = categorySlug ? categorySlug.replace(/-/g, ' ') : 'the categories you care about'
-  const cadenceLabel = cadence === 'priority' ? 'as soon as the signal matters' : 'in a steady weekly digest'
+  const cadenceLabel = cadence === 'priority' ? 'right away when it is worth your attention' : 'in one weekly update'
 
   if (intent === 'price-alert') {
     return `Bes3 will watch ${categoryLabel} and surface price moves worth acting on ${cadenceLabel}.`
   }
 
   if (intent === 'category-brief') {
-    return `Bes3 will summarize what changed in ${categoryLabel} ${cadenceLabel}, so you can stay informed without reopening the whole research loop.`
+    return `Bes3 will summarize what changed in ${categoryLabel} ${cadenceLabel}, so you can stay informed without restarting your research.`
   }
 
-  return `Bes3 will surface the most worthwhile live deals for ${categoryLabel} ${cadenceLabel}, without turning the feed into a generic promo blast.`
+  return `Bes3 will send the most worthwhile live deals for ${categoryLabel} ${cadenceLabel}, without turning your inbox into generic marketing spam.`
 }
 
 export function NewsletterSignup({
@@ -96,17 +96,17 @@ export function NewsletterSignup({
       <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-100/60 blur-3xl" />
       {done ? (
         <div className="relative space-y-5">
-          <p className="editorial-kicker">Alert added</p>
-          <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">You are on the watchlist.</h3>
+          <p className="editorial-kicker">Email saved</p>
+          <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">You&apos;re signed up.</h3>
           <p className="text-sm leading-7 text-muted-foreground">
-            Bes3 will use this preference to keep future {selectedIntent.label.toLowerCase()} more relevant{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
+            Bes3 will use this choice to keep future {selectedIntent.label.toLowerCase()} more relevant{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
           </p>
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
               {selectedIntent.label}
             </span>
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-              {cadence === 'priority' ? 'Priority cadence' : 'Weekly cadence'}
+              {cadence === 'priority' ? 'Right away' : 'Weekly'}
             </span>
             {categorySlug ? (
               <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -116,7 +116,7 @@ export function NewsletterSignup({
           </div>
           {afterSignupRoutes.length ? (
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">While you wait</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">While you wait</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {afterSignupRoutes.map((route) => (
                   <Link
@@ -152,8 +152,8 @@ export function NewsletterSignup({
           }}
         >
           <div className="space-y-2">
-            <p className="editorial-kicker">Buyer Alerts</p>
-            <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Tell Bes3 what to watch for.</h3>
+            <p className="editorial-kicker">Email Updates</p>
+            <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Tell Bes3 what to email you about.</h3>
             <p className="text-sm leading-7 text-muted-foreground">{selectedIntent.description}</p>
           </div>
 
@@ -219,14 +219,14 @@ export function NewsletterSignup({
           </div>
 
           <div className="rounded-[1.25rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Alert preview</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">What you will get</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{alertPreview}</p>
           </div>
 
           <Button type="submit" disabled={!email.includes('@') || isPending} className="min-h-[56px] rounded-full px-6">
-            {isPending ? 'Saving...' : 'Start my alert'}
+            {isPending ? 'Saving...' : 'Save my updates'}
           </Button>
-          <p className="text-xs leading-6 text-muted-foreground">One email address, preference-aware updates, and no generic newsletter blast.</p>
+          <p className="text-xs leading-6 text-muted-foreground">One email address, updates matched to what you picked, and no generic marketing spam.</p>
         </form>
       )}
     </div>

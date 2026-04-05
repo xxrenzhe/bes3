@@ -117,18 +117,18 @@ export default async function ComparisonPage({
   ]
   const howToSteps = [
     {
-      name: 'Confirm the finalists',
+      name: 'Confirm the top picks',
       text: 'Use the comparison only when the shortlist is already narrow enough that the tradeoffs stay honest and you are close to choosing.'
     },
     {
       name: 'Pick the winner',
       text: article.product?.slug
         ? 'Open the winning product page when you need pricing, specs, and current store details before clicking through.'
-        : 'Treat the editorial winner as the default answer unless you still have a product-fit blocker.'
+        : 'Treat the winner here as the default answer unless you still have an open question.'
     },
     {
       name: 'Keep other options open',
-      text: 'If price timing is the only blocker, switch into a category price alert. If neither finalist is right, reopen the shortlist instead of branching into unrelated products.'
+      text: 'If price is the only thing holding you back, switch into a category price alert. If neither option is right, reopen the shortlist instead of branching into unrelated products.'
     }
   ]
   const structuredData = [
@@ -174,14 +174,14 @@ export default async function ComparisonPage({
         }
       ]
     }),
-    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the finalists, choose the better fit, and decide whether to buy now, set a price alert, or reopen the shortlist.', howToSteps)
+    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the top picks, choose the better fit, and decide whether to buy now, set a price alert, or reopen the shortlist.', howToSteps)
   ]
   const faqEntries = [
     {
       question: 'What should I do after this comparison?',
       answer: article.product?.slug
-        ? 'If the winner is clear, move into the product page next for specs, pricing, and current store details. Reopen the shortlist only if neither finalist feels right.'
-        : 'Treat the editorial winner as the default answer unless a real fit blocker remains.'
+        ? 'If the winner is clear, move into the product page next for specs, pricing, and current store details. Reopen the shortlist only if neither option feels right.'
+        : 'Treat the winner here as the default answer unless you still have a real concern.'
     },
     {
       question: 'When does a brand page help after a comparison?',
@@ -190,7 +190,7 @@ export default async function ComparisonPage({
         : 'Use the category page instead when you still need broader market context.'
     },
     {
-      question: 'Why keep this page tightly scoped to finalists?',
+      question: 'Why keep this page tightly scoped to the top picks?',
       answer: 'Because comparisons only stay trustworthy when the shortlist is already narrow. Pulling in unrelated products makes the recommendation weaker and the page less useful.'
     }
   ]
@@ -200,7 +200,7 @@ export default async function ComparisonPage({
       title: article.product?.slug ? 'Open the winning product' : 'Use this winner as the default',
       description: article.product?.slug
         ? 'Move into the product page when the comparison settled the choice and you now just need pricing, specs, and current store details.'
-        : 'The comparison already did the hard narrowing work. Treat the editorial winner as your default answer unless a blocker remains.',
+        : 'The comparison already did the hard narrowing work. Treat the winner here as your default unless you still have a real concern.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
       label: article.product?.slug ? 'Open winner details' : 'Stay with this pick'
     },
@@ -209,14 +209,14 @@ export default async function ComparisonPage({
       title: relatedReview ? 'Read the supporting review' : 'Recheck the category page',
       description: relatedReview
         ? 'Use the review when you want the strongest product-level rationale behind the winner before clicking through.'
-        : 'Go back to the category page if the finalists still do not feel grounded in your actual use case.',
+        : 'Go back to the category page if the current picks still do not feel grounded in your actual use case.',
       href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : category ? `/categories/${category}` : '/shortlist',
       label: relatedReview ? 'Open review' : 'Browse category page'
     },
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track a better deal',
-      description: 'If price timing is the only unresolved variable, convert this comparison into a price alert instead of restarting your research later.',
+      description: 'If price is the only unresolved variable, convert this comparison into a price alert instead of restarting your research later.',
       href: category
         ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
         : '/newsletter?intent=deals&cadence=priority',
@@ -225,7 +225,7 @@ export default async function ComparisonPage({
     {
       eyebrow: 'Return',
       title: 'Keep the shortlist clean',
-      description: 'If neither finalist is quite right, go back to the shortlist or category page instead of branching into unrelated products.',
+      description: 'If neither option feels quite right, go back to the shortlist or category page instead of branching into unrelated products.',
       href: category ? `/categories/${category}#category-shortlist` : '/shortlist',
       label: 'Reopen shortlist'
     }
@@ -420,7 +420,7 @@ export default async function ComparisonPage({
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Open the brand page if the manufacturer looks right and you want to see its other options without widening the field too early.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Open the brand page if the brand looks right and you want to see its other options without widening the field too early.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (

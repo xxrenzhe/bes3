@@ -72,7 +72,7 @@ export default async function BrandPage({
     },
     {
       question: `When should I leave the ${brand.name} page and return to a category page?`,
-      answer: `Leave the brand page when the manufacturer no longer feels like the right constraint. Category pages are better once you need honest cross-brand tradeoffs.`
+      answer: `Leave the brand page when the brand no longer feels like the right constraint. Category pages are better once you need honest cross-brand tradeoffs.`
     },
     {
       question: `What is the best next move after this brand page?`,
@@ -119,7 +119,7 @@ export default async function BrandPage({
       [
         {
           name: 'Start with the strongest product',
-          text: 'Open the most credible product page when you already trust the brand and want the shortest path into specs, price context, and shortlist actions.'
+          text: 'Open the strongest product page when you already trust the brand and want the shortest path into specs, price context, and shortlist actions.'
         },
         {
           name: 'Validate with brand coverage',
@@ -127,7 +127,7 @@ export default async function BrandPage({
         },
         {
           name: 'Return to categories when needed',
-          text: 'If the brand no longer feels like the right constraint, reopen the related category pages so you can compare across manufacturers without losing your place.'
+          text: 'If the brand no longer feels like the right constraint, reopen the related category pages so you can compare across brands without losing your place.'
         }
       ]
     ),
@@ -156,7 +156,7 @@ export default async function BrandPage({
       ? {
           eyebrow: 'Compare',
           title: 'Pressure-test the best options',
-          description: 'The comparison page is best when this brand already has multiple credible finalists and you want the tradeoffs condensed into one answer.',
+          description: 'The comparison page is best when this brand already has multiple strong options and you want the tradeoffs condensed into one answer.',
           href: getArticlePath(leadComparison.type, leadComparison.slug),
           label: 'Open comparison'
         }
@@ -173,7 +173,7 @@ export default async function BrandPage({
       ? {
           eyebrow: 'Watch',
           title: `Track ${getCategoryLabel(leadCategory)}`,
-          description: 'If timing is the blocker, keep the surrounding category active instead of forcing a brand choice today.',
+          description: 'If price is the only thing holding you back, keep the surrounding category active instead of forcing a brand choice today.',
           href: `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority`,
           label: 'Start price alert'
         }

@@ -161,7 +161,7 @@ export default async function BrandCategoryPage({
         },
         {
           question: 'What should I do while this exact page is still thin?',
-          answer: `Use the broader ${brand.name} page if brand preference is still strong, or reopen the ${categoryLabel} category page if the category matters more than the manufacturer right now.`
+          answer: `Use the broader ${brand.name} page if brand preference is still strong, or reopen the ${categoryLabel} category page if the category matters more than the brand right now.`
         },
         {
           question: 'Will this page grow over time?',
@@ -189,7 +189,7 @@ export default async function BrandCategoryPage({
           ? {
               eyebrow: 'Validate',
               title: 'Read the clearest review',
-              description: 'Use the review or guide once one product already looks plausible and you want fit context before comparing or clicking out.',
+              description: 'Use the review or guide once one product already looks promising and you want fit context before comparing or clicking out.',
               href: getArticlePath(leadReview.type, leadReview.slug),
               label: 'Open review'
             }
@@ -203,8 +203,8 @@ export default async function BrandCategoryPage({
         leadComparison
           ? {
               eyebrow: 'Compare',
-              title: 'Pressure-test the finalists',
-              description: 'Use the comparison once there are multiple credible options inside this exact page and you want the tradeoffs condensed into one answer.',
+              title: 'Compare the top picks',
+              description: 'Use the comparison once there are multiple strong options inside this exact page and you want the tradeoffs condensed into one answer.',
               href: getArticlePath(leadComparison.type, leadComparison.slug),
               label: 'Open comparison'
             }
@@ -218,7 +218,7 @@ export default async function BrandCategoryPage({
         {
           eyebrow: 'Watch',
           title: `Track ${categoryLabel}`,
-          description: 'If timing is the blocker, keep this category active through alerts instead of forcing a decision today.',
+          description: 'If price is the only thing holding you back, keep this category active through alerts instead of forcing a decision today.',
           href: `/newsletter?intent=price-alert&category=${encodeURIComponent(categorySlug)}&brand=${encodeURIComponent(brand.name)}&cadence=priority`,
           label: 'Start price watch'
         }
@@ -287,11 +287,11 @@ export default async function BrandCategoryPage({
         ? [
             {
               name: 'Start with the exact product match',
-              text: `Open the strongest ${brand.name} ${categoryLabel} product page when you already trust the manufacturer and want the shortest path into specifics.`
+              text: `Open the strongest ${brand.name} ${categoryLabel} product page when you already trust the brand and want the shortest path into specifics.`
             },
             {
               name: 'Validate with nearby editorial',
-              text: 'Use the attached review, guide, or comparison once one candidate already looks plausible and you want the recommendation condensed into one page.'
+              text: 'Use the attached review, guide, or comparison once one candidate already looks promising and you want the recommendation condensed into one page.'
             },
             {
               name: 'Widen only if this page stops helping',

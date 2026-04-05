@@ -114,8 +114,8 @@ export default async function ReviewPage({
     {
       name: 'Choose the next step',
       text: relatedComparison
-        ? 'Move into the related comparison if you are down to finalists, or switch to a price alert if timing is the only blocker left.'
-        : 'Use the category page or a price alert if you are not ready to compare finalists yet.'
+        ? 'Move into the related comparison if you are down to your top picks, or switch to a price alert if price is the only thing holding you back.'
+        : 'Use the category page or a price alert if you are not ready to compare your top picks yet.'
     }
   ]
   const structuredData = [
@@ -153,18 +153,18 @@ export default async function ReviewPage({
   const faqEntries = [
     {
       question: 'What should this review help me decide?',
-      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once the fit is credible, the next step is usually the product page, a comparison, or a price alert.'
+      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once it feels like a real option, the next step is usually the product page, a comparison, or a price alert.'
     },
     {
       question: 'When should I open the brand page from a review?',
       answer: article.product?.brand
-        ? `Open the ${article.product.brand} page when the manufacturer itself looks promising and you want the rest of that brand's Bes3 coverage without broadening your search too early.`
+        ? `Open the ${article.product.brand} page when the brand itself looks promising and you want the rest of that brand's Bes3 coverage without broadening your search too early.`
         : 'Use the category page instead when you still need nearby context before comparing or clicking through.'
     },
     {
       question: 'Should I compare now or keep reading?',
       answer: relatedComparison
-        ? 'If this product already feels credible, move into the comparison next. Keep reading only if you still need the deeper rationale behind the recommendation.'
+        ? 'If this product already feels right, move into the comparison next. Keep reading only if you still need the deeper rationale behind the recommendation.'
         : 'If no comparison is live yet, use the product page or category page next instead of reopening broad research.'
     }
   ]
@@ -183,16 +183,16 @@ export default async function ReviewPage({
       eyebrow: 'Deep Dive',
       title: article.product?.slug ? 'Open the product page' : 'Stay with this review',
       description: article.product?.slug
-        ? 'Move into the product page when this recommendation is already credible enough and you want specs, pricing, and current store details.'
+        ? 'Move into the product page when this recommendation already looks right and you want specs, pricing, and current store details.'
         : 'Use this review as the main answer when a separate product page is not available yet.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
       label: article.product?.slug ? 'Open product details' : 'Keep reading this review'
     },
     {
       eyebrow: 'Compare',
-      title: relatedComparison ? 'Compare the finalist' : 'Narrow the shortlist first',
+      title: relatedComparison ? 'Compare this pick' : 'Narrow the shortlist first',
       description: relatedComparison
-        ? 'Use the comparison when this pick is strong enough to deserve a head-to-head comparison against nearby alternatives.'
+        ? 'Use the comparison when this pick is strong enough to deserve a side-by-side check against nearby alternatives.'
         : 'If you are not ready to decide, go back to the category page and narrow real alternatives before comparing.',
       href: relatedComparison
         ? getArticlePath(relatedComparison.type, relatedComparison.slug)
@@ -272,7 +272,7 @@ export default async function ReviewPage({
               <p className="editorial-kicker">How To Use This Review</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the review, then choose the next move.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into an alert if timing is the only remaining blocker.
+                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into an alert if price is the only thing still holding you back.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
@@ -434,7 +434,7 @@ export default async function ReviewPage({
                 <Link href={`/brands/${brandSlug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{article.product.brand}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay with the same manufacturer if the brand already looks promising and you want related Bes3 coverage in one place.</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay with the same brand if it already looks promising and you want related Bes3 coverage in one place.</p>
                 </Link>
               ) : null}
               {relatedGuide ? (

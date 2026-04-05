@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Brand Directory',
     description:
-      'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each manufacturer.',
+      'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each brand.',
     path: '/brands',
     image: brands[0]?.heroImageUrl,
     freshnessDate,
@@ -38,7 +38,7 @@ export default async function BrandsPage() {
     },
     {
       question: 'Does a brand page replace category browsing?',
-      answer: 'No. Brand pages focus on one manufacturer, while category pages are better when you still need to compare across brands.'
+      answer: 'No. Brand pages focus on one brand, while category pages are better when you still need to compare across brands.'
     },
     {
       question: 'What makes a brand page useful for buyers?',
@@ -50,7 +50,7 @@ export default async function BrandsPage() {
     buildCollectionPageSchema({
       path: '/brands',
       title: 'Brand Directory',
-      description: 'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each manufacturer.',
+      description: 'Browse Bes3 by brand to see which products, reviews, comparisons, and categories already exist for each brand.',
       breadcrumbItems,
       dateModified: leadBrand?.latestUpdate || null,
       items: brands.map((brand) => ({
@@ -61,15 +61,15 @@ export default async function BrandsPage() {
     buildHowToSchema(
       '/brands',
       'How to use the Bes3 brand directory',
-      'Use the brand directory when you already have a preferred manufacturer and want to stay focused on that brand.',
+      'Use the brand directory when you already have a preferred brand and want to stay focused on that brand.',
       [
         {
           name: 'Open the brand page',
-          text: 'Choose a brand once you already trust the manufacturer or want to see all Bes3 coverage tied to that brand.'
+          text: 'Choose a brand once you already trust it or want to see all Bes3 coverage tied to that brand.'
         },
         {
           name: 'Check the strongest products and pages',
-          text: 'Use the page to jump into the most credible products, reviews, and comparisons without searching the full site again.'
+          text: 'Use the page to jump into the strongest products, reviews, and comparisons without searching the full site again.'
         },
         {
           name: 'Return to categories if the scope broadens',
@@ -93,7 +93,7 @@ export default async function BrandsPage() {
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Brand Directory</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">Browse Bes3 by brand.</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                This page mirrors the brand-first searches shoppers actually make. Open a brand page when you already trust the manufacturer and want the quickest path into its products, reviews, and comparisons.
+                This page mirrors the brand-first searches shoppers actually make. Open a brand page when you already trust the brand and want the quickest path into its products, reviews, and comparisons.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -104,7 +104,7 @@ export default async function BrandsPage() {
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Best use</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Use brand pages once the manufacturer is already credible. Use category pages first if you still need cross-brand discovery.
+                  Use brand pages once the brand already feels right. Use category pages first if you still need cross-brand discovery.
                 </p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">

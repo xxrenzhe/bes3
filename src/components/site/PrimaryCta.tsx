@@ -58,14 +58,14 @@ export function PrimaryCta({
           aria-disabled="true"
           className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-muted px-6 py-3 text-sm font-semibold text-muted-foreground"
         >
-          Merchant link pending verification
+          Store link not ready yet
         </div>
       )}
       {note ? <p className="text-xs text-muted-foreground">{note}</p> : null}
       <p className="text-xs text-muted-foreground">
         {resolvedHref
           ? 'Affiliate disclosure: Bes3 may earn from qualifying purchases at no extra cost to you.'
-          : 'Bes3 only sends buyers off-site after a merchant link is verified.'}
+          : 'Bes3 only sends buyers to a store after the link has been checked.'}
       </p>
     </div>
   )

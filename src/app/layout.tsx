@@ -20,7 +20,7 @@ export const metadata: Metadata = {
   alternates: {
     canonical: '/'
   },
-  keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'verified deals', 'brand directory'],
+  keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'live deals', 'brand directory'],
   robots: {
     index: true,
     follow: true

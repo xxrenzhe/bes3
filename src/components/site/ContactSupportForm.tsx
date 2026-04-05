@@ -69,9 +69,9 @@ export function ContactSupportForm() {
     >
       <div className="space-y-3">
         <p className="editorial-kicker">Contact Bes3</p>
-        <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the form when self-serve is not enough.</h2>
+        <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the form when you still need help.</h2>
         <p className="text-sm leading-7 text-muted-foreground">
-          Bes3 is designed to answer most buying questions through search, reviews, shortlist, and alerts. Use this form for edge cases, corrections, and conversations that need a human pass.
+          Bes3 is designed to answer most buying questions through search, reviews, shortlist, and alerts. Use this form for corrections, unusual cases, or anything that needs a real person to look at it.
         </p>
       </div>
 
@@ -124,7 +124,7 @@ export function ContactSupportForm() {
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           className="min-h-[200px] w-full rounded-2xl border-none bg-muted px-5 py-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          placeholder="Include the product, category, or page already in play, plus the part of the buying choice that still feels blocked."
+          placeholder="Include the product, category, or page involved, plus what still feels unclear."
         />
       </label>
 

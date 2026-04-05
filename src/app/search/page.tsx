@@ -23,7 +23,7 @@ const SEARCH_SCOPE_META: Record<SearchScope, string> = {
   all: 'Shows products, reviews, comparisons, and guides together.',
   products: 'Best when you want a short list of products to start from.',
   review: 'Best when you want a deeper review of one product.',
-  comparison: 'Best when you already have finalists and want them side by side.',
+  comparison: 'Best when you already have two or three top picks and want them side by side.',
   guide: 'Best when you still need help understanding what matters before choosing.'
 }
 
@@ -81,8 +81,8 @@ const SEARCH_STARTER_ROUTES = [
     label: 'Search review pages'
   },
   {
-    title: 'Compare finalists',
-    description: 'Use comparison pages when you are choosing between two or three credible options.',
+    title: 'Compare top picks',
+    description: 'Use comparison pages when you are choosing between two or three strong options.',
     href: '/search?q=ergonomic%20chair&scope=comparison',
     label: 'Search comparisons'
   },
@@ -185,7 +185,7 @@ export default async function SearchPage({
           ? {
               eyebrow: 'Watch',
               title: `Track ${getCategoryLabel(suggestedCategory)}`,
-              description: 'If timing is the blocker, turn this search into a price alert so you do not have to start over later.',
+              description: 'If price is the only thing holding you back, turn this search into a price alert so you do not have to start over later.',
               href: `/newsletter?intent=price-alert&category=${encodeURIComponent(suggestedCategory)}&cadence=priority`,
               label: 'Start price alert'
             }
@@ -436,7 +436,7 @@ export default async function SearchPage({
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Good search should match where you are: discover products, validate one option, compare finalists, or switch into a price alert when the timing is not right yet.
+                Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better deal.
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-2">
                 {SEARCH_STARTER_ROUTES.map((route) => (
