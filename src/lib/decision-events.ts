@@ -41,6 +41,24 @@ const COACH_SECONDARY_TYPES: DecisionEventType[] = ['decision_coach_secondary_cl
 
 const MERCHANT_INTENT_TYPES: DecisionEventType[] = ['merchant_cta_click', 'merchant_offer_select']
 const SHORTLIST_DECISION_COACH_SOURCE = normalizeMerchantSource('shortlist-decision-coach')
+const ASSISTANT_SESSION_TYPES: DecisionEventType[] = ['assistant_session_start']
+const ASSISTANT_CONSTRAINT_TYPES: DecisionEventType[] = ['assistant_constraint_add']
+const ASSISTANT_ACCEPT_TYPES: DecisionEventType[] = ['assistant_recommendation_accept']
+const ASSISTANT_REJECT_TYPES: DecisionEventType[] = ['assistant_recommendation_reject']
+const ASSISTANT_ALERT_TYPES: DecisionEventType[] = ['alert_subscribe_from_assistant']
+const ASSISTANT_OFFER_EXPAND_TYPES: DecisionEventType[] = ['offer_expand']
+const ASSISTANT_PRICE_HISTORY_TYPES: DecisionEventType[] = ['price_history_view']
+const ASSISTANT_MERCHANT_SELECTION_TYPES: DecisionEventType[] = ['merchant_offer_select']
+const ASSISTANT_EVENT_TYPES: DecisionEventType[] = [
+  ...ASSISTANT_SESSION_TYPES,
+  ...ASSISTANT_CONSTRAINT_TYPES,
+  ...ASSISTANT_ACCEPT_TYPES,
+  ...ASSISTANT_REJECT_TYPES,
+  ...ASSISTANT_ALERT_TYPES,
+  ...ASSISTANT_OFFER_EXPAND_TYPES,
+  ...ASSISTANT_PRICE_HISTORY_TYPES,
+  ...ASSISTANT_MERCHANT_SELECTION_TYPES
+]
 
 type DecisionEventRow = {
   event_type: string
@@ -95,6 +113,23 @@ export interface DecisionFunnelSummary {
   topSourceEvents: number
   topCoachAction: string | null
   topCoachActionEvents: number
+  assistantFunnel: {
+    lookbackDays: number
+    sessions: DecisionEventCounter
+    constraints: DecisionEventCounter
+    recommendationAccepts: DecisionEventCounter
+    recommendationRejects: DecisionEventCounter
+    alertSubscriptions: DecisionEventCounter
+    offerExpands: DecisionEventCounter
+    priceHistoryViews: DecisionEventCounter
+    merchantOfferSelections: DecisionEventCounter
+    sessionToConstraintRate: number
+    sessionToAcceptRate: number
+    sessionToAlertRate: number
+    acceptToMerchantSelectionRate: number
+    topSource: string | null
+    topSourceEvents: number
+  }
 }
 
 function parseTimestamp(value: string | null | undefined) {
@@ -237,8 +272,22 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
   )
   const merchantIntentClicks = buildCounter(recentRows, MERCHANT_INTENT_TYPES)
   const verifiedMerchantExits = buildVisitorCounter(recentMerchantRows)
+  const assistantSessions = buildCounter(recentRows, ASSISTANT_SESSION_TYPES)
+  const assistantConstraints = buildCounter(recentRows, ASSISTANT_CONSTRAINT_TYPES)
+  const assistantAccepts = buildCounter(recentRows, ASSISTANT_ACCEPT_TYPES)
+  const assistantRejects = buildCounter(recentRows, ASSISTANT_REJECT_TYPES)
+  const assistantAlerts = buildCounter(recentRows, ASSISTANT_ALERT_TYPES)
+  const assistantOfferExpands = buildCounter(recentRows, ASSISTANT_OFFER_EXPAND_TYPES)
+  const assistantPriceHistoryViews = buildCounter(recentRows, ASSISTANT_PRICE_HISTORY_TYPES)
+  const assistantMerchantSelections = buildCounter(recentRows, ASSISTANT_MERCHANT_SELECTION_TYPES)
 
   const sourceCounts = recentRows.reduce((result, row) => {
+    result.set(row.source, (result.get(row.source) || 0) + 1)
+    return result
+  }, new Map<string, number>())
+
+  const assistantSourceCounts = recentRows.reduce((result, row) => {
+    if (!ASSISTANT_EVENT_TYPES.includes(row.event_type)) return result
     result.set(row.source, (result.get(row.source) || 0) + 1)
     return result
   }, new Map<string, number>())
@@ -258,6 +307,11 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
   })[0]
 
   const topCoachActionEntry = Array.from(coachActionCounts.entries()).sort((left, right) => {
+    if (right[1] !== left[1]) return right[1] - left[1]
+    return left[0].localeCompare(right[0])
+  })[0]
+
+  const topAssistantSourceEntry = Array.from(assistantSourceCounts.entries()).sort((left, right) => {
     if (right[1] !== left[1]) return right[1] - left[1]
     return left[0].localeCompare(right[0])
   })[0]
@@ -283,6 +337,23 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     topSource: topSourceEntry?.[0] || null,
     topSourceEvents: Number(topSourceEntry?.[1] || 0),
     topCoachAction: topCoachActionEntry?.[0] || null,
-    topCoachActionEvents: Number(topCoachActionEntry?.[1] || 0)
+    topCoachActionEvents: Number(topCoachActionEntry?.[1] || 0),
+    assistantFunnel: {
+      lookbackDays: Math.max(1, days),
+      sessions: assistantSessions,
+      constraints: assistantConstraints,
+      recommendationAccepts: assistantAccepts,
+      recommendationRejects: assistantRejects,
+      alertSubscriptions: assistantAlerts,
+      offerExpands: assistantOfferExpands,
+      priceHistoryViews: assistantPriceHistoryViews,
+      merchantOfferSelections: assistantMerchantSelections,
+      sessionToConstraintRate: toPercent(assistantConstraints.visitors, assistantSessions.visitors),
+      sessionToAcceptRate: toPercent(assistantAccepts.visitors, assistantSessions.visitors),
+      sessionToAlertRate: toPercent(assistantAlerts.visitors, assistantSessions.visitors),
+      acceptToMerchantSelectionRate: toPercent(assistantMerchantSelections.visitors, assistantAccepts.visitors),
+      topSource: topAssistantSourceEntry?.[0] || null,
+      topSourceEvents: Number(topAssistantSourceEntry?.[1] || 0)
+    }
   }
 }

@@ -70,6 +70,7 @@ export interface AdminDashboardSummary {
     productsWithoutOffers: number
     productsWithoutEvidence: number
     productsWithoutOfferCompetition: number
+    productsWithoutPriceHistory: number
     freshnessDistribution: {
       fresh: number
       recent: number
@@ -86,6 +87,11 @@ export interface AdminDashboardSummary {
       single: number
       multi: number
     }
+    priceHistoryCoverageDistribution: {
+      none: number
+      thin: number
+      healthy: number
+    }
     topPriorityProducts: Array<{
       id: number
       slug: string | null
@@ -97,6 +103,7 @@ export interface AdminDashboardSummary {
       recentMerchantClicks: number
       offerCount: number
       evidenceCount: number
+      priceHistoryCount: number
       dataConfidenceScore: number
       attributeCompletenessScore: number
       reasons: string[]
@@ -134,6 +141,28 @@ export interface AdminDashboardSummary {
       topDecisionSourceEvents: number
       topCoachAction: string | null
       topCoachActionEvents: number
+      assistantFunnel: {
+        lookbackDays: number
+        sessionVisitors: number
+        sessionEvents: number
+        constraintVisitors: number
+        acceptVisitors: number
+        acceptEvents: number
+        rejectVisitors: number
+        rejectEvents: number
+        alertVisitors: number
+        alertEvents: number
+        offerExpandVisitors: number
+        priceHistoryViewVisitors: number
+        merchantOfferSelectionVisitors: number
+        merchantOfferSelectionEvents: number
+        sessionToConstraintRate: number
+        sessionToAcceptRate: number
+        sessionToAlertRate: number
+        acceptToMerchantSelectionRate: number
+        topAssistantSource: string | null
+        topAssistantSourceEvents: number
+      }
     }
   }
   recentRuns: PipelineRunListItem[]
@@ -1859,7 +1888,7 @@ function getCompletenessBucket(value: number): 'high' | 'medium' | 'low' {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, merchantClickRows] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, priceHistoryCountRows, merchantClickRows] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -1895,6 +1924,13 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         GROUP BY product_id
       `
     ),
+    db.query<{ product_id: number; count: number }>(
+      `
+        SELECT product_id, COUNT(*) AS count
+        FROM product_price_history
+        GROUP BY product_id
+      `
+    ),
     db.query<{ product_id: number | null; created_at: string | null }>(
       `
         SELECT product_id, created_at
@@ -1926,6 +1962,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
   const articlesMissingVisual = publishedArticles.filter((article) => !article.heroImageUrl && !article.product?.heroImageUrl).length
   const offerCounts = new Map(offerCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
   const evidenceCounts = new Map(evidenceCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
+  const priceHistoryCounts = new Map(priceHistoryCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
   const merchantClickThreshold = Date.now() - 30 * 86_400_000
   const recentMerchantClicks = merchantClickRows.reduce((result, row) => {
     if (!row.product_id) return result
@@ -1941,6 +1978,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
   const commerceProducts = siteProducts.map((product) => {
     const offerCount = offerCounts.get(product.id) || 0
     const evidenceCount = evidenceCounts.get(product.id) || 0
+    const priceHistoryCount = priceHistoryCounts.get(product.id) || 0
     const freshness = getCommerceFreshnessBucket(product.offerLastCheckedAt || product.priceLastCheckedAt)
     const recentClicks = recentMerchantClicks.get(product.id) || 0
     const confidencePenalty = Math.round((1 - Number(product.dataConfidenceScore || 0)) * 35)
@@ -1948,6 +1986,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     const freshnessPenalty = freshness === 'stale' ? 18 : freshness === 'unknown' ? 14 : freshness === 'recent' ? 4 : 0
     const offerPenalty = offerCount === 0 ? 24 : offerCount === 1 ? 12 : 0
     const evidencePenalty = evidenceCount === 0 ? 20 : evidenceCount < 3 ? 8 : 0
+    const priceHistoryPenalty = priceHistoryCount === 0 ? 16 : priceHistoryCount < 4 ? 7 : 0
     const demandBonus = recentClicks * 8
     const commercialBonus = product.resolvedUrl ? 8 : 0
     const priorityScore =
@@ -1956,6 +1995,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       freshnessPenalty +
       offerPenalty +
       evidencePenalty +
+      priceHistoryPenalty +
       demandBonus +
       commercialBonus
 
@@ -1967,6 +2007,8 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     if (offerCount === 1) reasons.push('Only one tracked offer')
     if (evidenceCount === 0) reasons.push('No attribute evidence')
     if (evidenceCount > 0 && evidenceCount < 3) reasons.push('Thin evidence coverage')
+    if (priceHistoryCount === 0) reasons.push('No price history')
+    if (priceHistoryCount > 0 && priceHistoryCount < 4) reasons.push('Thin price history')
     if (Number(product.dataConfidenceScore || 0) < 0.6) reasons.push('Low confidence score')
     if (Number(product.attributeCompletenessScore || 0) < 0.5) reasons.push('Low attribute completeness')
 
@@ -1981,6 +2023,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       recentMerchantClicks: recentClicks,
       offerCount,
       evidenceCount,
+      priceHistoryCount,
       dataConfidenceScore: Number(product.dataConfidenceScore || 0),
       attributeCompletenessScore: Number(product.attributeCompletenessScore || 0),
       reasons: reasons.slice(0, 4)
@@ -2017,6 +2060,20 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     { none: 0, single: 0, multi: 0 }
   )
 
+  const priceHistoryCoverageDistribution = commerceProducts.reduce(
+    (result, product) => {
+      if (product.priceHistoryCount <= 0) {
+        result.none += 1
+      } else if (product.priceHistoryCount < 7) {
+        result.thin += 1
+      } else {
+        result.healthy += 1
+      }
+      return result
+    },
+    { none: 0, thin: 0, healthy: 0 }
+  )
+
   return {
     totals: {
       products: Number(products?.count || 0),
@@ -2039,9 +2096,11 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       productsWithoutOffers: commerceProducts.filter((product) => product.offerCount === 0).length,
       productsWithoutEvidence: commerceProducts.filter((product) => product.evidenceCount === 0).length,
       productsWithoutOfferCompetition: commerceProducts.filter((product) => product.offerCount < 2).length,
+      productsWithoutPriceHistory: commerceProducts.filter((product) => product.priceHistoryCount === 0).length,
       freshnessDistribution,
       completenessDistribution,
       offerCoverageDistribution,
+      priceHistoryCoverageDistribution,
       topPriorityProducts: commerceProducts
         .sort((left, right) => {
           if (right.priorityScore !== left.priorityScore) return right.priorityScore - left.priorityScore
@@ -2081,7 +2140,29 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         topDecisionSource: decisionFunnel.topSource,
         topDecisionSourceEvents: decisionFunnel.topSourceEvents,
         topCoachAction: decisionFunnel.topCoachAction,
-        topCoachActionEvents: decisionFunnel.topCoachActionEvents
+        topCoachActionEvents: decisionFunnel.topCoachActionEvents,
+        assistantFunnel: {
+          lookbackDays: decisionFunnel.assistantFunnel.lookbackDays,
+          sessionVisitors: decisionFunnel.assistantFunnel.sessions.visitors,
+          sessionEvents: decisionFunnel.assistantFunnel.sessions.events,
+          constraintVisitors: decisionFunnel.assistantFunnel.constraints.visitors,
+          acceptVisitors: decisionFunnel.assistantFunnel.recommendationAccepts.visitors,
+          acceptEvents: decisionFunnel.assistantFunnel.recommendationAccepts.events,
+          rejectVisitors: decisionFunnel.assistantFunnel.recommendationRejects.visitors,
+          rejectEvents: decisionFunnel.assistantFunnel.recommendationRejects.events,
+          alertVisitors: decisionFunnel.assistantFunnel.alertSubscriptions.visitors,
+          alertEvents: decisionFunnel.assistantFunnel.alertSubscriptions.events,
+          offerExpandVisitors: decisionFunnel.assistantFunnel.offerExpands.visitors,
+          priceHistoryViewVisitors: decisionFunnel.assistantFunnel.priceHistoryViews.visitors,
+          merchantOfferSelectionVisitors: decisionFunnel.assistantFunnel.merchantOfferSelections.visitors,
+          merchantOfferSelectionEvents: decisionFunnel.assistantFunnel.merchantOfferSelections.events,
+          sessionToConstraintRate: decisionFunnel.assistantFunnel.sessionToConstraintRate,
+          sessionToAcceptRate: decisionFunnel.assistantFunnel.sessionToAcceptRate,
+          sessionToAlertRate: decisionFunnel.assistantFunnel.sessionToAlertRate,
+          acceptToMerchantSelectionRate: decisionFunnel.assistantFunnel.acceptToMerchantSelectionRate,
+          topAssistantSource: decisionFunnel.assistantFunnel.topSource,
+          topAssistantSourceEvents: decisionFunnel.assistantFunnel.topSourceEvents
+        }
       }
     },
     recentRuns: recentRuns.slice(0, 6),
