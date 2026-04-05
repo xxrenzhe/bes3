@@ -9,7 +9,7 @@ const NAV_ITEMS = [
   { href: '/directory', label: 'Directory' },
   { href: '/brands', label: 'Brands' },
   { href: '/deals', label: 'Deals' },
-  { href: '/about', label: 'Method' },
+  { href: '/about', label: 'About' },
   { href: '/newsletter', label: 'Alerts' }
 ]
 
@@ -33,7 +33,7 @@ export function PublicShell({
               B3
             </div>
             <div className="hidden sm:block">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Buyer Decision System</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-muted-foreground">Tech Buying Guide</p>
               <p className="font-[var(--font-display)] text-xl font-extrabold tracking-tight text-foreground">{DEFAULT_SITE_NAME}</p>
             </div>
           </Link>
@@ -84,7 +84,7 @@ export function PublicShell({
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-muted-foreground">Tech Buying Intelligence</p>
             <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{DEFAULT_SITE_NAME}</h2>
             <p className="max-w-xl text-sm leading-7 text-muted-foreground">
-              {DEFAULT_SITE_TAGLINE} Bes3 is a structured buyer decision system that turns noisy research into shortlists, verdicts, comparisons, and price-aware next steps.
+              {DEFAULT_SITE_TAGLINE} Bes3 helps you compare products, read honest reviews, and find verified deals without the usual hype.
             </p>
           </div>
           <div>
