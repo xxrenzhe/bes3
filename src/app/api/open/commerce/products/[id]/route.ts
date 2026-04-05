@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct } from '@/lib/open-commerce'
 import { getOpenCommerceProductById, listProductAttributeFacts } from '@/lib/site-data'
 
 export async function GET(
@@ -18,8 +19,13 @@ export async function GET(
   const attributeFacts = await listProductAttributeFacts(productId)
 
   return NextResponse.json({
+    protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
     product,
-    attributeFacts
+    attributeFacts,
+    result: serializeCommerceProduct(product, {
+      attributeFacts,
+      source: 'open-commerce-product'
+    })
   })
 }
