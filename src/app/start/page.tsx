@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -245,6 +246,12 @@ export default async function StartPage() {
             </div>
           </div>
         </section>
+
+        <IntentSearchPanel
+          categoryOptions={categories}
+          className="border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)]"
+          compact
+        />
 
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
