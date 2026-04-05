@@ -24,23 +24,27 @@ async function generateTextWithGemini(prompt: string): Promise<string | null> {
   if (provider !== 'gemini') return null
   if (!apiKey) return null
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    }
-  )
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }]
+        })
+      }
+    )
 
-  if (!response.ok) {
+    if (!response.ok) {
+      return null
+    }
+
+    const payload = await response.json()
+    return payload.candidates?.[0]?.content?.parts?.[0]?.text || null
+  } catch {
     return null
   }
-
-  const payload = await response.json()
-  return payload.candidates?.[0]?.content?.parts?.[0]?.text || null
 }
 
 export async function generateKeywordIdeas(product: ProductRecord): Promise<KeywordIdea[]> {
