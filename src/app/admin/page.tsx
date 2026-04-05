@@ -34,6 +34,7 @@ function getFreshnessBadgeClass(value: 'fresh' | 'recent' | 'stale' | 'unknown')
 export default async function AdminDashboardPage() {
   const [summary, workerConfig] = await Promise.all([getAdminDashboardSummary(), Promise.resolve(getPipelineWorkerRuntimeConfig())])
   const decisionFunnel = summary.conversionSignals.decisionFunnel
+  const assistantFunnel = summary.conversionSignals.decisionFunnel.assistantFunnel
   const commerceQuality = summary.commerceQuality
 
   return (
@@ -276,6 +277,102 @@ export default async function AdminDashboardPage() {
         </div>
       </section>
 
+      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Assistant Funnel</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">How the buyer copilot turns intent into action</h2>
+            </div>
+            <StatusBadge value={assistantFunnel.sessionVisitors ? 'configured' : 'partial'} />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Sessions</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.sessionVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.sessionEvents} starts in the last {assistantFunnel.lookbackDays} days.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Constraints Added</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.constraintVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{formatPercent(assistantFunnel.sessionToConstraintRate)} of assistant visitors added meaningful constraints.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Recommendation Accepts</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.acceptVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.acceptEvents} acceptance events with a {formatPercent(assistantFunnel.sessionToAcceptRate)} session-to-accept rate.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Alert Starts</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.alertVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.alertEvents} assistant-led alert subscriptions with a {formatPercent(assistantFunnel.sessionToAlertRate)} rate.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_58%,#0f766e_100%)] p-5 text-white shadow-[0_24px_60px_-36px_rgba(15,23,42,0.5)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200/90">Accept → Offer Select</p>
+              <p className="mt-3 text-3xl font-black">{formatPercent(assistantFunnel.acceptToMerchantSelectionRate)}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-200">Measures whether assistant approval turns into merchant-level offer selection.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Recommendation Rejects</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.rejectVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.rejectEvents} rejections show where fallback routes still dominate.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Offer / Price Exploration</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.offerExpandVisitors + assistantFunnel.priceHistoryViewVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.offerExpandVisitors} offer expands and {assistantFunnel.priceHistoryViewVisitors} price history views from assistant-led traffic.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Top Assistant Source</p>
+              <p className="mt-3 text-2xl font-black text-slate-950">
+                {assistantFunnel.topAssistantSource ? formatMerchantSource(assistantFunnel.topAssistantSource) : 'No assistant data yet'}
+              </p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">
+                {assistantFunnel.topAssistantSource ? `${assistantFunnel.topAssistantSourceEvents} assistant events from the strongest source.` : 'Once assistant traffic grows, the strongest assistant surface will appear here.'}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Assistant Readiness</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Signals that make the assistant stronger or weaker</h2>
+            </div>
+            <StatusBadge value={assistantFunnel.sessionVisitors && assistantFunnel.acceptVisitors ? 'configured' : 'partial'} />
+          </div>
+
+          <div className="mt-6 space-y-4">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Offer Selection Visitors</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{assistantFunnel.merchantOfferSelectionVisitors}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">{assistantFunnel.merchantOfferSelectionEvents} explicit merchant-offer choices show buyers are engaging with structured commerce data instead of generic CTAs.</p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Current Interpretation</p>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                {assistantFunnel.sessionVisitors
+                  ? `The assistant is turning ${formatPercent(assistantFunnel.sessionToAcceptRate)} of sessions into an accepted next move, while ${formatPercent(assistantFunnel.sessionToAlertRate)} convert into wait-for-price behavior.`
+                  : 'The assistant funnel is wired, but there is not enough traffic yet to draw behavior conclusions.'}
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">What To Improve Next</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
+                <p>- Raise constraint capture if sessions are starting without enough category, budget, or must-have detail.</p>
+                <p>- Raise accept-to-offer selection if recommendations feel abstract and buyers still hesitate before merchant choice.</p>
+                <p>- Watch alert starts: high alert rate is healthy when price timing matters, but can also signal weak buy-now confidence.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       <section className="grid gap-6 xl:grid-cols-[1.12fr_0.88fr]">
         <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
           <div className="flex items-center justify-between gap-4">
@@ -312,6 +409,11 @@ export default async function AdminDashboardPage() {
               <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.productsWithoutOfferCompetition}</p>
               <p className="mt-2 text-sm leading-7 text-slate-600">Products with fewer than two tracked offers and weak merchant-side competitive context.</p>
             </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(commerceQuality.productsWithoutPriceHistory)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">No Price History</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{commerceQuality.productsWithoutPriceHistory}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">These products still cannot explain whether the current price sits inside a credible tracked window.</p>
+            </div>
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Priority Rule</p>
               <p className="mt-3 text-lg font-black text-slate-950">Clicks + quality gaps</p>
@@ -319,7 +421,7 @@ export default async function AdminDashboardPage() {
             </div>
           </div>
 
-          <div className="mt-6 grid gap-4 md:grid-cols-3">
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
             <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Freshness Distribution</p>
               <div className="mt-4 space-y-3 text-sm text-slate-600">
@@ -343,6 +445,14 @@ export default async function AdminDashboardPage() {
                 <div className="flex items-center justify-between"><span>No offers</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.none}</span></div>
                 <div className="flex items-center justify-between"><span>Single offer</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.single}</span></div>
                 <div className="flex items-center justify-between"><span>Multi offer</span><span className="font-semibold text-slate-950">{commerceQuality.offerCoverageDistribution.multi}</span></div>
+              </div>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Price History Coverage</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between"><span>No history</span><span className="font-semibold text-slate-950">{commerceQuality.priceHistoryCoverageDistribution.none}</span></div>
+                <div className="flex items-center justify-between"><span>Thin history</span><span className="font-semibold text-slate-950">{commerceQuality.priceHistoryCoverageDistribution.thin}</span></div>
+                <div className="flex items-center justify-between"><span>Healthy history</span><span className="font-semibold text-slate-950">{commerceQuality.priceHistoryCoverageDistribution.healthy}</span></div>
               </div>
             </div>
           </div>
@@ -378,6 +488,7 @@ export default async function AdminDashboardPage() {
                     <span className={`inline-flex rounded-full px-3 py-1 ${getFreshnessBadgeClass(product.freshness)}`}>{product.freshness}</span>
                     <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{product.offerCount} offers</span>
                     <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{product.evidenceCount} evidence</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{product.priceHistoryCount} history points</span>
                     <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{formatScore(product.dataConfidenceScore)} confidence</span>
                     <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{formatScore(product.attributeCompletenessScore)} completeness</span>
                   </div>
