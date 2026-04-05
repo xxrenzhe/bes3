@@ -1,6 +1,12 @@
 import { NextResponse } from 'next/server'
 import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct } from '@/lib/open-commerce'
-import { getOpenCommerceProductById, listProductAttributeFacts } from '@/lib/site-data'
+import {
+  getBrandSlug,
+  getBrandPolicyBySlug,
+  getOpenCommerceProductById,
+  listBrandCompatibilityFacts,
+  listProductAttributeFacts
+} from '@/lib/site-data'
 
 export async function GET(
   _request: Request,
@@ -16,15 +22,24 @@ export async function GET(
     return NextResponse.json({ error: 'Product not found' }, { status: 404 })
   }
 
-  const attributeFacts = await listProductAttributeFacts(productId)
+  const brandSlug = getBrandSlug(product.brand)
+  const [attributeFacts, brandPolicy, compatibilityFacts] = await Promise.all([
+    listProductAttributeFacts(productId),
+    brandSlug ? getBrandPolicyBySlug(brandSlug) : Promise.resolve(null),
+    brandSlug ? listBrandCompatibilityFacts(brandSlug, { category: product.category || undefined, limit: 6 }) : Promise.resolve([])
+  ])
 
   return NextResponse.json({
     protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
     product,
     attributeFacts,
+    brandPolicy,
+    compatibilityFacts,
     result: serializeCommerceProduct(product, {
       attributeFacts,
+      brandPolicy,
+      compatibilityFacts,
       source: 'open-commerce-product'
     })
   })
