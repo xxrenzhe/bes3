@@ -9,7 +9,7 @@ const INQUIRY_OPTIONS = [
   {
     id: 'buyer-support',
     label: 'Buyer Support',
-    description: 'Use this for edge-case purchase questions that do not fit a normal shortlist or comparison route.'
+    description: 'Use this for edge-case purchase questions that do not fit a normal shortlist or comparison page.'
   },
   {
     id: 'editorial-feedback',
@@ -19,7 +19,7 @@ const INQUIRY_OPTIONS = [
   {
     id: 'correction',
     label: 'Correction',
-    description: 'Use this when a factual detail, price snapshot, or routing cue on the public site looks wrong.'
+    description: 'Use this when a factual detail, price snapshot, or page cue on the public site looks wrong.'
   },
   {
     id: 'partnership',
@@ -29,7 +29,7 @@ const INQUIRY_OPTIONS = [
   {
     id: 'general',
     label: 'General',
-    description: 'Use this for anything that does not fit the routes above.'
+    description: 'Use this for anything that does not fit the options above.'
   }
 ] as const
 
@@ -71,7 +71,7 @@ export function ContactSupportForm() {
         <p className="editorial-kicker">Contact Bes3</p>
         <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the form when self-serve is not enough.</h2>
         <p className="text-sm leading-7 text-muted-foreground">
-          Bes3 is designed to answer most buying questions through search, verdicts, shortlist, and alerts. Use this form for the edge cases, corrections, and conversations that need a human pass.
+          Bes3 is designed to answer most buying questions through search, reviews, shortlist, and alerts. Use this form for edge cases, corrections, and conversations that need a human pass.
         </p>
       </div>
 
@@ -124,22 +124,22 @@ export function ContactSupportForm() {
           value={message}
           onChange={(event) => setMessage(event.target.value)}
           className="min-h-[200px] w-full rounded-2xl border-none bg-muted px-5 py-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
-          placeholder="Include the product, category, or page already in play, plus the part of the decision that still feels blocked."
+          placeholder="Include the product, category, or page already in play, plus the part of the buying choice that still feels blocked."
         />
       </label>
 
       <div className="mt-6 rounded-[1.5rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] p-5">
         <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Submission note</p>
         <p className="mt-3 text-sm leading-7 text-muted-foreground">
-          Personal contact details and full message content stay on this page. The confirmation step only carries the inquiry type and subject so the thank-you page can return you to the right Bes3 route cleanly.
+          Personal contact details and full message content stay on this page. The confirmation step only carries the inquiry type and subject so the thank-you page can return you to the right Bes3 page cleanly.
         </p>
       </div>
 
       <Button type="submit" disabled={!isValid || isPending} className="mt-8 min-h-[56px] rounded-full px-8 text-base font-semibold">
-        {isPending ? 'Routing your note...' : 'Send Message'}
+        {isPending ? 'Sending your note...' : 'Send Message'}
       </Button>
       <p className="mt-4 text-xs leading-6 text-muted-foreground">
-        Use at least 6 characters in the subject and 20 characters in the message so Bes3 can route the note accurately.
+        Use at least 6 characters in the subject and 20 characters in the message so Bes3 can sort the note accurately.
       </p>
     </form>
   )
