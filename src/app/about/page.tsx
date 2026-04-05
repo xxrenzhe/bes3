@@ -5,6 +5,7 @@ import { SeoTrustSignalsPanel } from '@/components/site/SeoTrustSignalsPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -147,7 +148,7 @@ export default async function AboutPage() {
     {
       title: `Browse ${leadCategoryLabel}`,
       description: 'Best when the category is already obvious and you want the strongest pages grouped in one place.',
-      href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+      href: buildCategoryPath(leadCategory),
       label: leadCategory ? 'Open category page' : 'Open directory'
     },
     {

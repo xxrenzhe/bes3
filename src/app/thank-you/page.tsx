@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { buildCategoryPath } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
@@ -153,7 +154,7 @@ export default async function ThankYouPage({
         {
           title: `Browse ${leadCategoryLabel}`,
           description: 'Stay close to the category where the page structure and buying cues can be judged in context.',
-          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          href: buildCategoryPath(leadCategory),
           label: leadCategory ? 'Open category page' : 'Open directory'
         }
       ]
@@ -175,7 +176,7 @@ export default async function ThankYouPage({
         {
           title: 'Browse current category coverage',
           description: 'Stay in the same category so you can re-check the updated context once the fix lands.',
-          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          href: buildCategoryPath(leadCategory),
           label: leadCategory ? 'Open category page' : 'Open directory'
         },
         {
@@ -203,7 +204,7 @@ export default async function ThankYouPage({
         {
           title: `Browse ${leadCategoryLabel}`,
           description: 'See a live category page instead of a static brand deck to understand how Bes3 serves real shoppers.',
-          href: leadCategory ? `/categories/${leadCategory}` : '/directory',
+          href: buildCategoryPath(leadCategory),
           label: leadCategory ? 'Open category page' : 'Open directory'
         },
         {

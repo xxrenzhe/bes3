@@ -12,6 +12,7 @@ const nextConfig = {
     serverComponentsExternalPackages: [
       'better-sqlite3',
       'cheerio',
+      'undici',
       'postgres',
       'pg',
       'playwright'
@@ -48,7 +49,7 @@ const nextConfig = {
     }
 
     if (isServer) {
-      config.externals.push('better-sqlite3', 'cheerio', 'postgres', 'pg', 'playwright')
+      config.externals.push('better-sqlite3', 'cheerio', 'undici', 'postgres', 'pg', 'playwright')
     }
     return config
   },

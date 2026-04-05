@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
 import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
@@ -14,11 +15,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     ...categories.flatMap((category) => {
       const categoryFreshness = maxDate([
-        ...articles.filter((article) => article.product?.category === category).flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt]),
-        ...products.filter((product) => product.category === category).flatMap((product) => [product.updatedAt, product.publishedAt])
+        ...articles.filter((article) => categoryMatches(article.product?.category, category)).flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt]),
+        ...products.filter((product) => categoryMatches(product.category, category)).flatMap((product) => [product.updatedAt, product.publishedAt])
       ])
 
-      return buildLocalizedSitemapRoute(`/categories/${category}`, {
+      return buildLocalizedSitemapRoute(buildCategoryPath(category), {
         lastModified: categoryFreshness,
         changeFrequency: 'weekly',
         priority: 0.82
@@ -32,7 +33,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       })
     ),
     ...brandCategoryHubs.flatMap((hub) =>
-      buildLocalizedSitemapRoute(`/brands/${hub.brandSlug}/categories/${hub.category}`, {
+      buildLocalizedSitemapRoute(buildBrandCategoryPath(hub.brandSlug, hub.category), {
         lastModified: maxDate([hub.latestUpdate]),
         changeFrequency: 'weekly',
         priority: 0.78

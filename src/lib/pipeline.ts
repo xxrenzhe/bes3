@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache'
+import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { generateComparisonCopy, generateKeywordIdeas, generateReviewCopy, generateSeoPayload } from '@/lib/ai'
 import { updateAdminArticle } from '@/lib/admin-articles'
 import { getArticlePath } from '@/lib/article-path'
@@ -1283,13 +1284,13 @@ async function revalidateGeneratedPaths(paths: string[], category: string | null
     revalidatePath('/brands')
     revalidatePath('/directory')
     if (category) {
-      revalidatePath(`/categories/${category}`)
+      revalidatePath(buildCategoryPath(category))
     }
     if (brandSlug) {
       revalidatePath(`/brands/${brandSlug}`)
     }
     if (brandSlug && category) {
-      revalidatePath(`/brands/${brandSlug}/categories/${category}`)
+      revalidatePath(buildBrandCategoryPath(brandSlug, category))
     }
     for (const item of uniquePaths) {
       revalidatePath(item)

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, toTitleCaseWords } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -64,8 +65,9 @@ export default async function NewsletterPage({
     ? (resolvedParams.cadence as 'weekly' | 'priority')
     : 'weekly'
   const selectedCategory = slugify(String(resolvedParams.category || ''))
-  const selectedCategoryLabel = getCategoryLabel(selectedCategory)
-  const categoryCoverage = selectedCategory ? articles.filter((article) => article.product?.category === selectedCategory) : []
+  const matchedCategory = categories.find((category) => categoryMatches(category, selectedCategory)) || selectedCategory
+  const selectedCategoryLabel = getCategoryLabel(matchedCategory)
+  const categoryCoverage = selectedCategory ? articles.filter((article) => categoryMatches(article.product?.category, selectedCategory)) : []
   const relatedComparison = categoryCoverage.find((article) => article.type === 'comparison') || null
   const relatedReview = categoryCoverage.find((article) => article.type === 'review') || null
   const relatedGuide = categoryCoverage.find((article) => article.type === 'guide') || null
@@ -107,7 +109,7 @@ export default async function NewsletterPage({
           eyebrow: 'Return',
           title: `Browse ${selectedCategoryLabel}`,
           description: 'Keep the same category open while Bes3 monitors the market in the background.',
-          href: `/categories/${selectedCategory}`,
+          href: buildCategoryPath(selectedCategory),
           label: 'Open category page'
         }
       : {

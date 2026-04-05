@@ -13,6 +13,7 @@ import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
@@ -116,18 +117,18 @@ export default async function ReviewPage({
   const relatedComparison = articles.find((candidate) => {
     if (candidate.type !== 'comparison') return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const relatedGuide = articles.find((candidate) => {
     if (candidate.type !== 'guide') return false
     if (candidate.id === article.id) return false
     if (article.productId && candidate.productId === article.productId) return true
-    if (category && candidate.product?.category === category) return true
+    if (category && categoryMatches(candidate.product?.category, category)) return true
     return false
   }) || null
   const peerProducts = allProducts
-    .filter((candidate) => candidate.id !== article.product?.id && candidate.category === category)
+    .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/reviews/${article.slug}`
   const reviewDescription =
@@ -135,7 +136,7 @@ export default async function ReviewPage({
     buildFallbackNote(article.product?.productName || article.title)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
-    { name: category ? category.replace(/-/g, ' ') : 'Reviews', path: category ? `/categories/${category}` : '/directory' },
+    { name: category ? category.replace(/-/g, ' ') : 'Reviews', path: buildCategoryPath(category) },
     { name: article.title, path }
   ]
   const howToSteps = [
@@ -235,7 +236,7 @@ export default async function ReviewPage({
       href: relatedComparison
         ? getArticlePath(relatedComparison.type, relatedComparison.slug)
         : category
-          ? `/categories/${category}#category-shortlist`
+          ? buildCategoryPath(category, 'category-shortlist')
           : '/shortlist',
       label: relatedComparison ? 'Open related comparison' : 'Browse shortlist'
     },
@@ -245,7 +246,7 @@ export default async function ReviewPage({
       description: relatedGuide
         ? 'Use the guide if you still need category basics, compatibility context, or setup advice before finalizing the shortlist.'
         : 'Return to the category page when you still need broader coverage before acting on this review.',
-      href: relatedGuide ? getArticlePath(relatedGuide.type, relatedGuide.slug) : category ? `/categories/${category}` : '/directory',
+      href: relatedGuide ? getArticlePath(relatedGuide.type, relatedGuide.slug) : buildCategoryPath(category),
       label: relatedGuide ? 'Open category guide' : 'Visit category page'
     },
     {
@@ -307,7 +308,7 @@ export default async function ReviewPage({
               note: 'See the rest of the same-brand coverage without broadening the market too early.'
             }
           : null,
-        ...(category ? [{ href: `/categories/${category}`, label: `${categoryLabel} category page`, note: 'Return to the category hub when cross-brand comparison matters again.' }] : []),
+        ...(category ? [{ href: buildCategoryPath(category), label: `${categoryLabel} category page`, note: 'Return to the category hub when cross-brand comparison matters again.' }] : []),
         ...peerProducts.slice(0, 2).map((candidate) => ({
           href: `/products/${candidate.slug}`,
           label: candidate.productName,
@@ -332,7 +333,7 @@ export default async function ReviewPage({
           <nav className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             <Link href="/" className="transition-colors hover:text-primary">Home</Link>
             <span>/</span>
-            <Link href={category ? `/categories/${category}` : '/directory'} className="transition-colors hover:text-primary">
+            <Link href={buildCategoryPath(category)} className="transition-colors hover:text-primary">
               {category ? category.replace(/-/g, ' ') : 'Reviews'}
             </Link>
             <span>/</span>
@@ -569,7 +570,7 @@ export default async function ReviewPage({
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
               {category ? (
-                <Link href={`/categories/${category}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
+                <Link href={buildCategoryPath(category)} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{categoryLabel}</h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category page if you still need adjacent reviews, comparisons, or shortlist coverage.</p>

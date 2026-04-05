@@ -1,5 +1,6 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
+import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { getBrandSlug } from '@/lib/site-data'
 
 export async function POST(request: Request) {
@@ -18,13 +19,13 @@ export async function POST(request: Request) {
   revalidatePath('/brands')
   revalidatePath('/directory')
   if (body.category) {
-    revalidatePath(`/categories/${body.category}`)
+    revalidatePath(buildCategoryPath(body.category))
   }
   if (brandSlug) {
     revalidatePath(`/brands/${brandSlug}`)
   }
   if (brandSlug && body.category) {
-    revalidatePath(`/brands/${brandSlug}/categories/${body.category}`)
+    revalidatePath(buildBrandCategoryPath(brandSlug, body.category))
   }
   for (const path of uniquePaths) {
     revalidatePath(path)
