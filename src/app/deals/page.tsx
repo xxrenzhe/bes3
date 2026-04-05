@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Live Deals',
     description:
-      'Browse verified deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
+      'Browse live deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
     path: '/deals',
     image: leadProduct?.heroImageUrl,
     freshnessDate: leadProduct?.updatedAt || leadProduct?.publishedAt,
@@ -52,7 +52,7 @@ export default async function DealsPage() {
   const structuredData = buildCollectionPageSchema({
     path: '/deals',
     title: 'Live Deals',
-    description: 'Browse verified deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
+    description: 'Browse live deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
     image: leadProduct?.heroImageUrl,
     breadcrumbItems,
     dateModified: latestRefresh,
@@ -150,7 +150,7 @@ export default async function DealsPage() {
         <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
           <div className="mb-10">
             <p className="editorial-kicker">Today&apos;s Selection</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Verified deals right now</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Live deals right now</h2>
           </div>
           <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
@@ -161,7 +161,7 @@ export default async function DealsPage() {
                 </div>
                 <div className="space-y-4 p-6">
                   <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">{product.productName}</h2>
-                  <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Current pricing with a direct path to the latest merchant page.'}</p>
+                  <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Current pricing with a direct path to the latest store page.'}</p>
                   <div className="rounded-[1.5rem] bg-muted p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
                     <p className="mt-3 text-3xl font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>

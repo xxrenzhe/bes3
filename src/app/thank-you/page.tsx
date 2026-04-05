@@ -206,7 +206,7 @@ export default async function ThankYouPage({
         },
         {
           title: 'Browse live deals',
-          description: 'Browse real, verified deals without the usual spam.',
+          description: 'Browse real deals without the usual spam.',
           href: '/deals',
           label: 'Open deals'
         }

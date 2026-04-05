@@ -434,7 +434,7 @@ export default async function SearchPage({
         ) : (
           <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
-              <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with buyer intent.</h2>
+              <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
                 Good search should match where you are: discover products, validate one option, compare finalists, or switch into a price alert when the timing is not right yet.
               </p>
