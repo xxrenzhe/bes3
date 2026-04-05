@@ -22,7 +22,7 @@ export async function generateMetadata({
   if (!brand) {
     return buildPageMetadata({
       title: 'Brand Not Found',
-      description: 'This Bes3 brand hub is unavailable.',
+      description: 'This Bes3 brand page is unavailable.',
       path: `/brands/${slug}`,
       robots: {
         index: false,
@@ -67,18 +67,18 @@ export default async function BrandPage({
   const leadCategory = brand.categories[0] || ''
   const faqEntries = [
     {
-      question: `What does the ${brand.name} hub include?`,
-      answer: `It groups the live ${brand.name} product pages, reviews, comparisons, and category links that Bes3 has already published, so buyers can stay inside one brand-specific research path.`
+      question: `What does the ${brand.name} page include?`,
+      answer: `It groups the live ${brand.name} product pages, reviews, comparisons, and category links that Bes3 has already published, so shoppers can stay focused on one brand.`
     },
     {
-      question: `When should I leave the ${brand.name} hub and return to a category page?`,
-      answer: `Leave the brand hub when the manufacturer no longer feels like the right constraint. Category hubs are better once you need honest cross-brand tradeoffs.`
+      question: `When should I leave the ${brand.name} page and return to a category page?`,
+      answer: `Leave the brand page when the manufacturer no longer feels like the right constraint. Category pages are better once you need honest cross-brand tradeoffs.`
     },
     {
       question: `What is the best next move after this brand page?`,
       answer: leadComparison
-        ? 'Use the live comparison if the shortlist is already tight. Otherwise start with the strongest product or review, then come back to the category lane only if you need wider context.'
-        : 'Start with the strongest product or review on this page. If coverage is still thin, return to the category lane to keep the shortlist broader.'
+        ? 'Use the live comparison if the shortlist is already tight. Otherwise start with the strongest product or review, then come back to the category page only if you need wider context.'
+        : 'Start with the strongest product or review on this page. If coverage is still thin, return to the category page to keep the shortlist broader.'
     }
   ]
   const breadcrumbItems = [
@@ -114,20 +114,20 @@ export default async function BrandPage({
     }),
     buildHowToSchema(
       `/brands/${brand.slug}`,
-      `How to use the ${brand.name} brand hub`,
-      'Use the brand hub to start with the strongest product, validate the brand with a live verdict, and reopen category comparison only if the lane broadens.',
+      `How to use the ${brand.name} brand page`,
+      'Use the brand page to start with the strongest product, validate the brand with a review, and go back to category comparisons only if your search broadens.',
       [
         {
           name: 'Start with the strongest product',
-          text: 'Open the most credible live product page when you already trust the brand and want the shortest path into specs, price context, and shortlist actions.'
+          text: 'Open the most credible product page when you already trust the brand and want the shortest path into specs, price context, and shortlist actions.'
         },
         {
-          name: 'Validate with live editorial',
-          text: 'Use the review or comparison pages tied to this brand once you need buyer-fit confirmation or a head-to-head decision.'
+          name: 'Validate with brand coverage',
+          text: 'Use the review or comparison pages tied to this brand once you need a clearer fit check or a head-to-head comparison.'
         },
         {
           name: 'Return to categories when needed',
-          text: 'If the brand no longer feels like the right constraint, reopen the related category hubs so you can compare across manufacturers without losing the lane.'
+          text: 'If the brand no longer feels like the right constraint, reopen the related category pages so you can compare across manufacturers without losing your place.'
         }
       ]
     ),
@@ -140,23 +140,23 @@ export default async function BrandPage({
           title: `Open the lead ${brand.name} product`,
           description: 'Begin with the strongest current product page if you already trust the brand and want the cleanest next step into specs, pricing, and shortlist actions.',
           href: brandProducts[0].slug ? `/products/${brandProducts[0].slug}` : `/brands/${brand.slug}`,
-          label: 'Open product deep-dive'
+          label: 'Open product details'
         }
       : null,
     leadReview
       ? {
           eyebrow: 'Validate',
-          title: 'Read the clearest brand verdict',
-          description: 'Use the lead review once one product already looks plausible and you want buyer-fit confidence before comparing or clicking out.',
+          title: 'Read the clearest brand review',
+          description: 'Use the lead review once one product already looks promising and you want one more fit check before comparing or clicking out.',
           href: getArticlePath(leadReview.type, leadReview.slug),
-          label: 'Open review verdict'
+          label: 'Open review'
         }
       : null,
     leadComparison
       ? {
           eyebrow: 'Compare',
           title: 'Pressure-test the best options',
-          description: 'The comparison route is best when this brand already has multiple credible finalists and you want the tradeoffs condensed into one answer.',
+          description: 'The comparison page is best when this brand already has multiple credible finalists and you want the tradeoffs condensed into one answer.',
           href: getArticlePath(leadComparison.type, leadComparison.slug),
           label: 'Open comparison'
         }
@@ -164,18 +164,18 @@ export default async function BrandPage({
         ? {
             eyebrow: 'Explore',
             title: `Open ${brand.name} in ${getCategoryLabel(leadCategory)}`,
-            description: 'Use the brand-category lane when both constraints already matter and you want the shortest route into exact-match products, verdicts, and next steps.',
+            description: 'Use the brand-and-category view when both filters already matter and you want the shortest path into exact-match products and next steps.',
             href: `/brands/${brand.slug}/categories/${leadCategory}`,
-            label: 'Open exact lane'
+            label: 'Open this view'
           }
         : null,
     leadCategory
       ? {
           eyebrow: 'Watch',
           title: `Track ${getCategoryLabel(leadCategory)}`,
-          description: 'If timing is the blocker, keep the surrounding category active instead of forcing the brand decision today.',
+          description: 'If timing is the blocker, keep the surrounding category active instead of forcing a brand choice today.',
           href: `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority`,
-          label: 'Start price watch'
+          label: 'Start price alert'
         }
       : null
   ].filter(Boolean) as Array<{
@@ -196,12 +196,12 @@ export default async function BrandPage({
               <Link href="/brands" className="inline-flex text-sm font-medium text-muted-foreground transition-colors hover:text-primary">
                 Brands / {brand.name}
               </Link>
-              <p className="editorial-kicker mt-4">Brand Hub</p>
+              <p className="editorial-kicker mt-4">Brand Page</p>
               <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">
                 {brand.name} on Bes3
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                {brand.description || `This hub collects the current ${brand.name} product coverage, brand-specific verdicts, and category routes already live on Bes3.`}
+                {brand.description || `This page collects the current ${brand.name} product coverage, reviews, and category links currently available on Bes3.`}
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
@@ -241,7 +241,7 @@ export default async function BrandPage({
               <p className="editorial-kicker">Top Products</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Start with the strongest {brand.name} picks.</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These are the cleanest current entry points into the {brand.name} lane: live products that already carry price context, specs, and a way forward into shortlist or merchant actions.
+                These are the cleanest current entry points into {brand.name}: published products that already carry price context, specs, and a way forward into shortlist or store actions.
               </p>
             </div>
             <div className="grid gap-6 xl:grid-cols-3">
@@ -263,12 +263,12 @@ export default async function BrandPage({
                   href={`/brands/${brand.slug}/categories/${category}`}
                   className="rounded-[1.5rem] bg-muted p-5 transition-colors hover:bg-emerald-50"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Lane</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand + Category</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
                     {brand.name} {getCategoryLabel(category)}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    Move into the exact {brand.name} + {getCategoryLabel(category)} lane before reopening the broader category hub for cross-brand tradeoffs.
+                    Open the exact {brand.name} + {getCategoryLabel(category)} view before reopening the broader category page for cross-brand comparisons.
                   </p>
                 </Link>
               ))}
@@ -292,7 +292,7 @@ export default async function BrandPage({
               ))}
               {!brandArticles.length ? (
                 <p className="text-sm leading-7 text-muted-foreground">
-                  Editorial coverage for {brand.name} is still building. Use the product pages above or return to category hubs for broader coverage.
+                  Editorial coverage for {brand.name} is still building. Use the product pages above or return to category pages for broader coverage.
                 </p>
               ) : null}
             </div>
@@ -302,7 +302,7 @@ export default async function BrandPage({
         <SeoFaqSection
           title={`${brand.name} buyer questions, answered fast.`}
           entries={faqEntries}
-          description="This FAQ mirrors the brand-first queries real buyers make, while the matching JSON-LD keeps the page machine-readable for search engines."
+          description="This FAQ mirrors the brand-first questions real buyers ask and makes the next step easier to choose."
         />
       </div>
     </PublicShell>

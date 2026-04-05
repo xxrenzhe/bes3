@@ -59,7 +59,7 @@ export async function generateMetadata({
     title: article.seoTitle || article.title,
     description:
       pickMetadataDescription(article.seoDescription, article.summary) ||
-      'Use this Bes3 comparison to settle a shortlist, understand the tradeoffs, and move into the winner with less buyer regret.',
+      'Use this comparison to settle a shortlist, understand the tradeoffs, and choose the better fit with less second-guessing.',
     path: `/compare/${article.slug}`,
     image: article.heroImageUrl || article.product?.heroImageUrl,
     type: 'article',
@@ -109,7 +109,7 @@ export default async function ComparisonPage({
   const path = `/compare/${article.slug}`
   const comparisonDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
-    'Use this Bes3 comparison to settle a shortlist, understand the tradeoffs, and move into the winner with less buyer regret.'
+    'Use this comparison to settle a shortlist, understand the tradeoffs, and choose the better fit with less second-guessing.'
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: article.product?.category ? article.product.category.replace(/-/g, ' ') : 'Comparisons', path: article.product?.category ? `/categories/${article.product.category}` : '/directory' },
@@ -118,7 +118,7 @@ export default async function ComparisonPage({
   const howToSteps = [
     {
       name: 'Confirm the finalists',
-      text: 'Use the comparison only when the shortlist is already narrow enough that the tradeoffs stay honest and decision-ready.'
+      text: 'Use the comparison only when the shortlist is already narrow enough that the tradeoffs stay honest and you are close to choosing.'
     },
     {
       name: 'Pick the winner',
@@ -127,8 +127,8 @@ export default async function ComparisonPage({
         : 'Treat the editorial winner as the default answer unless you still have a product-fit blocker.'
     },
     {
-      name: 'Keep the category in play',
-      text: 'If price timing is the only blocker, switch into a category watch. If neither finalist is right, reopen the shortlist lane instead of branching into unrelated products.'
+      name: 'Keep other options open',
+      text: 'If price timing is the only blocker, switch into a category price alert. If neither finalist is right, reopen the shortlist instead of branching into unrelated products.'
     }
   ]
   const structuredData = [
@@ -174,7 +174,7 @@ export default async function ComparisonPage({
         }
       ]
     }),
-    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the finalists, pick the cleanest winner, and decide whether to buy, watch, or reopen the shortlist.', howToSteps)
+    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the finalists, choose the better fit, and decide whether to buy now, set a price alert, or reopen the shortlist.', howToSteps)
   ]
   const faqEntries = [
     {
@@ -184,14 +184,14 @@ export default async function ComparisonPage({
         : 'Treat the editorial winner as the default answer unless a real fit blocker remains.'
     },
     {
-      question: 'When does a brand hub help after a comparison?',
+      question: 'When does a brand page help after a comparison?',
       answer: article.product?.brand
-        ? `Use the ${article.product.brand} hub when the manufacturer looks right but you want the rest of its products and editorial coverage before buying.`
-        : 'Use the category hub instead when you still need broader market context.'
+        ? `Use the ${article.product.brand} page when the brand looks right but you want the rest of its products and editorial coverage before buying.`
+        : 'Use the category page instead when you still need broader market context.'
     },
     {
       question: 'Why keep this page tightly scoped to finalists?',
-      answer: 'Because comparisons only stay trustworthy when the lane is already narrow. Pulling in unrelated products makes the verdict weaker and the page less useful.'
+      answer: 'Because comparisons only stay trustworthy when the shortlist is already narrow. Pulling in unrelated products makes the recommendation weaker and the page less useful.'
     }
   ]
   const comparisonRoutes = [
@@ -199,24 +199,24 @@ export default async function ComparisonPage({
       eyebrow: 'Winner',
       title: article.product?.slug ? 'Open the winning product' : 'Use this winner as the default',
       description: article.product?.slug
-        ? 'Move into the product page when the comparison answered the lane and you now just need pricing, specs, and merchant verification.'
+        ? 'Move into the product page when the comparison settled the choice and you now just need pricing, specs, and merchant verification.'
         : 'The comparison already did the hard narrowing work. Treat the editorial winner as your default answer unless a blocker remains.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
-      label: article.product?.slug ? 'Open winner deep-dive' : 'Stay with the verdict'
+      label: article.product?.slug ? 'Open winner details' : 'Stay with this pick'
     },
     {
       eyebrow: 'Validate',
-      title: relatedReview ? 'Read the supporting review' : 'Recheck the category lane',
+      title: relatedReview ? 'Read the supporting review' : 'Recheck the category page',
       description: relatedReview
         ? 'Use the review when you want the strongest product-level rationale behind the winner before clicking through.'
-        : 'Go back to the category lane if the finalists still do not feel grounded in your actual use case.',
+        : 'Go back to the category page if the finalists still do not feel grounded in your actual use case.',
       href: relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : category ? `/categories/${category}` : '/shortlist',
-      label: relatedReview ? 'Open review verdict' : 'Browse category hub'
+      label: relatedReview ? 'Open review' : 'Browse category page'
     },
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track a better deal',
-      description: 'If price timing is the only unresolved variable, convert this comparison into a watch flow instead of restarting your research later.',
+      description: 'If price timing is the only unresolved variable, convert this comparison into a price alert instead of restarting your research later.',
       href: category
         ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
         : '/newsletter?intent=deals&cadence=priority',
@@ -225,9 +225,9 @@ export default async function ComparisonPage({
     {
       eyebrow: 'Return',
       title: 'Keep the shortlist clean',
-      description: 'If neither finalist is quite right, go back to the shortlist or category lane instead of branching into unrelated products.',
+      description: 'If neither finalist is quite right, go back to the shortlist or category page instead of branching into unrelated products.',
       href: category ? `/categories/${category}#category-shortlist` : '/shortlist',
-      label: 'Reopen shortlist lane'
+      label: 'Reopen shortlist'
     }
   ]
   const scoreCards = [
@@ -299,10 +299,10 @@ export default async function ComparisonPage({
 
             <aside className="space-y-6">
               <div className="rounded-[2rem] bg-[linear-gradient(135deg,#eefaf5,#f6fffb)] p-6 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Editorial Verdict</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Winner</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{winner}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Best overall for shoppers who want the cleanest balance of confidence, practicality, and lowest-regret purchase risk.
+                  Best overall for shoppers who want the clearest mix of reliability, practicality, and low-regret value.
                 </p>
                 <div className="mt-5 grid gap-3">
                   <div className="rounded-[1.25rem] bg-white p-4">
@@ -336,16 +336,16 @@ export default async function ComparisonPage({
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">After This Comparison</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Land the decision without restarting research.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Finish the choice without restarting research.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                A comparison should settle the buying lane, not create a new one. Pick the action that matches what is still unresolved: product confidence, price timing, or one last category pass.
+                A comparison should help settle the choice, not create a new one. Pick the action that matches what is still unresolved: product fit, price timing, or one last category check.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {article.product?.slug
-                    ? 'This comparison already gave you a likely winner. The cleanest next move is the product page, where price, specs, and merchant readiness can be checked without reopening the whole decision.'
-                    : 'This page already carries the main decision weight. Use a review or shortlist route only if you still need extra buyer-fit confidence.'}
+                    ? 'This comparison already gave you a likely winner. The cleanest next move is the product page, where price, specs, and merchant readiness can be checked without reopening the whole choice.'
+                    : 'This page already carries the main recommendation. Use a review or shortlist next only if you still need one more reason before buying.'}
                 </p>
               </div>
             </div>
@@ -374,7 +374,7 @@ export default async function ComparisonPage({
 
           <aside className="space-y-6">
             <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Decision Framework</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">What to check</p>
               <div className="mt-5 space-y-4">
                 {decisionChecklist.map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
@@ -388,12 +388,12 @@ export default async function ComparisonPage({
             <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-6 shadow-panel">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Quick Take</p>
               <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                If you only need the answer fast, start with <span className="font-semibold text-foreground">{winner}</span>. The supporting article below exists for buyers who want the why, not just the verdict.
+                If you only need the answer fast, start with <span className="font-semibold text-foreground">{winner}</span>. The supporting article below exists for buyers who want the why, not just the recommendation.
               </p>
             </div>
             {relatedReview || relatedGuide || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Category</p>
                 <div className="mt-5 space-y-3">
                   {relatedReview ? (
                     <Link href={getArticlePath(relatedReview.type, relatedReview.slug)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
@@ -411,24 +411,24 @@ export default async function ComparisonPage({
                   ) : null}
                   {category ? (
                     <Link href={`/categories/${category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the main category lane if you need adjacent context before accepting the winner.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Reopen the main category page if you need more context before accepting the winner.</p>
                     </Link>
                   ) : null}
                   {brandSlug && article.product?.brand ? (
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Open the brand hub if the manufacturer looks right and you want the rest of that lane without widening the field too early.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Open the brand page if the manufacturer looks right and you want to see its other options without widening the field too early.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Similar Product</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {candidate.description || `Another ${categoryLabel} option in the same decision lane.`}
+                        {candidate.description || `Another ${categoryLabel} option worth checking.`}
                       </p>
                     </Link>
                   ))}
@@ -441,7 +441,7 @@ export default async function ComparisonPage({
         <SeoFaqSection
           title="Comparison-page questions, answered fast."
           entries={faqEntries}
-          description="The comparison now exposes its intent clearly on-page and in schema: keep the shortlist narrow, pick the winner, and route to the next action without starting over."
+          description="This FAQ explains how to use the comparison: keep the shortlist narrow, choose the better fit, and move to the next action without starting over."
         />
       </div>
     </PublicShell>
