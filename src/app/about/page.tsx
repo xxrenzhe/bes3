@@ -10,11 +10,11 @@ import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export const metadata: Metadata = buildPageMetadata({
-  title: 'About Bes3',
+  title: 'Bes3 Method',
   description:
-    'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
+    'Learn how Bes3 uses structured buyer routes to turn noisy product research into shortlists, verdicts, comparisons, and wait flows.',
   path: '/about',
-  keywords: ['about bes3', 'product reviews', 'comparison methodology', 'buying guides']
+  keywords: ['bes3 method', 'buyer decision system', 'comparison methodology', 'buying guides']
 })
 
 export default async function AboutPage() {
@@ -153,8 +153,8 @@ export default async function AboutPage() {
   const structuredData = [
     buildWebPageSchema({
       path: '/about',
-      title: 'About Bes3',
-      description: 'Learn how Bes3 turns noisy product research into shortlists, verdicts, comparisons, and wait flows built around real buyer decisions.',
+      title: 'Bes3 Method',
+      description: 'Learn how Bes3 uses structured buyer routes to turn noisy product research into shortlists, verdicts, comparisons, and wait flows.',
       type: 'AboutPage'
     }),
     buildFaqSchema('/about', faqEntries)
@@ -169,10 +169,10 @@ export default async function AboutPage() {
             <div className="space-y-7">
               <p className="editorial-kicker">How Bes3 Works</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-7xl">
-                Buyer-first guidance, built to end the research loop.
+                The Bes3 method turns noisy research into a decision system.
               </h1>
               <p className="max-w-3xl text-xl leading-9 text-muted-foreground">
-                Bes3 is not a generic review archive. It is a consumer buying guide that narrows noisy categories into a few serious options, explains the tradeoffs that actually matter, and gives buyers a clean next step when the timing is not right yet.
+                Bes3 is not a generic review archive. It is a structured buyer system that narrows noisy categories into a few serious options, explains the tradeoffs that actually matter, and gives buyers a clean next step when the timing is not right yet.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link

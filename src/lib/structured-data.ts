@@ -247,9 +247,9 @@ export function buildOrganizationSchema(): SchemaNode {
       '@type': 'ImageObject',
       url: toAbsoluteUrl('/icon.svg')
     },
-    description: 'Bes3 helps shoppers compare real tech products, track pricing, and read high-signal buying guides.',
+    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
     slogan: DEFAULT_SITE_TAGLINE,
-    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'price tracking'],
+    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'buyer decision systems', 'price tracking'],
     contactPoint: {
       '@type': 'ContactPoint',
       contactType: 'customer support',
@@ -269,7 +269,7 @@ export function buildWebsiteSchema(): SchemaNode {
     url: toAbsoluteUrl('/'),
     name: DEFAULT_SITE_NAME,
     alternateName: DEFAULT_SITE_TAGLINE,
-    description: 'Bes3 helps shoppers compare real tech products, track pricing, and read high-signal buying guides.',
+    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
     inLanguage: 'en-US',
     publisher: buildOrganizationReference(),
     potentialAction: {
