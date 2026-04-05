@@ -10,7 +10,7 @@ import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRe
 import { getDatabase } from '@/lib/db'
 import { dispatchSeoNotifications } from '@/lib/seo-ops'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
-import { getBrandSlug, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
+import { getBrandSlug, listBrands, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { resolveAffiliateLink } from '@/lib/url-resolver'
@@ -106,6 +106,24 @@ export interface AdminDashboardSummary {
       priceHistoryCount: number
       dataConfidenceScore: number
       attributeCompletenessScore: number
+      reasons: string[]
+    }>
+  }
+  brandQuality: {
+    trackedBrands: number
+    brandsWithPolicy: number
+    brandsWithCompatibilityFacts: number
+    brandsWithoutPolicy: number
+    brandsWithoutCompatibilityFacts: number
+    topPriorityBrands: Array<{
+      slug: string
+      name: string
+      productCount: number
+      articleCount: number
+      compatibilityFactCount: number
+      hasPolicy: boolean
+      latestUpdate: string | null
+      priorityScore: number
       reasons: string[]
     }>
   }
@@ -1888,7 +1906,7 @@ function getCompletenessBucket(value: number): 'high' | 'medium' | 'low' {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, priceHistoryCountRows, merchantClickRows] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, brands, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, priceHistoryCountRows, merchantClickRows, brandPolicyRows, compatibilityFactRows] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -1897,6 +1915,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     listAffiliateProducts(),
     listProducts(),
     listPublishedArticles(),
+    listBrands(),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM newsletter_subscribers'),
     db.queryOne<{ count: number }>(
       `
@@ -1936,6 +1955,19 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         SELECT product_id, created_at
         FROM merchant_click_events
         WHERE product_id IS NOT NULL
+      `
+    ),
+    db.query<{ brand_slug: string }>(
+      `
+        SELECT brand_slug
+        FROM brand_policies
+      `
+    ),
+    db.query<{ brand_slug: string; count: number }>(
+      `
+        SELECT brand_slug, COUNT(*) AS count
+        FROM compatibility_facts
+        GROUP BY brand_slug
       `
     )
   ])
@@ -2074,6 +2106,41 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     { none: 0, thin: 0, healthy: 0 }
   )
 
+  const brandPolicySlugs = new Set(brandPolicyRows.map((row) => row.brand_slug).filter(Boolean))
+  const compatibilityFactCounts = new Map(compatibilityFactRows.map((row) => [row.brand_slug, Number(row.count || 0)]))
+  const brandQualityRows = brands.map((brand) => {
+    const hasPolicy = brandPolicySlugs.has(brand.slug)
+    const compatibilityFactCount = compatibilityFactCounts.get(brand.slug) || 0
+    const latestUpdateAgeDays = brand.latestUpdate
+      ? Math.max(0, Math.floor((Date.now() - new Date(brand.latestUpdate).getTime()) / 86_400_000))
+      : 999
+    const freshnessPenalty = latestUpdateAgeDays >= 45 ? 8 : latestUpdateAgeDays >= 30 ? 4 : 0
+    const policyPenalty = hasPolicy ? 0 : 18
+    const compatibilityPenalty = compatibilityFactCount === 0 ? 16 : compatibilityFactCount < 3 ? 7 : 0
+    const coverageBonus = brand.productCount * 6 + brand.articleCount * 3
+    const priorityScore = coverageBonus + freshnessPenalty + policyPenalty + compatibilityPenalty
+    const reasons = []
+
+    if (!hasPolicy) reasons.push('No brand policy rows')
+    if (compatibilityFactCount === 0) reasons.push('No compatibility facts')
+    if (compatibilityFactCount > 0 && compatibilityFactCount < 3) reasons.push('Thin compatibility coverage')
+    if (latestUpdateAgeDays >= 45) reasons.push('Brand coverage is aging')
+    if (brand.productCount >= 3) reasons.push(`${brand.productCount} products already rely on this brand layer`)
+    if (brand.articleCount >= 2) reasons.push(`${brand.articleCount} editorial pages already reference this brand`)
+
+    return {
+      slug: brand.slug,
+      name: brand.name,
+      productCount: brand.productCount,
+      articleCount: brand.articleCount,
+      compatibilityFactCount,
+      hasPolicy,
+      latestUpdate: brand.latestUpdate,
+      priorityScore,
+      reasons: reasons.slice(0, 4)
+    }
+  })
+
   return {
     totals: {
       products: Number(products?.count || 0),
@@ -2106,6 +2173,20 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
           if (right.priorityScore !== left.priorityScore) return right.priorityScore - left.priorityScore
           if (right.recentMerchantClicks !== left.recentMerchantClicks) return right.recentMerchantClicks - left.recentMerchantClicks
           return left.productName.localeCompare(right.productName)
+        })
+        .slice(0, 5)
+    },
+    brandQuality: {
+      trackedBrands: brands.length,
+      brandsWithPolicy: brandQualityRows.filter((brand) => brand.hasPolicy).length,
+      brandsWithCompatibilityFacts: brandQualityRows.filter((brand) => brand.compatibilityFactCount > 0).length,
+      brandsWithoutPolicy: brandQualityRows.filter((brand) => !brand.hasPolicy).length,
+      brandsWithoutCompatibilityFacts: brandQualityRows.filter((brand) => brand.compatibilityFactCount <= 0).length,
+      topPriorityBrands: brandQualityRows
+        .sort((left, right) => {
+          if (right.priorityScore !== left.priorityScore) return right.priorityScore - left.priorityScore
+          if (right.productCount !== left.productCount) return right.productCount - left.productCount
+          return left.name.localeCompare(right.name)
         })
         .slice(0, 5)
     },
