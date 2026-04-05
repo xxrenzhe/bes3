@@ -64,6 +64,44 @@ export interface AdminDashboardSummary {
     newsletterSubscribers: number
     targetedSubscribers: number
   }
+  commerceQuality: {
+    lowConfidenceProducts: number
+    staleOfferProducts: number
+    productsWithoutOffers: number
+    productsWithoutEvidence: number
+    productsWithoutOfferCompetition: number
+    freshnessDistribution: {
+      fresh: number
+      recent: number
+      stale: number
+      unknown: number
+    }
+    completenessDistribution: {
+      high: number
+      medium: number
+      low: number
+    }
+    offerCoverageDistribution: {
+      none: number
+      single: number
+      multi: number
+    }
+    topPriorityProducts: Array<{
+      id: number
+      slug: string | null
+      productName: string
+      brand: string | null
+      category: string | null
+      priorityScore: number
+      freshness: 'fresh' | 'recent' | 'stale' | 'unknown'
+      recentMerchantClicks: number
+      offerCount: number
+      evidenceCount: number
+      dataConfidenceScore: number
+      attributeCompletenessScore: number
+      reasons: string[]
+    }>
+  }
   conversionSignals: {
     totalMerchantClicks: number
     merchantClicksLast7Days: number
@@ -1692,9 +1730,27 @@ export async function rescrapeProductMedia(productId: number): Promise<void> {
   }
 }
 
+function getCommerceFreshnessBucket(value: string | null | undefined): 'fresh' | 'recent' | 'stale' | 'unknown' {
+  if (!value) return 'unknown'
+
+  const parsed = Date.parse(value)
+  if (!Number.isFinite(parsed)) return 'unknown'
+
+  const deltaMs = Date.now() - parsed
+  if (deltaMs <= 36 * 60 * 60 * 1000) return 'fresh'
+  if (deltaMs <= 7 * 24 * 60 * 60 * 1000) return 'recent'
+  return 'stale'
+}
+
+function getCompletenessBucket(value: number): 'high' | 'medium' | 'low' {
+  if (value >= 0.8) return 'high'
+  if (value >= 0.5) return 'medium'
+  return 'low'
+}
+
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, merchantClickRows] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -1715,7 +1771,28 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       `
     ),
     getMerchantClickSummary(),
-    getDecisionFunnelSummary()
+    getDecisionFunnelSummary(),
+    db.query<{ product_id: number; count: number }>(
+      `
+        SELECT product_id, COUNT(*) AS count
+        FROM product_offers
+        GROUP BY product_id
+      `
+    ),
+    db.query<{ product_id: number; count: number }>(
+      `
+        SELECT product_id, COUNT(*) AS count
+        FROM product_attribute_facts
+        GROUP BY product_id
+      `
+    ),
+    db.query<{ product_id: number | null; created_at: string | null }>(
+      `
+        SELECT product_id, created_at
+        FROM merchant_click_events
+        WHERE product_id IS NOT NULL
+      `
+    )
   ])
 
   const staleArticles = publishedArticles
@@ -1738,6 +1815,98 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
   const productsMissingCategory = siteProducts.filter((product) => !product.category).length
   const productsWithLivePrice = siteProducts.filter((product) => product.priceAmount !== null && product.resolvedUrl).length
   const articlesMissingVisual = publishedArticles.filter((article) => !article.heroImageUrl && !article.product?.heroImageUrl).length
+  const offerCounts = new Map(offerCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
+  const evidenceCounts = new Map(evidenceCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
+  const merchantClickThreshold = Date.now() - 30 * 86_400_000
+  const recentMerchantClicks = merchantClickRows.reduce((result, row) => {
+    if (!row.product_id) return result
+    if (!row.created_at) return result
+
+    const timestamp = Date.parse(row.created_at)
+    if (!Number.isFinite(timestamp) || timestamp < merchantClickThreshold) return result
+
+    result.set(row.product_id, (result.get(row.product_id) || 0) + 1)
+    return result
+  }, new Map<number, number>())
+
+  const commerceProducts = siteProducts.map((product) => {
+    const offerCount = offerCounts.get(product.id) || 0
+    const evidenceCount = evidenceCounts.get(product.id) || 0
+    const freshness = getCommerceFreshnessBucket(product.offerLastCheckedAt || product.priceLastCheckedAt)
+    const recentClicks = recentMerchantClicks.get(product.id) || 0
+    const confidencePenalty = Math.round((1 - Number(product.dataConfidenceScore || 0)) * 35)
+    const completenessPenalty = Math.round((1 - Number(product.attributeCompletenessScore || 0)) * 25)
+    const freshnessPenalty = freshness === 'stale' ? 18 : freshness === 'unknown' ? 14 : freshness === 'recent' ? 4 : 0
+    const offerPenalty = offerCount === 0 ? 24 : offerCount === 1 ? 12 : 0
+    const evidencePenalty = evidenceCount === 0 ? 20 : evidenceCount < 3 ? 8 : 0
+    const demandBonus = recentClicks * 8
+    const commercialBonus = product.resolvedUrl ? 8 : 0
+    const priorityScore =
+      confidencePenalty +
+      completenessPenalty +
+      freshnessPenalty +
+      offerPenalty +
+      evidencePenalty +
+      demandBonus +
+      commercialBonus
+
+    const reasons = []
+    if (recentClicks > 0) reasons.push(`${recentClicks} merchant click${recentClicks === 1 ? '' : 's'} in the last 30 days`)
+    if (freshness === 'stale') reasons.push('Offer freshness is stale')
+    if (freshness === 'unknown') reasons.push('Offer freshness has not been established yet')
+    if (offerCount === 0) reasons.push('No tracked offers')
+    if (offerCount === 1) reasons.push('Only one tracked offer')
+    if (evidenceCount === 0) reasons.push('No attribute evidence')
+    if (evidenceCount > 0 && evidenceCount < 3) reasons.push('Thin evidence coverage')
+    if (Number(product.dataConfidenceScore || 0) < 0.6) reasons.push('Low confidence score')
+    if (Number(product.attributeCompletenessScore || 0) < 0.5) reasons.push('Low attribute completeness')
+
+    return {
+      id: product.id,
+      slug: product.slug,
+      productName: product.productName,
+      brand: product.brand,
+      category: product.category,
+      priorityScore,
+      freshness,
+      recentMerchantClicks: recentClicks,
+      offerCount,
+      evidenceCount,
+      dataConfidenceScore: Number(product.dataConfidenceScore || 0),
+      attributeCompletenessScore: Number(product.attributeCompletenessScore || 0),
+      reasons: reasons.slice(0, 4)
+    }
+  })
+
+  const freshnessDistribution = commerceProducts.reduce(
+    (result, product) => {
+      result[product.freshness] += 1
+      return result
+    },
+    { fresh: 0, recent: 0, stale: 0, unknown: 0 }
+  )
+
+  const completenessDistribution = commerceProducts.reduce(
+    (result, product) => {
+      result[getCompletenessBucket(product.attributeCompletenessScore)] += 1
+      return result
+    },
+    { high: 0, medium: 0, low: 0 }
+  )
+
+  const offerCoverageDistribution = commerceProducts.reduce(
+    (result, product) => {
+      if (product.offerCount <= 0) {
+        result.none += 1
+      } else if (product.offerCount === 1) {
+        result.single += 1
+      } else {
+        result.multi += 1
+      }
+      return result
+    },
+    { none: 0, single: 0, multi: 0 }
+  )
 
   return {
     totals: {
@@ -1754,6 +1923,23 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       staleArticleCount: staleArticles.length,
       newsletterSubscribers: Number(newsletterSubscribers?.count || 0),
       targetedSubscribers: Number(targetedSubscribers?.count || 0)
+    },
+    commerceQuality: {
+      lowConfidenceProducts: commerceProducts.filter((product) => product.dataConfidenceScore < 0.6).length,
+      staleOfferProducts: commerceProducts.filter((product) => product.freshness === 'stale').length,
+      productsWithoutOffers: commerceProducts.filter((product) => product.offerCount === 0).length,
+      productsWithoutEvidence: commerceProducts.filter((product) => product.evidenceCount === 0).length,
+      productsWithoutOfferCompetition: commerceProducts.filter((product) => product.offerCount < 2).length,
+      freshnessDistribution,
+      completenessDistribution,
+      offerCoverageDistribution,
+      topPriorityProducts: commerceProducts
+        .sort((left, right) => {
+          if (right.priorityScore !== left.priorityScore) return right.priorityScore - left.priorityScore
+          if (right.recentMerchantClicks !== left.recentMerchantClicks) return right.recentMerchantClicks - left.recentMerchantClicks
+          return left.productName.localeCompare(right.productName)
+        })
+        .slice(0, 5)
     },
     conversionSignals: {
       totalMerchantClicks: merchantClicks.totalClicks,
