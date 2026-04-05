@@ -1,0 +1,181 @@
+import { getSettingValueOrEnv } from '@/lib/settings'
+
+export const GEMINI_ACTIVE_MODEL = 'gemini-3-flash-preview' as const
+
+const GEMINI_DEPRECATED_MODELS = new Set([
+  'gemini-2.5-flash',
+  'gemini-2.5-pro'
+])
+
+export type GeminiResponseSchema = {
+  type?: 'STRING' | 'NUMBER' | 'INTEGER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT'
+  format?: string
+  description?: string
+  nullable?: boolean
+  items?: GeminiResponseSchema
+  enum?: string[]
+  properties?: Record<string, GeminiResponseSchema>
+  required?: string[]
+}
+
+export type GeminiGenerateParams = {
+  prompt: string
+  model?: string | null
+  temperature?: number
+  maxOutputTokens?: number
+  timeoutMs?: number
+  responseMimeType?: string
+  responseSchema?: GeminiResponseSchema
+}
+
+export type GeminiGenerateResult = {
+  text: string
+  model: string
+  usage?: {
+    inputTokens: number
+    outputTokens: number
+    totalTokens: number
+  }
+}
+
+export function normalizeGeminiModel(model?: string | null): string {
+  const value = String(model || '').trim()
+  if (!value || GEMINI_DEPRECATED_MODELS.has(value)) {
+    return GEMINI_ACTIVE_MODEL
+  }
+  return value
+}
+
+function extractGeminiText(payload: any): string | null {
+  const parts = payload?.candidates?.[0]?.content?.parts
+  if (!Array.isArray(parts)) return null
+
+  const text = parts
+    .map((part: any) => {
+      if (typeof part?.text === 'string') return part.text
+      return ''
+    })
+    .join('')
+    .trim()
+
+  return text || null
+}
+
+function extractUsage(payload: any): GeminiGenerateResult['usage'] | undefined {
+  const usage = payload?.usageMetadata
+  if (!usage || typeof usage !== 'object') return undefined
+
+  const inputTokens = Number(usage.promptTokenCount || 0)
+  const outputTokens = Number(usage.candidatesTokenCount || 0)
+  const totalTokens = Number(usage.totalTokenCount || inputTokens + outputTokens || 0)
+
+  if (!inputTokens && !outputTokens && !totalTokens) return undefined
+
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens
+  }
+}
+
+export function extractJsonTextBlock(text: string): string | null {
+  const trimmed = String(text || '').trim()
+  if (!trimmed) return null
+
+  const fencedMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i)
+  if (fencedMatch?.[1]) return fencedMatch[1].trim()
+
+  const arrayStart = trimmed.indexOf('[')
+  const objectStart = trimmed.indexOf('{')
+  const start =
+    arrayStart < 0 ? objectStart : objectStart < 0 ? arrayStart : Math.min(arrayStart, objectStart)
+
+  if (start < 0) return null
+
+  const endArray = trimmed.lastIndexOf(']')
+  const endObject = trimmed.lastIndexOf('}')
+  const end = Math.max(endArray, endObject)
+  if (end <= start) return null
+
+  return trimmed.slice(start, end + 1).trim()
+}
+
+async function getGeminiConfig(): Promise<{
+  provider: string
+  apiKey: string
+  model: string
+  timeoutMs: number
+}> {
+  const provider = await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
+  const apiKey = await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const model = normalizeGeminiModel(
+    await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
+  )
+  const timeoutMs = Math.max(
+    5000,
+    Number.parseInt(
+      await getSettingValueOrEnv('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000'),
+      10
+    ) || 30000
+  )
+
+  return { provider, apiKey, model, timeoutMs }
+}
+
+export async function generateGeminiContent(params: GeminiGenerateParams): Promise<GeminiGenerateResult | null> {
+  const config = await getGeminiConfig()
+  if (config.provider !== 'gemini') return null
+  if (!config.apiKey) return null
+
+  const model = normalizeGeminiModel(params.model || config.model)
+  const timeoutMs = Math.max(5000, params.timeoutMs || config.timeoutMs)
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: params.prompt }] }],
+          generationConfig: {
+            temperature: params.temperature ?? 0.4,
+            maxOutputTokens: params.maxOutputTokens ?? 4096,
+            ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
+            ...(params.responseSchema ? { responseSchema: params.responseSchema } : {})
+          }
+        }),
+        signal: controller.signal
+      }
+    )
+
+    const payload = await response.json().catch(() => null)
+    if (!response.ok) {
+      const message =
+        payload?.error?.message ||
+        payload?.error?.status ||
+        `Gemini request failed with ${response.status}`
+      console.warn(`[ai] Gemini request failed: ${message}`)
+      return null
+    }
+
+    const text = extractGeminiText(payload)
+    if (!text) {
+      console.warn('[ai] Gemini returned no text candidates')
+      return null
+    }
+
+    return {
+      text,
+      model,
+      usage: extractUsage(payload)
+    }
+  } catch (error: any) {
+    console.warn(`[ai] Gemini request error: ${error?.message || error}`)
+    return null
+  } finally {
+    clearTimeout(timeout)
+  }
+}

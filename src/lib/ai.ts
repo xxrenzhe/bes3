@@ -1,6 +1,6 @@
 import { loadActivePrompt } from '@/lib/prompts'
 import type { ProductRecord } from '@/lib/site-data'
-import { getSettingValueOrEnv } from '@/lib/settings'
+import { extractJsonTextBlock, generateGeminiContent } from '@/lib/gemini'
 
 type KeywordIdea = {
   keyword: string
@@ -18,50 +18,68 @@ function interpolate(template: string, variables: Record<string, string>): strin
 }
 
 async function generateTextWithGemini(prompt: string): Promise<string | null> {
-  const provider = await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
-  const apiKey = await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
-  const model = await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-2.5-flash')
-  if (provider !== 'gemini') return null
-  if (!apiKey) return null
+  const result = await generateGeminiContent({ prompt })
+  return result?.text || null
+}
 
-  try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }]
-        })
-      }
-    )
+function parseJsonFromAiText<T>(text: string | null): T | null {
+  if (!text) return null
 
-    if (!response.ok) {
-      return null
+  const candidates = [text, extractJsonTextBlock(text)].filter((item): item is string => Boolean(item))
+  for (const candidate of candidates) {
+    try {
+      return JSON.parse(candidate) as T
+    } catch {
+      // Try the next candidate.
     }
-
-    const payload = await response.json()
-    return payload.candidates?.[0]?.content?.parts?.[0]?.text || null
-  } catch {
-    return null
   }
+
+  return null
 }
 
 export async function generateKeywordIdeas(product: ProductRecord): Promise<KeywordIdea[]> {
   const prompt = await loadActivePrompt('keyword_mining')
-  const aiText = await generateTextWithGemini(
-    interpolate(prompt, {
-      'product.productName': product.productName,
-      'product.category': product.category || 'tech'
-    })
-  )
-
-  if (aiText) {
-    try {
-      return JSON.parse(aiText) as KeywordIdea[]
-    } catch {
-      // fall through
+  const interpolatedPrompt = interpolate(prompt, {
+    'product.productName': product.productName,
+    'product.category': product.category || 'tech'
+  })
+  const aiResult = await generateGeminiContent(
+    {
+      prompt: interpolatedPrompt,
+      temperature: 0.3,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'ARRAY',
+        items: {
+          type: 'OBJECT',
+          required: ['keyword', 'buyerIntent', 'serpWeakness', 'commissionPotential', 'contentFit', 'freshness'],
+          properties: {
+            keyword: { type: 'STRING' },
+            buyerIntent: { type: 'NUMBER' },
+            serpWeakness: { type: 'NUMBER' },
+            commissionPotential: { type: 'NUMBER' },
+            contentFit: { type: 'NUMBER' },
+            freshness: { type: 'NUMBER' }
+          }
+        }
+      }
     }
+  )
+  const parsedIdeas = parseJsonFromAiText<KeywordIdea[]>(aiResult?.text || null)
+
+  if (parsedIdeas && Array.isArray(parsedIdeas) && parsedIdeas.length) {
+    return parsedIdeas
+      .filter((item) => item && typeof item.keyword === 'string')
+      .slice(0, 12)
+      .map((item) => ({
+        keyword: item.keyword,
+        buyerIntent: Number(item.buyerIntent) || 0,
+        serpWeakness: Number(item.serpWeakness) || 0,
+        commissionPotential: Number(item.commissionPotential) || 0,
+        contentFit: Number(item.contentFit) || 0,
+        freshness: Number(item.freshness) || 0
+      }))
   }
 
   return [
@@ -140,23 +158,34 @@ export async function generateSeoPayload(title: string, summary: string): Promis
   schemaJson: string
 }> {
   const prompt = await loadActivePrompt('seo_enrichment')
-  const aiText = await generateTextWithGemini(
-    interpolate(prompt, {
-      'article.title': title,
-      'article.summary': summary
-    })
-  )
-
-  if (aiText) {
-    try {
-      const parsed = JSON.parse(aiText) as { seoTitle?: string; seoDescription?: string; schemaJson?: unknown }
-      return {
-        seoTitle: parsed.seoTitle || title,
-        seoDescription: parsed.seoDescription || summary,
-        schemaJson: JSON.stringify(parsed.schemaJson || { '@type': 'FAQPage', mainEntity: [] })
+  const interpolatedPrompt = interpolate(prompt, {
+    'article.title': title,
+    'article.summary': summary
+  })
+  const aiResult = await generateGeminiContent(
+    {
+      prompt: interpolatedPrompt,
+      temperature: 0.2,
+      maxOutputTokens: 2048,
+      responseMimeType: 'application/json',
+      responseSchema: {
+        type: 'OBJECT',
+        required: ['seoTitle', 'seoDescription', 'schemaJson'],
+        properties: {
+          seoTitle: { type: 'STRING' },
+          seoDescription: { type: 'STRING' },
+          schemaJson: { type: 'OBJECT' }
+        }
       }
-    } catch {
-      // fall through
+    }
+  )
+  const parsed = parseJsonFromAiText<{ seoTitle?: string; seoDescription?: string; schemaJson?: unknown }>(aiResult?.text || null)
+
+  if (parsed) {
+    return {
+      seoTitle: parsed.seoTitle || title,
+      seoDescription: parsed.seoDescription || summary,
+      schemaJson: JSON.stringify(parsed.schemaJson || { '@type': 'FAQPage', mainEntity: [] })
     }
   }
 
