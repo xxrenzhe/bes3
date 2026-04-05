@@ -39,7 +39,7 @@ function buildCategoryHubHref(item: ShortlistItem | undefined) {
 }
 
 function getCategoryLabel(item: ShortlistItem | undefined) {
-  return item?.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'
+  return item?.category ? item.category.replace(/-/g, ' ') : 'Saved shortlist'
 }
 
 function buildCategoryAlertHref(
@@ -165,7 +165,7 @@ export function ShortlistWorkspace({
     return (
       <div className="rounded-[2rem] bg-white p-10 shadow-panel">
         <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">
-          Keep your buying decision alive across visits.
+          Keep your shortlist across visits.
         </h1>
         <p className="text-sm text-muted-foreground">Loading your shortlist...</p>
       </div>
@@ -178,7 +178,7 @@ export function ShortlistWorkspace({
         <p className="editorial-kicker">Buyer Workspace</p>
         <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">No saved candidates yet.</h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-          Save products from search, category hubs, deals, or product deep-dives to keep your shortlist stable across visits.
+          Save products from search, category pages, deals, or product pages to keep your shortlist stable across visits.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/search" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
@@ -232,7 +232,7 @@ export function ShortlistWorkspace({
           title: leadDecisionItem ? `Open ${leadDecisionItem.productName}` : 'Open the strongest saved pick',
           description: 'Use the lead product page when you want one last buyer-fit check before compare or checkout.',
           href: getShortlistProductPath(leadDecisionItem),
-          label: 'Open deep-dive'
+          label: 'Open details'
         },
         compareCount >= 2
           ? {
@@ -253,14 +253,14 @@ export function ShortlistWorkspace({
             : {
                 eyebrow: 'Compare',
                 title: 'Add one more serious contender',
-                description: 'You still need a cleaner lane before compare becomes useful. Pull one more option from the same category first.',
+                description: 'You still need a tighter shortlist before compare becomes useful. Pull one more option from the same category first.',
                 href: searchForAlternativesHref,
-                label: 'Browse this lane'
+                label: 'Browse this category'
               },
         {
           eyebrow: 'Wait',
           title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Start price alerts',
-          description: 'If timing is the blocker, switch from active deciding into a price-watch flow instead of losing the shortlist context.',
+          description: 'If timing is the blocker, switch from active shopping into a price alert instead of losing the shortlist context.',
           href: buildCategoryAlertHref(alertAnchorItem, 'price-alert', 'priority'),
           label: 'Start price watch'
         },
@@ -275,17 +275,17 @@ export function ShortlistWorkspace({
           : {
               eyebrow: 'Browse',
               title: alertAnchorItem?.category ? `Reopen ${getCategoryLabel(alertAnchorItem)}` : 'Reopen the directory',
-              description: 'Return to the category lane when the shortlist still needs stronger context before you keep deciding.',
+              description: 'Return to the category page when the shortlist still needs stronger context before you keep choosing.',
               href: buildCategoryHubHref(alertAnchorItem),
-              label: 'Browse category hub'
+              label: 'Open category page'
             }
       ]
     : []
   const sharedBriefPreview = sharedSummary
     ? [
         `${sharedSummary.overview} ${sharedSummary.decisionNote}`,
-        sharedDecisionSummary ? `Decision lens: ${sharedDecisionSummary.decisionLens}` : '',
-        `Strongest signal: ${sharedSummary.strongestSignal}`,
+        sharedDecisionSummary ? `What matters most: ${sharedDecisionSummary.decisionLens}` : '',
+        `Strongest reason: ${sharedSummary.strongestSignal}`,
         `Included picks: ${buildProductRollup(sharedItems)}.`
       ].filter(Boolean).join('\n')
     : ''
@@ -294,9 +294,9 @@ export function ShortlistWorkspace({
   const coach = shortlist.length === 1
     ? {
         variant: 'expand-options',
-        eyebrow: 'Decision Coach',
+        eyebrow: 'Shortlist Coach',
         title: 'Add one more contender before you decide.',
-        description: 'A single saved product is still a preference, not a decision. Pull in at least one serious alternative so the tradeoffs become obvious.',
+        description: 'A single saved product is still a preference, not a real choice. Pull in at least one serious alternative so the tradeoffs become obvious.',
         primaryLabel: shortlist[0]?.category ? 'Browse this category' : 'Browse the directory',
         primaryHref: searchForAlternativesHref,
         primaryActionKey: 'browse-category',
@@ -312,7 +312,7 @@ export function ShortlistWorkspace({
     : shortlist.length >= 2 && compareCount < 2
       ? {
           variant: 'start-compare',
-          eyebrow: 'Decision Coach',
+          eyebrow: 'Shortlist Coach',
           title: 'Turn your shortlist into a real comparison.',
           description: 'You already have enough candidates to stop collecting and start deciding. Load the strongest saved picks into compare and keep the shortlist for backups.',
           primaryLabel: `Load ${compareCandidates.length} ${compareCandidates.length === 1 ? 'pick' : 'picks'} into compare`,
@@ -325,15 +325,15 @@ export function ShortlistWorkspace({
             `Recommended finalists: ${compareCandidateNames}.`,
             'Bes3 uses your most recently saved picks first, capped at three.'
           ],
-          emphasis: 'The decision is mature enough to compare now. More saving will likely add noise, not clarity.'
+          emphasis: 'The shortlist is mature enough to compare now. More saving will likely add noise, not clarity.'
         }
       : compareCount >= 2
         ? {
             variant: 'close-decision',
-            eyebrow: 'Decision Coach',
-            title: 'Your finalists are ready for a decision.',
-            description: 'Keep compare tight, review the decision matrix, then move to a published comparison or merchant price checks once the tradeoffs feel clear.',
-            primaryLabel: 'Jump to decision matrix',
+            eyebrow: 'Shortlist Coach',
+            title: 'Your finalists are ready for a choice.',
+            description: 'Keep compare tight, review the compare table, then move to a published comparison or store price checks once the tradeoffs feel clear.',
+            primaryLabel: 'Jump to compare table',
             primaryHref: '/shortlist#decision-matrix',
             primaryActionKey: 'jump-decision-matrix',
             secondaryLabel: comparisonSearchHref ? 'Search for a published comparison' : 'Open compare queue',
@@ -343,7 +343,7 @@ export function ShortlistWorkspace({
               `Active finalists: ${buildProductRollup(compare)}.`,
               compareCount < shortlist.length ? `${shortlist.length - compareCount} saved ${shortlist.length - compareCount === 1 ? 'backup remains' : 'backups remain'} outside compare.` : 'Your shortlist and compare set are currently aligned.'
             ],
-            emphasis: 'You already have enough signal to decide. The next gains come from sharper comparison, not more candidates.'
+            emphasis: 'You already have enough proof to choose. The next gains come from sharper comparison, not more candidates.'
           }
         : null
 
@@ -413,14 +413,14 @@ export function ShortlistWorkspace({
     <div className="space-y-8">
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div id="compare-queue" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">Persistent Shortlist</p>
-          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your buying decision alive across visits.</h1>
+          <p className="editorial-kicker">Saved Shortlist</p>
+          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your shortlist across visits.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            Bes3 now remembers your saved candidates locally, so you can collect strong options, return later, and continue comparing without starting over.
+            Bes3 now remembers your saved products locally, so you can collect strong options, return later, and continue comparing without starting over.
           </p>
         </div>
         <div className="rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)]">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Decision Status</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Shortlist Status</p>
           <div className="mt-6 grid gap-4 sm:grid-cols-3">
             <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Saved</p>
@@ -431,7 +431,7 @@ export function ShortlistWorkspace({
               <p className="mt-3 text-4xl font-black">{compareCount}</p>
             </div>
             <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Compare-ready</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Ready to compare</p>
               <p className="mt-3 text-4xl font-black">{shortlistDecisionSummary.compareReadyCount}</p>
             </div>
           </div>
@@ -467,13 +467,13 @@ export function ShortlistWorkspace({
             <div className="rounded-[2rem] bg-white p-7 sm:p-8">
               <p className="editorial-kicker">Shared Shortlist</p>
               <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                Someone sent you {sharedItems.length} buyer-ready {sharedItems.length === 1 ? 'pick' : 'picks'}.
+                Someone sent you {sharedItems.length} saved {sharedItems.length === 1 ? 'pick' : 'picks'}.
               </h3>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
                 {sharedSummary?.overview} {sharedSummary?.decisionNote} Review the incoming candidates below, then merge them into your own workspace or replace your current shortlist if this shared set is stronger.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Strongest signal</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Strongest reason</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{sharedSummary?.strongestSignal}</p>
               </div>
             </div>
@@ -494,11 +494,11 @@ export function ShortlistWorkspace({
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">{sharedSummary?.priceRangeNote}</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Buyer proof</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Review proof</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{sharedSummary?.buyerProofLabel}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
                   {sharedSummary?.averageRating
-                    ? `Average signal ${sharedSummary.averageRatingLabel}.`
+                    ? `Average rating ${sharedSummary.averageRatingLabel}.`
                     : sharedSummary?.buyerProofNote}
                 </p>
               </div>
@@ -572,7 +572,7 @@ export function ShortlistWorkspace({
               return (
                 <div key={`shared-${item.id}`} className="rounded-[1.75rem] bg-white p-5">
                   <div className="flex items-start justify-between gap-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{item.category ? item.category.replace(/-/g, ' ') : 'Saved shortlist'}</p>
                     {decisionState ? (
                       <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getDecisionBadgeClass(decisionState.stage)}`}>
                         {decisionState.label} · {decisionState.score}
@@ -581,7 +581,7 @@ export function ShortlistWorkspace({
                   </div>
                   <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{item.productName}</h4>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {item.reviewHighlights[0] || item.description || 'Shared as part of a Bes3 buying decision.'}
+                    {item.reviewHighlights[0] || item.description || 'Shared as part of a Bes3 shortlist.'}
                   </p>
                   {decisionState?.whySaved.length ? (
                     <div className="mt-4 flex flex-wrap gap-2">
@@ -609,13 +609,13 @@ export function ShortlistWorkspace({
         <section className="rounded-[2.5rem] bg-[linear-gradient(180deg,#f8fbff,#ffffff)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
             <div>
-              <p className="editorial-kicker">Decision Readiness</p>
+              <p className="editorial-kicker">Shortlist Readiness</p>
               <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
                 {shortlistDecisionSummary.label}
               </h3>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">{shortlistDecisionSummary.note}</p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Decision lens</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">What matters most</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.decisionLens}</p>
                 <p className="mt-5 text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Next move</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.nextAction}</p>
@@ -624,14 +624,14 @@ export function ShortlistWorkspace({
 
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="rounded-[1.75rem] bg-white p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Average readiness</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Average score</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.averageScore}/100</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">A blend of price proof, merchant readiness, freshness, and shortlist maturity.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">A blend of price proof, store readiness, freshness, and shortlist maturity.</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Finalists</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{shortlistDecisionSummary.finalistCount}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Products already promoted into compare and treated as real decision candidates.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Products already promoted into compare and treated as real finalists.</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Needs a check</p>
@@ -651,21 +651,21 @@ export function ShortlistWorkspace({
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
-              <p className="editorial-kicker">Decision Exits</p>
+              <p className="editorial-kicker">Next Steps</p>
               <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                Choose whether this shortlist should compare, validate, or wait.
+                Choose whether this shortlist should compare, double-check, or wait.
               </h3>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                A saved list only has value if it leads somewhere. Use these routes to keep the shortlist moving: validate the lead pick, promote finalists into compare, or switch the whole lane into alerts when buying later is smarter.
+                A saved list only has value if it leads somewhere. Use these next steps to keep the shortlist moving: validate the lead pick, promote finalists into compare, or switch the whole category into alerts when buying later is smarter.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {compareCount >= 2
-                    ? 'Your shortlist already has active finalists. Compare now if the decision is close, or switch to a watch flow if price timing is the only thing left.'
+                    ? 'Your shortlist already has active finalists. Compare now if the choice is close, or switch to a price alert if timing is the only thing left.'
                     : shortlist.length >= 2
                       ? 'This shortlist is mature enough to compare. If you are still hesitating, validate the lead pick or set alerts instead of adding more noise.'
-                      : 'One saved product is not a decision yet. Either validate it with a deep-dive or reopen the lane and add one more serious contender.'}
+                      : 'One saved product is not a real choice yet. Either validate it with the product page or go back to the category and add one more serious contender.'}
                 </p>
               </div>
             </div>
@@ -712,20 +712,20 @@ export function ShortlistWorkspace({
         <section id="decision-paths" className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_50%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr] xl:items-start">
             <div>
-              <p className="editorial-kicker">Decision Paths</p>
+              <p className="editorial-kicker">Category Groups</p>
               <h3 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
-                Split unlike products into clean buying lanes.
+                Split unlike products into clean groups.
               </h3>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
                 {compareMixesCategories
-                  ? 'Your active compare queue mixes categories. Keep finalists inside the same product lane so the matrix stays honest and the tradeoffs remain actionable.'
-                  : `Your shortlist spans ${decisionPaths.length} decision paths. Treat each category as a separate buying choice instead of forcing unrelated products into one compare view.`}
+                  ? 'Your active compare queue mixes categories. Keep finalists inside the same category so the table stays honest and the tradeoffs remain actionable.'
+                  : `Your shortlist spans ${decisionPaths.length} category groups. Treat each category as a separate buying choice instead of forcing unrelated products into one compare view.`}
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Recommended lane</p>
-                <p className="mt-3 text-2xl font-black">{dominantDecisionPath?.label || 'Buyer shortlist'}</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Recommended group</p>
+                <p className="mt-3 text-2xl font-black">{dominantDecisionPath?.label || 'Saved shortlist'}</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  {dominantDecisionPath?.readiness.note || 'Choose one same-category lane first, then narrow finalists inside it.'}
+                  {dominantDecisionPath?.readiness.note || 'Choose one same-category group first, then narrow finalists inside it.'}
                 </p>
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
@@ -750,20 +750,20 @@ export function ShortlistWorkspace({
 
             <div className="grid gap-4 sm:grid-cols-3">
               <div className="rounded-[1.75rem] bg-white p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Decision lanes</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Groups</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{decisionPaths.length}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">Separate these by category before you let compare drive the purchase decision.</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">Separate these by category before you let compare drive the final choice.</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Dominant lane</p>
-                <p className="mt-3 text-sm font-semibold leading-7 text-foreground">{dominantDecisionPath?.label || 'Buyer shortlist'}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{dominantDecisionPath?.items.length || 0} saved picks currently support this lane.</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Main group</p>
+                <p className="mt-3 text-sm font-semibold leading-7 text-foreground">{dominantDecisionPath?.label || 'Saved shortlist'}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{dominantDecisionPath?.items.length || 0} saved picks currently support this group.</p>
               </div>
               <div className="rounded-[1.75rem] bg-white p-5">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">Compare hygiene</p>
                 <p className="mt-3 text-3xl font-black text-foreground">{compareMixesCategories ? 'Mixed' : 'Clean'}</p>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {compareMixesCategories ? 'Current finalists span multiple categories.' : 'Current compare set stays inside one buying lane.'}
+                  {compareMixesCategories ? 'Current finalists span multiple categories.' : 'Current compare set stays inside one category.'}
                 </p>
               </div>
             </div>
@@ -800,7 +800,7 @@ export function ShortlistWorkspace({
                 </div>
 
                 <div className="mt-5 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Strongest signal</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Strongest reason</p>
                   <p className="mt-2 text-sm leading-7 text-foreground">{path.summary.strongestSignal}</p>
                 </div>
 
@@ -821,7 +821,7 @@ export function ShortlistWorkspace({
                     href={buildCategoryHubHref(path.items[0])}
                     className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-4 text-sm font-semibold text-foreground transition-colors hover:bg-muted"
                   >
-                    Browse this lane
+                    Browse this category
                   </Link>
                 </div>
               </div>
@@ -914,7 +914,7 @@ export function ShortlistWorkspace({
                       <div className="space-y-2">
                         <div className="flex items-start justify-between gap-3">
                           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">
-                            {item.category ? item.category.replace(/-/g, ' ') : 'Buyer shortlist'}
+                            {item.category ? item.category.replace(/-/g, ' ') : 'Saved shortlist'}
                           </p>
                           {decisionState ? (
                             <span className={`rounded-full border px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] ${getDecisionBadgeClass(decisionState.stage)}`}>
@@ -924,7 +924,7 @@ export function ShortlistWorkspace({
                         </div>
                         <h4 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{item.productName}</h4>
                         <p className="text-sm leading-7 text-muted-foreground">
-                          {item.description || 'Saved for later review. Open the deep-dive or merchant page when you are ready to continue.'}
+                          {item.description || 'Saved for later review. Open the product page or store link when you are ready to continue.'}
                         </p>
                       </div>
 
@@ -944,8 +944,8 @@ export function ShortlistWorkspace({
                           <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD')}</p>
                         </div>
                         <div className="rounded-[1.25rem] bg-muted p-4">
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Signal</p>
-                          <p className="mt-2 text-lg font-black text-foreground">{item.rating ? `${item.rating.toFixed(1)} / 5` : 'Building'}</p>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">User rating</p>
+                          <p className="mt-2 text-lg font-black text-foreground">{item.rating ? `${item.rating.toFixed(1)} / 5` : 'Pending'}</p>
                         </div>
                         <div className="rounded-[1.25rem] bg-muted p-4">
                           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Last checked</p>
@@ -955,10 +955,10 @@ export function ShortlistWorkspace({
 
                       {decisionState ? (
                         <div className={`rounded-[1.25rem] border p-4 ${getDecisionBadgeClass(decisionState.stage)}`}>
-                          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Decision read</p>
+                          <p className="text-[10px] font-bold uppercase tracking-[0.2em]">Quick read</p>
                           <p className="mt-2 text-sm font-semibold leading-7">{decisionState.note}</p>
                           {decisionState.gaps[0] ? (
-                            <p className="mt-2 text-xs leading-6 opacity-80">Watchout: {decisionState.gaps[0]}</p>
+                            <p className="mt-2 text-xs leading-6 opacity-80">Watch out: {decisionState.gaps[0]}</p>
                           ) : null}
                         </div>
                       ) : null}
@@ -968,7 +968,7 @@ export function ShortlistWorkspace({
                           href={getShortlistProductPath(item)}
                           className="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
                         >
-                          Open deep-dive
+                          Open details
                           <ArrowRight className="h-4 w-4" />
                         </Link>
                         <button
@@ -1025,7 +1025,7 @@ export function ShortlistWorkspace({
           <div className="rounded-[2rem] border border-dashed border-border bg-white p-10 text-center shadow-panel">
             <h4 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Your shortlist is still empty.</h4>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Import the shared picks above to start your own workspace, or add products from search, deals, and category hubs.
+              Import the shared picks above to start your own workspace, or add products from search, deals, and category pages.
             </p>
           </div>
         )}
@@ -1034,7 +1034,7 @@ export function ShortlistWorkspace({
       <section className="grid gap-6 lg:grid-cols-[0.9fr_1.1fr]">
         <div id="decision-matrix" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Compare Queue</p>
-          <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Side-by-side decision board</h3>
+          <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Side-by-side compare table</h3>
           <p className="mt-4 text-sm leading-7 text-muted-foreground">
             Use compare for the finalists only. If you have more than three, narrow the shortlist first so the tradeoffs stay obvious.
           </p>
@@ -1042,7 +1042,7 @@ export function ShortlistWorkspace({
           {compareMixesCategories && dominantDecisionPath?.recommendedItems.length >= 2 ? (
             <div className="mt-6 rounded-[1.5rem] border border-amber-200 bg-amber-50 px-5 py-4">
               <p className="text-sm leading-7 text-amber-950">
-                Compare is currently mixing categories. Replace it with the strongest {dominantDecisionPath.label.toLowerCase()} lane so the decision matrix stays comparable.
+                Compare is currently mixing categories. Replace it with the strongest {dominantDecisionPath.label.toLowerCase()} group so the compare table stays fair.
               </p>
               <button
                 type="button"
@@ -1088,7 +1088,7 @@ export function ShortlistWorkspace({
         </div>
 
         <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">Decision Matrix</p>
+          <p className="editorial-kicker">Compare Table</p>
           <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">What changes between the finalists</h3>
           <p className="mt-4 text-sm leading-7 text-muted-foreground">{comparisonSummary.lensNote}</p>
 
