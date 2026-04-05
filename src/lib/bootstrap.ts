@@ -7,8 +7,9 @@ let bootstrapPromise: Promise<void> | null = null
 
 const DEFAULT_SETTINGS = [
   ['ai', 'provider', 'gemini', 'string', 0, 'AI provider'],
-  ['ai', 'geminiModel', 'gemini-2.5-flash', 'string', 0, 'Gemini model'],
+  ['ai', 'geminiModel', 'gemini-3-flash-preview', 'string', 0, 'Gemini model'],
   ['ai', 'geminiApiKey', '', 'secret', 1, 'Gemini API key used for keyword and article generation'],
+  ['ai', 'geminiTimeoutMs', '30000', 'string', 0, 'Gemini request timeout in milliseconds'],
   ['proxy', 'browserProxyUrlsJson', '[]', 'json', 0, 'Proxy pool list'],
   ['affiliateSync', 'partnerboostAmazonBaseUrl', 'https://app.partnerboost.com', 'string', 0, 'PartnerBoost Amazon API base URL'],
   ['affiliateSync', 'partnerboostAmazonToken', '', 'secret', 1, 'PartnerBoost Amazon token'],
