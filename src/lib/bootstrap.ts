@@ -70,6 +70,30 @@ const DEFAULT_PROMPTS = [
     version: 'v1',
     promptContent:
       'Generate SEO title, meta description, FAQPage schema, Review schema, and open graph summary for {{article.title}}. Return JSON.'
+  },
+  {
+    promptId: 'fact_extraction',
+    category: 'factExtraction',
+    name: 'Fact Extraction',
+    version: 'v1',
+    promptContent:
+      'Extract only verifiable commerce facts for {{product.productName}}. Return JSON with productFacts, topAttributes, offerSummary, and evidenceGaps. Do not add opinions.'
+  },
+  {
+    promptId: 'buyer_fit_reasoning',
+    category: 'buyerFitReasoning',
+    name: 'Buyer Fit Reasoning',
+    version: 'v1',
+    promptContent:
+      'Using the verified facts for {{product.productName}}, explain who it is best for, who should skip it, and what proof is still missing. Return JSON.'
+  },
+  {
+    promptId: 'assistant_answering',
+    category: 'assistantAnswering',
+    name: 'Assistant Answering',
+    version: 'v1',
+    promptContent:
+      'Answer the shopping question using only the supplied Bes3 product facts, offers, and evidence. Recommend the clearest next action and keep the tone concise.'
   }
 ] as const
 
