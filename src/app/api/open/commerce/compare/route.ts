@@ -7,9 +7,11 @@ import {
   serializeCommerceProduct
 } from '@/lib/open-commerce'
 import {
+  getBrandKnowledgeByProduct,
   getOpenCommerceProductById,
   listProductAttributeFacts,
-  listProductOffers
+  listProductOffers,
+  listProductPriceHistory
 } from '@/lib/site-data'
 
 function normalizeProductIds(value: unknown) {
@@ -43,13 +45,28 @@ export async function POST(request: Request) {
 
         if (!product) return null
 
+        const [priceHistory, brandKnowledge] = await Promise.all([
+          listProductPriceHistory(productId, 12),
+          getBrandKnowledgeByProduct({
+            brandName: product.brand,
+            category: product.category,
+            compatibilityLimit: 6
+          })
+        ])
+
         return {
           product,
           offers,
           attributeFacts,
+          priceHistory,
+          brandPolicy: brandKnowledge.brandPolicy,
+          compatibilityFacts: brandKnowledge.compatibilityFacts,
           result: serializeCommerceProduct(product, {
             offers,
             attributeFacts,
+            priceHistory,
+            brandPolicy: brandKnowledge.brandPolicy,
+            compatibilityFacts: brandKnowledge.compatibilityFacts,
             source: 'open-commerce-compare',
             visitorId: typeof body.visitorId === 'string' ? body.visitorId : null
           })
@@ -60,6 +77,9 @@ export async function POST(request: Request) {
     product: NonNullable<Awaited<ReturnType<typeof getOpenCommerceProductById>>>
     offers: Awaited<ReturnType<typeof listProductOffers>>
     attributeFacts: Awaited<ReturnType<typeof listProductAttributeFacts>>
+    priceHistory: Awaited<ReturnType<typeof listProductPriceHistory>>
+    brandPolicy: Awaited<ReturnType<typeof getBrandKnowledgeByProduct>>['brandPolicy']
+    compatibilityFacts: Awaited<ReturnType<typeof getBrandKnowledgeByProduct>>['compatibilityFacts']
     result: ReturnType<typeof serializeCommerceProduct>
   }>
 
@@ -90,7 +110,9 @@ export async function POST(request: Request) {
       confidence: entry.product.dataConfidenceScore,
       fitSummary: entry.result.fitSummary,
       notForSummary: entry.result.notForSummary,
-      bestOffer: entry.result.bestOffer
+      bestOffer: entry.result.bestOffer,
+      priceHistorySummary: entry.result.evidence.priceHistorySummary,
+      brandKnowledge: entry.result.brandKnowledge
     })),
     actions: winner.result.actions,
     disclaimers: buildCommerceDisclaimers(winner.product)
