@@ -107,7 +107,7 @@ export default async function ProductPage({
     },
     {
       name: 'Compare or set a price alert',
-      text: `If the product looks plausible but not final, move into ${categoryLabel} comparisons or a price alert instead of restarting research.`
+      text: `If the product looks good but not final, move into ${categoryLabel} comparisons or a price alert instead of restarting research.`
     }
   ]
   const structuredData = [
@@ -141,13 +141,13 @@ export default async function ProductPage({
     {
       question: 'When should I use the brand page from here?',
       answer: product.brand
-        ? `Use the ${product.brand} page when you want to see nearby products and editorial pages from the same manufacturer without reopening site-wide search.`
+        ? `Use the ${product.brand} page when you want to see nearby products and editorial pages from the same brand without reopening site-wide search.`
         : 'Use the category page when you still need adjacent products and articles around this product before comparing or buying.'
     },
     {
       question: 'What should I do if this product looks good but not final?',
       answer: comparisonArticle
-        ? 'Open the related comparison next if you are down to finalists. If timing is the blocker instead of fit, switch to the category price watch.'
+        ? 'Open the related comparison next if you are down to your top picks. If price is the only thing holding you back instead of fit, switch to the category price watch.'
         : 'Return to the category page or start a price alert so you can keep following this category without forcing the purchase today.'
     }
   ]
@@ -165,7 +165,7 @@ export default async function ProductPage({
       ? {
           eyebrow: 'Compare',
           title: 'See close alternatives',
-          description: 'Open the comparison once this product is good enough to become a finalist against nearby substitutes.',
+          description: 'Open the comparison once this product is good enough to become a top pick against nearby substitutes.',
           href: getArticlePath(comparisonArticle.type, comparisonArticle.slug),
           label: 'Open comparison'
         }
@@ -174,7 +174,7 @@ export default async function ProductPage({
       ? {
           eyebrow: 'Brand',
           title: `More from ${product.brand}`,
-          description: 'Open the brand page when you want adjacent products and editorial pages from the same manufacturer without broadening the search too early.',
+          description: 'Open the brand page when you want adjacent products and editorial pages from the same brand without broadening the search too early.',
           href: `/brands/${brandSlug}`,
           label: `Open ${product.brand} page`
         }

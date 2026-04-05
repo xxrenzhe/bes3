@@ -43,7 +43,7 @@ function buildThankYouMeta(intent: ContactIntent) {
     default:
       return {
         title: 'Thank You',
-        description: 'Your message is in the Bes3 queue, and the site can still help you move forward while the team reviews it.'
+        description: 'Your message is with the Bes3 team, and the site can still help you move forward while it is being reviewed.'
       }
   }
 }
@@ -102,7 +102,7 @@ export default async function ThankYouPage({
   > = {
     'buyer-support': {
       eyebrow: 'Buyer Support',
-      title: 'Your question is in the Bes3 queue.',
+      title: 'Your question is with the Bes3 team.',
       description:
         'A Bes3 reviewer will look at the issue you flagged. While that happens, the fastest answer is often still on the site: search, save your options, or set a price alert.',
       bestRoute:
@@ -116,7 +116,7 @@ export default async function ThankYouPage({
         },
         {
           title: 'Keep options in shortlist',
-          description: 'Best when you already have plausible candidates and just need to keep them together while you wait.',
+          description: 'Best when you already have a few good options and just need to keep them together while you wait.',
           href: '/shortlist',
           label: 'Open shortlist'
         },
@@ -216,7 +216,7 @@ export default async function ThankYouPage({
       eyebrow: 'General',
       title: 'Thanks for reaching out to Bes3.',
       description:
-        'Your note is in the queue. While the team reviews it, the public site can still help if the real question is about product fit, comparison, or timing.',
+        'Your note is with the team. While it is being reviewed, the public site can still help if the real question is about product fit, comparison, or timing.',
       bestRoute:
         'Use one concrete next step instead of reopening broad browsing. That keeps the question closer to a real buying action.',
       routes: [
@@ -228,7 +228,7 @@ export default async function ThankYouPage({
         },
         {
           title: 'Read a lead guide',
-          description: 'Best when you still need a broader guide before picking candidates or comparing finalists.',
+          description: 'Best when you still need a broader guide before picking candidates or comparing top picks.',
           href: leadGuide ? getArticlePath(leadGuide.type, leadGuide.slug) : '/directory',
           label: leadGuide ? 'Open guide' : 'Open directory'
         },

@@ -45,7 +45,7 @@ export default function TermsPage() {
     },
     {
       title: 'Browse live deal coverage',
-      description: 'Use deals only after product fit is credible enough that a price signal should matter.',
+      description: 'Use deals only after the product already looks right and price is what matters next.',
       href: '/deals',
       label: 'Open Deals'
     },

@@ -35,7 +35,7 @@ export async function generateMetadata({
     title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
     description:
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
-      `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare finalists, and start alerts without starting over.`,
+      `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
     path: `/categories/${slug}`,
     image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
     category: categoryLabel,
@@ -99,7 +99,7 @@ export default async function CategoryPage({
   ]
   const howToSteps = [
     {
-      name: 'Shortlist the credible products',
+      name: 'Shortlist the best options',
       text: 'Start with the strongest product cards when you still need the category narrowed into a few options worth saving.'
     },
     {
@@ -110,7 +110,7 @@ export default async function CategoryPage({
     },
     {
       name: 'Compare or track the category',
-      text: 'Move into comparisons when the shortlist is tight. If timing is the blocker, switch to category alerts without losing your place.'
+      text: 'Move into comparisons when the shortlist is tight. If price is the only thing holding you back, switch to category alerts without losing your place.'
     }
   ]
   const structuredData = [
@@ -120,7 +120,7 @@ export default async function CategoryPage({
       title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
       description:
         pickMetadataDescription(featuredReview?.seoDescription, featuredReview?.summary, featured?.summary) ||
-        `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare finalists, and start alerts without starting over.`,
+        `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
       image: featured?.heroImageUrl || products[0]?.heroImageUrl,
       breadcrumbItems,
       about: {
@@ -144,11 +144,11 @@ export default async function CategoryPage({
   const faqEntries = [
     {
       question: `What should this ${categoryLabel} page help me do?`,
-      answer: `It should help you shop inside one ${categoryLabel} category: shortlist good products, open the lead review, compare finalists, and switch to alerts if timing is the blocker.`
+      answer: `It should help you shop inside one ${categoryLabel} category: shortlist good products, open the lead review, compare top picks, and switch to alerts if price timing is the only thing holding you back.`
     },
     {
       question: 'When should I use a brand page from here?',
-      answer: 'Open a brand page when one manufacturer is already promising and you want every related product and page in one place. Stay here when cross-brand comparison still matters.'
+      answer: 'Open a brand page when one brand is already promising and you want every related product and page in one place. Stay here when cross-brand comparison still matters.'
     },
     {
       question: 'Why does this page push next moves instead of dumping every result?',
@@ -172,8 +172,8 @@ export default async function CategoryPage({
     },
     {
       eyebrow: 'Decide',
-      title: 'Compare finalists',
-      description: 'Compare products that really belong together so the tradeoffs stay honest, especially once you already have two credible options.',
+      title: 'Compare top picks',
+      description: 'Compare products that really belong together so the tradeoffs stay honest, especially once you already have two strong options.',
       href: featuredComparison ? getArticlePath(featuredComparison.type, featuredComparison.slug) : '/shortlist',
       label: featuredComparison ? 'Open category comparison' : 'Use shortlist compare'
     },
@@ -199,7 +199,7 @@ export default async function CategoryPage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Category Page</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">{categoryLabel}</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                Bes3 uses this page to narrow the category into real product options, useful reviews, and the shortest path from research mode to an informed click.
+                Bes3 uses this page to narrow the category into real product options, useful reviews, and the clearest next step.
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -225,7 +225,7 @@ export default async function CategoryPage({
               <p className="editorial-kicker">How To Use This Category</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Move from browsing to a shortlist you can actually use.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                {categoryLabel} works best when you use it to shortlist credible candidates, validate one product with a review, compare only real finalists, and switch to alerts if the purchase is still waiting.
+                {categoryLabel} works best when you use it to shortlist good options, validate one product with a review, compare only the top picks, and switch to alerts if the purchase is still waiting.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
@@ -278,7 +278,7 @@ export default async function CategoryPage({
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Open the brand pages already active in this category.</h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                These brand pages help when shoppers search by manufacturer without breaking the current {categoryLabel} category view.
+                These brand pages help when shoppers search by brand without breaking the current {categoryLabel} category view.
               </p>
             </div>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">

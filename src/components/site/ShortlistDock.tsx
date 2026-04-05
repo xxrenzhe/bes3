@@ -16,7 +16,7 @@ export function ShortlistDock() {
       <div className="pointer-events-auto mx-auto max-w-5xl rounded-[1.75rem] border border-white/15 bg-slate-950/96 p-4 text-white shadow-[0_32px_80px_-35px_rgba(15,23,42,0.75)] backdrop-blur">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="space-y-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Buyer Workspace</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Shortlist</p>
             <h3 className="font-[var(--font-display)] text-2xl font-black tracking-tight">
               {shortlistCount} saved {shortlistCount === 1 ? 'product' : 'products'}{compareCount ? ` · ${compareCount} in compare` : ''}
             </h3>

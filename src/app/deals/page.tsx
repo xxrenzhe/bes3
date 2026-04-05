@@ -41,7 +41,7 @@ export default async function DealsPage() {
       text: 'Use deals only after the product already looks right for your use case. A discount should speed up a good decision, not create a bad one.'
     },
     {
-      name: 'Keep finalists in shortlist',
+      name: 'Keep top picks in shortlist',
       text: 'Save strong candidates so a temporary price move does not break the comparison you already built.'
     },
     {
@@ -71,7 +71,7 @@ export default async function DealsPage() {
     },
     {
       eyebrow: 'Save',
-      title: 'Keep finalists in shortlist',
+      title: 'Keep top picks in shortlist',
       description: 'Use shortlist to keep the good options together so a price move does not wipe out your comparison work.',
       href: '/shortlist',
       label: 'Open shortlist'
@@ -96,7 +96,7 @@ export default async function DealsPage() {
 
   return (
     <PublicShell>
-      <StructuredData data={[buildBreadcrumbSchema('/deals', breadcrumbItems), structuredData, buildHowToSchema('/deals', 'How to use Bes3 live deals', 'Use the deals page to validate product fit, keep finalists together, and switch to a price watch when timing matters.', howToSteps)]} />
+      <StructuredData data={[buildBreadcrumbSchema('/deals', breadcrumbItems), structuredData, buildHowToSchema('/deals', 'How to use Bes3 live deals', 'Use the deals page to validate product fit, keep top picks together, and switch to a price watch when timing matters.', howToSteps)]} />
       <div className="space-y-16">
         <section className="overflow-hidden bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
@@ -121,7 +121,7 @@ export default async function DealsPage() {
                 <p className="editorial-kicker">How To Use Deals</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Let price accelerate a good decision, not create a bad one.</h2>
                 <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                  Bes3 deals matter only after the product already looks right. Validate first, save your finalists, and use alerts when the right price has not arrived yet.
+                  Bes3 deals matter only after the product already looks right. Validate first, save your top picks, and use alerts when the right price has not arrived yet.
                 </p>
                 <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
