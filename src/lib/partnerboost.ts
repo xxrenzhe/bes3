@@ -16,6 +16,7 @@ export interface SyncResult {
 export interface AffiliateProductRecord {
   id: number
   platform: string
+  asin?: string | null
   product_name: string | null
   promo_link: string | null
   short_promo_link: string | null
@@ -23,6 +24,11 @@ export interface AffiliateProductRecord {
   brand?: string | null
   image_url?: string | null
   price_amount?: number | null
+  price_currency?: string | null
+  review_count?: number | null
+  rating?: number | null
+  country_code?: string | null
+  raw_payload?: string | null
   updated_at?: string
 }
 
