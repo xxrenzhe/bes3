@@ -361,6 +361,35 @@ export async function getProductBySlug(slug: string): Promise<ProductRecord | nu
   return mapProductRow(row)
 }
 
+export async function getProductById(productId: number): Promise<ProductRecord | null> {
+  if (!Number.isInteger(productId) || productId <= 0) return null
+
+  const db = await getDatabase()
+  const row = await db.queryOne<any>(
+    `
+      SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
+        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
+        published_at, updated_at,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = products.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS hero_image_url
+      FROM products
+      WHERE id = ?
+      LIMIT 1
+    `,
+    [productId]
+  )
+
+  if (!row) return null
+
+  return mapProductRow(row)
+}
+
 export async function listProductsByCategory(category: string): Promise<ProductRecord[]> {
   const products = await listProducts()
   return products.filter((product) => product.category === category)
@@ -551,8 +580,31 @@ export async function listOpenCommerceProducts(): Promise<CommerceProductRecord[
 export async function getOpenCommerceProductById(productId: number): Promise<CommerceProductRecord | null> {
   if (!Number.isInteger(productId) || productId <= 0) return null
 
-  const products = await listOpenCommerceProducts()
-  return products.find((product) => product.id === productId) || null
+  const [product, offersByProductId, evidenceCounts] = await Promise.all([
+    getProductById(productId),
+    listOffersForProductIds([productId]),
+    listAttributeFactCountsForProductIds([productId])
+  ])
+
+  if (!product?.slug) return null
+
+  const offers = offersByProductId.get(productId) || []
+
+  return {
+    ...product,
+    bestOffer: offers[0] || null,
+    offerCount: offers.length,
+    evidenceCount: evidenceCounts.get(productId) || 0,
+    freshness: getFreshnessBucket(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)
+  }
+}
+
+export async function getOpenCommerceProductBySlug(slug: string): Promise<CommerceProductRecord | null> {
+  if (!slug.trim()) return null
+
+  const product = await getProductBySlug(slug)
+  if (!product) return null
+  return getOpenCommerceProductById(product.id)
 }
 
 export async function searchOpenCommerceProducts(query: string, options?: {

@@ -31,7 +31,14 @@ export type SeoPageType = 'review' | 'comparison' | 'guide' | 'category' | 'syst
 
 export type SettingDataType = 'string' | 'number' | 'boolean' | 'json' | 'secret'
 
-export type PromptCategory = 'keywordMining' | 'reviewGeneration' | 'comparisonGeneration' | 'seoEnrichment'
+export type PromptCategory =
+  | 'keywordMining'
+  | 'reviewGeneration'
+  | 'comparisonGeneration'
+  | 'seoEnrichment'
+  | 'factExtraction'
+  | 'buyerFitReasoning'
+  | 'assistantAnswering'
 
 export interface DatabaseAdapter {
   type: DatabaseType

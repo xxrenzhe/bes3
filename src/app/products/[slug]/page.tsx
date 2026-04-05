@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -17,7 +18,16 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { getBrandSlug, getProductBySlug, getProductGalleryImageUrls, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import {
+  getBrandSlug,
+  getOpenCommerceProductBySlug,
+  getProductBySlug,
+  getProductGalleryImageUrls,
+  listProductAttributeFacts,
+  listProductOffers,
+  listPublishedArticles,
+  listPublishedProducts
+} from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getCategoryLabelValue(category: string | null) {
@@ -73,10 +83,13 @@ export default async function ProductPage({
   const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
 
-  const [articles, allProducts, galleryImages] = await Promise.all([
+  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
-    getProductGalleryImageUrls(product.id)
+    getProductGalleryImageUrls(product.id),
+    getOpenCommerceProductBySlug(product.slug || ''),
+    listProductOffers(product.id),
+    listProductAttributeFacts(product.id)
   ])
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
@@ -372,6 +385,14 @@ export default async function ProductPage({
                 </Link>
               </div>
             ) : null}
+            <CommerceEvidencePanel
+              product={commerceProduct}
+              offers={offers}
+              attributeFacts={attributeFacts}
+              compact
+              title="Offer and fact evidence"
+              description="These are the live offer and product-fact signals behind the current product recommendation."
+            />
             {guideArticle || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Category</p>
