@@ -13,19 +13,19 @@ export default async function NotFound() {
   const recoveryRoutes = [
     {
       title: 'Search the site',
-      description: 'Best when you know the product type, brand, or use case and want to recover the lane fast.',
+      description: 'Best when you know the product type, brand, or use case and want to get back on track fast.',
       href: '/search?scope=products',
       label: 'Open search'
     },
     {
       title: leadCategory ? `Browse ${getCategoryLabel(leadCategory)}` : 'Browse the directory',
-      description: 'Best when the exact page is gone but the broader category lane is still the right place to continue.',
+      description: 'Best when the exact page is gone but the broader category page is still the right place to continue.',
       href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-      label: leadCategory ? 'Open category hub' : 'Open directory'
+      label: leadCategory ? 'Open category page' : 'Open directory'
     },
     {
       title: 'Check live deals',
-      description: 'Best when you were already near the end of the decision and just need current price-aware options.',
+      description: 'Best when you were already close to buying and just need the latest live deals.',
       href: '/deals',
       label: 'Open deals'
     }
@@ -40,7 +40,7 @@ export default async function NotFound() {
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight sm:text-5xl">Oops. Page not found.</h1>
               <p className="mt-4 max-w-xl text-lg leading-8 text-muted-foreground">
-                It looks like this page was moved, unpublished, or never existed in the first place. The goal now is to recover the right buying lane instead of dropping you into a dead end.
+                It looks like this page was moved, unpublished, or never existed in the first place. The goal now is to get you back to the right shopping page instead of dropping you into a dead end.
               </p>
             </div>
           </div>

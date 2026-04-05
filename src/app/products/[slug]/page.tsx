@@ -413,7 +413,7 @@ export default async function ProductPage({
         <SeoFaqSection
           title={`${product.productName} buyer questions, answered fast.`}
           entries={faqEntries}
-          description="This FAQ matches the product-page intent that was already present in the page flow, and now exposes it as explicit on-page content plus matching JSON-LD."
+          description="These quick answers cover the questions most buyers ask before they save, compare, or buy."
         />
       </div>
     </PublicShell>

@@ -199,7 +199,7 @@ export default async function ComparisonPage({
       eyebrow: 'Winner',
       title: article.product?.slug ? 'Open the winning product' : 'Use this winner as the default',
       description: article.product?.slug
-        ? 'Move into the product page when the comparison settled the choice and you now just need pricing, specs, and merchant verification.'
+        ? 'Move into the product page when the comparison settled the choice and you now just need pricing, specs, and current store details.'
         : 'The comparison already did the hard narrowing work. Treat the editorial winner as your default answer unless a blocker remains.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
       label: article.product?.slug ? 'Open winner details' : 'Stay with this pick'
