@@ -25,6 +25,7 @@ import {
   getProductGalleryImageUrls,
   listProductAttributeFacts,
   listProductOffers,
+  listProductPriceHistory,
   listPublishedArticles,
   listPublishedProducts
 } from '@/lib/site-data'
@@ -83,13 +84,14 @@ export default async function ProductPage({
   const product = await getProductBySlug((await params).slug)
   if (!product) notFound()
 
-  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts] = await Promise.all([
+  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     getProductGalleryImageUrls(product.id),
     getOpenCommerceProductBySlug(product.slug || ''),
     listProductOffers(product.id),
-    listProductAttributeFacts(product.id)
+    listProductAttributeFacts(product.id),
+    listProductPriceHistory(product.id)
   ])
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
@@ -389,9 +391,11 @@ export default async function ProductPage({
               product={commerceProduct}
               offers={offers}
               attributeFacts={attributeFacts}
+              priceHistory={priceHistory}
               compact
               title="Offer and fact evidence"
               description="These are the live offer and product-fact signals behind the current product recommendation."
+              source="product-page-evidence"
             />
             {guideArticle || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">

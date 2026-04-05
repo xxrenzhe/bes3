@@ -65,8 +65,8 @@ export default async function StartPage() {
       eyebrow: 'Step 01',
       title: 'I know what I need, but not which model',
       description: 'Start with search when your use case is clear but you still need help narrowing the options.',
-      href: '/search?scope=products',
-      label: 'Search products'
+      href: '/assistant',
+      label: 'Open assistant'
     },
     {
       eyebrow: 'Step 02',
@@ -226,8 +226,8 @@ export default async function StartPage() {
                 Bes3 is not a generic review archive. It helps you narrow the options, understand the tradeoffs, and keep your progress saved if you decide to wait.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/search?scope=products" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
-                  Start with search
+                <Link href="/assistant" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
+                  Tell Bes3 what you need
                 </Link>
                 <Link href="/shortlist" className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/20 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10">
                   Open shortlist

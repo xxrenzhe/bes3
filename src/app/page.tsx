@@ -41,11 +41,11 @@ export default async function HomePage() {
   const featuredComparison = articles.find((article) => article.type === 'comparison') || featured[1] || featuredReview
   const intentRoutes = [
     {
-      eyebrow: 'Start here',
-      title: 'Not sure where to start?',
-      description: 'Open the start page when you want Bes3 to point you to the most useful next step instead of dumping you into a giant archive.',
-      href: '/start',
-      label: 'Open start page'
+      eyebrow: 'Assistant',
+      title: 'Tell Bes3 what you need',
+      description: 'Use the assistant when the problem is still fuzzy and you want a shortlist, proof, and a clear next move instead of another keyword search.',
+      href: '/assistant',
+      label: 'Open assistant'
     },
     {
       eyebrow: 'Go deep',
@@ -80,6 +80,10 @@ export default async function HomePage() {
     description: 'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
     image: featured[0]?.heroImageUrl,
     items: [
+      {
+        name: 'Assistant',
+        path: '/assistant'
+      },
       {
         name: 'Start Here',
         path: '/start'
@@ -132,22 +136,22 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/start"
+                href="/assistant"
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
               >
-                Start here
+                Tell Bes3 what you need
+              </Link>
+              <Link
+                href="/start"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
+              >
+                Open start page
               </Link>
               <Link
                 href="/shortlist"
                 className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
               >
                 Open My Shortlist
-              </Link>
-              <Link
-                href="/deals"
-                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
-              >
-                See Live Deals
               </Link>
             </div>
           </div>

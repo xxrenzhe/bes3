@@ -24,6 +24,7 @@ import {
   getOpenCommerceProductBySlug,
   listProductAttributeFacts,
   listProductOffers,
+  listProductPriceHistory,
   listPublishedArticles,
   listPublishedProducts
 } from '@/lib/site-data'
@@ -95,12 +96,13 @@ export default async function ComparisonPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'comparison') notFound()
 
-  const [allArticles, allProducts, commerceProduct, offers, attributeFacts] = await Promise.all([
+  const [allArticles, allProducts, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
     article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
-    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([])
+    article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([]),
+    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([])
   ])
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
@@ -431,8 +433,10 @@ export default async function ComparisonPage({
           product={commerceProduct}
           offers={offers}
           attributeFacts={attributeFacts}
+          priceHistory={priceHistory}
           title="Comparison evidence"
           description="This comparison now carries the live offer and verified-fact signals behind the current winner, instead of relying on copy alone."
+          source="comparison-page-evidence"
         />
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
