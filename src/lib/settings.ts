@@ -100,8 +100,9 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   }
 
   const aiProvider = read('ai', 'provider', undefined, 'gemini')
-  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-2.5-flash')
+  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-3-flash-preview')
   const aiKey = read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const aiTimeoutMs = read('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000')
   const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')
   const amazonToken = read('affiliateSync', 'partnerboostAmazonToken', 'PARTNERBOOST_AMAZON_TOKEN')
   const dtcToken = read('affiliateSync', 'partnerboostDtcToken', 'PARTNERBOOST_DTC_TOKEN')
@@ -156,8 +157,8 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
       title: 'AI Engine',
       status: getDiagnosticStatus([Boolean(aiProvider), Boolean(aiModel), Boolean(aiKey)]),
       detail: aiKey
-        ? `${aiProvider} · ${aiModel} · key ready`
-        : `${aiProvider} · ${aiModel} · missing API key`
+        ? `${aiProvider} · ${aiModel} · timeout ${aiTimeoutMs}ms · key ready`
+        : `${aiProvider} · ${aiModel} · timeout ${aiTimeoutMs}ms · missing API key`
     },
     {
       id: 'proxy',
