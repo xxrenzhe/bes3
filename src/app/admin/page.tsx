@@ -36,6 +36,7 @@ export default async function AdminDashboardPage() {
   const decisionFunnel = summary.conversionSignals.decisionFunnel
   const assistantFunnel = summary.conversionSignals.decisionFunnel.assistantFunnel
   const commerceQuality = summary.commerceQuality
+  const brandQuality = summary.brandQuality
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
@@ -514,6 +515,116 @@ export default async function AdminDashboardPage() {
             ) : (
               <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
                 No product currently needs urgent data-quality intervention.
+              </div>
+            )}
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Brand Knowledge Quality</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">How complete the merchant and brand layer really is</h2>
+            </div>
+            <StatusBadge value={brandQuality.brandsWithoutPolicy === 0 && brandQuality.brandsWithoutCompatibilityFacts === 0 ? 'configured' : 'partial'} />
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Tracked Brands</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{brandQuality.trackedBrands}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Brands currently represented by products or editorial pages on the public site.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(brandQuality.brandsWithoutPolicy)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Brand Policies Missing</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{brandQuality.brandsWithoutPolicy}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">These brands still cannot answer shipping, returns, warranty, discount-window, or support questions cleanly.</p>
+            </div>
+            <div className={`rounded-[1.5rem] border p-5 ${getHealthTone(brandQuality.brandsWithoutCompatibilityFacts)}`}>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Compatibility Gaps</p>
+              <p className="mt-3 text-3xl font-black text-slate-950">{brandQuality.brandsWithoutCompatibilityFacts}</p>
+              <p className="mt-2 text-sm leading-7 text-slate-600">Without compatibility facts, the assistant and brand layer still miss fit and accessory context.</p>
+            </div>
+          </div>
+
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Coverage Snapshot</p>
+              <div className="mt-4 space-y-3 text-sm text-slate-600">
+                <div className="flex items-center justify-between"><span>Brands with policies</span><span className="font-semibold text-slate-950">{brandQuality.brandsWithPolicy}</span></div>
+                <div className="flex items-center justify-between"><span>Brands with compatibility facts</span><span className="font-semibold text-slate-950">{brandQuality.brandsWithCompatibilityFacts}</span></div>
+                <div className="flex items-center justify-between"><span>Brands still missing policies</span><span className="font-semibold text-slate-950">{brandQuality.brandsWithoutPolicy}</span></div>
+                <div className="flex items-center justify-between"><span>Brands still missing compatibility</span><span className="font-semibold text-slate-950">{brandQuality.brandsWithoutCompatibilityFacts}</span></div>
+              </div>
+            </div>
+            <div className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-slate-500">Operator Guidance</p>
+              <div className="mt-3 space-y-2 text-sm leading-7 text-slate-600">
+                <p>- Add policy rows first for brands with active product coverage but no shipping / return / warranty answers.</p>
+                <p>- Then add compatibility facts for categories where buyers still need accessory, setup, or fit reassurance.</p>
+                <p>- Use the brand queue below before generating more editorial copy for the same brands.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Brand Priority Queue</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Brands to enrich before the next content push</h2>
+            </div>
+            <StatusBadge value={brandQuality.topPriorityBrands.length ? 'partial' : 'configured'} />
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {brandQuality.topPriorityBrands.length ? (
+              brandQuality.topPriorityBrands.map((brand) => (
+                <div key={brand.slug} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="font-semibold text-slate-950">{brand.name}</p>
+                      <p className="mt-1 text-sm text-slate-500">
+                        {brand.productCount} products · {brand.articleCount} editorial pages · {brand.compatibilityFactCount} compatibility facts
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">Priority score</p>
+                      <p className="mt-2 text-2xl font-black text-slate-950">{brand.priorityScore}</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.16em]">
+                    <span className={`inline-flex rounded-full px-3 py-1 ${brand.hasPolicy ? 'bg-emerald-100 text-emerald-800' : 'bg-amber-100 text-amber-900'}`}>
+                      {brand.hasPolicy ? 'policy ready' : 'policy missing'}
+                    </span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">{brand.compatibilityFactCount} compatibility facts</span>
+                    <span className="inline-flex rounded-full bg-white px-3 py-1 text-slate-700">
+                      Updated {brand.latestUpdate ? new Date(brand.latestUpdate).toLocaleDateString() : 'unknown'}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-2">
+                    {brand.reasons.map((reason) => (
+                      <p key={reason} className="text-sm leading-7 text-slate-600">- {reason}</p>
+                    ))}
+                  </div>
+
+                  <div className="mt-5 flex flex-wrap gap-3">
+                    <Link href={`/brands/${brand.slug}`} target="_blank" className="inline-flex rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
+                      Open public brand page
+                    </Link>
+                    <Link href="/admin/products" className="inline-flex rounded-full bg-white px-4 py-2 text-sm font-semibold text-slate-700 shadow-sm ring-1 ring-slate-200 transition-colors hover:bg-slate-50">
+                      Open product workspace
+                    </Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
+                No brand currently needs urgent knowledge enrichment.
               </div>
             )}
           </div>
