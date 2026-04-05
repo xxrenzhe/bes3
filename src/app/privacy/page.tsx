@@ -31,7 +31,7 @@ export default function PrivacyPage() {
   ]
 
   const buyerPromises = [
-    'Newsletter signups are used to deliver the watch, brief, or deal flow that the subscriber actually selected.',
+    'Newsletter signups are used to deliver the price watch, category brief, or deal updates that the subscriber actually selected.',
     'Internal administrator and session records exist to protect the CMS and publishing workflow, not to profile public readers.',
     'Product, article, and settings records are operational content data used to render Bes3 pages and maintain the site.'
   ]
@@ -45,7 +45,7 @@ export default function PrivacyPage() {
     },
     {
       title: 'Manage expectations with alerts',
-      description: 'Use newsletter flows only when you want Bes3 to keep a buying lane alive over time.',
+      description: 'Use newsletter updates only when you want Bes3 to keep tracking the category, deal, or shortlist over time.',
       href: '/newsletter',
       label: 'Open Newsletter'
     },
@@ -109,7 +109,7 @@ export default function PrivacyPage() {
             <p className="editorial-kicker">Next Steps</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the page that fits the question.</h2>
             <p className="mt-4 text-sm leading-8 text-muted-foreground">
-              Legal pages should answer trust questions clearly, then route people back into the right product surface instead of trapping them in policy copy.
+              Legal pages should answer trust questions clearly, then send people back to the right product page instead of trapping them in policy copy.
             </p>
             <div className="mt-6 grid gap-4">
               {routeCards.map((route) => (
@@ -138,7 +138,7 @@ export default function PrivacyPage() {
             <ul>
               <li>Administrator accounts and session records used to secure the internal CMS.</li>
               <li>Affiliate product records, article metadata, and operational settings required to publish Bes3 pages.</li>
-              <li>Newsletter signups submitted through the site, including the preference information needed to deliver the selected alert flow.</li>
+              <li>Newsletter signups submitted through the site, including the preference information needed to deliver the selected updates.</li>
             </ul>
             <h3>How we use it</h3>
             <p>

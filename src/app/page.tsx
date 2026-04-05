@@ -99,14 +99,14 @@ export default async function HomePage() {
   const faqEntries = [
     {
       question: 'What is Bes3 actually optimized for?',
-      answer: 'Bes3 is built to help you make a buying decision faster. It points you to the right next page instead of making you dig through endless lists.'
+      answer: 'Bes3 is built to help you choose faster. It points you to the right next page instead of making you dig through endless lists.'
     },
     {
-      question: 'When should I use a brand hub instead of a category hub?',
+      question: 'When should I use a brand page instead of a category page?',
       answer: 'Use a brand page when you already trust a specific manufacturer. Use a category page when you still want to compare different brands fairly.'
     },
     {
-      question: 'Why does Bes3 keep only a few routes on the homepage?',
+      question: 'Why does Bes3 keep only a few entry points on the homepage?',
       answer: 'Because most people do not need twenty choices just to get started. The homepage keeps the main paths simple so you can move quickly.'
     }
   ]
@@ -280,7 +280,7 @@ export default async function HomePage() {
                   href={`/brands/${brand.slug}`}
                   className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1"
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                   <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{brand.name}</h2>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
                     {brand.description || `Browse ${brand.name} products and reviews without running a new site search.`}

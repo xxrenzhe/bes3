@@ -119,7 +119,7 @@ export default async function StartPage() {
     {
       step: '03',
       title: 'Compare the real tradeoffs',
-      description: 'Read a review or compare finalists once the list is small enough for a real decision.'
+      description: 'Read a review or compare finalists once the list is small enough for a real choice.'
     },
     {
       step: '04',
@@ -134,7 +134,7 @@ export default async function StartPage() {
       description: 'Categories you can browse right now.'
     },
     {
-      label: 'Brand hubs',
+      label: 'Brand pages',
       value: String(brands.length),
       description: 'Brands with dedicated pages and coverage.'
     },
@@ -162,7 +162,7 @@ export default async function StartPage() {
     },
     {
       question: 'Why does Bes3 prefer a few strong picks instead of giant lists?',
-      answer: 'Because giant lists create more reading, not better decisions. Bes3 tries to narrow the field to a few options that are actually worth your time.'
+      answer: 'Because giant lists create more reading, not better choices. Bes3 tries to narrow the field to a few options that are actually worth your time.'
     },
     {
       question: 'When should I go to shortlist instead of staying in search?',
@@ -170,7 +170,7 @@ export default async function StartPage() {
     },
     {
       question: 'Why does Bes3 include alerts as part of the product?',
-      answer: 'Because many real buying decisions are blocked by timing, not by product fit. Alerts help you wait for a better moment without restarting your research.'
+      answer: 'Because timing often blocks a purchase even when the product fit is already clear. Alerts help you wait for a better moment without restarting your research.'
     }
   ]
   const structuredData = [
@@ -248,7 +248,7 @@ export default async function StartPage() {
           <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
             <SectionHeader
               eyebrow="Buying States"
-              title="Choose the route that matches what is still unresolved."
+              title="Choose the page that matches what is still unresolved."
               description="Bes3 works best when you start with the page that matches what is still unclear."
             />
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
@@ -292,7 +292,7 @@ export default async function StartPage() {
             <SectionHeader
               eyebrow="Method"
               title="How it works in four simple steps."
-              description="This is the simple flow behind search, reviews, shortlist, and alerts."
+              description="This is the simple path behind search, reviews, shortlist, and alerts."
             />
             <div className="mt-6 space-y-4">
               {methodSteps.map((step) => (
@@ -333,7 +333,7 @@ export default async function StartPage() {
                 title: leadCategory ? `Open ${leadCategoryLabel}` : 'Open the directory',
                 description: 'Return to the category page after saving the alert, so the next useful step is still in front of you.',
                 href: leadCategory ? `/categories/${leadCategory}` : '/directory',
-                label: leadCategory ? 'Open category hub' : 'Browse the directory'
+                label: leadCategory ? 'Open category page' : 'Browse the directory'
               },
               {
                 eyebrow: 'Brand',
