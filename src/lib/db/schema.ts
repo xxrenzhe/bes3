@@ -127,6 +127,73 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS merchants (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      website_url TEXT,
+      country_code TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS product_offers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      merchant_id INTEGER,
+      offer_url TEXT NOT NULL,
+      merchant_sku TEXT,
+      availability_status TEXT,
+      price_amount REAL,
+      price_currency TEXT,
+      shipping_cost REAL,
+      coupon_text TEXT,
+      coupon_type TEXT,
+      condition_label TEXT,
+      source_type TEXT NOT NULL DEFAULT 'scrape',
+      source_url TEXT,
+      confidence_score REAL NOT NULL DEFAULT 0.7,
+      raw_payload_json TEXT,
+      last_checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (merchant_id) REFERENCES merchants(id) ON DELETE SET NULL,
+      UNIQUE(product_id, offer_url)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS product_price_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      product_offer_id INTEGER,
+      price_amount REAL,
+      price_currency TEXT,
+      availability_status TEXT,
+      captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_offer_id) REFERENCES product_offers(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS product_attribute_facts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      attribute_key TEXT NOT NULL,
+      attribute_label TEXT NOT NULL,
+      attribute_value TEXT NOT NULL,
+      source_url TEXT,
+      source_type TEXT NOT NULL DEFAULT 'scrape',
+      confidence_score REAL NOT NULL DEFAULT 0.7,
+      is_verified INTEGER NOT NULL DEFAULT 0,
+      last_checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS keyword_opportunities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -382,6 +449,68 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
   )
 }
 
+async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
+  await ensureColumn(db, 'products', 'price_last_checked_at', 'TEXT')
+  await ensureColumn(db, 'products', 'offer_last_checked_at', 'TEXT')
+  await ensureColumn(db, 'products', 'attribute_completeness_score', 'REAL NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'products', 'data_confidence_score', 'REAL NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'products', 'source_count', 'INTEGER NOT NULL DEFAULT 0')
+
+  await ensureColumn(db, 'merchants', 'website_url', 'TEXT')
+  await ensureColumn(db, 'merchants', 'country_code', 'TEXT')
+  await ensureColumn(db, 'merchants', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  await ensureColumn(db, 'product_offers', 'merchant_sku', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'availability_status', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'shipping_cost', 'REAL')
+  await ensureColumn(db, 'product_offers', 'coupon_text', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'coupon_type', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'condition_label', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
+  await ensureColumn(db, 'product_offers', 'source_url', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'confidence_score', 'REAL NOT NULL DEFAULT 0.7')
+  await ensureColumn(db, 'product_offers', 'raw_payload_json', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_offers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  await ensureColumn(db, 'product_price_history', 'product_offer_id', 'INTEGER')
+  await ensureColumn(db, 'product_price_history', 'availability_status', 'TEXT')
+  await ensureColumn(db, 'product_price_history', 'captured_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  await ensureColumn(db, 'product_attribute_facts', 'source_url', 'TEXT')
+  await ensureColumn(db, 'product_attribute_facts', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
+  await ensureColumn(db, 'product_attribute_facts', 'confidence_score', 'REAL NOT NULL DEFAULT 0.7')
+  await ensureColumn(db, 'product_attribute_facts', 'is_verified', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'product_attribute_facts', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_attribute_facts', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  await ensureIndex(
+    db,
+    'idx_products_offer_last_checked_at',
+    'CREATE INDEX idx_products_offer_last_checked_at ON products (offer_last_checked_at, updated_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_offers_product_checked_price',
+    'CREATE INDEX idx_product_offers_product_checked_price ON product_offers (product_id, last_checked_at, price_amount)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_offers_merchant_product',
+    'CREATE INDEX idx_product_offers_merchant_product ON product_offers (merchant_id, product_id)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_price_history_product_captured_at',
+    'CREATE INDEX idx_product_price_history_product_captured_at ON product_price_history (product_id, captured_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_attribute_facts_product_key',
+    'CREATE INDEX idx_product_attribute_facts_product_key ON product_attribute_facts (product_id, attribute_key, last_checked_at)'
+  )
+}
+
 async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'newsletter_subscribers', 'intent', "TEXT NOT NULL DEFAULT 'deals'")
   await ensureColumn(db, 'newsletter_subscribers', 'category_slug', 'TEXT')
@@ -482,6 +611,7 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   for (const statement of statements) {
     await db.exec(statement)
   }
+  await ensureProductGraphSchema(db)
   await ensurePipelineRunSchema(db)
   await ensureLinkInspectorSchema(db)
   await ensureMerchantClickSchema(db)
