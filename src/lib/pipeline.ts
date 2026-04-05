@@ -9,7 +9,7 @@ import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
 import { scrapeProductPage } from '@/lib/scraper'
-import { listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
+import { getBrandSlug, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { resolveAffiliateLink } from '@/lib/url-resolver'
@@ -940,8 +940,9 @@ function getInternalServiceBaseUrl(): string {
   return `http://127.0.0.1:${port}`
 }
 
-async function revalidateGeneratedPaths(paths: string[], category: string | null) {
+async function revalidateGeneratedPaths(paths: string[], category: string | null, brand?: string | null) {
   const uniquePaths = Array.from(new Set(paths.filter(Boolean)))
+  const brandSlug = getBrandSlug(brand)
   try {
     const response = await fetch(`${getInternalServiceBaseUrl()}/api/internal/revalidate`, {
       method: 'POST',
@@ -949,7 +950,7 @@ async function revalidateGeneratedPaths(paths: string[], category: string | null
         'Content-Type': 'application/json',
         'x-bes3-internal-token': process.env.JWT_SECRET || ''
       },
-      body: JSON.stringify({ paths: uniquePaths, category })
+      body: JSON.stringify({ paths: uniquePaths, category, brand })
     })
     if (response.ok) {
       return
@@ -959,9 +960,16 @@ async function revalidateGeneratedPaths(paths: string[], category: string | null
   }
 
   revalidatePath('/')
+  revalidatePath('/brands')
   revalidatePath('/directory')
   if (category) {
     revalidatePath(`/categories/${category}`)
+  }
+  if (brandSlug) {
+    revalidatePath(`/brands/${brandSlug}`)
+  }
+  if (brandSlug && category) {
+    revalidatePath(`/brands/${brandSlug}/categories/${category}`)
   }
   for (const item of uniquePaths) {
     revalidatePath(item)
@@ -1192,7 +1200,7 @@ async function executeProductWorkspaceActionRun(
       await assertRunNotCancelled(runId)
       const revalidateJobId = await createJob(runId, 'revalidateAndSitemap')
       await markRun(runId, 'running', 'revalidateAndSitemap')
-      await revalidateGeneratedPaths([publication.path], product.category)
+      await revalidateGeneratedPaths([publication.path], product.category, product.brand)
       await assertRunNotCancelled(runId)
       await finishJob(revalidateJobId, 'completed', 'Public paths revalidated', { paths: [publication.path] })
 
@@ -1226,7 +1234,7 @@ async function executeProductWorkspaceActionRun(
       await assertRunNotCancelled(runId)
       const revalidateJobId = await createJob(runId, 'revalidateAndSitemap')
       await markRun(runId, 'running', 'revalidateAndSitemap')
-      await revalidateGeneratedPaths(refreshed.paths, product.category)
+      await revalidateGeneratedPaths(refreshed.paths, product.category, product.brand)
       await assertRunNotCancelled(runId)
       await finishJob(revalidateJobId, 'completed', 'Public paths revalidated', { paths: refreshed.paths })
 
@@ -1507,7 +1515,7 @@ async function executeFullPipelineRun(
     await assertRunNotCancelled(runId)
     const revalidateJob = await createJob(runId, 'revalidateAndSitemap')
     await markRun(runId, 'running', 'revalidateAndSitemap')
-    await revalidateGeneratedPaths([reviewPath, comparisonPath], product.category || null)
+    await revalidateGeneratedPaths([reviewPath, comparisonPath], product.category || null, product.brand)
     await assertRunNotCancelled(runId)
     await finishJob(revalidateJob, 'completed', 'Paths revalidated', { paths: [reviewPath, comparisonPath] })
 

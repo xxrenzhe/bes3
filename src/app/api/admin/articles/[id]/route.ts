@@ -2,6 +2,7 @@ import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { getArticlePath } from '@/lib/article-path'
+import { getBrandSlug } from '@/lib/site-data'
 import {
   AdminArticleValidationError,
   getAdminArticle,
@@ -51,13 +52,21 @@ export async function PUT(
 
     const previousPath = getArticlePath(existing.article_type, existing.slug)
     const nextPath = getArticlePath(article.article_type, article.slug)
+    const previousBrandSlug = getBrandSlug(existing.product_brand)
 
     revalidatePath(previousPath)
     revalidatePath(nextPath)
     revalidatePath('/')
+    revalidatePath('/brands')
     revalidatePath('/directory')
     if (existing.product_category) {
       revalidatePath(`/categories/${existing.product_category}`)
+    }
+    if (previousBrandSlug) {
+      revalidatePath(`/brands/${previousBrandSlug}`)
+    }
+    if (previousBrandSlug && existing.product_category) {
+      revalidatePath(`/brands/${previousBrandSlug}/categories/${existing.product_category}`)
     }
 
     return NextResponse.json(article)
