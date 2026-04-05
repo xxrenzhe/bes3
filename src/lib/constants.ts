@@ -28,4 +28,4 @@ export const SETTINGS_CATEGORIES = [
 ] as const
 
 export const DEFAULT_SITE_NAME = 'Bes3'
-export const DEFAULT_SITE_TAGLINE = 'The Best 3 Tech Picks, Decoded.'
+export const DEFAULT_SITE_TAGLINE = 'Clear tech reviews, comparisons, and deals.'

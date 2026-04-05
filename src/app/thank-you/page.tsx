@@ -23,27 +23,27 @@ function buildThankYouMeta(intent: ContactIntent) {
     case 'buyer-support':
       return {
         title: 'Buyer Support Request Received',
-        description: 'Bes3 received your buyer support request and routes you back into search, shortlist, or watch flows while the team reviews it.'
+        description: 'Bes3 received your support request. While the team reviews it, you can keep shopping with search, shortlist, or price alerts.'
       }
     case 'editorial-feedback':
       return {
         title: 'Editorial Feedback Received',
-        description: 'Thanks for helping improve Bes3. Your editorial feedback is in review while the public buyer journey stays open.'
+        description: 'Thanks for helping improve Bes3. Your feedback is in review while the public site stays open.'
       }
     case 'correction':
       return {
         title: 'Correction Request Received',
-        description: 'Bes3 received your correction request and will review the public page issue while you keep the buying lane intact.'
+        description: 'Bes3 received your correction request and will review the public page issue while you keep shopping from the most useful next page.'
       }
     case 'partnership':
       return {
         title: 'Partnership Inquiry Received',
-        description: 'Your Bes3 partnership note is with the team. In the meantime, the live public experience remains the best context for fit.'
+        description: 'Your Bes3 partnership note is with the team. In the meantime, the live site remains the best way to understand how the product works.'
       }
     default:
       return {
         title: 'Thank You',
-        description: 'Your message is in the Bes3 queue, and the site can still move the decision forward while the team reviews it.'
+        description: 'Your message is in the Bes3 queue, and the site can still help you move forward while the team reviews it.'
       }
   }
 }
@@ -104,25 +104,25 @@ export default async function ThankYouPage({
       eyebrow: 'Buyer Support',
       title: 'Your question is in the Bes3 queue.',
       description:
-        'A Bes3 reviewer will look at the edge case you flagged. While that happens, the fastest resolution is often still inside the same buying lane rather than outside it.',
+        'A Bes3 reviewer will look at the issue you flagged. While that happens, the fastest answer is often still on the site: search, save your options, or set a price alert.',
       bestRoute:
-        'Keep the current decision alive with search, shortlist, or a watch flow so you do not lose the context that made you reach out in the first place.',
+        'Use search, shortlist, or alerts so you do not lose your place while we review your message.',
       routes: [
         {
-          title: 'Search product lanes',
-          description: 'Best when your use case is concrete and you still need Bes3 to narrow the field.',
+          title: 'Search products',
+          description: 'Best when your use case is clear and you still need Bes3 to narrow the field.',
           href: '/search?scope=products',
           label: 'Open search'
         },
         {
-          title: 'Keep finalists in shortlist',
-          description: 'Best when you already have plausible candidates and only need to keep them together while you wait.',
+          title: 'Keep options in shortlist',
+          description: 'Best when you already have plausible candidates and just need to keep them together while you wait.',
           href: '/shortlist',
           label: 'Open shortlist'
         },
         {
           title: `Track ${leadCategoryLabel}`,
-          description: 'Best when timing, not product fit, is the last blocker still left in the decision.',
+          description: 'Best when timing, not product fit, is the last blocker left.',
           href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
           label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
         }
@@ -132,25 +132,25 @@ export default async function ThankYouPage({
       eyebrow: 'Editorial Feedback',
       title: 'Thanks for helping sharpen the public site.',
       description:
-        'Editorial feedback is most useful when it improves how Bes3 helps people decide. The team will review your note and use it to tighten clarity, routing, or coverage depth where needed.',
+        'Editorial feedback is most useful when it helps Bes3 become clearer and more useful. The team will review your note and use it to improve the site where needed.',
       bestRoute:
-        'The clearest next move is to stay inside a live article or category lane, so the feedback remains grounded in an actual buyer journey.',
+        'The clearest next move is to stay on a real page, so the feedback remains tied to an actual shopping moment.',
       routes: [
         {
           title: 'Read a live review',
-          description: 'Use a real verdict page to anchor what felt clear or unclear in the current editorial style.',
+          description: 'Use a real review page to anchor what felt clear or unclear in the current editorial style.',
           href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
           label: leadReview ? 'Open review' : 'Browse reviews'
         },
         {
           title: 'Open how Bes3 works',
-          description: 'Return to the methodology page if your note is about structure, trust, or decision framing.',
+          description: 'Return to the About page if your note is about structure, trust, or how the site is organized.',
           href: '/about',
-          label: 'Open methodology'
+          label: 'Open About'
         },
         {
           title: `Browse ${leadCategoryLabel}`,
-          description: 'Stay close to the category lane where the page structure and buyer cues can be judged in context.',
+          description: 'Stay close to the category where the page structure and buying cues can be judged in context.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
           label: leadCategory ? 'Open category hub' : 'Open directory'
         }
@@ -160,25 +160,25 @@ export default async function ThankYouPage({
       eyebrow: 'Correction',
       title: 'Correction request received.',
       description:
-        'Thanks for flagging a public-site issue. Bes3 treats accuracy corrections seriously because stale pricing, weak routing, or factual drift can damage buyer trust quickly.',
+        'Thanks for flagging a public-site issue. Bes3 treats accuracy corrections seriously because stale pricing or factual errors can damage trust quickly.',
       bestRoute:
-        'If the issue was tied to one page or one category, keep that lane open while the team reviews the correction so the decision context stays intact.',
+        'If the issue was tied to one page or one category, keep that page open while the team reviews the correction so your context stays intact.',
       routes: [
         {
-          title: 'Review how Bes3 handles trust',
-          description: 'Use the trust workspace to understand the guardrails Bes3 is trying to maintain on the public site.',
+          title: 'See how Bes3 checks recommendations',
+          description: 'Use the About page to understand the rules Bes3 is trying to maintain on the public site.',
           href: '/about',
           label: 'Open About'
         },
         {
           title: 'Browse current category coverage',
-          description: 'Stay in the same product lane so you can re-check the updated context once the fix lands.',
+          description: 'Stay in the same category so you can re-check the updated context once the fix lands.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
           label: leadCategory ? 'Open category hub' : 'Open directory'
         },
         {
           title: 'Return to shortlist',
-          description: 'Keep saved candidates together while the public page or signal is being reviewed.',
+          description: 'Keep saved candidates together while the public page is being reviewed.',
           href: '/shortlist',
           label: 'Open shortlist'
         }
@@ -188,25 +188,25 @@ export default async function ThankYouPage({
       eyebrow: 'Partnership',
       title: 'Your partnership note is with the Bes3 team.',
       description:
-        'Partnership conversations are reviewed separately from buyer-support requests so they do not distort the public decision flow or editorial ranking.',
+        'Partnership conversations are reviewed separately from buyer-support requests so they do not distort the public shopping experience or our rankings.',
       bestRoute:
-        'If you are evaluating fit with Bes3, the best context comes from the live trust page and the current public category experience rather than a generic media kit.',
+        'If you are evaluating fit with Bes3, the best context comes from the live site rather than a generic media kit.',
       routes: [
         {
           title: 'See how Bes3 works',
-          description: 'Review the buyer-first model, editorial guardrails, and route logic that shape the public site.',
+          description: 'Review the buyer-first model and editorial rules that shape the public site.',
           href: '/about',
           label: 'Open About'
         },
         {
           title: `Browse ${leadCategoryLabel}`,
-          description: 'See a live category lane instead of a static brand deck to understand how Bes3 serves actual buying intent.',
+          description: 'See a live category page instead of a static brand deck to understand how Bes3 serves real shoppers.',
           href: leadCategory ? `/categories/${leadCategory}` : '/directory',
           label: leadCategory ? 'Open category hub' : 'Open directory'
         },
         {
-          title: 'Check live deals coverage',
-          description: 'Use the deals page to see how Bes3 handles price-aware buyer timing without collapsing into promotion-first UX.',
+          title: 'Browse verified deals',
+          description: 'Browse real, verified deals without the usual spam.',
           href: '/deals',
           label: 'Open deals'
         }
@@ -216,9 +216,9 @@ export default async function ThankYouPage({
       eyebrow: 'General',
       title: 'Thanks for reaching out to Bes3.',
       description:
-        'Your note is in the queue. While the team reviews it, the public site can still move the decision forward if the underlying question is really about product fit, comparison, or timing.',
+        'Your note is in the queue. While the team reviews it, the public site can still help if the real question is about product fit, comparison, or timing.',
       bestRoute:
-        'Use one concrete route next instead of reopening broad browsing. That keeps the question closer to a real buyer action.',
+        'Use one concrete next step instead of reopening broad browsing. That keeps the question closer to a real buying action.',
       routes: [
         {
           title: 'Search the site',
@@ -228,7 +228,7 @@ export default async function ThankYouPage({
         },
         {
           title: 'Read a lead guide',
-          description: 'Best when you still need category logic before picking candidates or comparing finalists.',
+          description: 'Best when you still need a broader guide before picking candidates or comparing finalists.',
           href: leadGuide ? getArticlePath(leadGuide.type, leadGuide.slug) : '/directory',
           label: leadGuide ? 'Open guide' : 'Open directory'
         },
@@ -273,12 +273,12 @@ export default async function ThankYouPage({
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">While You Wait</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep the decision moving in the right place.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep shopping progress moving.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                A contact confirmation should not trap the buyer in a dead end. Bes3 uses this step to route you back into the lane most likely to move the question forward while the team reviews your message.
+                A contact confirmation should not trap you in a dead end. Bes3 uses this step to point you back to the page most likely to help while the team reviews your message.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">{selectedMeta.bestRoute}</p>
               </div>
             </div>

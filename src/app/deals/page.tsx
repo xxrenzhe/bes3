@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Live Deals',
     description:
-      'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
+      'Browse verified deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
     path: '/deals',
     image: leadProduct?.heroImageUrl,
     freshnessDate: leadProduct?.updatedAt || leadProduct?.publishedAt,
@@ -38,11 +38,11 @@ export default async function DealsPage() {
   const howToSteps = [
     {
       name: 'Validate the product fit first',
-      text: 'Use deals only after the product already looks credible for your use case. A markdown should accelerate a good decision, not create a bad one.'
+      text: 'Use deals only after the product already looks right for your use case. A discount should speed up a good decision, not create a bad one.'
     },
     {
       name: 'Keep finalists in shortlist',
-      text: 'Save strong candidates so a temporary price move does not destroy the comparison context you already built.'
+      text: 'Save strong candidates so a temporary price move does not break the comparison you already built.'
     },
     {
       name: 'Switch to a price watch when needed',
@@ -52,7 +52,7 @@ export default async function DealsPage() {
   const structuredData = buildCollectionPageSchema({
     path: '/deals',
     title: 'Live Deals',
-    description: 'Browse Bes3 live deals with buyer-fit context, shortlist saves, and price-watch routes so markdowns support better decisions instead of worse ones.',
+    description: 'Browse verified deals with clear product context, shortlist saves, and price alerts so discounts help instead of distracting you.',
     image: leadProduct?.heroImageUrl,
     breadcrumbItems,
     dateModified: latestRefresh,
@@ -65,32 +65,32 @@ export default async function DealsPage() {
     {
       eyebrow: 'Validate',
       title: leadProduct?.slug ? 'Open the lead deep-dive' : 'Recheck product fit',
-      description: 'Deals should be the last accelerator, not the first filter. Validate buyer fit before a markdown pushes you into the wrong product lane.',
+      description: 'Deals should be the last push, not the first filter. Recheck product fit before a discount pushes you toward the wrong item.',
       href: leadProduct?.slug ? `/products/${leadProduct.slug}` : '/directory',
       label: leadProduct?.slug ? 'Open product page' : 'Browse categories'
     },
     {
       eyebrow: 'Save',
       title: 'Keep finalists in shortlist',
-      description: 'Use shortlist to hold the good options together so a price move does not destroy your comparison context.',
+      description: 'Use shortlist to keep the good options together so a price move does not wipe out your comparison work.',
       href: '/shortlist',
       label: 'Open shortlist'
     },
     {
       eyebrow: 'Watch',
       title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Start price alerts',
-      description: 'If the current deal is close but not quite right, turn the category into a watch flow rather than buying under pressure.',
+      description: 'If the current deal is close but not quite right, set an alert rather than buying under pressure.',
       href: leadProduct?.category
         ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadProduct.category)}&cadence=priority`
         : '/newsletter?intent=deals&cadence=priority',
-      label: 'Start price watch'
+      label: 'Start price alert'
     },
     {
       eyebrow: 'Explore',
-      title: 'Return to category lanes',
-      description: 'When the markdown looks better than the fit, go back to category hubs and keep the decision grounded.',
+      title: 'Go back to categories',
+      description: 'When the discount looks better than the product fit, go back to category pages and keep the decision grounded.',
       href: '/directory',
-      label: 'Browse category hubs'
+      label: 'Browse categories'
     }
   ]
 
@@ -101,10 +101,10 @@ export default async function DealsPage() {
         <section className="overflow-hidden bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-4 py-16 text-white sm:px-6 lg:px-8 lg:py-24">
           <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Timed Editorial Drop</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Verified Deals</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">Today&apos;s best live deals.</h1>
               <p className="max-w-2xl text-lg leading-8 text-emerald-50/80">
-                Bes3 surfaces the strongest value opportunities we can verify right now. No fake markdowns, just the current price context and the products worth checking.
+                Bes3 surfaces the best deals we can verify right now. No fake markdowns, just current prices and products worth checking.
               </p>
             </div>
             <div className="glass-panel rounded-[2rem] px-8 py-6 text-center text-foreground">
@@ -121,12 +121,12 @@ export default async function DealsPage() {
                 <p className="editorial-kicker">How To Use Deals</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Let price accelerate a good decision, not create a bad one.</h2>
                 <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                  Bes3 deals only matter after product fit is credible. Validate first, save finalists in shortlist, and move to alerts when the right price has not arrived yet.
+                  Bes3 deals matter only after the product already looks right. Validate first, save your finalists, and use alerts when the right price has not arrived yet.
                 </p>
                 <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                   <p className="mt-3 text-sm leading-7 text-slate-200">
-                    Check a deal immediately only if you already trust the product fit. Otherwise the right move is a deep-dive, shortlist save, or price-watch setup before you click out.
+                    Check a deal immediately only if you already trust the product fit. Otherwise the better move is a product page, shortlist save, or price alert before you click out.
                   </p>
                 </div>
               </div>
@@ -150,7 +150,7 @@ export default async function DealsPage() {
         <section className="mx-auto max-w-7xl px-4 pb-20 sm:px-6 lg:px-8">
           <div className="mb-10">
             <p className="editorial-kicker">Today&apos;s Selection</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Curated Live Deals</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Verified deals right now</h2>
           </div>
           <div className="grid gap-8 md:grid-cols-2 xl:grid-cols-3">
             {products.map((product) => (
@@ -161,7 +161,7 @@ export default async function DealsPage() {
                 </div>
                 <div className="space-y-4 p-6">
                   <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">{product.productName}</h2>
-                  <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Live pricing snapshot with a direct path to the current merchant page.'}</p>
+                  <p className="text-sm leading-7 text-muted-foreground">{product.description || 'Current pricing with a direct path to the latest merchant page.'}</p>
                   <div className="rounded-[1.5rem] bg-muted p-5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current price snapshot</p>
                     <p className="mt-3 text-3xl font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
@@ -192,7 +192,7 @@ export default async function DealsPage() {
                     productId={product.id}
                     trackingSource="deals-grid"
                     label="Check Current Price"
-                    note={`Decision note: move fast only if this still fits your actual use case and budget.`}
+                    note="Only move fast if this still fits your actual use case and budget."
                   />
                 </div>
               </div>

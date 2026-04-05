@@ -13,14 +13,14 @@ export const metadata: Metadata = {
     default: DEFAULT_SITE_NAME,
     template: `%s | ${DEFAULT_SITE_NAME}`
   },
-  description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
+  description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.',
   applicationName: DEFAULT_SITE_NAME,
   publisher: DEFAULT_SITE_NAME,
   metadataBase: new URL(getSiteUrl()),
   alternates: {
     canonical: '/'
   },
-  keywords: ['buyer decision system', 'tech buying guide', 'product reviews', 'product comparisons', 'buyer shortlist', 'brand directory'],
+  keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'verified deals', 'brand directory'],
   robots: {
     index: true,
     follow: true
@@ -41,12 +41,12 @@ export const metadata: Metadata = {
     siteName: DEFAULT_SITE_NAME,
     locale: 'en_US',
     title: DEFAULT_SITE_NAME,
-    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.'
+    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.'
   },
   twitter: {
     card: 'summary',
     title: DEFAULT_SITE_NAME,
-    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.'
+    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and verified deals.'
   }
 }
 
