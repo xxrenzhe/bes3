@@ -44,7 +44,7 @@ export default async function ContactPage() {
       title: 'Read the clearest review',
       description: 'When one product is already promising, a review usually answers your fit questions faster than a custom reply.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
-      label: leadReview ? 'Open live review' : 'Browse review archive'
+      label: leadReview ? 'Open review' : 'Browse review archive'
     },
     {
       eyebrow: 'Wait',
@@ -145,7 +145,7 @@ export default async function ContactPage() {
           <div className="space-y-6">
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <p className="editorial-kicker">Best Reasons To Contact</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Use a human review only when the standard route is not enough.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Ask a real person only when the standard path is not enough.</h2>
               <div className="mt-6 space-y-4">
                 {bestUseCases.map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">

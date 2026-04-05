@@ -12,7 +12,7 @@ export function ProductSpotlightCard({
   product,
   source,
   supportingHref,
-  supportingLabel = 'Open deep-dive',
+  supportingLabel = 'Open details',
   className
 }: {
   product: ProductRecord
@@ -54,7 +54,7 @@ export function ProductSpotlightCard({
           </div>
           <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{product.productName}</h3>
           <p className="text-sm leading-7 text-muted-foreground">
-            {product.description || 'Current price context, buyer signal, and a direct path into the deeper Bes3 evaluation.'}
+            {product.description || 'Current price context, buyer reviews, and a direct path into the full Bes3 product page.'}
           </p>
         </div>
 
@@ -64,9 +64,9 @@ export function ProductSpotlightCard({
             <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
           </div>
           <div className="rounded-[1.25rem] bg-muted p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Buyer signal</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">User rating</p>
             <p className="mt-2 text-lg font-black text-foreground">
-              {product.rating ? `${product.rating.toFixed(1)} / 5` : 'Signal building'}
+              {product.rating ? `${product.rating.toFixed(1)} / 5` : 'Rating pending'}
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
               {product.reviewCount ? `${product.reviewCount.toLocaleString()} reviews` : 'Review count pending'}
@@ -93,7 +93,7 @@ export function ProductSpotlightCard({
           href={merchantHref}
           productId={product.id}
           trackingSource={source}
-          note="Use the Bes3 deep-dive first if you still need to verify fit, specs, or tradeoffs."
+          note="Use the full Bes3 product page first if you still need to verify fit, specs, or tradeoffs."
         />
       </div>
     </article>

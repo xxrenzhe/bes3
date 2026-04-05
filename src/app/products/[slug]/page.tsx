@@ -33,7 +33,7 @@ export async function generateMetadata({
   if (!product) {
     return buildPageMetadata({
       title: 'Product Not Found',
-      description: 'This Bes3 product deep-dive is unavailable.',
+      description: 'This Bes3 product page is unavailable.',
       path: `/products/${slug}`,
       robots: {
         index: false,
@@ -51,7 +51,7 @@ export async function generateMetadata({
     title: product.productName,
     description:
       pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
-      `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`,
+      `${product.productName} on Bes3 includes specs, shortlist context, and fit notes before you click through to a store.`,
     path: `/products/${product.slug}`,
     image: product.heroImageUrl || reviewArticle?.heroImageUrl,
     category: category || undefined,
@@ -88,7 +88,7 @@ export default async function ProductPage({
   const path = `/products/${product.slug}`
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
-    `${product.productName} on Bes3 includes specs, shortlist context, and buyer-fit notes before you click out to a merchant.`
+    `${product.productName} on Bes3 includes specs, shortlist context, and fit notes before you click through to a store.`
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: product.category ? product.category.replace(/-/g, ' ') : 'Directory', path: product.category ? `/categories/${product.category}` : '/directory' },
@@ -97,17 +97,17 @@ export default async function ProductPage({
   const howToSteps = [
     {
       name: 'Check the product fit',
-      text: 'Start with the freshness, best-for, and skip-if signals on this page before price influences the decision.'
+      text: 'Start with the freshness, best-for, and skip-if details on this page before price starts driving the choice.'
     },
     {
-      name: 'Validate the verdict',
+      name: 'Validate the pick',
       text: reviewArticle
-        ? 'Open the full review when you need deeper buyer-fit context before you save or click through.'
-        : 'Use the product facts and confidence signals here to decide whether the product deserves a place on the shortlist.'
+        ? 'Open the full review when you need deeper fit context before you save or click through.'
+        : 'Use the product facts and review signals here to decide whether the product deserves a place on the shortlist.'
     },
     {
-      name: 'Compare or watch the lane',
-      text: `If the product looks plausible but not final, move into ${categoryLabel} comparisons or price-watch flows instead of restarting research.`
+      name: 'Compare or set a price alert',
+      text: `If the product looks plausible but not final, move into ${categoryLabel} comparisons or a price alert instead of restarting research.`
     }
   ]
   const structuredData = [
@@ -131,7 +131,7 @@ export default async function ProductPage({
       }
     }),
     buildProductSchema(product, path, productDescription, heroImageUrl),
-    buildHowToSchema(path, `How to use ${product.productName} on Bes3`, 'Use the product page to validate fit, pressure-test the verdict, and choose the cleanest next move.', howToSteps)
+    buildHowToSchema(path, `How to use ${product.productName} on Bes3`, 'Use the product page to validate fit, read the supporting review when needed, and choose the clearest next step.', howToSteps)
   ]
   const faqEntries = [
     {
@@ -139,26 +139,26 @@ export default async function ProductPage({
       answer: 'It is meant to be the clean product-level checkpoint: confirm fit, verify specs and pricing, and choose whether to compare, click through, or keep watching the category.'
     },
     {
-      question: 'When should I use the brand hub from here?',
+      question: 'When should I use the brand page from here?',
       answer: product.brand
-        ? `Use the ${product.brand} hub when you want to see nearby products and editorial pages from the same manufacturer without reopening site-wide search.`
-        : 'Use the category hub when you still need adjacent products and articles around this product before comparing or buying.'
+        ? `Use the ${product.brand} page when you want to see nearby products and editorial pages from the same manufacturer without reopening site-wide search.`
+        : 'Use the category page when you still need adjacent products and articles around this product before comparing or buying.'
     },
     {
       question: 'What should I do if this product looks good but not final?',
       answer: comparisonArticle
         ? 'Open the related comparison next if you are down to finalists. If timing is the blocker instead of fit, switch to the category price watch.'
-        : 'Return to the category hub or start a price watch so you can keep the same lane active without forcing the purchase today.'
+        : 'Return to the category page or start a price alert so you can keep following this category without forcing the purchase today.'
     }
   ]
   const nextMoves = [
     reviewArticle
       ? {
           eyebrow: 'Validate',
-          title: 'Read the full verdict',
-          description: 'Use the full review when you want the strongest buyer-fit read before you save or click through.',
+          title: 'Read the full review',
+          description: 'Use the full review when you want the strongest fit check before you save or click through.',
           href: getArticlePath(reviewArticle.type, reviewArticle.slug),
-          label: 'Open review verdict'
+          label: 'Open review'
         }
       : null,
     comparisonArticle
@@ -174,9 +174,9 @@ export default async function ProductPage({
       ? {
           eyebrow: 'Brand',
           title: `More from ${product.brand}`,
-          description: 'Open the brand hub when you want adjacent products and editorial pages from the same manufacturer without broadening the lane too early.',
+          description: 'Open the brand page when you want adjacent products and editorial pages from the same manufacturer without broadening the search too early.',
           href: `/brands/${brandSlug}`,
-          label: `Open ${product.brand} hub`
+          label: `Open ${product.brand} page`
         }
       : null,
     {
@@ -188,10 +188,10 @@ export default async function ProductPage({
     },
     {
       eyebrow: 'Explore',
-      title: 'Go back to the lane',
-      description: 'Return to the category hub if you still need Bes3 to narrow the field before comparing or checking price.',
+      title: 'Browse the category',
+      description: 'Return to the category page if you still need Bes3 to narrow the field before comparing or checking price.',
       href: product.category ? `/categories/${product.category}` : '/directory',
-      label: 'Browse category hub'
+      label: 'Open category page'
     }
   ].filter(Boolean) as Array<{
     eyebrow: string
@@ -218,12 +218,12 @@ export default async function ProductPage({
 
           <div className="grid gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <div className="space-y-6">
-              <p className="editorial-kicker">Independent Product Deep-Dive</p>
+              <p className="editorial-kicker">Product Page</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight text-balance sm:text-6xl">
                 {product.productName}
               </h1>
               <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
-                {reviewArticle?.summary || product.description || `${product.productName} is part of the current Bes3 shortlist and this page captures the product facts, price context, and deep-dive notes that matter before you buy.`}
+                {reviewArticle?.summary || product.description || `${product.productName} is part of the current Bes3 shortlist and this page captures the product facts, price context, and product notes that matter before you buy.`}
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
@@ -279,14 +279,14 @@ export default async function ProductPage({
                   productId={product.id}
                   trackingSource="product-page-primary-cta"
                   label="Check Current Price"
-                  note={`Confidence signals: ${confidenceSignals.join(' · ')}`}
+                  note={`Why this looks strong: ${confidenceSignals.join(' · ')}`}
                 />
               </div>
               <div className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel">
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Next Best Move</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">Keep the decision chain intact.</h2>
+                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">Keep your next step clear.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  This product page should not be a dead end. Use the next route that matches your buying stage: validate, compare, or switch to a watch flow.
+                  This product page should not be a dead end. Use the next step that matches your buying stage: validate, compare, or switch to a price alert.
                 </p>
                 <div className="mt-5 grid gap-3">
                   {nextMoves.map((move) => (
@@ -308,7 +308,7 @@ export default async function ProductPage({
             <div className="rounded-[2rem] bg-white p-8 shadow-panel">
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">What stands out</p>
               <div className="mt-5 space-y-4">
-                {(product.reviewHighlights.length ? product.reviewHighlights : ['Strong buyer confidence', 'Useful value proposition', 'Worth shortlisting']).map((item) => (
+                {(product.reviewHighlights.length ? product.reviewHighlights : ['Strong buyer reviews', 'Good value for the price', 'Worth shortlisting']).map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 flex h-2.5 w-2.5 shrink-0 rounded-full bg-primary" />
                     <span>{item}</span>
@@ -323,9 +323,9 @@ export default async function ProductPage({
             ) : (
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">
                 <div className="editorial-prose">
-                  <h2>The Deep Dive Analysis</h2>
+                  <h2>Product Notes</h2>
                   <p>
-                    Bes3 uses this page to capture the product-level detail that sits underneath a shortlist recommendation: the price context, core specs, and the signals that make the product worth considering in the first place.
+                    Bes3 uses this page to capture the product-level details behind a shortlist recommendation: price context, core specs, and the reasons this product is worth considering.
                   </p>
                 </div>
               </div>
@@ -345,13 +345,13 @@ export default async function ProductPage({
               </div>
             </div>
             <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Decision Checklist</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">What to check before buying</p>
               <div className="mt-4 space-y-3">
                 {[
                   'Confirm this product still fits your actual use case before clicking through.',
                   'Treat price as a final check, not the only reason to buy.',
                   'Use the specs snapshot to verify there is no hidden mismatch.',
-                  comparisonArticle ? 'If this product survives the checklist, move into the comparison page next instead of opening unrelated alternatives.' : `If you still need options, return to the ${categoryLabel} hub and narrow the lane before comparing.`
+                  comparisonArticle ? 'If this product still looks good after this checklist, move into the comparison page next instead of opening unrelated alternatives.' : `If you still need options, return to the ${categoryLabel} category page and narrow the shortlist before comparing.`
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
                     <span className="mt-2 h-2.5 w-2.5 rounded-full bg-primary" />
@@ -372,7 +372,7 @@ export default async function ProductPage({
             ) : null}
             {guideArticle || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Lane</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">More In This Category</p>
                 <div className="mt-5 space-y-3">
                   {guideArticle ? (
                     <Link href={getArticlePath(guideArticle.type, guideArticle.slug)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
@@ -383,24 +383,24 @@ export default async function ProductPage({
                   ) : null}
                   {product.category ? (
                     <Link href={`/categories/${product.category}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main hub if you need adjacent coverage before committing to this product.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main category page if you need adjacent coverage before committing to this product.</p>
                     </Link>
                   ) : null}
                   {brandSlug && product.brand ? (
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Stay inside the same manufacturer graph if you want adjacent products and brand-level editorial context.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Stay with the same brand if you want adjacent products and brand-level editorial context.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (
                     <Link key={candidate.id} href={`/products/${candidate.slug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                      <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Similar Product</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{candidate.productName}</p>
                       <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        {candidate.description || `Another ${categoryLabel} option in the same decision lane.`}
+                        {candidate.description || `Another ${categoryLabel} option worth checking.`}
                       </p>
                     </Link>
                   ))}

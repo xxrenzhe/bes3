@@ -405,7 +405,7 @@ export default async function SearchPage({
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Closest Match</p>
                     <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h3>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">Open the category page if the exact model is missing but the product type is still right.</p>
-                    <p className="mt-5 text-sm font-semibold text-primary">Open category hub →</p>
+                    <p className="mt-5 text-sm font-semibold text-primary">Open category page →</p>
                   </Link>
                 ))}
                 {leadReview ? (
@@ -413,7 +413,7 @@ export default async function SearchPage({
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Featured Review</p>
                     <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{leadReview.title}</h3>
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                      {leadReview.summary || 'Open a live review if you want a concrete example of how Bes3 helps narrow a buying decision.'}
+                      {leadReview.summary || 'Open a review if you want a concrete example of how Bes3 helps narrow a shortlist.'}
                     </p>
                     <p className="mt-5 text-sm font-semibold text-primary">Open review →</p>
                   </Link>
