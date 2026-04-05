@@ -103,7 +103,7 @@ export default async function GuidePage({
     },
     {
       name: 'Keep your place',
-      text: 'If you are not ready to buy yet, turn the category into a briefing or alert instead of repeating the same research later.'
+      text: 'If you are not ready to buy yet, turn the category into a weekly update or alert instead of repeating the same research later.'
     }
   ]
   const structuredData = [
@@ -158,7 +158,7 @@ export default async function GuidePage({
       question: 'What is the best next step after reading this guide?',
       answer: relatedReview
         ? 'Move into the strongest review next so the guidance becomes a real product choice.'
-        : 'Go to the category page or shortlist next so the guide turns into concrete options instead of more abstract browsing.'
+        : 'Go to the category page or shortlist next so the guide turns into concrete options instead of more open-ended browsing.'
     }
   ]
   const guideRoutes = [
@@ -173,7 +173,7 @@ export default async function GuidePage({
     },
     {
       eyebrow: 'Decide',
-      title: relatedComparison ? 'Compare real finalists' : 'Build a shortlist',
+      title: relatedComparison ? 'Compare top picks' : 'Build a shortlist',
       description: relatedComparison
         ? 'Use the comparison only after the guide has clarified which tradeoffs actually matter to you.'
         : 'If you still need concrete options, move into a shortlist or category page before trying to compare.',
@@ -183,7 +183,7 @@ export default async function GuidePage({
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track market changes',
-      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the context alive with a category briefing or alert.',
+      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the category in view with a weekly update or alert.',
       href: category
         ? `/newsletter?intent=category-brief&category=${encodeURIComponent(category)}&cadence=weekly`
         : '/newsletter?intent=deals&cadence=weekly',
@@ -204,7 +204,7 @@ export default async function GuidePage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Buying Guide</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">{article.title}</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                {article.summary || 'Use this guide to understand the category well enough to narrow a shortlist, validate tradeoffs, and avoid reopening the same research loop later.'}
+                {article.summary || 'Use this guide to understand the category well enough to narrow a shortlist, validate tradeoffs, and avoid repeating the same research later.'}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -237,7 +237,7 @@ export default async function GuidePage({
               <p className="editorial-kicker">How To Use This Guide</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Turn category knowledge into a clearer shortlist.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Guides exist to reduce ambiguity before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of staying in pure research mode.
+                Guides exist to make the category clearer before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of staying stuck in research mode.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
@@ -302,7 +302,7 @@ export default async function GuidePage({
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand page if one manufacturer now looks credible and you want the rest of its Bes3 coverage in one place.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand page if one brand now looks promising and you want the rest of its Bes3 coverage in one place.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (

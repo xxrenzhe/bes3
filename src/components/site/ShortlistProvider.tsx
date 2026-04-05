@@ -215,7 +215,7 @@ export function ShortlistProvider({
         source,
         productId: item.id
       })
-      toast.message(`${item.productName} removed from compare queue`)
+      toast.message(`${item.productName} removed from compare list`)
       return
     }
 
@@ -233,7 +233,7 @@ export function ShortlistProvider({
     })
 
     if (blocked) {
-      toast.error(`Compare queue is capped at ${MAX_COMPARE_ITEMS} products`)
+      toast.error(`Compare list is capped at ${MAX_COMPARE_ITEMS} products`)
       return
     }
 
@@ -247,7 +247,7 @@ export function ShortlistProvider({
           category: item.category || undefined
         }
       })
-      toast.success(`${item.productName} added to compare queue`)
+      toast.success(`${item.productName} added to compare list`)
     }
   }
 
@@ -275,7 +275,7 @@ export function ShortlistProvider({
 
   const clearCompare = () => {
     setCompare([])
-    toast.message('Compare queue cleared')
+    toast.message('Compare list cleared')
   }
 
   return (

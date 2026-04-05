@@ -57,7 +57,7 @@ export default async function AboutPage() {
     {
       step: '02',
       title: 'Cut the list to a few good picks',
-      description: 'We narrow noisy product grids down to a few credible options instead of rewarding volume for its own sake.'
+      description: 'We narrow noisy product grids down to a few strong options instead of rewarding volume for its own sake.'
     },
     {
       step: '03',
@@ -88,14 +88,14 @@ export default async function AboutPage() {
     },
     {
       eyebrow: 'Compare',
-      title: 'Use comparisons only for finalists',
+      title: 'Use comparisons only for top picks',
       description: 'Comparisons work best after the list is already short enough that the tradeoffs stay clear and useful.',
       href: leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist',
       label: leadComparison ? 'Open a live comparison' : 'Use shortlist compare'
     },
     {
       eyebrow: 'Wait',
-      title: 'Use alerts when timing is the blocker',
+      title: 'Use alerts when price timing matters',
       description: 'Alerts keep the same category in view when price or timing matters more than buying today.',
       href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
@@ -225,7 +225,7 @@ export default async function AboutPage() {
             <SectionHeader
               eyebrow="Method"
               title="The Bes3 method is built for decisions, not page depth."
-              description="Every public format exists to help you do one useful thing next: understand the category, save strong picks, validate one product, compare finalists, or wait without losing your place."
+              description="Every public format exists to help you do one useful thing next: understand the category, save strong picks, validate one product, compare top picks, or wait without losing your place."
             />
             <div className="mt-10 grid gap-6 md:grid-cols-2 xl:grid-cols-4">
               {methodologySteps.map((step) => (

@@ -12,6 +12,12 @@ import { toShortlistItem } from '@/lib/shortlist'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
+function getArticleTypeLabel(type: string) {
+  if (type === 'comparison') return 'comparison'
+  if (type === 'review') return 'review'
+  return 'guide'
+}
+
 export async function generateMetadata(): Promise<Metadata> {
   const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const freshnessDate =
@@ -96,8 +102,8 @@ export default async function DirectoryPage() {
     },
     {
       eyebrow: 'Brands',
-      title: leadBrand ? `Open ${leadBrand.name}` : 'Browse by manufacturer',
-      description: 'Brand pages are useful when you already trust one manufacturer and want everything grouped in one place.',
+      title: leadBrand ? `Open ${leadBrand.name}` : 'Browse by brand',
+      description: 'Brand pages are useful when you already trust one brand and want everything from that brand grouped in one place.',
       href: leadBrand ? `/brands/${leadBrand.slug}` : '/brands',
       label: leadBrand ? `Open ${leadBrand.name}` : 'Browse brands'
     },
@@ -123,7 +129,7 @@ export default async function DirectoryPage() {
     },
     {
       question: 'What is the difference between category pages and brand pages?',
-      answer: 'Category pages help you compare across brands. Brand pages focus on one manufacturer. They solve different shopping needs and should not replace each other.'
+      answer: 'Category pages help you compare across brands. Brand pages focus on one brand. They solve different shopping needs and should not replace each other.'
     },
     {
       question: 'Why does each card point to a next move instead of just listing pages?',
@@ -190,7 +196,7 @@ export default async function DirectoryPage() {
                   : featuredReview
                   ? 'Read the lead review'
                   : featuredArticle
-                    ? `Open the lead ${featuredArticle.type}`
+                    ? `Open the lead ${getArticleTypeLabel(featuredArticle.type)}`
                   : 'Use alerts while coverage builds'
             const latestRefresh =
               featuredArticle?.updatedAt ||
@@ -205,7 +211,7 @@ export default async function DirectoryPage() {
                   <div>
                     <h2 className="border-l-2 border-primary pl-3 text-xs font-bold uppercase tracking-[0.16em] text-foreground">{category.replace(/-/g, ' ')}</h2>
                     <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                      {categoryProducts.length} products · {categoryArticles.length} published pages · Refreshed {formatEditorialDate(latestRefresh, 'soon')}
+                      {categoryProducts.length} products · {categoryArticles.length} pages to explore · Updated {formatEditorialDate(latestRefresh, 'soon')}
                     </p>
                     <p className="mt-3 text-sm font-semibold text-foreground">{bestRouteLabel}</p>
                   </div>
@@ -241,7 +247,7 @@ export default async function DirectoryPage() {
                       {article.title}
                     </Link>
                   ))}
-                  {!featuredArticle && !featuredProduct ? <p>Coverage is still being built for this category.</p> : null}
+                  {!featuredArticle && !featuredProduct ? <p>We are still building coverage for this category.</p> : null}
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">
@@ -263,7 +269,7 @@ export default async function DirectoryPage() {
                       : featuredReview
                         ? 'Open lead review →'
                         : featuredDecisionArticle
-                          ? `Open ${featuredDecisionArticle.type} →`
+                          ? `Open ${getArticleTypeLabel(featuredDecisionArticle.type)} →`
                           : 'Track this category →'}
                   </Link>
                 </div>

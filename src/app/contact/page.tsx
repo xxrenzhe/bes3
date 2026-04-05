@@ -34,7 +34,7 @@ export default async function ContactPage() {
     },
     {
       eyebrow: 'Shortlist',
-      title: 'Keep your finalists together',
+      title: 'Keep your top picks together',
       description: 'If the issue is “I am close but not ready,” shortlist usually solves it better than a support thread.',
       href: '/shortlist',
       label: 'Open shortlist'
