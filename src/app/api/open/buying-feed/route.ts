@@ -1,54 +1,19 @@
 import { NextResponse } from 'next/server'
+import { COMMERCE_PROTOCOL_VERSION, serializeCommerceArticle, serializeCommerceProduct } from '@/lib/open-commerce'
 import { listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
-import { toAbsoluteUrl } from '@/lib/site-url'
 
 export async function GET() {
   const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
 
   return NextResponse.json({
+    protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
-    products: products.slice(0, 24).map((product) => ({
-      id: product.id,
-      slug: product.slug,
-      brand: product.brand,
-      productName: product.productName,
-      category: product.category,
-      priceAmount: product.priceAmount,
-      priceCurrency: product.priceCurrency,
-      rating: product.rating,
-      reviewCount: product.reviewCount,
-      heroImageUrl: product.heroImageUrl,
-      priceLastCheckedAt: product.priceLastCheckedAt,
-      offerLastCheckedAt: product.offerLastCheckedAt,
-      attributeCompletenessScore: product.attributeCompletenessScore,
-      dataConfidenceScore: product.dataConfidenceScore,
-      sourceCount: product.sourceCount,
-      offerCount: product.offerCount,
-      evidenceCount: product.evidenceCount,
-      freshness: product.freshness,
-      bestOffer: product.bestOffer,
-      path: product.slug ? `/products/${product.slug}` : null,
-      absoluteUrl: product.slug ? toAbsoluteUrl(`/products/${product.slug}`) : null,
-      updatedAt: product.updatedAt,
-      publishedAt: product.publishedAt
-    })),
-    articles: articles.slice(0, 24).map((article) => ({
-      id: article.id,
-      type: article.type,
-      title: article.title,
-      slug: article.slug,
-      summary: article.summary,
-      productName: article.product?.productName || null,
-      category: article.product?.category || null,
-      heroImageUrl: article.heroImageUrl || article.product?.heroImageUrl || null,
-      path:
-        article.type === 'review'
-          ? `/reviews/${article.slug}`
-          : article.type === 'comparison'
-            ? `/compare/${article.slug}`
-            : `/guides/${article.slug}`,
-      updatedAt: article.updatedAt,
-      publishedAt: article.publishedAt
-    }))
+    feedType: 'commerce-feed',
+    products: products.slice(0, 24).map((product) =>
+      serializeCommerceProduct(product, {
+        source: 'open-buying-feed'
+      })
+    ),
+    articles: articles.slice(0, 24).map(serializeCommerceArticle)
   })
 }
