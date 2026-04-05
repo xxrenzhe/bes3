@@ -105,7 +105,7 @@ type CategoryDecisionProfile = {
 const GENERIC_DECISION_PROFILE: CategoryDecisionProfile = {
   id: 'generic',
   label: 'General buyer fit',
-  decisionLens: 'Bes3 uses price proof, merchant readiness, buyer signal, freshness, and clear tradeoffs to judge whether a saved pick deserves finalist status.',
+  decisionLens: 'Bes3 uses price proof, store availability, user reviews, freshness, and clear tradeoffs to judge whether a saved pick is strong enough for compare.',
   compareFocus: 'Compare the clearest tradeoffs first.',
   categoryMatchers: [],
   specKeywords: [],
@@ -234,7 +234,7 @@ export function buildShortlistSharePath(items: Array<Pick<ShortlistItem, 'id'> |
 }
 
 function humanizeCategory(category: string | null) {
-  return category ? category.replace(/-/g, ' ') : 'buyer shortlist'
+  return category ? category.replace(/-/g, ' ') : 'saved shortlist'
 }
 
 function normalizeDecisionText(value: string | null | undefined) {
@@ -354,9 +354,9 @@ export function getShortlistDecisionState(
 
   if (item.resolvedUrl) {
     score += 15
-    pushUnique(whySaved, 'Merchant ready')
+    pushUnique(whySaved, 'Store link ready')
   } else {
-    pushUnique(gaps, 'Merchant link still pending')
+    pushUnique(gaps, 'Store link still pending')
   }
 
   const rating = item.rating || 0
@@ -364,7 +364,7 @@ export function getShortlistDecisionState(
 
   if (rating >= 4.4 && reviewCount >= 1000) {
     score += 20
-    pushUnique(whySaved, 'Strong buyer proof')
+    pushUnique(whySaved, 'Strong review proof')
   } else if (rating >= 4.1 && reviewCount >= 200) {
     score += 16
     pushUnique(whySaved, 'Review-backed')
@@ -376,9 +376,9 @@ export function getShortlistDecisionState(
     pushUnique(whySaved, 'Heavy review volume')
   } else if (rating >= 4 || reviewCount >= 200) {
     score += 8
-    pushUnique(whySaved, 'Early buyer proof')
+    pushUnique(whySaved, 'Early review proof')
   } else {
-    pushUnique(gaps, 'Buyer proof still thin')
+    pushUnique(gaps, 'Review proof still thin')
   }
 
   if (item.reviewHighlights.length) {
@@ -386,9 +386,9 @@ export function getShortlistDecisionState(
     pushUnique(whySaved, 'Clear tradeoff clue')
   } else if (item.description) {
     score += 10
-    pushUnique(whySaved, 'Use-case signal')
+    pushUnique(whySaved, 'Clear use case')
   } else {
-    pushUnique(gaps, 'Deep-dive signal still thin')
+    pushUnique(gaps, 'Product-page detail still thin')
   }
 
   if (item.specSummary.length) {
@@ -429,7 +429,7 @@ export function getShortlistDecisionState(
 
   if (inCompare) {
     score += 20
-    pushUnique(whySaved, 'Finalist in compare')
+    pushUnique(whySaved, 'Already in compare')
   } else if (shortlistSize >= 2) {
     score += 10
     pushUnique(whySaved, 'Ready for compare')
@@ -446,7 +446,7 @@ export function getShortlistDecisionState(
       profileLabel: profile.label,
       decisionLens: profile.decisionLens,
       label: 'Finalist',
-      note: `${profile.compareFocus} This finalist already has enough verified signal to move toward merchant checks.`,
+      note: `${profile.compareFocus} This finalist already has enough proof to move toward price and store checks.`,
       whySaved: whySaved.slice(0, 4),
       gaps: gaps.slice(0, 2)
     }
@@ -458,7 +458,7 @@ export function getShortlistDecisionState(
       stage: 'compare-ready',
       profileLabel: profile.label,
       decisionLens: profile.decisionLens,
-      label: 'Compare-ready',
+      label: 'Ready to compare',
       note: `${profile.compareFocus} This pick already carries enough context to become a finalist now.`,
       whySaved: whySaved.slice(0, 4),
       gaps: gaps.slice(0, 2)
@@ -473,7 +473,7 @@ export function getShortlistDecisionState(
       decisionLens: profile.decisionLens,
       label: 'Needs one more check',
       note: gaps[0]
-        ? `Strong option, but ${gaps[0].charAt(0).toLowerCase()}${gaps[0].slice(1)} before it deserves finalist status.`
+        ? `Strong option, but ${gaps[0].charAt(0).toLowerCase()}${gaps[0].slice(1)} before it belongs in compare.`
         : 'Strong option, but it still needs one tighter proof point before it belongs in compare.',
       whySaved: whySaved.slice(0, 4),
       gaps: gaps.slice(0, 2)
@@ -485,8 +485,8 @@ export function getShortlistDecisionState(
     stage: 'signal-building',
     profileLabel: profile.label,
     decisionLens: profile.decisionLens,
-    label: 'Signal building',
-    note: 'Worth keeping visible, but the decision evidence is still too thin to treat this as a serious finalist.',
+    label: 'Still building',
+    note: 'Worth keeping visible, but the supporting proof is still too thin to treat this as a serious finalist.',
     whySaved: whySaved.slice(0, 4),
     gaps: gaps.slice(0, 2)
   }
@@ -501,10 +501,10 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
       needsCheckCount: 0,
       buildingCount: 0,
       label: 'No shortlist yet',
-      note: 'Save a few products first so Bes3 can tell you which ones are actually decision-ready.',
+      note: 'Save a few products first so Bes3 can tell you which ones are actually ready to compare.',
       decisionLens: GENERIC_DECISION_PROFILE.decisionLens,
       topGap: 'No saved picks yet.',
-      nextAction: 'Add products from search, deals, or category hubs to start building a real decision set.'
+      nextAction: 'Add products from search, deals, or category pages to start building a real shortlist.'
     }
   }
 
@@ -528,7 +528,7 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
   ).sort((left, right) => right[1] - left[1])[0]
   const decisionLens = dominantLensEntry && dominantLensEntry[1] === items.length
     ? dominantLensEntry[0]
-    : 'This shortlist spans multiple product types, so Bes3 blends shared buying signals with category-specific checks before calling anything finalist-ready.'
+    : 'This shortlist spans multiple product types, so Bes3 blends shared buying cues with category-specific checks before calling anything ready for compare.'
 
   const missingPriceCount = items.filter((item) => item.priceAmount === null || item.priceAmount === undefined || !Number.isFinite(item.priceAmount)).length
   const missingMerchantCount = items.filter((item) => !item.resolvedUrl).length
@@ -542,13 +542,13 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
   const noMajorGapLabel = 'No major proof gaps remain.'
 
   const topGap = missingMerchantCount
-    ? `${missingMerchantCount} ${missingMerchantCount === 1 ? 'pick still lacks' : 'picks still lack'} a verified merchant exit.`
+    ? `${missingMerchantCount} ${missingMerchantCount === 1 ? 'pick still lacks' : 'picks still lack'} a working store link.`
     : missingPriceCount
       ? `${missingPriceCount} ${missingPriceCount === 1 ? 'pick is still missing' : 'picks are still missing'} a price snapshot.`
       : missingSpecCount
         ? `${missingSpecCount} ${missingSpecCount === 1 ? 'pick still needs' : 'picks still need'} category-specific spec context.`
       : thinProofCount
-        ? `${thinProofCount} ${thinProofCount === 1 ? 'pick still needs' : 'picks still need'} stronger buyer proof.`
+        ? `${thinProofCount} ${thinProofCount === 1 ? 'pick still needs' : 'picks still need'} stronger review proof.`
         : staleCheckCount
           ? `${staleCheckCount} ${staleCheckCount === 1 ? 'pick needs' : 'picks need'} a fresher verification pass.`
           : noMajorGapLabel
@@ -560,11 +560,11 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
       finalistCount,
       needsCheckCount,
       buildingCount,
-      label: 'Decision in motion',
+      label: 'Choice in motion',
       note: `${finalistCount} finalists already sit in compare, so the shortlist is now supporting a real choice instead of passive saving.`,
       decisionLens,
       topGap,
-      nextAction: 'Use the decision matrix, then check merchant pricing only for the finalists instead of reopening the whole search.'
+      nextAction: 'Use the compare table, then check store pricing only for the finalists instead of reopening the whole search.'
     }
   }
 
@@ -606,7 +606,7 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
       needsCheckCount,
       buildingCount,
       label: 'Too early to decide',
-      note: 'One saved product is still a preference, not a real decision set.',
+      note: 'One saved product is still a preference, not a real choice yet.',
       decisionLens,
       topGap,
       nextAction: 'Add one same-category alternative so the tradeoffs become obvious.'
@@ -662,7 +662,7 @@ function buildPrimarySpecValue(item: ShortlistItem) {
     return `${primaryEntry.label}: ${primaryEntry.value}`
   }
 
-  return item.specSummary[0] || 'Open deep-dive'
+  return item.specSummary[0] || 'Open product page'
 }
 
 function buildCategorySpecificComparisonRows(items: ShortlistItem[], profile: CategoryDecisionProfile) {
@@ -715,7 +715,7 @@ function buildCategorySpecificComparisonRows(items: ShortlistItem[], profile: Ca
 export function buildShortlistComparisonSummary(items: ShortlistItem[]): ShortlistComparisonSummary {
   if (!items.length) {
     return {
-      lensLabel: 'Decision lens',
+      lensLabel: 'What matters most',
       lensNote: GENERIC_DECISION_PROFILE.decisionLens,
       focusNote: 'Add at least two finalists to compare product-level tradeoffs.',
       rows: []
@@ -748,7 +748,7 @@ export function buildShortlistComparisonSummary(items: ShortlistItem[]): Shortli
     }
   } else {
     rows.push({
-      label: 'Decision fit',
+      label: 'Best fit',
       values: states.map((state) => state.profileLabel)
     })
     rows.push({
@@ -763,8 +763,8 @@ export function buildShortlistComparisonSummary(items: ShortlistItem[]): Shortli
       values: items.map((item) => formatPriceSnapshot(item.priceAmount, item.priceCurrency || 'USD'))
     },
     {
-      label: 'Buyer signal',
-      values: items.map((item) => (item.rating ? `${item.rating.toFixed(1)} / 5` : 'Signal building'))
+      label: 'User rating',
+      values: items.map((item) => (item.rating ? `${item.rating.toFixed(1)} / 5` : 'Rating pending'))
     },
     {
       label: 'Review count',
@@ -772,7 +772,7 @@ export function buildShortlistComparisonSummary(items: ShortlistItem[]): Shortli
     },
     {
       label: 'Best clue',
-      values: items.map((item) => item.reviewHighlights[0] || item.description || 'Open the deep-dive for the fuller verdict')
+      values: items.map((item) => item.reviewHighlights[0] || item.description || 'Open the product page for the fuller picture')
     }
   )
 
@@ -787,7 +787,7 @@ export function buildShortlistComparisonSummary(items: ShortlistItem[]): Shortli
 
   return {
     lensLabel: 'Mixed-category shortlist',
-    lensNote: 'These finalists span different product types, so Bes3 compares fit, key specs, and buyer proof before asking you to collapse them into one decision path.',
+    lensNote: 'These finalists span different product types, so Bes3 compares fit, key specs, and review proof before asking you to collapse them into one compare group.',
     focusNote: 'Use the matrix to identify whether one product type is clearly dominating your actual use case before checking prices.',
     rows
   }
@@ -855,7 +855,7 @@ function pickStrongestSignal(items: ShortlistItem[]) {
 
   const strongest = candidates[0]
   if (!strongest) {
-    return 'Open the deep-dive pages to review the full Bes3 verdict on each option.'
+    return 'Open the product pages to review the full Bes3 take on each option.'
   }
 
   return `${strongest.item.productName}: ${strongest.clue}`
@@ -881,25 +881,25 @@ export function summarizeShortlist(items: ShortlistItem[]): ShortlistSummary {
       ? categories.join(' and ')
       : `${categories.slice(0, 2).join(', ')} and ${categories.length - 2} more`
 
-  const averageRatingLabel = averageRating ? `${averageRating.toFixed(1)} / 5` : 'Signal building'
+  const averageRatingLabel = averageRating ? `${averageRating.toFixed(1)} / 5` : 'Rating pending'
   const buyerProofLabel = totalReviews
     ? `${totalReviews.toLocaleString()} reviews`
     : ratedItems.length
       ? `${ratedItems.length} rated picks`
-      : 'Early signal'
+      : 'Early review proof'
 
   return {
     itemCount: items.length,
     categoryCount: categories.length,
     categoryLabel,
-    categoryNote: categoryNote || 'Bes3 is still clustering the category mix.',
+    categoryNote: categoryNote || 'Bes3 is still grouping the category mix.',
     priceRangeLabel: priceRange.label,
     priceRangeNote: priceRange.note,
     averageRating,
     averageRatingLabel,
     buyerProofLabel,
     buyerProofNote: totalReviews
-      ? 'Enough buyer proof to share the decision context with someone else.'
+      ? 'Enough review proof to share the shortlist context with someone else.'
       : 'This shortlist is still early, so use the product pages for deeper validation.',
     strongestSignal: pickStrongestSignal(items),
     overview: items.length
@@ -908,10 +908,10 @@ export function summarizeShortlist(items: ShortlistItem[]): ShortlistSummary {
         } ${categories.length === 1 ? 'category' : 'categories'}.`
       : 'No shared picks yet.',
     decisionNote: averageRating
-      ? `Average buyer signal sits at ${averageRating.toFixed(1)} / 5${totalReviews ? ` across ${totalReviews.toLocaleString()} reviews` : ''}.`
+      ? `Average rating is ${averageRating.toFixed(1)} / 5${totalReviews ? ` across ${totalReviews.toLocaleString()} reviews` : ''}.`
       : totalReviews
         ? `${totalReviews.toLocaleString()} buyer reviews are already tracked across the shared set.`
-        : 'Signal is still building, so lean on the product deep-dives before deciding.'
+        : 'Proof is still building, so lean on the product pages before choosing.'
   }
 }
 
@@ -922,17 +922,17 @@ export function buildShortlistBuyingBrief(items: ShortlistItem[]) {
   const decisionSummary = summarizeShortlistDecisionReadiness(items)
 
   return [
-    'Bes3 shortlist buying brief',
+    'Bes3 shortlist summary',
     `${summary.overview} ${summary.decisionNote}`,
-    `Decision readiness: ${decisionSummary.label} (${decisionSummary.averageScore}/100 average).`,
-    `Decision lens: ${decisionSummary.decisionLens}`,
+    `Shortlist readiness: ${decisionSummary.label} (${decisionSummary.averageScore}/100 average).`,
+    `What matters most: ${decisionSummary.decisionLens}`,
     `Next move: ${decisionSummary.nextAction}`,
     `Price range: ${summary.priceRangeLabel}.`,
-    `Strongest signal: ${summary.strongestSignal}`,
+    `Strongest reason: ${summary.strongestSignal}`,
     '',
     ...items.map((item, index) => {
-      const notes = item.reviewHighlights[0] || item.description || 'Open the deep-dive for the full Bes3 read.'
-      const ratingLabel = item.rating ? `${item.rating.toFixed(1)} / 5` : 'Signal building'
+      const notes = item.reviewHighlights[0] || item.description || 'Open the product page for the full Bes3 read.'
+      const ratingLabel = item.rating ? `${item.rating.toFixed(1)} / 5` : 'Rating pending'
       const decisionState = getShortlistDecisionState(item, { shortlistSize: items.length })
       const whySaved = decisionState.whySaved.length ? `Why saved: ${decisionState.whySaved.slice(0, 3).join(', ')}.` : ''
 

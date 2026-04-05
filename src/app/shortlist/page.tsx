@@ -8,7 +8,7 @@ import { parseShortlistShareValue, toShortlistItem } from '@/lib/shortlist'
 export const metadata: Metadata = buildPageMetadata({
   title: 'Shortlist',
   description:
-    'Keep Bes3 finalists together, compare serious options, and switch into price-watch flows without restarting the research process.',
+    'Keep your saved finalists together, compare serious options, and switch to price alerts without restarting your research.',
   path: '/shortlist',
   robots: {
     index: false,
