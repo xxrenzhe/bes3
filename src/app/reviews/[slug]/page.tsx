@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -20,7 +21,7 @@ import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSc
 import { toShortlistItem } from '@/lib/shortlist'
 import {
   getArticleBySlug,
-  getBrandSlug,
+  getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
   listProductAttributeFacts,
   listProductOffers,
@@ -85,19 +86,30 @@ export default async function ReviewPage({
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'review') notFound()
 
-  const [articles, allProducts, commerceProduct, offers, attributeFacts, priceHistory] = await Promise.all([
+  const category = article.product?.category || null
+  const [articles, allProducts, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
     article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
     article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([]),
-    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([])
+    article.product?.id ? listProductPriceHistory(article.product.id) : Promise.resolve([]),
+    article.product
+      ? getBrandKnowledgeByProduct({
+          brandName: article.product.brand,
+          category,
+          compatibilityLimit: 6
+        })
+      : Promise.resolve({
+          brandSlug: '',
+          brandPolicy: null,
+          compatibilityFacts: []
+        })
   ])
-  const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
   const snapshotDate = getSnapshotDate(article, article.product)
   const confidenceSignals = buildConfidenceSignals(article.product)
-  const brandSlug = getBrandSlug(article.product?.brand)
+  const brandSlug = brandKnowledge.brandSlug
   const relatedComparison = articles.find((candidate) => {
     if (candidate.type !== 'comparison') return false
     if (article.productId && candidate.productId === article.productId) return true
@@ -339,6 +351,16 @@ export default async function ReviewPage({
           description="These are the concrete offer and fact signals Bes3 checked before turning this product into a review recommendation."
           source="review-page-evidence"
         />
+
+        {article.product ? (
+          <BrandPolicyPanel
+            brandName={article.product.brand || article.product.productName}
+            policy={brandKnowledge.brandPolicy}
+            compatibilityFacts={brandKnowledge.compatibilityFacts}
+            title="Brand policy and fit context"
+            description="Use brand policy and compatibility knowledge to decide whether the recommendation still works after shipping, returns, warranty, and accessory fit are considered."
+          />
+        ) : null}
 
         <section className="grid gap-10">
           {reviewPicks.map((pick, index) => {
