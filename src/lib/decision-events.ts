@@ -39,7 +39,7 @@ const COACH_PRIMARY_TYPES: DecisionEventType[] = ['decision_coach_primary_click'
 
 const COACH_SECONDARY_TYPES: DecisionEventType[] = ['decision_coach_secondary_click']
 
-const MERCHANT_INTENT_TYPES: DecisionEventType[] = ['merchant_cta_click']
+const MERCHANT_INTENT_TYPES: DecisionEventType[] = ['merchant_cta_click', 'merchant_offer_select']
 const SHORTLIST_DECISION_COACH_SOURCE = normalizeMerchantSource('shortlist-decision-coach')
 
 type DecisionEventRow = {

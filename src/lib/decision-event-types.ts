@@ -1,4 +1,12 @@
 export const DECISION_EVENT_TYPES = [
+  'assistant_session_start',
+  'assistant_constraint_add',
+  'assistant_recommendation_accept',
+  'assistant_recommendation_reject',
+  'offer_expand',
+  'price_history_view',
+  'alert_subscribe_from_assistant',
+  'merchant_offer_select',
   'shortlist_add',
   'shortlist_remove',
   'compare_add',

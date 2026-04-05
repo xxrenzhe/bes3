@@ -1,5 +1,5 @@
-import Link from 'next/link'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { TrackedDecisionLink } from '@/components/site/TrackedDecisionLink'
 import {
   buildIntentContextChips,
   buildIntentRecommendationNote,
@@ -7,12 +7,15 @@ import {
 } from '@/lib/commerce-intent'
 
 export function IntentRecommendationPanel({
-  result
+  result,
+  source = 'intent-search-results'
 }: {
   result: IntentSearchResult
+  source?: string
 }) {
   const chips = buildIntentContextChips(result)
   const note = buildIntentRecommendationNote(result)
+  const leadProductId = result.recommendations[0]?.product.id || null
 
   return (
     <div className="space-y-8">
@@ -46,25 +49,46 @@ export function IntentRecommendationPanel({
             <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{note.title}</h3>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{note.description}</p>
             <div className="mt-5 flex flex-wrap gap-3">
-              <Link
+              <TrackedDecisionLink
                 href={result.nextAction.href}
                 className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground"
+                eventType={result.nextAction.href.includes('/newsletter') ? 'alert_subscribe_from_assistant' : 'assistant_recommendation_accept'}
+                source={source}
+                productId={leadProductId}
+                metadata={{
+                  href: result.nextAction.href,
+                  label: result.nextAction.label
+                }}
               >
                 {result.nextAction.label}
-              </Link>
-              <Link
+              </TrackedDecisionLink>
+              <TrackedDecisionLink
                 href={result.shortlistPath}
                 className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
+                eventType="assistant_recommendation_accept"
+                source={source}
+                productId={leadProductId}
+                metadata={{
+                  href: result.shortlistPath,
+                  label: 'Save this shortlist'
+                }}
               >
                 Save this shortlist
-              </Link>
+              </TrackedDecisionLink>
               {note.brandHref ? (
-                <Link
+                <TrackedDecisionLink
                   href={note.brandHref}
                   className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground"
+                  eventType="assistant_recommendation_accept"
+                  source={source}
+                  productId={leadProductId}
+                  metadata={{
+                    href: note.brandHref,
+                    label: 'Open brand page'
+                  }}
                 >
                   Open brand page
-                </Link>
+                </TrackedDecisionLink>
               ) : null}
             </div>
           </div>
@@ -76,9 +100,19 @@ export function IntentRecommendationPanel({
             <div className="mt-5 rounded-[1.25rem] bg-white/10 p-4">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Fallback</p>
               <p className="mt-2 text-sm leading-7 text-slate-200">{result.fallbackAction.description}</p>
-              <Link href={result.fallbackAction.href} className="mt-4 inline-flex text-sm font-semibold text-emerald-200">
+              <TrackedDecisionLink
+                href={result.fallbackAction.href}
+                className="mt-4 inline-flex text-sm font-semibold text-emerald-200"
+                eventType="assistant_recommendation_reject"
+                source={source}
+                productId={leadProductId}
+                metadata={{
+                  href: result.fallbackAction.href,
+                  label: result.fallbackAction.label
+                }}
+              >
                 {result.fallbackAction.label} →
-              </Link>
+              </TrackedDecisionLink>
             </div>
           </div>
         </div>
