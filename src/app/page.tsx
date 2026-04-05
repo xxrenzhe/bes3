@@ -21,7 +21,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Tech Reviews, Comparisons, and Deals',
     description:
-      'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and verified deals.',
+      'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
     path: '/',
     image: articles[0]?.heroImageUrl,
     freshnessDate,
@@ -75,7 +75,7 @@ export default async function HomePage() {
   const structuredData = buildCollectionPageSchema({
     path: '/',
     title: 'Tech Reviews, Comparisons, and Deals',
-    description: 'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and verified deals.',
+    description: 'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
     image: featured[0]?.heroImageUrl,
     items: [
       {

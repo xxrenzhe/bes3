@@ -7,7 +7,7 @@ import { buildPageMetadata } from '@/lib/metadata'
 export const metadata: Metadata = buildPageMetadata({
   title: 'Privacy Policy',
   description:
-    'Read how Bes3 handles subscriber, operational, and admin data while keeping the buyer-first product promise aligned with privacy expectations.',
+    'Read how Bes3 handles subscriber and internal admin data while keeping the buyer-first product promise aligned with privacy expectations.',
   path: '/privacy'
 })
 
@@ -15,8 +15,8 @@ export default function PrivacyPage() {
   const summaryCards = [
     {
       label: 'What Bes3 stores',
-      title: 'Operational and subscriber data only',
-      description: 'Bes3 stores the minimum information needed to run the public site, secure the internal CMS, and deliver newsletter updates people explicitly asked for.'
+      title: 'Only site and subscriber data',
+      description: 'Bes3 stores the minimum information needed to run the public site, secure the internal admin area, and deliver newsletter updates people explicitly asked for.'
     },
     {
       label: 'What Bes3 does not do',
@@ -32,8 +32,8 @@ export default function PrivacyPage() {
 
   const buyerPromises = [
     'Newsletter signups are used to deliver the price watch, category brief, or deal updates that the subscriber actually selected.',
-    'Internal administrator and session records exist to protect the CMS and publishing workflow, not to profile public readers.',
-    'Product, article, and settings records are operational content data used to render Bes3 pages and maintain the site.'
+    'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
+    'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]
 
   const routeCards = [
@@ -71,7 +71,7 @@ export default function PrivacyPage() {
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Plain-language summary</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Bes3 stores only the operational and subscriber information required to run the site, protect the internal system, and deliver the buyer-facing updates people intentionally requested.
+                  Bes3 stores only the site and subscriber information required to run the site, protect the internal system, and deliver the updates people intentionally requested.
                 </p>
               </div>
             </div>
@@ -132,21 +132,21 @@ export default function PrivacyPage() {
             <p>Last Updated: April 4, 2026</p>
             <h2>Privacy Policy</h2>
             <p>
-              Bes3 stores only the operational and subscriber information required to run the site, deliver newsletter updates, and maintain platform security.
+              Bes3 stores only the site and subscriber information required to run the site, deliver newsletter updates, and maintain platform security.
             </p>
             <h3>Data we store</h3>
             <ul>
-              <li>Administrator accounts and session records used to secure the internal CMS.</li>
-              <li>Affiliate product records, article metadata, and operational settings required to publish Bes3 pages.</li>
+              <li>Administrator accounts and sign-in records used to secure the internal CMS.</li>
+              <li>Affiliate product records, article metadata, and site settings required to publish Bes3 pages.</li>
               <li>Newsletter signups submitted through the site, including the preference information needed to deliver the selected updates.</li>
             </ul>
             <h3>How we use it</h3>
             <p>
-              We use the information above to operate Bes3, maintain publishing workflows, and deliver the buyer-facing content and email updates you requested.
+              We use the information above to run Bes3, keep publishing working, and deliver the content and email updates you requested.
             </p>
             <h3>What we do not claim</h3>
             <p>
-              Bes3 does not position itself as a broad social network, ad network, or data brokerage surface. The public site is a buying-guide product, and its data handling is intended to stay inside that operational scope.
+              Bes3 is not a social network, ad network, or data broker. The public site is a buying guide, and its data handling is meant to stay inside that purpose.
             </p>
             <h3>Questions</h3>
             <p>

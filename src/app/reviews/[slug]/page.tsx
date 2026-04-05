@@ -108,7 +108,7 @@ export default async function ReviewPage({
     {
       name: 'Validate against product details',
       text: article.product?.slug
-        ? 'Open the product page when you need specs, pricing, and merchant context before acting on the review.'
+        ? 'Open the product page when you need specs, pricing, and current store details before acting on the review.'
         : 'Use the review itself as the main source of truth when a separate product page is not available yet.'
     },
     {
@@ -183,7 +183,7 @@ export default async function ReviewPage({
       eyebrow: 'Deep Dive',
       title: article.product?.slug ? 'Open the product page' : 'Stay with this review',
       description: article.product?.slug
-        ? 'Move into the product page when this recommendation is already credible enough and you want specs, pricing, and merchant context.'
+        ? 'Move into the product page when this recommendation is already credible enough and you want specs, pricing, and current store details.'
         : 'Use this review as the main answer when a separate product page is not available yet.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
       label: article.product?.slug ? 'Open product details' : 'Keep reading this review'
