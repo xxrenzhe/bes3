@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DealsCountdown } from '@/components/site/DealsCountdown'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -113,6 +114,9 @@ export default async function DealsPage() {
               <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-primary">Current snapshot</p>
               <p className="mt-3 text-4xl font-black">{products.length}</p>
               <p className="mt-2 text-sm text-muted-foreground">Deals currently surfaced on Bes3</p>
+              <div className="mt-5">
+                <DealsCountdown />
+              </div>
             </div>
           </div>
         </section>

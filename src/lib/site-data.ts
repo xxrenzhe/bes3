@@ -20,6 +20,32 @@ export interface ProductRecord {
   updatedAt: string | null
 }
 
+export async function getProductGalleryImageUrls(productId: number, limit: number = 6): Promise<string[]> {
+  if (!Number.isInteger(productId) || productId <= 0) return []
+
+  const db = await getDatabase()
+  const rows = await db.query<{ public_url: string }>(
+    `
+      SELECT public_url
+      FROM product_media_assets
+      WHERE product_id = ?
+        AND is_public = 1
+        AND asset_role IN ('hero', 'gallery')
+      ORDER BY
+        CASE asset_role
+          WHEN 'hero' THEN 0
+          WHEN 'gallery' THEN 1
+          ELSE 2
+        END,
+        id ASC
+      LIMIT ?
+    `,
+    [productId, limit]
+  )
+
+  return Array.from(new Set(rows.map((row) => row.public_url).filter(Boolean)))
+}
+
 export interface ArticleRecord {
   id: number
   productId: number | null

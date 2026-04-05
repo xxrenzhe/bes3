@@ -2,10 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { GuideTableOfContents } from '@/components/site/GuideTableOfContents'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
-import { normalizeEditorialHtml } from '@/lib/editorial-html'
+import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -88,6 +89,7 @@ export default async function GuidePage({
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.'
+  const guideDocument = prepareEditorialHtmlWithToc(article.contentHtml)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: category ? categoryLabel : 'Directory', path: category ? `/categories/${category}` : '/directory' },
@@ -270,10 +272,11 @@ export default async function GuidePage({
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-            <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: normalizeEditorialHtml(article.contentHtml) }} />
+            <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: guideDocument.html }} />
           </article>
 
           <aside className="space-y-6">
+            <GuideTableOfContents entries={guideDocument.toc} />
             {relatedReview ? (
               <Link href={getArticlePath(relatedReview.type, relatedReview.slug)} className="block rounded-[2rem] bg-white p-6 shadow-panel transition-transform hover:-translate-y-1">
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Lead Review</p>

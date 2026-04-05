@@ -47,6 +47,7 @@ export type ShellDictionary = {
   footerCompany: string
   footerHome: string
   footerCategories: string
+  footerSiteMap: string
   footerShortlist: string
   footerDescription: string
   localeSwitcherLabel: string
@@ -81,6 +82,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCompany: 'Company',
     footerHome: 'Home',
     footerCategories: 'Categories',
+    footerSiteMap: 'Site Map',
     footerShortlist: 'Shortlist',
     footerDescription: 'Bes3 helps you compare products, read honest reviews, and find verified deals without the usual hype.',
     localeSwitcherLabel: 'Language'
@@ -101,6 +103,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCompany: 'Empresa',
     footerHome: 'Inicio',
     footerCategories: 'Categorías',
+    footerSiteMap: 'Mapa del sitio',
     footerShortlist: 'Lista corta',
     footerDescription: 'Bes3 te ayuda a comparar productos, leer reseñas honestas y encontrar ofertas verificadas sin el ruido habitual.',
     localeSwitcherLabel: 'Idioma'
@@ -121,6 +124,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCompany: 'Unternehmen',
     footerHome: 'Startseite',
     footerCategories: 'Kategorien',
+    footerSiteMap: 'Sitemap',
     footerShortlist: 'Merkliste',
     footerDescription: 'Bes3 hilft dir, Produkte zu vergleichen, ehrliche Tests zu lesen und verifizierte Angebote ohne üblichen Hype zu finden.',
     localeSwitcherLabel: 'Sprache'
@@ -141,6 +145,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCompany: 'Entreprise',
     footerHome: 'Accueil',
     footerCategories: 'Catégories',
+    footerSiteMap: 'Plan du site',
     footerShortlist: 'Sélection',
     footerDescription: 'Bes3 vous aide à comparer des produits, lire des avis honnêtes et trouver des offres vérifiées sans le battage habituel.',
     localeSwitcherLabel: 'Langue'
@@ -161,6 +166,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCompany: '会社情報',
     footerHome: 'ホーム',
     footerCategories: 'カテゴリ',
+    footerSiteMap: 'サイトマップ',
     footerShortlist: '候補リスト',
     footerDescription: 'Bes3 は製品比較、率直なレビュー、検証済みセールをまとめて、無駄な煽りなしで判断を助けます。',
     localeSwitcherLabel: '言語'

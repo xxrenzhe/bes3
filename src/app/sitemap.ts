@@ -44,7 +44,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
   }
 
-  for (const route of ['', '/about', '/brands', '/contact', '/deals', '/directory', '/newsletter', '/shortlist', '/start', '/tools', '/privacy', '/terms']) {
+  for (const route of ['', '/about', '/brands', '/contact', '/deals', '/directory', '/newsletter', '/shortlist', '/site-map', '/start', '/tools', '/privacy', '/terms']) {
     pushLocalizedRoute(route, siteFreshness)
   }
 

@@ -21,6 +21,7 @@ const PUBLIC_PATHS = [
   '/contact',
   '/deals',
   '/search',
+  '/site-map',
   '/directory',
   '/newsletter',
   '/privacy',

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatrix'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -246,6 +247,33 @@ export default async function ComparisonPage({
       badge: winner === contenders.right ? 'Recommended' : 'Alternative'
     }
   ]
+  const comparisonMatrixRows = [
+    {
+      label: 'Recommendation',
+      left: winner === contenders.left ? 'Recommended winner for most buyers.' : 'Worth keeping as the backup option.',
+      right: winner === contenders.right ? 'Recommended winner for most buyers.' : 'Worth keeping as the backup option.'
+    },
+    {
+      label: 'Who should consider it',
+      left: scoreCards[0].detail,
+      right: scoreCards[1].detail
+    },
+    {
+      label: 'Current price context',
+      left: winner === contenders.left ? priceLabel : 'Use the full breakdown below for the price tradeoff.',
+      right: winner === contenders.right ? priceLabel : 'Use the full breakdown below for the price tradeoff.'
+    },
+    {
+      label: 'Last checked',
+      left: formatEditorialDate(snapshotDate),
+      right: formatEditorialDate(snapshotDate)
+    },
+    {
+      label: 'Best next move',
+      left: winner === contenders.left ? 'Open the winner details or check the live price.' : 'Keep this as the fallback if your priorities differ.',
+      right: winner === contenders.right ? 'Open the winner details or check the live price.' : 'Keep this as the fallback if your priorities differ.'
+    }
+  ]
 
   return (
     <PublicShell>
@@ -376,6 +404,13 @@ export default async function ComparisonPage({
             </div>
           </div>
         </section>
+
+        <ComparisonSummaryMatrix
+          leftTitle={contenders.left}
+          rightTitle={contenders.right}
+          winner={winner}
+          rows={comparisonMatrixRows}
+        />
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
