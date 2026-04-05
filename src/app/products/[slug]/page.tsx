@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
+import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
@@ -19,6 +20,7 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
+import { buildProductDecisionContent } from '@/lib/decision-content'
 import {
   getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
@@ -230,6 +232,12 @@ export default async function ProductPage({
     href: string
     label: string
   }>
+  const decisionModules = buildProductDecisionContent(product, 'product', {
+    nextStepTitle: 'Move with the clearest next step',
+    nextStepDescription: comparisonArticle
+      ? 'Validate this product, then compare it or switch into a price watch instead of reopening a broad search.'
+      : 'Use the product page to validate fit, then either click through or keep the category on watch.'
+  })
 
   return (
     <PublicShell>
@@ -325,6 +333,13 @@ export default async function ProductPage({
             </div>
           </div>
         </section>
+
+        <DecisionContentPanel
+          modules={decisionModules}
+          title="Reusable product decision blocks"
+          description="These structured modules turn the product page into more than one long read: they can also support search, feeds, and assistant answers."
+          compact
+        />
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
