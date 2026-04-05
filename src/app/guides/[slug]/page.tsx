@@ -8,6 +8,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
@@ -25,6 +26,7 @@ export async function generateMetadata({
       title: 'Guide Not Found',
       description: 'This Bes3 buying guide is unavailable.',
       path: `/guides/${slug}`,
+      locale: getRequestLocale(),
       robots: {
         index: false,
         follow: false
@@ -41,6 +43,7 @@ export async function generateMetadata({
       pickMetadataDescription(article.seoDescription, article.summary) ||
       'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.',
     path: `/guides/${article.slug}`,
+    locale: getRequestLocale(),
     image: article.heroImageUrl || article.product?.heroImageUrl,
     type: 'article',
     category: categoryLabel || undefined,
@@ -209,7 +212,7 @@ export default async function GuidePage({
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Guide freshness</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Last checked</p>
                 <p className="mt-3 text-lg font-black">{formatEditorialDate(snapshotDate)}</p>
                 <p className="mt-2 text-sm leading-7 text-slate-200">{getFreshnessLabel(snapshotDate)}</p>
               </div>

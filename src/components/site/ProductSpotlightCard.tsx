@@ -60,7 +60,7 @@ export function ProductSpotlightCard({
 
         <div className="grid gap-3 sm:grid-cols-3">
           <div className="rounded-[1.25rem] bg-muted p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Price snapshot</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Current price</p>
             <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}</p>
           </div>
           <div className="rounded-[1.25rem] bg-muted p-4">

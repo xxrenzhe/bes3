@@ -4,6 +4,7 @@ import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, toTitleCaseWords } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { slugify } from '@/lib/slug'
 
@@ -41,6 +42,7 @@ export async function generateMetadata({
     title,
     description,
     path: '/newsletter',
+    locale: getRequestLocale(),
     robots: {
       index: !hasPrefill,
       follow: true

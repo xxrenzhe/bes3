@@ -1,0 +1,864 @@
+import { load } from 'cheerio'
+import { importPKCS8, SignJWT } from 'jose'
+import { getDatabase } from '@/lib/db'
+import { SUPPORTED_LOCALES } from '@/lib/i18n'
+import { getSettingValueOrEnv } from '@/lib/settings'
+import { toAbsoluteUrl } from '@/lib/site-url'
+
+type PublishEventStatus = 'success' | 'warning' | 'error' | 'skipped'
+
+type SyndicationTarget = {
+  id: string
+  platformName: string
+  type: 'webhook'
+  endpoint: string
+  authToken?: string
+  enabled?: boolean
+  headers?: Record<string, string>
+}
+
+type SyndicationPagePayload = {
+  seoPageId: number | null
+  path: string
+  title: string
+  description: string
+  canonicalUrl: string
+  excerpt: string
+  heroImageUrl: string | null
+  publishedAt: string | null
+  articleType: string | null
+  productName: string | null
+  brand: string | null
+  category: string | null
+  previewMarkdown: string
+}
+
+type LinkInspectionIssueType = 'http_error' | 'out_of_stock' | 'missing_destination' | 'timeout' | 'unknown'
+
+export type PublishDispatchSummary = {
+  pingomatic: PublishEventStatus
+  googleIndexing: PublishEventStatus
+  syndication: PublishEventStatus
+}
+
+export type LinkInspectorSummary = {
+  runId: number
+  status: string
+  totalChecked: number
+  issuesFound: number
+  brokenCount: number
+  outOfStockCount: number
+  finishedAt: string | null
+}
+
+export type SeoOpsSummary = {
+  supportedLocales: string[]
+  lastLinkInspectorRun: LinkInspectorSummary | null
+  latestLinkIssues: Array<{
+    id: number
+    productId: number | null
+    productName: string | null
+    sourceUrl: string
+    finalUrl: string | null
+    httpStatus: number | null
+    issueType: string | null
+    issueDetail: string | null
+    checkedAt: string
+  }>
+  recentIndexingEvents: Array<{
+    id: number
+    status: string
+    payloadJson: string | null
+    createdAt: string
+  }>
+  recentSyndicationEvents: Array<{
+    id: number
+    status: string
+    payloadJson: string | null
+    createdAt: string
+  }>
+}
+
+const GOOGLE_INDEXING_SCOPE = 'https://www.googleapis.com/auth/indexing'
+const GOOGLE_TOKEN_ENDPOINT = 'https://oauth2.googleapis.com/token'
+const GOOGLE_INDEXING_ENDPOINT = 'https://indexing.googleapis.com/v3/urlNotifications:publish'
+const OUT_OF_STOCK_PATTERNS = [
+  'currently unavailable',
+  'out of stock',
+  'sold out',
+  'temporarily unavailable',
+  'no longer available',
+  'unavailable'
+]
+
+function sanitizeText(value: string | null | undefined) {
+  return String(value || '')
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+function truncate(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength - 1).trimEnd()}…`
+}
+
+async function recordPublishEvent(eventType: string, status: PublishEventStatus, payload: unknown, seoPageId?: number | null) {
+  const db = await getDatabase()
+  await db.exec(
+    'INSERT INTO publish_events (seo_page_id, event_type, status, payload_json) VALUES (?, ?, ?, ?)',
+    [seoPageId || null, eventType, status, JSON.stringify(payload)]
+  )
+}
+
+async function getSiteIdentity() {
+  const siteName = await getSettingValueOrEnv('seo', 'siteName', undefined, 'Bes3')
+  const siteUrl = await getSettingValueOrEnv('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL', 'http://localhost:3000')
+  return {
+    siteName,
+    siteUrl: siteUrl.replace(/\/+$/, '')
+  }
+}
+
+function buildPreviewMarkdown(payload: Omit<SyndicationPagePayload, 'previewMarkdown'>) {
+  const header = `# ${payload.title}`
+  const excerpt = payload.excerpt || payload.description
+  const imageLine = payload.heroImageUrl ? `![${payload.title}](${payload.heroImageUrl})` : ''
+  return [header, excerpt, imageLine, `Original: ${payload.canonicalUrl}`, 'Canonical tag: rel="canonical"'].filter(Boolean).join('\n\n')
+}
+
+function extractExcerpt(contentHtml: string | null | undefined, fallbackSummary: string, fallbackDescription: string) {
+  if (contentHtml) {
+    const $ = load(contentHtml)
+    const paragraphs = $('p')
+      .map((_, node) => sanitizeText($(node).text()))
+      .get()
+      .filter(Boolean)
+      .slice(0, 2)
+    if (paragraphs.length > 0) {
+      return truncate(paragraphs.join(' '), 420)
+    }
+  }
+
+  return truncate(sanitizeText(fallbackSummary || fallbackDescription), 420)
+}
+
+async function parseSyndicationTargets(): Promise<SyndicationTarget[]> {
+  const raw = await getSettingValueOrEnv('seo', 'syndicationTargetsJson', 'SEO_SYNDICATION_TARGETS_JSON', '[]')
+  try {
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed
+      .filter((item): item is SyndicationTarget => {
+        return Boolean(
+          item &&
+            typeof item === 'object' &&
+            !Array.isArray(item) &&
+            item.type === 'webhook' &&
+            typeof item.endpoint === 'string' &&
+            typeof item.platformName === 'string' &&
+            typeof item.id === 'string'
+        )
+      })
+      .filter((item) => item.enabled !== false)
+  } catch {
+    return []
+  }
+}
+
+async function loadSyndicationPayloads(paths: string[]): Promise<SyndicationPagePayload[]> {
+  const uniquePaths = Array.from(new Set(paths.filter(Boolean)))
+  if (uniquePaths.length === 0) return []
+
+  const db = await getDatabase()
+  const placeholders = uniquePaths.map(() => '?').join(', ')
+  const rows = await db.query<{
+    seo_page_id: number | null
+    pathname: string
+    seo_title: string | null
+    meta_description: string
+    canonical_url: string | null
+    seo_published_at: string | null
+    article_type: string | null
+    article_summary: string | null
+    content_html: string | null
+    article_hero_image_url: string | null
+    article_published_at: string | null
+    product_name: string | null
+    brand: string | null
+    category: string | null
+    product_hero_image_url: string | null
+  }>(
+    `
+      SELECT sp.id AS seo_page_id,
+        sp.pathname,
+        sp.title AS seo_title,
+        sp.meta_description,
+        sp.canonical_url,
+        sp.published_at AS seo_published_at,
+        a.article_type,
+        a.summary AS article_summary,
+        a.content_html,
+        a.hero_image_url AS article_hero_image_url,
+        a.published_at AS article_published_at,
+        p.product_name,
+        p.brand,
+        p.category,
+        (
+          SELECT public_url
+          FROM product_media_assets m
+          WHERE m.product_id = p.id AND m.asset_role = 'hero'
+          ORDER BY m.id ASC
+          LIMIT 1
+        ) AS product_hero_image_url
+      FROM seo_pages sp
+      LEFT JOIN articles a ON a.id = sp.article_id
+      LEFT JOIN products p ON p.id = a.product_id
+      WHERE sp.pathname IN (${placeholders})
+      ORDER BY sp.updated_at DESC, sp.id DESC
+    `,
+    uniquePaths
+  )
+
+  return rows.map((row) => {
+    const canonicalUrl = toAbsoluteUrl(row.canonical_url || row.pathname)
+    const description = sanitizeText(row.meta_description)
+    const excerpt = extractExcerpt(row.content_html, sanitizeText(row.article_summary), description)
+    const payload = {
+      seoPageId: row.seo_page_id,
+      path: row.pathname,
+      title: sanitizeText(row.seo_title) || description || row.pathname,
+      description,
+      canonicalUrl,
+      excerpt,
+      heroImageUrl: row.article_hero_image_url || row.product_hero_image_url || null,
+      publishedAt: row.article_published_at || row.seo_published_at,
+      articleType: row.article_type,
+      productName: row.product_name,
+      brand: row.brand,
+      category: row.category,
+      previewMarkdown: ''
+    }
+
+    return {
+      ...payload,
+      previewMarkdown: buildPreviewMarkdown(payload)
+    }
+  })
+}
+
+async function fetchGoogleAccessToken() {
+  const rawServiceAccount = await getSettingValueOrEnv('seo', 'googleServiceAccountJson', 'GOOGLE_SERVICE_ACCOUNT_JSON', '')
+  if (!rawServiceAccount.trim()) {
+    throw new Error('Missing Google service account JSON')
+  }
+
+  const credentials = JSON.parse(rawServiceAccount) as {
+    client_email?: string
+    private_key?: string
+  }
+  const clientEmail = sanitizeText(credentials.client_email)
+  const privateKey = String(credentials.private_key || '').replace(/\\n/g, '\n').trim()
+  if (!clientEmail || !privateKey) {
+    throw new Error('Google service account JSON is incomplete')
+  }
+
+  const key = await importPKCS8(privateKey, 'RS256')
+  const now = Math.floor(Date.now() / 1000)
+  const assertion = await new SignJWT({ scope: GOOGLE_INDEXING_SCOPE })
+    .setProtectedHeader({ alg: 'RS256', typ: 'JWT' })
+    .setIssuer(clientEmail)
+    .setSubject(clientEmail)
+    .setAudience(GOOGLE_TOKEN_ENDPOINT)
+    .setIssuedAt(now)
+    .setExpirationTime(now + 3600)
+    .sign(key)
+
+  const response = await fetch(GOOGLE_TOKEN_ENDPOINT, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/x-www-form-urlencoded'
+    },
+    body: new URLSearchParams({
+      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
+      assertion
+    })
+  })
+
+  if (!response.ok) {
+    throw new Error(`Google token request failed with ${response.status}`)
+  }
+
+  const body = await response.json()
+  if (!body.access_token) {
+    throw new Error('Google token response did not include access_token')
+  }
+
+  return String(body.access_token)
+}
+
+async function notifyPingOMatic(paths: string[], seoPageId?: number | null): Promise<PublishEventStatus> {
+  const enabled = await getSettingValueOrEnv('seo', 'pingomaticEnabled', 'PINGOMATIC_ENABLED', 'false')
+  if (enabled !== 'true') {
+    await recordPublishEvent('seo.pingomatic', 'skipped', { reason: 'disabled', paths }, seoPageId)
+    return 'skipped'
+  }
+
+  const { siteName, siteUrl } = await getSiteIdentity()
+  try {
+    await fetch(
+      `https://rpc.pingomatic.com/ping/?title=${encodeURIComponent(siteName)}&blogurl=${encodeURIComponent(siteUrl)}&rssurl=${encodeURIComponent(`${siteUrl}/sitemap.xml`)}`,
+      { method: 'GET' }
+    )
+    await recordPublishEvent('seo.pingomatic', 'success', { paths, siteUrl }, seoPageId)
+    return 'success'
+  } catch (error: any) {
+    await recordPublishEvent('seo.pingomatic', 'error', { paths, error: error?.message || String(error) }, seoPageId)
+    return 'error'
+  }
+}
+
+async function notifyGoogleIndexing(paths: string[], seoPageId?: number | null): Promise<PublishEventStatus> {
+  const enabled = await getSettingValueOrEnv('seo', 'googleIndexingEnabled', 'GOOGLE_INDEXING_ENABLED', 'false')
+  if (enabled !== 'true') {
+    await recordPublishEvent('seo.google_indexing', 'skipped', { reason: 'disabled', paths }, seoPageId)
+    return 'skipped'
+  }
+
+  const accessToken = await fetchGoogleAccessToken().catch(async (error: any) => {
+    await recordPublishEvent('seo.google_indexing', 'error', { paths, error: error?.message || String(error) }, seoPageId)
+    throw error
+  })
+
+  const absoluteUrls = paths.map((path) => toAbsoluteUrl(path))
+  const results: Array<{ url: string; status: string; body: unknown }> = []
+  let hadError = false
+
+  for (const url of absoluteUrls) {
+    try {
+      const response = await fetch(GOOGLE_INDEXING_ENDPOINT, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`
+        },
+        body: JSON.stringify({
+          url,
+          type: 'URL_UPDATED'
+        })
+      })
+      const body = await response.json().catch(() => null)
+      if (!response.ok) {
+        hadError = true
+      }
+      results.push({
+        url,
+        status: response.ok ? 'success' : 'error',
+        body
+      })
+    } catch (error: any) {
+      hadError = true
+      results.push({
+        url,
+        status: 'error',
+        body: { message: error?.message || String(error) }
+      })
+    }
+  }
+
+  const status: PublishEventStatus = hadError ? 'warning' : 'success'
+  await recordPublishEvent('seo.google_indexing', status, { urls: results }, seoPageId)
+  return status
+}
+
+async function dispatchSyndication(paths: string[], seoPageId?: number | null): Promise<PublishEventStatus> {
+  const enabled = await getSettingValueOrEnv('seo', 'syndicationEnabled', 'SEO_SYNDICATION_ENABLED', 'false')
+  if (enabled !== 'true') {
+    await recordPublishEvent('seo.syndication', 'skipped', { reason: 'disabled', paths }, seoPageId)
+    return 'skipped'
+  }
+
+  const [targets, payloads] = await Promise.all([parseSyndicationTargets(), loadSyndicationPayloads(paths)])
+  if (targets.length === 0) {
+    await recordPublishEvent('seo.syndication', 'warning', { reason: 'no-targets', paths }, seoPageId)
+    return 'warning'
+  }
+  if (payloads.length === 0) {
+    await recordPublishEvent('seo.syndication', 'skipped', { reason: 'no-pages', paths }, seoPageId)
+    return 'skipped'
+  }
+
+  const results: Array<{ targetId: string; platformName: string; path: string; status: string; detail: string }> = []
+  let hadError = false
+
+  for (const target of targets) {
+    for (const payload of payloads) {
+      try {
+        const response = await fetch(target.endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            ...(target.authToken ? { Authorization: `Bearer ${target.authToken}` } : {}),
+            ...(target.headers || {})
+          },
+          body: JSON.stringify({
+            source: 'bes3',
+            target: {
+              id: target.id,
+              platformName: target.platformName,
+              type: target.type
+            },
+            page: {
+              ...payload,
+              suggestedCanonicalTag: `<link rel="canonical" href="${payload.canonicalUrl}" />`
+            }
+          })
+        })
+
+        if (!response.ok) {
+          hadError = true
+          results.push({
+            targetId: target.id,
+            platformName: target.platformName,
+            path: payload.path,
+            status: 'error',
+            detail: `HTTP ${response.status}`
+          })
+          continue
+        }
+
+        results.push({
+          targetId: target.id,
+          platformName: target.platformName,
+          path: payload.path,
+          status: 'success',
+          detail: 'dispatched'
+        })
+      } catch (error: any) {
+        hadError = true
+        results.push({
+          targetId: target.id,
+          platformName: target.platformName,
+          path: payload.path,
+          status: 'error',
+          detail: error?.message || String(error)
+        })
+      }
+    }
+  }
+
+  const status: PublishEventStatus = hadError ? 'warning' : 'success'
+  await recordPublishEvent(
+    'seo.syndication',
+    status,
+    {
+      targets: targets.map((item) => ({ id: item.id, platformName: item.platformName })),
+      results
+    },
+    seoPageId
+  )
+  return status
+}
+
+export async function dispatchSeoNotifications(paths: string[], seoPageId?: number | null): Promise<PublishDispatchSummary> {
+  const uniquePaths = Array.from(new Set(paths.filter(Boolean)))
+  if (uniquePaths.length === 0) {
+    return {
+      pingomatic: 'skipped',
+      googleIndexing: 'skipped',
+      syndication: 'skipped'
+    }
+  }
+
+  const [pingomatic, googleIndexing, syndication] = await Promise.all([
+    notifyPingOMatic(uniquePaths, seoPageId),
+    notifyGoogleIndexing(uniquePaths, seoPageId).catch(() => 'error' as const),
+    dispatchSyndication(uniquePaths, seoPageId).catch(() => 'error' as const)
+  ])
+
+  return {
+    pingomatic,
+    googleIndexing,
+    syndication
+  }
+}
+
+type InspectableProduct = {
+  id: number
+  product_name: string
+  destination_url: string
+}
+
+async function createLinkInspectorRun(): Promise<number> {
+  const db = await getDatabase()
+  const result = await db.exec(
+    `
+      INSERT INTO link_inspector_runs (status, started_at)
+      VALUES ('running', CURRENT_TIMESTAMP)
+    `
+  )
+  return Number(result.lastInsertRowid)
+}
+
+async function finalizeLinkInspectorRun(input: {
+  runId: number
+  status: string
+  totalChecked: number
+  issuesFound: number
+  brokenCount: number
+  outOfStockCount: number
+  payload: unknown
+}) {
+  const db = await getDatabase()
+  await db.exec(
+    `
+      UPDATE link_inspector_runs
+      SET status = ?, total_checked = ?, issues_found = ?, broken_count = ?, out_of_stock_count = ?,
+          payload_json = ?, finished_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    [
+      input.status,
+      input.totalChecked,
+      input.issuesFound,
+      input.brokenCount,
+      input.outOfStockCount,
+      JSON.stringify(input.payload),
+      input.runId
+    ]
+  )
+}
+
+function classifyInspection(content: string, httpStatus: number | null): { status: string; issueType: LinkInspectionIssueType | null; issueDetail: string | null } {
+  if (!httpStatus) {
+    return {
+      status: 'issue',
+      issueType: 'unknown',
+      issueDetail: 'No HTTP status recorded'
+    }
+  }
+
+  if (httpStatus >= 400) {
+    return {
+      status: 'issue',
+      issueType: 'http_error',
+      issueDetail: `HTTP ${httpStatus}`
+    }
+  }
+
+  const normalized = sanitizeText(content).toLowerCase()
+  const matchedPattern = OUT_OF_STOCK_PATTERNS.find((pattern) => normalized.includes(pattern))
+  if (matchedPattern) {
+    return {
+      status: 'issue',
+      issueType: 'out_of_stock',
+      issueDetail: `Matched inventory signal: ${matchedPattern}`
+    }
+  }
+
+  return {
+    status: 'ok',
+    issueType: null,
+    issueDetail: null
+  }
+}
+
+async function inspectDestinationUrl(url: string) {
+  const response = await fetch(url, {
+    method: 'GET',
+    redirect: 'follow',
+    signal: AbortSignal.timeout(15000),
+    headers: {
+      'User-Agent': 'Mozilla/5.0 (compatible; Bes3LinkInspector/1.0; +https://bes3.local)',
+      'Accept-Language': 'en-US,en;q=0.9'
+    }
+  })
+  const contentType = response.headers.get('content-type') || ''
+  const text = contentType.includes('text/html') ? truncate(await response.text(), 4000) : ''
+  const classification = classifyInspection(text, response.status)
+
+  return {
+    finalUrl: response.url || url,
+    httpStatus: response.status,
+    responseSnippet: text ? truncate(text, 800) : null,
+    status: classification.status,
+    issueType: classification.issueType,
+    issueDetail: classification.issueDetail
+  }
+}
+
+async function listInspectableProducts(limit: number): Promise<InspectableProduct[]> {
+  const db = await getDatabase()
+  return db.query<InspectableProduct>(
+    `
+      SELECT id, product_name, COALESCE(resolved_url, source_affiliate_link) AS destination_url
+      FROM products
+      WHERE COALESCE(resolved_url, source_affiliate_link) IS NOT NULL
+      ORDER BY updated_at DESC, id DESC
+      LIMIT ?
+    `,
+    [limit]
+  )
+}
+
+async function saveLinkInspectionResult(input: {
+  runId: number
+  productId: number
+  productName: string
+  sourceUrl: string
+  finalUrl: string | null
+  httpStatus: number | null
+  status: string
+  issueType: string | null
+  issueDetail: string | null
+  responseSnippet: string | null
+}) {
+  const db = await getDatabase()
+  await db.exec(
+    `
+      INSERT INTO link_inspector_results (
+        run_id, product_id, product_name, source_url, final_url, http_status, status, issue_type, issue_detail, response_snippet
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `,
+    [
+      input.runId,
+      input.productId,
+      input.productName,
+      input.sourceUrl,
+      input.finalUrl,
+      input.httpStatus,
+      input.status,
+      input.issueType,
+      input.issueDetail,
+      input.responseSnippet
+    ]
+  )
+}
+
+async function mapLimit() {
+  const configured = Number(await getSettingValueOrEnv('seo', 'linkInspectorMaxUrls', 'LINK_INSPECTOR_MAX_URLS', '60'))
+  if (!Number.isFinite(configured) || configured <= 0) return 60
+  return Math.min(250, configured)
+}
+
+export async function runLinkInspector(limit?: number): Promise<LinkInspectorSummary> {
+  const enabled = await getSettingValueOrEnv('seo', 'linkInspectorEnabled', 'LINK_INSPECTOR_ENABLED', 'true')
+  const runId = await createLinkInspectorRun()
+
+  if (enabled !== 'true') {
+    await finalizeLinkInspectorRun({
+      runId,
+      status: 'skipped',
+      totalChecked: 0,
+      issuesFound: 0,
+      brokenCount: 0,
+      outOfStockCount: 0,
+      payload: { reason: 'disabled' }
+    })
+    await recordPublishEvent('seo.link_inspector', 'skipped', { runId, reason: 'disabled' })
+    return {
+      runId,
+      status: 'skipped',
+      totalChecked: 0,
+      issuesFound: 0,
+      brokenCount: 0,
+      outOfStockCount: 0,
+      finishedAt: null
+    }
+  }
+
+  const actualLimit = limit || (await mapLimit())
+  const products = await listInspectableProducts(actualLimit)
+  let issuesFound = 0
+  let brokenCount = 0
+  let outOfStockCount = 0
+
+  for (const product of products) {
+    try {
+      const inspected = await inspectDestinationUrl(product.destination_url)
+      if (inspected.status !== 'ok') {
+        issuesFound += 1
+        if (inspected.issueType === 'http_error') brokenCount += 1
+        if (inspected.issueType === 'out_of_stock') outOfStockCount += 1
+      }
+      await saveLinkInspectionResult({
+        runId,
+        productId: product.id,
+        productName: product.product_name,
+        sourceUrl: product.destination_url,
+        finalUrl: inspected.finalUrl,
+        httpStatus: inspected.httpStatus,
+        status: inspected.status,
+        issueType: inspected.issueType,
+        issueDetail: inspected.issueDetail,
+        responseSnippet: inspected.responseSnippet
+      })
+    } catch (error: any) {
+      issuesFound += 1
+      brokenCount += 1
+      await saveLinkInspectionResult({
+        runId,
+        productId: product.id,
+        productName: product.product_name,
+        sourceUrl: product.destination_url,
+        finalUrl: null,
+        httpStatus: null,
+        status: 'issue',
+        issueType: error?.name === 'TimeoutError' ? 'timeout' : 'unknown',
+        issueDetail: error?.message || String(error),
+        responseSnippet: null
+      })
+    }
+  }
+
+  await finalizeLinkInspectorRun({
+    runId,
+    status: issuesFound > 0 ? 'completed_with_issues' : 'completed',
+    totalChecked: products.length,
+    issuesFound,
+    brokenCount,
+    outOfStockCount,
+    payload: {
+      checkedProductIds: products.map((product) => product.id)
+    }
+  })
+  await recordPublishEvent('seo.link_inspector', issuesFound > 0 ? 'warning' : 'success', {
+    runId,
+    totalChecked: products.length,
+    issuesFound,
+    brokenCount,
+    outOfStockCount
+  })
+
+  return {
+    runId,
+    status: issuesFound > 0 ? 'completed_with_issues' : 'completed',
+    totalChecked: products.length,
+    issuesFound,
+    brokenCount,
+    outOfStockCount,
+    finishedAt: new Date().toISOString()
+  }
+}
+
+async function listRecentPublishedPaths(limit: number = 12): Promise<string[]> {
+  const db = await getDatabase()
+  const rows = await db.query<{ pathname: string }>(
+    `
+      SELECT pathname
+      FROM seo_pages
+      WHERE status = 'published'
+      ORDER BY updated_at DESC, id DESC
+      LIMIT ?
+    `,
+    [limit]
+  )
+  return rows.map((row) => row.pathname)
+}
+
+export async function rerunGoogleIndexing(paths?: string[]) {
+  const selectedPaths = paths && paths.length > 0 ? paths : await listRecentPublishedPaths()
+  return notifyGoogleIndexing(selectedPaths)
+}
+
+export async function rerunSyndication(paths?: string[]) {
+  const selectedPaths = paths && paths.length > 0 ? paths : await listRecentPublishedPaths()
+  return dispatchSyndication(selectedPaths)
+}
+
+export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
+  const db = await getDatabase()
+  const [lastRun, latestIssues, recentIndexingEvents, recentSyndicationEvents] = await Promise.all([
+    db.queryOne<{
+      id: number
+      status: string
+      total_checked: number
+      issues_found: number
+      broken_count: number
+      out_of_stock_count: number
+      finished_at: string | null
+    }>(
+      `
+        SELECT id, status, total_checked, issues_found, broken_count, out_of_stock_count, finished_at
+        FROM link_inspector_runs
+        ORDER BY id DESC
+        LIMIT 1
+      `
+    ),
+    db.query<{
+      id: number
+      product_id: number | null
+      product_name: string | null
+      source_url: string
+      final_url: string | null
+      http_status: number | null
+      issue_type: string | null
+      issue_detail: string | null
+      checked_at: string
+    }>(
+      `
+        SELECT id, product_id, product_name, source_url, final_url, http_status, issue_type, issue_detail, checked_at
+        FROM link_inspector_results
+        WHERE status <> 'ok'
+        ORDER BY checked_at DESC, id DESC
+        LIMIT 12
+      `
+    ),
+    db.query<{ id: number; status: string; payload_json: string | null; created_at: string }>(
+      `
+        SELECT id, status, payload_json, created_at
+        FROM publish_events
+        WHERE event_type = 'seo.google_indexing'
+        ORDER BY id DESC
+        LIMIT 8
+      `
+    ),
+    db.query<{ id: number; status: string; payload_json: string | null; created_at: string }>(
+      `
+        SELECT id, status, payload_json, created_at
+        FROM publish_events
+        WHERE event_type = 'seo.syndication'
+        ORDER BY id DESC
+        LIMIT 8
+      `
+    )
+  ])
+
+  return {
+    supportedLocales: [...SUPPORTED_LOCALES],
+    lastLinkInspectorRun: lastRun
+      ? {
+          runId: lastRun.id,
+          status: lastRun.status,
+          totalChecked: lastRun.total_checked,
+          issuesFound: lastRun.issues_found,
+          brokenCount: lastRun.broken_count,
+          outOfStockCount: lastRun.out_of_stock_count,
+          finishedAt: lastRun.finished_at
+        }
+      : null,
+    latestLinkIssues: latestIssues.map((item) => ({
+      id: item.id,
+      productId: item.product_id,
+      productName: item.product_name,
+      sourceUrl: item.source_url,
+      finalUrl: item.final_url,
+      httpStatus: item.http_status,
+      issueType: item.issue_type,
+      issueDetail: item.issue_detail,
+      checkedAt: item.checked_at
+    })),
+    recentIndexingEvents: recentIndexingEvents.map((item) => ({
+      id: item.id,
+      status: item.status,
+      payloadJson: item.payload_json,
+      createdAt: item.created_at
+    })),
+    recentSyndicationEvents: recentSyndicationEvents.map((item) => ({
+      id: item.id,
+      status: item.status,
+      payloadJson: item.payload_json,
+      createdAt: item.created_at
+    }))
+  }
+}

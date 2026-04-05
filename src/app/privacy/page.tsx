@@ -3,13 +3,17 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Privacy Policy',
-  description:
-    'Read how Bes3 handles subscriber and internal admin data while keeping the buyer-first product promise aligned with privacy expectations.',
-  path: '/privacy'
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    title: 'Privacy Policy',
+    description:
+      'Read how Bes3 handles subscriber and internal admin data while keeping the buyer-first product promise aligned with privacy expectations.',
+    path: '/privacy',
+    locale: getRequestLocale()
+  })
+}
 
 export default function PrivacyPage() {
   const summaryCards = [
@@ -31,7 +35,7 @@ export default function PrivacyPage() {
   ]
 
   const buyerPromises = [
-    'Newsletter signups are used to deliver the price watch, category brief, or deal updates that the subscriber actually selected.',
+    'Newsletter signups are used to deliver the price watch, category updates, or deal updates that the subscriber actually selected.',
     'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]

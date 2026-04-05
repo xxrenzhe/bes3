@@ -115,11 +115,34 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const siteName = read('seo', 'siteName', undefined, 'Bes3')
   const siteTagline = read('seo', 'siteTagline', undefined, 'The Best 3 Tech Picks, Decoded.')
   const siteUrl = read('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL')
+  const pingomaticEnabled = read('seo', 'pingomaticEnabled', 'PINGOMATIC_ENABLED', 'false') === 'true'
+  const googleIndexingEnabled = read('seo', 'googleIndexingEnabled', 'GOOGLE_INDEXING_ENABLED', 'false') === 'true'
+  const googleServiceAccountJson = read('seo', 'googleServiceAccountJson', 'GOOGLE_SERVICE_ACCOUNT_JSON')
+  const syndicationEnabled = read('seo', 'syndicationEnabled', 'SEO_SYNDICATION_ENABLED', 'false') === 'true'
+  const syndicationTargetsJson = read('seo', 'syndicationTargetsJson', 'SEO_SYNDICATION_TARGETS_JSON', '[]')
+  const linkInspectorEnabled = read('seo', 'linkInspectorEnabled', 'LINK_INSPECTOR_ENABLED', 'true') === 'true'
+  const linkInspectorMaxUrls = read('seo', 'linkInspectorMaxUrls', 'LINK_INSPECTOR_MAX_URLS', '60')
   const jwtSecret = process.env.JWT_SECRET || ''
   const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
   const runtimePort = process.env.PORT || '80'
   const isJwtStrong = Boolean(jwtSecret) && !DEFAULT_JWT_SECRETS.has(jwtSecret) && jwtSecret.length >= 32
   const isAdminPasswordRotated = Boolean(adminPassword) && adminPassword !== DEFAULT_ADMIN_PASSWORD
+  let parsedSyndicationTargets: unknown[] = []
+  try {
+    const parsed = JSON.parse(syndicationTargetsJson)
+    parsedSyndicationTargets = Array.isArray(parsed) ? parsed : []
+  } catch {
+    parsedSyndicationTargets = []
+  }
+  const enabledSyndicationTargets = parsedSyndicationTargets.filter((item) => {
+    return Boolean(
+      item &&
+        typeof item === 'object' &&
+        !Array.isArray(item) &&
+        String((item as { enabled?: unknown }).enabled ?? 'true') !== 'false' &&
+        String((item as { endpoint?: unknown }).endpoint || '').trim()
+    )
+  }).length
 
   return [
     {
@@ -175,8 +198,34 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
     {
       id: 'seo',
       title: 'SEO Site',
-      status: getDiagnosticStatus([Boolean(siteName), Boolean(siteTagline), Boolean(siteUrl)]),
-      detail: `${siteName} · ${siteUrl || 'missing app URL'}`
+      status: getDiagnosticStatus([Boolean(siteName), Boolean(siteTagline), Boolean(siteUrl), pingomaticEnabled]),
+      detail: `${siteName} · ${siteUrl || 'missing app URL'} · Ping-O-Matic ${pingomaticEnabled ? 'enabled' : 'disabled'}`
+    },
+    {
+      id: 'seo-indexing',
+      title: 'Google Indexing API',
+      status: googleIndexingEnabled ? getDiagnosticStatus([Boolean(siteUrl), Boolean(googleServiceAccountJson)]) : 'missing',
+      detail: googleIndexingEnabled
+        ? googleServiceAccountJson
+          ? 'Enabled with service account JSON'
+          : 'Enabled but missing service account JSON'
+        : 'Indexing API disabled'
+    },
+    {
+      id: 'seo-syndication',
+      title: 'Syndication Targets',
+      status: syndicationEnabled ? getDiagnosticStatus([enabledSyndicationTargets > 0]) : 'missing',
+      detail: syndicationEnabled
+        ? enabledSyndicationTargets > 0
+          ? `${enabledSyndicationTargets} target(s) configured`
+          : 'Enabled but no active syndication target found'
+        : 'External syndication disabled'
+    },
+    {
+      id: 'seo-link-inspector',
+      title: 'Link Inspector',
+      status: linkInspectorEnabled ? getDiagnosticStatus([Number(linkInspectorMaxUrls) > 0]) : 'missing',
+      detail: linkInspectorEnabled ? `Enabled · up to ${linkInspectorMaxUrls} URLs per run` : 'Link inspector disabled'
     }
   ]
 }

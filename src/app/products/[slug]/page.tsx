@@ -12,6 +12,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
@@ -35,6 +36,7 @@ export async function generateMetadata({
       title: 'Product Not Found',
       description: 'This Bes3 product page is unavailable.',
       path: `/products/${slug}`,
+      locale: getRequestLocale(),
       robots: {
         index: false,
         follow: false
@@ -53,6 +55,7 @@ export async function generateMetadata({
       pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
       `${product.productName} on Bes3 includes specs, shortlist context, and fit notes before you click through to a store.`,
     path: `/products/${product.slug}`,
+    locale: getRequestLocale(),
     image: product.heroImageUrl || reviewArticle?.heroImageUrl,
     category: category || undefined,
     freshnessDate,
@@ -97,7 +100,7 @@ export default async function ProductPage({
   const howToSteps = [
     {
       name: 'Check the product fit',
-      text: 'Start with the freshness, best-for, and skip-if details on this page before price starts driving the choice.'
+      text: 'Start with the last-checked note, buyer fit, and watch-out details on this page before price starts driving the choice.'
     },
     {
       name: 'Validate the pick',
@@ -227,7 +230,7 @@ export default async function ProductPage({
               </p>
               <div className="grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Review freshness</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Last checked</p>
                   <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(snapshotDate)}</p>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{getFreshnessLabel(snapshotDate)}</p>
                 </div>
@@ -236,7 +239,7 @@ export default async function ProductPage({
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildBestFor(product, 'product')}</p>
                 </div>
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Skip if</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Watch out</p>
                   <p className="mt-2 text-sm leading-7 text-muted-foreground">{buildNotFor(product, 'product')}</p>
                 </div>
               </div>

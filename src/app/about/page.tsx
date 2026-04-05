@@ -6,16 +6,20 @@ import { SectionHeader } from '@/components/site/SectionHeader'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getRequestLocale } from '@/lib/request-locale'
 import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
-export const metadata: Metadata = buildPageMetadata({
-  title: 'Bes3 Method',
-  description:
-    'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
-  path: '/about',
-  keywords: ['bes3 method', 'product review process', 'comparison methodology', 'buying guides']
-})
+export async function generateMetadata(): Promise<Metadata> {
+  return buildPageMetadata({
+    title: 'Bes3 Method',
+    description:
+      'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
+    path: '/about',
+    locale: getRequestLocale(),
+    keywords: ['bes3 method', 'product review process', 'comparison methodology', 'buying guides']
+  })
+}
 
 export default async function AboutPage() {
   const [categories, articles, products] = await Promise.all([listCategories(), listPublishedArticles(), listPublishedProducts()])

@@ -8,6 +8,7 @@ import { getDecisionFunnelSummary } from '@/lib/decision-events'
 import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
+import { dispatchSeoNotifications } from '@/lib/seo-ops'
 import { scrapeProductPage } from '@/lib/scraper'
 import { getBrandSlug, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
@@ -980,17 +981,8 @@ async function notifyPublishedPaths(paths: string[], seoPageId?: number | null) 
   const uniquePaths = Array.from(new Set(paths.filter(Boolean)))
   if (uniquePaths.length === 0) return
 
-  const siteName = await getSettingValueOrEnv('seo', 'siteName', undefined, 'Bes3')
-  const siteUrl = await getSettingValueOrEnv('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL', 'http://localhost:3000')
-  const pingomaticEnabled = await getSettingValueOrEnv('seo', 'pingomaticEnabled', 'PINGOMATIC_ENABLED', 'false')
-
   await publishEvent('seo.publish', 'success', { paths: uniquePaths }, seoPageId)
-  if (pingomaticEnabled === 'true') {
-    await fetch(
-      `https://rpc.pingomatic.com/ping/?title=${encodeURIComponent(siteName)}&blogurl=${encodeURIComponent(siteUrl)}&rssurl=${encodeURIComponent(`${siteUrl}/sitemap.xml`)}`,
-      { method: 'GET' }
-    ).catch(() => undefined)
-  }
+  await dispatchSeoNotifications(uniquePaths, seoPageId)
 }
 
 async function buildSeoRefreshPayloads(productId: number) {
@@ -1522,14 +1514,8 @@ async function executeFullPipelineRun(
     await assertRunNotCancelled(runId)
     const pingJob = await createJob(runId, 'pingAndIndexing')
     await markRun(runId, 'running', 'pingAndIndexing')
-    const siteUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     await publishEvent('seo.publish', 'success', { reviewPath, comparisonPath }, reviewSeoPageId)
-    if (process.env.PINGOMATIC_ENABLED === 'true') {
-      await fetch(
-        `https://rpc.pingomatic.com/ping/?title=Bes3&blogurl=${encodeURIComponent(siteUrl)}&rssurl=${encodeURIComponent(`${siteUrl}/sitemap.xml`)}`,
-        { method: 'GET' }
-      ).catch(() => undefined)
-    }
+    await dispatchSeoNotifications([reviewPath, comparisonPath], reviewSeoPageId)
     await assertRunNotCancelled(runId)
     await finishJob(pingJob, 'completed', 'Ping/indexing completed')
 
