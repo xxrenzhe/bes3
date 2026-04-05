@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -197,6 +198,37 @@ export default async function BrandPage({
     href: string
     label: string
   }>
+  const seoHubSections = [
+    {
+      id: 'brand-categories',
+      eyebrow: 'Brand spokes',
+      title: `Brand + category paths for ${brand.name}`,
+      description: 'These exact-match hubs catch narrower long-tail searches without fragmenting the underlying brand coverage.',
+      links: brand.categories.slice(0, 4).map((category) => ({
+        href: `/brands/${brand.slug}/categories/${category}`,
+        label: `${brand.name} ${getCategoryLabel(category)}`,
+        note: 'Open the exact brand-and-category hub.'
+      }))
+    },
+    {
+      id: 'brand-editorial',
+      eyebrow: 'Brand coverage',
+      title: 'Lead product and editorial pages',
+      description: 'These links keep the brand page connected to the strongest product and editorial assets.',
+      links: [
+        ...brandProducts.slice(0, 2).map((product) => ({
+          href: product.slug ? `/products/${product.slug}` : `/brands/${brand.slug}`,
+          label: product.productName,
+          note: product.description || 'Open the strongest current product page.'
+        })),
+        ...brandArticles.slice(0, 2).map((article) => ({
+          href: getArticlePath(article.type, article.slug),
+          label: article.title,
+          note: article.summary || 'Open the closest review or comparison next.'
+        }))
+      ]
+    }
+  ]
 
   return (
     <PublicShell>
@@ -253,6 +285,12 @@ export default async function BrandPage({
           compatibilityFacts={compatibilityFacts}
           title="Brand policy knowledge"
           description="Bes3 uses these stored policy and compatibility notes to answer the questions product specs alone cannot settle: shipping, returns, warranty, and setup fit."
+        />
+
+        <SeoHubLinksPanel
+          title="Brand hub and spoke links"
+          description="The brand page acts like a long-tail hub: one entry point that fans out into exact brand-category pages, product pages, and editorial validation."
+          sections={seoHubSections}
         />
 
         {brandProducts.length ? (

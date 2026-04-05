@@ -7,6 +7,7 @@ import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatr
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
@@ -311,6 +312,58 @@ export default async function ComparisonPage({
       ? 'This comparison should lead either to the winning product page, a price watch, or a shortlist reset. It should not restart discovery.'
       : 'Take the winner, or reopen shortlist only if neither finalist actually fits.'
   })
+  const seoHubSections: SeoHubSection[] = [
+    {
+      id: 'comparison-outcomes',
+      eyebrow: 'Outcome paths',
+      title: 'Use the comparison result without restarting discovery',
+      description: 'These links carry the winner into the next step or let the buyer reopen the shortlist on purpose.',
+      links: compactSeoHubLinks([
+        article.product?.slug
+          ? {
+              href: `/products/${article.product.slug}`,
+              label: `${winner} product page`,
+              note: 'Validate price, evidence, and merchant context on the winning product.'
+            }
+          : null,
+        relatedReview
+          ? {
+              href: getArticlePath(relatedReview.type, relatedReview.slug),
+              label: relatedReview.title,
+              note: 'Read the supporting review if one more rationale is still needed.'
+            }
+          : null,
+        ...(category ? [{ href: `/categories/${category}#category-shortlist`, label: `${categoryLabel} shortlist hub`, note: 'Reopen the category shortlist only if neither finalist truly fits.' }] : [])
+      ])
+    },
+    {
+      id: 'comparison-neighbors',
+      eyebrow: 'Adjacent nodes',
+      title: 'Neighbor pages around the winner',
+      description: 'These spokes preserve crawl depth and buyer continuity across nearby brand and category assets.',
+      links: compactSeoHubLinks([
+        brandSlug && article.product?.brand
+          ? {
+              href: `/brands/${brandSlug}`,
+              label: `${article.product.brand} brand page`,
+              note: 'Stay on-brand if the winner makes the brand itself more interesting.'
+            }
+          : null,
+        relatedGuide
+          ? {
+              href: getArticlePath(relatedGuide.type, relatedGuide.slug),
+              label: relatedGuide.title,
+              note: 'Use the guide if the category still needs broader explanation.'
+            }
+          : null,
+        ...peerProducts.slice(0, 2).map((candidate) => ({
+          href: `/products/${candidate.slug}`,
+          label: candidate.productName,
+          note: candidate.description || `Another ${categoryLabel} option worth checking.`
+        }))
+      ])
+    }
+  ]
 
   return (
     <PublicShell>
@@ -453,6 +506,12 @@ export default async function ComparisonPage({
           modules={decisionModules}
           title="Reusable comparison decision blocks"
           description="These modules turn the comparison into structured tradeoff logic that Bes3 can reuse across pages, feeds, and agent responses."
+        />
+
+        <SeoHubLinksPanel
+          title="Comparison hub and spoke links"
+          description="This comparison stays connected to the winner, the category hub, and the surrounding editorial graph instead of becoming an orphan verdict page."
+          sections={seoHubSections}
         />
 
         <CommerceEvidencePanel
