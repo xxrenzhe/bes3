@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
+import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -19,6 +20,7 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
+import { buildArticleDecisionContent } from '@/lib/decision-content'
 import {
   getArticleBySlug,
   getBrandKnowledgeByProduct,
@@ -255,6 +257,12 @@ export default async function ReviewPage({
       label: 'Start price alert'
     }
   ]
+  const decisionModules = buildArticleDecisionContent(article, 'review', {
+    nextStepTitle: 'Use the review to move the decision',
+    nextStepDescription: relatedComparison
+      ? 'The fit is already clear enough to move toward a comparison or merchant check, rather than reading adjacent filler pages.'
+      : 'Use the product page or a price watch next if the main question is no longer product fit.'
+  })
 
   return (
     <PublicShell>
@@ -350,6 +358,12 @@ export default async function ReviewPage({
           title="Review evidence"
           description="These are the concrete offer and fact signals Bes3 checked before turning this product into a review recommendation."
           source="review-page-evidence"
+        />
+
+        <DecisionContentPanel
+          modules={decisionModules}
+          title="Reusable review decision blocks"
+          description="These modules compress the review into structured reasoning Bes3 can reuse in assistant answers, search, and feeds."
         />
 
         {article.product ? (
