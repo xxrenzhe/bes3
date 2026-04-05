@@ -103,19 +103,19 @@ export default async function ReviewPage({
   const howToSteps = [
     {
       name: 'Read the buyer fit first',
-      text: 'Use the summary, freshness, best-for, and skip-if signals to decide whether this product deserves deeper attention.'
+      text: 'Use the summary, freshness, best-for, and skip-if notes to decide whether this product deserves deeper attention.'
     },
     {
       name: 'Validate against product details',
       text: article.product?.slug
-        ? 'Open the product page when you need specs, pricing, and merchant context before acting on the verdict.'
+        ? 'Open the product page when you need specs, pricing, and merchant context before acting on the review.'
         : 'Use the review itself as the main source of truth when a separate product page is not available yet.'
     },
     {
-      name: 'Choose the next route',
+      name: 'Choose the next step',
       text: relatedComparison
-        ? 'Move into the related comparison if you are down to finalists, or switch to a price watch if timing is the only blocker left.'
-        : 'Use the category hub or a price watch if you are not ready to compare finalists yet.'
+        ? 'Move into the related comparison if you are down to finalists, or switch to a price alert if timing is the only blocker left.'
+        : 'Use the category page or a price alert if you are not ready to compare finalists yet.'
     }
   ]
   const structuredData = [
@@ -148,24 +148,24 @@ export default async function ReviewPage({
       type: 'Article'
     }),
     buildReviewSchema(article, path),
-    buildHowToSchema(path, `How to use the ${article.title} review`, 'Use the review to confirm buyer fit, validate the product details, and choose the next decision step.', howToSteps)
+    buildHowToSchema(path, `How to use the ${article.title} review`, 'Use the review to confirm buyer fit, validate the product details, and choose the next useful step.', howToSteps)
   ]
   const faqEntries = [
     {
       question: 'What should this review help me decide?',
-      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once the fit is credible, the next step is usually the product page, a comparison, or a watch flow.'
+      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once the fit is credible, the next step is usually the product page, a comparison, or a price alert.'
     },
     {
-      question: 'When should I open the brand hub from a review?',
+      question: 'When should I open the brand page from a review?',
       answer: article.product?.brand
-        ? `Open the ${article.product.brand} hub when the manufacturer itself looks promising and you want the rest of that brand's Bes3 coverage without broadening the lane too early.`
-        : 'Use the category hub instead when you still need nearby context before comparing or clicking through.'
+        ? `Open the ${article.product.brand} page when the manufacturer itself looks promising and you want the rest of that brand's Bes3 coverage without broadening your search too early.`
+        : 'Use the category page instead when you still need nearby context before comparing or clicking through.'
     },
     {
       question: 'Should I compare now or keep reading?',
       answer: relatedComparison
-        ? 'If this product already feels credible, move into the comparison next. Keep reading only if you still need the deeper rationale behind the verdict.'
-        : 'If no comparison is live yet, use the product page or category hub next instead of reopening broad research.'
+        ? 'If this product already feels credible, move into the comparison next. Keep reading only if you still need the deeper rationale behind the recommendation.'
+        : 'If no comparison is live yet, use the product page or category page next instead of reopening broad research.'
     }
   ]
 
@@ -181,43 +181,43 @@ export default async function ReviewPage({
   const reviewRoutes = [
     {
       eyebrow: 'Deep Dive',
-      title: article.product?.slug ? 'Open the product page' : 'Stay with the verdict',
+      title: article.product?.slug ? 'Open the product page' : 'Stay with this review',
       description: article.product?.slug
         ? 'Move into the product page when this recommendation is already credible enough and you want specs, pricing, and merchant context.'
-        : 'Use this review as the main decision source when a separate product deep-dive is not available yet.',
+        : 'Use this review as the main answer when a separate product page is not available yet.',
       href: article.product?.slug ? `/products/${article.product.slug}` : getArticlePath(article.type, article.slug),
-      label: article.product?.slug ? 'Open product deep-dive' : 'Keep reading this review'
+      label: article.product?.slug ? 'Open product details' : 'Keep reading this review'
     },
     {
       eyebrow: 'Compare',
-      title: relatedComparison ? 'Pressure-test the finalist' : 'Narrow the lane first',
+      title: relatedComparison ? 'Compare the finalist' : 'Narrow the shortlist first',
       description: relatedComparison
-        ? 'Use the comparison when this pick is strong enough to deserve a head-to-head decision against nearby alternatives.'
-        : 'If you are not ready to decide, go back to the category lane and narrow real alternatives before comparing.',
+        ? 'Use the comparison when this pick is strong enough to deserve a head-to-head comparison against nearby alternatives.'
+        : 'If you are not ready to decide, go back to the category page and narrow real alternatives before comparing.',
       href: relatedComparison
         ? getArticlePath(relatedComparison.type, relatedComparison.slug)
         : category
           ? `/categories/${category}#category-shortlist`
           : '/shortlist',
-      label: relatedComparison ? 'Open related comparison' : 'Browse shortlist lane'
+      label: relatedComparison ? 'Open related comparison' : 'Browse shortlist'
     },
     {
       eyebrow: 'Learn',
-      title: relatedGuide ? 'Read the supporting guide' : 'Browse the category hub',
+      title: relatedGuide ? 'Read the supporting guide' : 'Browse the category page',
       description: relatedGuide
-        ? 'Use the guide if you still need buying heuristics, compatibility context, or setup advice before finalizing the shortlist.'
-        : 'Return to the category hub when you still need broader coverage before acting on this verdict.',
+        ? 'Use the guide if you still need category basics, compatibility context, or setup advice before finalizing the shortlist.'
+        : 'Return to the category page when you still need broader coverage before acting on this review.',
       href: relatedGuide ? getArticlePath(relatedGuide.type, relatedGuide.slug) : category ? `/categories/${category}` : '/directory',
-      label: relatedGuide ? 'Open category guide' : 'Visit category hub'
+      label: relatedGuide ? 'Open category guide' : 'Visit category page'
     },
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track the market',
-      description: 'If the purchase is waiting on a better price, convert this review into a price-watch flow instead of reopening research from scratch later.',
+      description: 'If the purchase is waiting on a better price, turn this review into a price alert instead of reopening research from scratch later.',
       href: category
         ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
         : '/newsletter?intent=deals&cadence=priority',
-      label: 'Start price watch'
+      label: 'Start price alert'
     }
   ]
 
@@ -237,14 +237,12 @@ export default async function ReviewPage({
           </nav>
           <div className="space-y-6">
             <div className="inline-flex items-center rounded-full bg-secondary px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-secondary-foreground">
-              Top 3 Review Landing
+              Review
             </div>
             <h1 className="max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight text-balance sm:text-6xl">
               {article.title}
             </h1>
             <div className="flex flex-wrap items-center gap-4 border-y border-border/30 py-6 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">Buyer-first editorial shortlist</span>
-              <span className="hidden sm:inline">•</span>
               <span>{article.publishedAt ? `Updated ${new Date(article.publishedAt).toLocaleDateString()}` : 'Freshly curated'}</span>
             </div>
             <p className="max-w-3xl text-lg leading-8 text-muted-foreground">
@@ -272,15 +270,15 @@ export default async function ReviewPage({
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">How To Use This Review</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the verdict, then choose the next move.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the review, then choose the next move.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into a watch flow if timing is the only remaining blocker.
+                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into an alert if timing is the only remaining blocker.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best current route</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedComparison
-                    ? `This review already has enough adjacent coverage in ${categoryLabel} to support a head-to-head decision. Move into the comparison once the core fit feels right.`
+                    ? `This review already has enough adjacent coverage in ${categoryLabel} to support a head-to-head comparison. Move into the comparison once the core fit feels right.`
                     : 'This review is the clearest current answer. Use the product page or a price watch next if you do not need another comparison yet.'}
                 </p>
               </div>
@@ -320,7 +318,7 @@ export default async function ReviewPage({
                         {product?.productName || pick.title}
                       </h2>
                       <p className="text-sm leading-7 text-muted-foreground">
-                        <strong className="text-foreground">BLUF:</strong> {pick.summary || buildFallbackNote(product?.productName || pick.title)}
+                        <strong className="text-foreground">Bottom line:</strong> {pick.summary || buildFallbackNote(product?.productName || pick.title)}
                       </p>
                     </div>
 
@@ -330,7 +328,7 @@ export default async function ReviewPage({
                         <p className="mt-2 text-lg font-black text-foreground">{formatPriceSnapshot(product?.priceAmount, product?.priceCurrency || 'USD')}</p>
                       </div>
                       <div className="rounded-[1.25rem] bg-muted p-4">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Reader Signal</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">User rating</p>
                         <p className="mt-2 text-lg font-black text-foreground">
                           {product?.rating ? `${product.rating.toFixed(1)} / 5` : 'No rating yet'}
                         </p>
@@ -345,12 +343,12 @@ export default async function ReviewPage({
 
                     <div className="grid gap-6 md:grid-cols-2">
                       <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#eefaf5,#f6fffb)] p-6">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Bes3 Radar Score</p>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Quick scorecard</p>
                         <div className="mt-5 space-y-4">
                           {[
                             ['Build quality', product?.rating ? Math.min(9.8, product.rating * 2) : 8.2],
-                            ['Buyer confidence', product?.reviewCount ? Math.min(9.9, 6 + Math.log10(product.reviewCount + 1)) : 7.4],
-                            ['Value signal', product?.priceAmount ? Math.max(6.6, 10 - Math.min(product.priceAmount / 200, 3)) : 7.8]
+                            ['Review volume', product?.reviewCount ? Math.min(9.9, 6 + Math.log10(product.reviewCount + 1)) : 7.4],
+                            ['Price value', product?.priceAmount ? Math.max(6.6, 10 - Math.min(product.priceAmount / 200, 3)) : 7.8]
                           ].map(([label, score]) => (
                             <div key={label}>
                               <div className="mb-1 flex items-center justify-between text-xs font-semibold text-foreground">
@@ -381,7 +379,7 @@ export default async function ReviewPage({
                     {product ? <ShortlistActionBar item={toShortlistItem(product)} compact source="review-page" /> : null}
                     {index === 0 ? (
                       <p className="text-xs leading-6 text-muted-foreground">
-                        Confidence signals: {confidenceSignals.join(' · ')}
+                        Why this looks strong: {confidenceSignals.join(' · ')}
                       </p>
                     ) : null}
                   </div>
@@ -417,26 +415,26 @@ export default async function ReviewPage({
           <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
             <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="editorial-kicker">Stay In This Lane</p>
+                <p className="editorial-kicker">Keep Browsing Nearby</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep the related pages one click away.</h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                This review should connect you to the surrounding category graph: the category hub, the supporting guide, the head-to-head comparison, and nearby product pages.
+                This review should connect you to the surrounding pages: the category page, the supporting guide, the head-to-head comparison, and nearby product pages.
               </p>
             </div>
             <div className="mt-6 grid gap-4 lg:grid-cols-3">
               {category ? (
                 <Link href={`/categories/${category}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Hub</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{categoryLabel}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category lane if you still need adjacent verdicts, comparisons, or shortlist coverage.</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category page if you still need adjacent reviews, comparisons, or shortlist coverage.</p>
                 </Link>
               ) : null}
               {brandSlug && article.product?.brand ? (
                 <Link href={`/brands/${brandSlug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Hub</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{article.product.brand}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay inside the same manufacturer lane if the brand is already plausible and you want related Bes3 coverage in one place.</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay with the same manufacturer if the brand already looks promising and you want related Bes3 coverage in one place.</p>
                 </Link>
               ) : null}
               {relatedGuide ? (
@@ -455,10 +453,10 @@ export default async function ReviewPage({
               ) : null}
               {peerProducts.map((candidate) => (
                 <Link key={candidate.id} href={`/products/${candidate.slug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Peer Product</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Similar Product</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{candidate.productName}</h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {candidate.description || `Another ${categoryLabel} option in the same buying lane.`}
+                    {candidate.description || `Another ${categoryLabel} option worth checking.`}
                   </p>
                 </Link>
               ))}
@@ -469,7 +467,7 @@ export default async function ReviewPage({
         <SeoFaqSection
           title="Review-page questions, answered clearly."
           entries={faqEntries}
-          description="This FAQ exposes the review's intended job in the decision flow: validate fit, route to the next best page, and avoid reopening the full research loop."
+          description="This FAQ explains what the review is supposed to help you decide and what page to open next."
         />
       </div>
     </PublicShell>
