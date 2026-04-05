@@ -1,9 +1,9 @@
 import { NextResponse } from 'next/server'
-import { listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 export async function GET() {
-  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
 
   return NextResponse.json({
     generatedAt: new Date().toISOString(),
@@ -18,6 +18,15 @@ export async function GET() {
       rating: product.rating,
       reviewCount: product.reviewCount,
       heroImageUrl: product.heroImageUrl,
+      priceLastCheckedAt: product.priceLastCheckedAt,
+      offerLastCheckedAt: product.offerLastCheckedAt,
+      attributeCompletenessScore: product.attributeCompletenessScore,
+      dataConfidenceScore: product.dataConfidenceScore,
+      sourceCount: product.sourceCount,
+      offerCount: product.offerCount,
+      evidenceCount: product.evidenceCount,
+      freshness: product.freshness,
+      bestOffer: product.bestOffer,
       path: product.slug ? `/products/${product.slug}` : null,
       absoluteUrl: product.slug ? toAbsoluteUrl(`/products/${product.slug}`) : null,
       updatedAt: product.updatedAt,
