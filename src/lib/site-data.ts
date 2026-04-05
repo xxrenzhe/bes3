@@ -132,6 +132,37 @@ export interface BrandCategoryRecord {
   description: string | null
 }
 
+export interface BrandPolicyRecord {
+  id: number
+  brandName: string
+  brandSlug: string
+  shippingPolicy: string | null
+  returnPolicy: string | null
+  warrantyPolicy: string | null
+  discountWindow: string | null
+  supportPolicy: string | null
+  sourceUrl: string | null
+  sourceType: string
+  confidenceScore: number
+  lastVerifiedAt: string | null
+  updatedAt: string | null
+}
+
+export interface CompatibilityFactRecord {
+  id: number
+  brandName: string
+  brandSlug: string
+  category: string | null
+  factType: string
+  factLabel: string
+  factValue: string
+  sourceUrl: string | null
+  sourceType: string
+  confidenceScore: number
+  isVerified: boolean
+  lastCheckedAt: string | null
+}
+
 function parseJsonObject(value: string | null): Record<string, string> {
   if (!value) return {}
   try {
@@ -254,6 +285,41 @@ function mapArticleRow(row: any): ArticleRecord {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     product
+  }
+}
+
+function mapBrandPolicyRow(row: any): BrandPolicyRecord {
+  return {
+    id: row.id,
+    brandName: row.brand_name,
+    brandSlug: row.brand_slug,
+    shippingPolicy: row.shipping_policy || null,
+    returnPolicy: row.return_policy || null,
+    warrantyPolicy: row.warranty_policy || null,
+    discountWindow: row.discount_window || null,
+    supportPolicy: row.support_policy || null,
+    sourceUrl: row.source_url || null,
+    sourceType: row.source_type || 'editorial',
+    confidenceScore: Number(row.confidence_score || 0),
+    lastVerifiedAt: row.last_verified_at || null,
+    updatedAt: row.updated_at || null
+  }
+}
+
+function mapCompatibilityFactRow(row: any): CompatibilityFactRecord {
+  return {
+    id: row.id,
+    brandName: row.brand_name,
+    brandSlug: row.brand_slug,
+    category: row.category || null,
+    factType: row.fact_type,
+    factLabel: row.fact_label,
+    factValue: row.fact_value,
+    sourceUrl: row.source_url || null,
+    sourceType: row.source_type || 'editorial',
+    confidenceScore: Number(row.confidence_score || 0),
+    isVerified: parseBoolean(row.is_verified),
+    lastCheckedAt: row.last_checked_at || null
   }
 }
 
@@ -762,6 +828,92 @@ export async function listBrands(): Promise<BrandRecord[]> {
 
       return left.name.localeCompare(right.name)
     })
+}
+
+export async function listBrandPolicies(): Promise<BrandPolicyRecord[]> {
+  const db = await getDatabase()
+  const rows = await db.query<any>(
+    `
+      SELECT id, brand_name, brand_slug, shipping_policy, return_policy, warranty_policy, discount_window,
+        support_policy, source_url, source_type, confidence_score, last_verified_at, updated_at
+      FROM brand_policies
+      ORDER BY confidence_score DESC, last_verified_at DESC, brand_name ASC
+    `
+  )
+
+  return rows.map(mapBrandPolicyRow)
+}
+
+export async function getBrandPolicyBySlug(brandSlug: string): Promise<BrandPolicyRecord | null> {
+  if (!brandSlug.trim()) return null
+
+  const db = await getDatabase()
+  const row = await db.queryOne<any>(
+    `
+      SELECT id, brand_name, brand_slug, shipping_policy, return_policy, warranty_policy, discount_window,
+        support_policy, source_url, source_type, confidence_score, last_verified_at, updated_at
+      FROM brand_policies
+      WHERE brand_slug = ?
+      LIMIT 1
+    `,
+    [brandSlug]
+  )
+
+  return row ? mapBrandPolicyRow(row) : null
+}
+
+export async function listCompatibilityFacts(options?: {
+  brandSlug?: string
+  category?: string
+  limit?: number
+}): Promise<CompatibilityFactRecord[]> {
+  const db = await getDatabase()
+  const conditions: string[] = []
+  const params: Array<string | number> = []
+
+  if (options?.brandSlug) {
+    conditions.push('brand_slug = ?')
+    params.push(options.brandSlug)
+  }
+
+  if (options?.category) {
+    conditions.push('(category = ? OR category IS NULL)')
+    params.push(options.category)
+  }
+
+  const limit = Math.max(1, options?.limit || 12)
+  params.push(limit)
+
+  const rows = await db.query<any>(
+    `
+      SELECT id, brand_name, brand_slug, category, fact_type, fact_label, fact_value, source_url, source_type,
+        confidence_score, is_verified, last_checked_at
+      FROM compatibility_facts
+      ${conditions.length ? `WHERE ${conditions.join(' AND ')}` : ''}
+      ORDER BY
+        CASE WHEN category IS NULL THEN 1 ELSE 0 END ASC,
+        confidence_score DESC,
+        last_checked_at DESC,
+        id DESC
+      LIMIT ?
+    `,
+    params
+  )
+
+  return rows.map(mapCompatibilityFactRow)
+}
+
+export async function listBrandCompatibilityFacts(brandSlug: string, options?: {
+  category?: string
+  limit?: number
+}): Promise<CompatibilityFactRecord[]> {
+  if (!brandSlug.trim()) return []
+
+  return listCompatibilityFacts({
+    brandSlug,
+    category: options?.category,
+    limit: options?.limit
+  })
 }
 
 export async function listBrandCategoryHubs(): Promise<BrandCategoryRecord[]> {

@@ -194,6 +194,43 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS brand_policies (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      brand_name TEXT NOT NULL,
+      brand_slug TEXT NOT NULL UNIQUE,
+      shipping_policy TEXT,
+      return_policy TEXT,
+      warranty_policy TEXT,
+      discount_window TEXT,
+      support_policy TEXT,
+      source_url TEXT,
+      source_type TEXT NOT NULL DEFAULT 'editorial',
+      confidence_score REAL NOT NULL DEFAULT 0.8,
+      last_verified_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS compatibility_facts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      brand_name TEXT NOT NULL,
+      brand_slug TEXT NOT NULL,
+      category TEXT,
+      fact_type TEXT NOT NULL,
+      fact_label TEXT NOT NULL,
+      fact_value TEXT NOT NULL,
+      source_url TEXT,
+      source_type TEXT NOT NULL DEFAULT 'editorial',
+      confidence_score REAL NOT NULL DEFAULT 0.8,
+      is_verified INTEGER NOT NULL DEFAULT 0,
+      last_checked_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(brand_slug, category, fact_label, fact_value)
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS keyword_opportunities (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -484,6 +521,32 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'product_attribute_facts', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
   await ensureColumn(db, 'product_attribute_facts', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
 
+  await ensureColumn(db, 'brand_policies', 'brand_name', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'brand_slug', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'shipping_policy', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'return_policy', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'warranty_policy', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'discount_window', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'support_policy', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'source_url', 'TEXT')
+  await ensureColumn(db, 'brand_policies', 'source_type', "TEXT NOT NULL DEFAULT 'editorial'")
+  await ensureColumn(db, 'brand_policies', 'confidence_score', 'REAL NOT NULL DEFAULT 0.8')
+  await ensureColumn(db, 'brand_policies', 'last_verified_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'brand_policies', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  await ensureColumn(db, 'compatibility_facts', 'brand_name', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'brand_slug', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'category', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'fact_type', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'fact_label', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'fact_value', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'source_url', 'TEXT')
+  await ensureColumn(db, 'compatibility_facts', 'source_type', "TEXT NOT NULL DEFAULT 'editorial'")
+  await ensureColumn(db, 'compatibility_facts', 'confidence_score', 'REAL NOT NULL DEFAULT 0.8')
+  await ensureColumn(db, 'compatibility_facts', 'is_verified', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'compatibility_facts', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'compatibility_facts', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
   await ensureIndex(
     db,
     'idx_products_offer_last_checked_at',
@@ -508,6 +571,16 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
     db,
     'idx_product_attribute_facts_product_key',
     'CREATE INDEX idx_product_attribute_facts_product_key ON product_attribute_facts (product_id, attribute_key, last_checked_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_brand_policies_brand_slug',
+    'CREATE INDEX idx_brand_policies_brand_slug ON brand_policies (brand_slug)'
+  )
+  await ensureIndex(
+    db,
+    'idx_compatibility_facts_brand_category',
+    'CREATE INDEX idx_compatibility_facts_brand_category ON compatibility_facts (brand_slug, category, last_checked_at)'
   )
 }
 

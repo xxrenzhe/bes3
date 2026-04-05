@@ -2,7 +2,9 @@ import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } 
 import { normalizeMerchantSource, buildMerchantExitPath } from '@/lib/merchant-links'
 import type {
   ArticleRecord,
+  BrandPolicyRecord,
   CommerceProductRecord,
+  CompatibilityFactRecord,
   ProductAttributeFactRecord,
   ProductOfferRecord
 } from '@/lib/site-data'
@@ -112,6 +114,38 @@ export function buildCommerceDisclaimers(product?: CommerceProductRecord | null)
   ]
 }
 
+export function serializeBrandKnowledge(brandName: string, policy: BrandPolicyRecord | null, compatibilityFacts: CompatibilityFactRecord[]) {
+  if (!policy && !compatibilityFacts.length) return null
+
+  return {
+    brandName,
+    policy: policy
+      ? {
+          shippingPolicy: policy.shippingPolicy,
+          returnPolicy: policy.returnPolicy,
+          warrantyPolicy: policy.warrantyPolicy,
+          discountWindow: policy.discountWindow,
+          supportPolicy: policy.supportPolicy,
+          confidence: policy.confidenceScore,
+          sourceType: policy.sourceType,
+          sourceUrl: policy.sourceUrl,
+          lastVerifiedAt: policy.lastVerifiedAt
+        }
+      : null,
+    compatibilityFacts: compatibilityFacts.map((fact) => ({
+      category: fact.category,
+      factType: fact.factType,
+      factLabel: fact.factLabel,
+      factValue: fact.factValue,
+      confidence: fact.confidenceScore,
+      isVerified: fact.isVerified,
+      sourceType: fact.sourceType,
+      sourceUrl: fact.sourceUrl,
+      lastCheckedAt: fact.lastCheckedAt
+    }))
+  }
+}
+
 function dedupeAlternativeOffers(bestOffer: ProductOfferRecord | null, offers: ProductOfferRecord[]) {
   return offers
     .filter((offer) => !bestOffer || offer.id !== bestOffer.id)
@@ -123,6 +157,8 @@ export function serializeCommerceProduct(
   options?: {
     offers?: ProductOfferRecord[]
     attributeFacts?: ProductAttributeFactRecord[]
+    brandPolicy?: BrandPolicyRecord | null
+    compatibilityFacts?: CompatibilityFactRecord[]
     source?: string | null
     visitorId?: string | null
   }
@@ -186,6 +222,7 @@ export function serializeCommerceProduct(
       source: options?.source,
       visitorId: options?.visitorId
     }),
+    brandKnowledge: serializeBrandKnowledge(product.brand || product.productName, options?.brandPolicy || null, options?.compatibilityFacts || []),
     disclaimers: buildCommerceDisclaimers(product)
   }
 }

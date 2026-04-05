@@ -331,6 +331,81 @@ async function ensureSeedContent(): Promise<void> {
       ]
     )
   )
+
+}
+
+async function ensureSeedBrandKnowledge(): Promise<void> {
+  const db = await getDatabase()
+  const brandSlug = slugify('Midea')
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO brand_policies (
+          brand_name,
+          brand_slug,
+          shipping_policy,
+          return_policy,
+          warranty_policy,
+          discount_window,
+          support_policy,
+          source_type,
+          confidence_score,
+          last_verified_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, 'editorial', ?, CURRENT_TIMESTAMP)
+      `,
+      [
+        'Midea',
+        brandSlug,
+        'Most large-appliance orders should be treated as scheduled delivery items, so buyers should confirm shipping timing before checkout.',
+        'Return eligibility can vary by merchant on major appliances and freezer products, so buyers should verify pickup and restocking rules before ordering.',
+        'Expect standard limited-appliance warranty coverage and confirm the exact term on the merchant or manufacturer support page before purchase.',
+        'The best discount windows usually cluster around major seasonal sale events and merchant coupon pushes rather than constant everyday pricing.',
+        'Use merchant delivery details plus the official brand support flow as the final source of truth for installation, warranty, and post-purchase service.',
+        0.82
+      ]
+    )
+  )
+
+  const compatibilityFacts = [
+    {
+      factType: 'placement',
+      factLabel: 'Placement planning',
+      factValue: 'Chest freezers usually need ventilation clearance and enough lid-opening room, so small-room placement should be checked before purchase.'
+    },
+    {
+      factType: 'power',
+      factLabel: 'Power expectations',
+      factValue: 'Garage or utility-room appliance buyers should verify outlet availability and operating-environment guidance before relying on year-round placement.'
+    },
+    {
+      factType: 'delivery',
+      factLabel: 'Delivery fit',
+      factValue: 'Measure doorways, stairs, and final placement space before ordering because delivery constraints matter as much as freezer capacity.'
+    }
+  ]
+
+  for (const fact of compatibilityFacts) {
+    await ignoreUniqueViolation(() =>
+      db.exec(
+        `
+          INSERT INTO compatibility_facts (
+            brand_name,
+            brand_slug,
+            category,
+            fact_type,
+            fact_label,
+            fact_value,
+            source_type,
+            confidence_score,
+            is_verified,
+            last_checked_at
+          ) VALUES (?, ?, ?, ?, ?, ?, 'editorial', ?, ?, CURRENT_TIMESTAMP)
+        `,
+        ['Midea', brandSlug, 'home-office', fact.factType, fact.factLabel, fact.factValue, 0.78, 1]
+      )
+    )
+  }
 }
 
 export async function bootstrapApplication(): Promise<void> {
@@ -341,6 +416,7 @@ export async function bootstrapApplication(): Promise<void> {
       await ensureDefaultSettings()
       await ensureDefaultPrompts()
       await ensureSeedContent()
+      await ensureSeedBrandKnowledge()
     })().catch((error) => {
       bootstrapPromise = null
       throw error
