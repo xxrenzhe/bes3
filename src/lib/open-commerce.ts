@@ -1,3 +1,4 @@
+import { buildArticleDecisionContent, buildProductDecisionContent } from '@/lib/decision-content'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
 import { normalizeMerchantSource, buildMerchantExitPath } from '@/lib/merchant-links'
 import type {
@@ -243,6 +244,12 @@ export function serializeCommerceProduct(
     alternativeOffers,
     fitSummary,
     notForSummary,
+    contentModules: buildProductDecisionContent(product, 'product', {
+      nextStepTitle: 'Use the next Bes3 step with intent',
+      nextStepDescription: product.slug
+        ? `Open ${product.productName} on Bes3 or move into price history, shortlist, or merchant checking based on what is still unresolved.`
+        : 'Use the current recommendation to decide between shortlist, alerts, or merchant checking.'
+    }),
     evidence: {
       offerCount: product.offerCount,
       evidenceCount: product.evidenceCount,
@@ -300,6 +307,14 @@ export function serializeCommerceArticle(article: ArticleRecord) {
       fitSummary: article.product ? buildBestFor(article.product, article.type === 'comparison' ? 'comparison' : 'review') : null,
       notForSummary: article.product ? buildNotFor(article.product, article.type === 'comparison' ? 'comparison' : 'review') : null
     },
+    contentModules: buildArticleDecisionContent(article, article.type === 'guide' ? 'guide' : article.type === 'comparison' ? 'comparison' : 'review', {
+      nextStepTitle: 'Use the editorial page to move, not linger',
+      nextStepDescription: article.type === 'comparison'
+        ? 'Accept the winner, reopen shortlist, or switch to a price watch based on what still blocks the decision.'
+        : article.type === 'guide'
+          ? 'Use this guide to narrow the field, then move into products or reviews instead of staying broad.'
+          : 'Validate the fit here, then move into the product page, comparison, or alert flow.'
+    }),
     actions: [
       {
         type: 'open_editorial',

@@ -5,6 +5,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatrix'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
+import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -19,6 +20,7 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
+import { buildArticleDecisionContent } from '@/lib/decision-content'
 import {
   getArticleBySlug,
   getBrandKnowledgeByProduct,
@@ -303,6 +305,12 @@ export default async function ComparisonPage({
       right: winner === contenders.right ? 'Open the winner details or check the live price.' : 'Keep this as the fallback if your priorities differ.'
     }
   ]
+  const decisionModules = buildArticleDecisionContent(article, 'comparison', {
+    nextStepTitle: 'Use the winner or reopen the shortlist on purpose',
+    nextStepDescription: article.product?.slug
+      ? 'This comparison should lead either to the winning product page, a price watch, or a shortlist reset. It should not restart discovery.'
+      : 'Take the winner, or reopen shortlist only if neither finalist actually fits.'
+  })
 
   return (
     <PublicShell>
@@ -439,6 +447,12 @@ export default async function ComparisonPage({
           rightTitle={contenders.right}
           winner={winner}
           rows={comparisonMatrixRows}
+        />
+
+        <DecisionContentPanel
+          modules={decisionModules}
+          title="Reusable comparison decision blocks"
+          description="These modules turn the comparison into structured tradeoff logic that Bes3 can reuse across pages, feeds, and agent responses."
         />
 
         <CommerceEvidencePanel
