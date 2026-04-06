@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { GuideTableOfContents } from '@/components/site/GuideTableOfContents'
+import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -10,6 +10,7 @@ import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -25,13 +26,13 @@ export async function generateMetadata({
 
   if (!article || article.type !== 'guide') {
     return buildPageMetadata({
-      title: 'Guide Not Found',
-      description: 'This Bes3 buying guide is unavailable.',
+      title: `${deslugify(slug) || 'Guide'} Recovery`,
+      description: 'The exact Bes3 buying guide is unavailable. Use nearby guides, products, and category routes instead of a dead end.',
       path: `/guides/${slug}`,
       locale: getRequestLocale(),
       robots: {
         index: false,
-        follow: false
+        follow: true
       }
     })
   }
@@ -63,8 +64,62 @@ export default async function GuidePage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const article = await getArticleBySlug((await params).slug)
-  if (!article || article.type !== 'guide') notFound()
+  const slug = (await params).slug
+  const article = await getArticleBySlug(slug)
+
+  if (!article || article.type !== 'guide') {
+    const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+    const categories = Array.from(
+      new Set([
+        ...allProducts.map((product) => product.category).filter(Boolean),
+        ...allArticles.map((candidate) => candidate.product?.category).filter(Boolean)
+      ] as string[])
+    ).sort((left, right) => left.localeCompare(right))
+    const queryLabel = deslugify(slug) || slug
+
+    return (
+      <PublicShell>
+        <RouteRecoveryPanel
+          kicker="Guide Recovery"
+          title="This exact buying guide is not available."
+          description="Bes3 could not find that exact guide slug, so this route falls back to nearby guides, likely products, and category hubs instead of a dead end."
+          queryLabel={queryLabel}
+          searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=guide`}
+          sections={[
+            {
+              eyebrow: 'Nearby guides',
+              title: 'Closest guide pages',
+              links: findSuggestedArticles(allArticles, slug, { type: 'guide', limit: 6 }).map((candidate) => ({
+                href: getArticlePath(candidate.type, candidate.slug),
+                label: candidate.title,
+                note: candidate.summary || 'Open the nearest guide page.'
+              }))
+            },
+            {
+              eyebrow: 'Nearby products',
+              title: 'Likely product matches',
+              links: findSuggestedProducts(allProducts, slug, 6)
+                .filter((candidate) => candidate.slug)
+                .map((candidate) => ({
+                  href: `/products/${candidate.slug}`,
+                  label: candidate.productName,
+                  note: candidate.description || 'Open the closest product page.'
+                }))
+            },
+            {
+              eyebrow: 'Nearby categories',
+              title: 'Category hubs that may match',
+              links: findSuggestedCategories(categories, slug, 6).map((category) => ({
+                href: buildCategoryPath(category),
+                label: getCategoryLabel(category),
+                note: 'Open the category hub if the guide topic is still right but the exact slug was wrong.'
+              }))
+            }
+          ]}
+        />
+      </PublicShell>
+    )
+  }
 
   const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
   const category = article.product?.category || null

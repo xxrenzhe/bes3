@@ -4,7 +4,7 @@ import { ShortlistProvider } from '@/components/site/ShortlistProvider'
 import { ToasterProvider } from '@/components/ToasterProvider'
 import { bootstrapApplication } from '@/lib/bootstrap'
 import { DEFAULT_SITE_NAME } from '@/lib/constants'
-import { addLocaleToPath, buildLanguageAlternates, getHtmlLang, getOgLocale } from '@/lib/i18n'
+import { addLocaleToPath, buildLanguageAlternatesWithDefault, getHtmlLang, getOgLocale } from '@/lib/i18n'
 import { getRequestLocale } from '@/lib/request-locale'
 import { getSiteUrl } from '@/lib/site-url'
 import { buildOrganizationSchema, buildWebsiteSchema } from '@/lib/structured-data'
@@ -13,7 +13,7 @@ import './globals.css'
 export async function generateMetadata(): Promise<Metadata> {
   const locale = getRequestLocale()
   const localizedHome = addLocaleToPath('/', locale)
-  const alternates = buildLanguageAlternates('/')
+  const alternates = buildLanguageAlternatesWithDefault('/')
 
   return {
     title: {

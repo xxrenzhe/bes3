@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -10,6 +11,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
+import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
@@ -34,6 +36,19 @@ export async function generateMetadata({
     leadProduct?.updatedAt ||
     leadProduct?.publishedAt ||
     null
+
+  if (!articles.length && !products.length) {
+    return buildPageMetadata({
+      title: `${toTitleCaseWords(deslugify(slug) || 'Category')} Recovery`,
+      description: 'The exact Bes3 category page is not published yet. Use nearby category, product, and editorial routes instead of ending on a thin page.',
+      path: `/categories/${slug}`,
+      locale: getRequestLocale(),
+      robots: {
+        index: false,
+        follow: true
+      }
+    })
+  }
 
   return buildPageMetadata({
     title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
@@ -71,6 +86,61 @@ export default async function CategoryPage({
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
   const resolvedCategory = products[0]?.category || articles[0]?.product?.category || slug
   const categoryLabel = getCategoryLabel(resolvedCategory)
+  const hasCoverage = Boolean(products.length || articles.length)
+
+  if (!hasCoverage) {
+    const categories = Array.from(
+      new Set([
+        ...allProducts.map((product) => product.category).filter(Boolean),
+        ...allArticles.map((article) => article.product?.category).filter(Boolean)
+      ] as string[])
+    ).sort((left, right) => left.localeCompare(right))
+    const queryLabel = deslugify(slug) || slug
+
+    return (
+      <PublicShell>
+        <RouteRecoveryPanel
+          kicker="Category Recovery"
+          title="This exact category page is not populated yet."
+          description="Bes3 could not find published coverage for that exact category slug, so this route falls back to the nearest category hubs, product pages, and editorial paths."
+          queryLabel={queryLabel}
+          searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
+          sections={[
+            {
+              eyebrow: 'Nearby categories',
+              title: 'Closest category hubs',
+              links: findSuggestedCategories(categories, slug, 6).map((category) => ({
+                href: buildCategoryPath(category),
+                label: getCategoryLabel(category),
+                note: 'Open the nearest published category hub.'
+              }))
+            },
+            {
+              eyebrow: 'Nearby products',
+              title: 'Likely product matches',
+              links: findSuggestedProducts(allProducts, slug, 6)
+                .filter((product) => product.slug)
+                .map((product) => ({
+                  href: `/products/${product.slug}`,
+                  label: product.productName,
+                  note: product.description || 'Open the closest product page.'
+                }))
+            },
+            {
+              eyebrow: 'Nearby editorial',
+              title: 'Reviews, comparisons, and guides nearby',
+              links: findSuggestedArticles(allArticles, slug, { limit: 6 }).map((article) => ({
+                href: getArticlePath(article.type, article.slug),
+                label: article.title,
+                note: article.summary || 'Open the closest editorial page.'
+              }))
+            }
+          ]}
+        />
+      </PublicShell>
+    )
+  }
+
   const secondaryArticles = rest.filter((article) => article.id !== featuredGuide?.id)
   const topBrands = Array.from(
     products.reduce((brands, product) => {
