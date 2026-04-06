@@ -20,8 +20,8 @@ export function BrandPolicyPanel({
   brandName,
   policy,
   compatibilityFacts,
-  title = 'Brand policy knowledge',
-  description = 'These policies and compatibility notes give Bes3 more than product-copy context when buyers ask about shipping, returns, warranty, and fit.',
+  title = 'Shipping, returns, and warranty',
+  description = 'These notes help answer the questions product specs alone cannot settle: shipping, returns, warranty, support, and fit.',
   compact = false
 }: {
   brandName: string
@@ -40,7 +40,7 @@ export function BrandPolicyPanel({
     <section className="rounded-[2rem] bg-white p-6 shadow-panel sm:p-8">
       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">{title}</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-        {brandName} policy and fit context
+        {brandName} after-you-buy details
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p>
 
@@ -52,21 +52,21 @@ export function BrandPolicyPanel({
             <p className="mt-2 text-xs text-muted-foreground">{policy.sourceType} source</p>
           </div>
           <div className="rounded-[1.5rem] bg-muted p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Policy confidence</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">How much we confirmed</p>
             <p className="mt-2 text-lg font-black text-foreground">{formatScore(policy.confidenceScore)}</p>
             <p className="mt-2 text-xs text-muted-foreground">Use merchant checkout and support pages as the final confirmation step.</p>
           </div>
           <div className="rounded-[1.5rem] bg-muted p-4">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Compatibility facts</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Fit notes</p>
             <p className="mt-2 text-lg font-black text-foreground">{compatibilityFacts.length}</p>
-            <p className="mt-2 text-xs text-muted-foreground">Structured fit notes Bes3 can reuse across pages and AI answers.</p>
+            <p className="mt-2 text-xs text-muted-foreground">Extra notes about setup, accessories, and real-world fit.</p>
           </div>
         </div>
       ) : null}
 
       <div className={`mt-6 grid gap-6 ${compact ? 'lg:grid-cols-1' : 'lg:grid-cols-[1.1fr_0.9fr]'}`}>
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Policy cards</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Store policies</p>
           <div className="mt-4 space-y-3">
             {visiblePolicies.length ? visiblePolicies.map((field) => (
               <div key={field.key} className="rounded-[1.25rem] bg-muted px-4 py-4">
@@ -75,14 +75,14 @@ export function BrandPolicyPanel({
               </div>
             )) : (
               <div className="rounded-[1.25rem] bg-muted px-4 py-4 text-sm text-muted-foreground">
-                No brand policy rows are stored yet.
+                No brand policy details have been saved yet.
               </div>
             )}
           </div>
         </div>
 
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Compatibility notes</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Fit and setup notes</p>
           <div className="mt-4 space-y-3">
             {visibleFacts.length ? visibleFacts.map((fact) => (
               <div key={fact.id} className="rounded-[1.25rem] bg-muted px-4 py-4">
@@ -96,7 +96,7 @@ export function BrandPolicyPanel({
               </div>
             )) : (
               <div className="rounded-[1.25rem] bg-muted px-4 py-4 text-sm text-muted-foreground">
-                No compatibility facts are stored yet.
+                No fit or setup notes are stored yet.
               </div>
             )}
           </div>

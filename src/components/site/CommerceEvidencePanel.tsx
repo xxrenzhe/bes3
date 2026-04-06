@@ -36,8 +36,8 @@ export function CommerceEvidencePanel({
   offers,
   attributeFacts,
   priceHistory = [],
-  title = 'Decision evidence',
-  description = 'These are the current offer and attribute signals Bes3 used to support the recommendation.',
+  title = 'What we checked',
+  description = 'These are the latest prices, seller details, and product facts behind this recommendation.',
   compact = false,
   source = 'commerce-evidence-panel'
 }: {
@@ -83,13 +83,13 @@ export function CommerceEvidencePanel({
     <section className="rounded-[2rem] bg-white p-6 shadow-panel">
       <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">{title}</p>
       <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
-        Evidence behind the current pick
+        What we checked before recommending this
       </h2>
       <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
 
       <div className={`mt-5 grid gap-4 ${compact ? 'md:grid-cols-2' : 'md:grid-cols-4'}`}>
         <div className="rounded-[1.25rem] bg-muted p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Best live offer</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Best current price</p>
           <p className="mt-2 text-xl font-black text-foreground">
             {formatPriceSnapshot(bestOffer?.priceAmount ?? product.priceAmount, bestOffer?.priceCurrency || product.priceCurrency || 'USD')}
           </p>
@@ -98,19 +98,19 @@ export function CommerceEvidencePanel({
           </p>
         </div>
         <div className="rounded-[1.25rem] bg-muted p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Offer freshness</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Price last checked</p>
           <p className="mt-2 text-xl font-black text-foreground">{formatEditorialDate(product.offerLastCheckedAt || product.priceLastCheckedAt)}</p>
           <p className="mt-2 text-xs text-muted-foreground">{getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt)}</p>
         </div>
         <div className="rounded-[1.25rem] bg-muted p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Data confidence</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">How much we verified</p>
           <p className="mt-2 text-xl font-black text-foreground">{formatPercentScore(product.dataConfidenceScore)}</p>
           <p className="mt-2 text-xs text-muted-foreground">{product.offerCount} offers · {product.evidenceCount} facts</p>
         </div>
         <div className="rounded-[1.25rem] bg-muted p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Attribute coverage</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Specs we checked</p>
           <p className="mt-2 text-xl font-black text-foreground">{formatPercentScore(product.attributeCompletenessScore)}</p>
-          <p className="mt-2 text-xs text-muted-foreground">{product.sourceCount} source signal{product.sourceCount === 1 ? '' : 's'}</p>
+          <p className="mt-2 text-xs text-muted-foreground">{product.sourceCount} source{product.sourceCount === 1 ? '' : 's'}</p>
         </div>
       </div>
 
@@ -127,7 +127,7 @@ export function CommerceEvidencePanel({
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Price history window</p>
               <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                Bes3 has {historySummary.totalPoints} tracked price snapshot{historySummary.totalPoints === 1 ? '' : 's'} for this product.
+                Bes3 has tracked {historySummary.totalPoints} price check{historySummary.totalPoints === 1 ? '' : 's'} for this product.
               </p>
             </div>
             <button
@@ -214,7 +214,7 @@ export function CommerceEvidencePanel({
       <div className={`mt-6 grid gap-6 ${compact ? 'lg:grid-cols-1' : 'lg:grid-cols-[1fr_1fr]'}`}>
         <div>
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Tracked offers</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Stores we checked</p>
             {offers.length > defaultVisibleOffers ? (
               <button
                 type="button"
@@ -278,21 +278,21 @@ export function CommerceEvidencePanel({
                       }}
                       className="mt-3 inline-flex text-sm font-semibold text-primary transition-colors hover:text-emerald-700"
                     >
-                      Select this offer →
+                      Check this store →
                     </Link>
                   ) : null}
                 </div>
               )
             }) : (
               <div className="rounded-[1.25rem] bg-muted px-4 py-4 text-sm text-muted-foreground">
-                No tracked offer rows yet.
+                No store prices have been saved yet.
               </div>
             )}
           </div>
         </div>
 
         <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Verified facts</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Product facts</p>
           <div className="mt-4 space-y-3">
             {visibleFacts.length ? visibleFacts.map((fact) => (
               <div key={fact.id} className="rounded-[1.25rem] bg-muted px-4 py-4">
@@ -306,7 +306,7 @@ export function CommerceEvidencePanel({
               </div>
             )) : (
               <div className="rounded-[1.25rem] bg-muted px-4 py-4 text-sm text-muted-foreground">
-                No attribute evidence rows yet.
+                No extra product facts have been saved yet.
               </div>
             )}
           </div>
