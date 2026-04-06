@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server'
+import { buildBrandCategoryPath } from '@/lib/category'
 import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { SUPPORTED_LOCALES } from '@/lib/i18n'
+import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function GET() {
-  const [brands, categories, articles, products] = await Promise.all([
+  const [brandCategoryHubs, brands, categories, articles, products] = await Promise.all([
+    listBrandCategoryHubs(),
     listBrands(),
     listCategories(),
     listPublishedArticles(),
@@ -22,14 +25,17 @@ export async function GET() {
     feedType: 'coverage-manifest-v1',
     latestRefresh,
     counts: {
+      supportedLocales: SUPPORTED_LOCALES.length,
       categories: categories.length,
       brands: brands.length,
+      brandCategoryHubs: brandCategoryHubs.length,
       products: products.length,
       articles: articles.length,
       reviews: articles.filter((article) => article.type === 'review').length,
       comparisons: articles.filter((article) => article.type === 'comparison').length,
       guides: articles.filter((article) => article.type === 'guide').length
     },
+    localeFootprint: SUPPORTED_LOCALES,
     topCategories: categories.slice(0, 24),
     topBrands: brands.slice(0, 24).map((brand) => ({
       name: brand.name,
@@ -38,6 +44,42 @@ export async function GET() {
       articleCount: brand.articleCount,
       latestUpdate: brand.latestUpdate
     })),
+    topBrandCategoryHubs: brandCategoryHubs.slice(0, 24).map((hub) => ({
+      brandName: hub.brandName,
+      brandSlug: hub.brandSlug,
+      category: hub.category,
+      productCount: hub.productCount,
+      articleCount: hub.articleCount,
+      latestUpdate: hub.latestUpdate,
+      href: buildBrandCategoryPath(hub.brandSlug, hub.category)
+    })),
+    crawlSurfaces: {
+      html: [
+        '/',
+        '/directory',
+        '/categories',
+        '/brands',
+        '/products',
+        '/reviews',
+        '/compare',
+        '/guides',
+        '/data',
+        '/site-map',
+        '/trust'
+      ],
+      sitemaps: [
+        '/sitemap.xml',
+        '/products/sitemap.xml',
+        '/editorial/sitemap.xml',
+        '/taxonomy/sitemap.xml',
+        '/trust/sitemap.xml'
+      ],
+      machineEntry: [
+        '/llms.txt',
+        '/api/open/buying-feed',
+        '/api/open/coverage'
+      ]
+    },
     endpoints: [
       {
         path: '/api/open/buying-feed',
@@ -58,6 +100,31 @@ export async function GET() {
         path: '/api/open/commerce/intent?intent=small%20desk%20setup',
         type: 'intent',
         description: 'Turn a buyer intent into products and next actions.'
+      },
+      {
+        path: '/api/open/commerce/compare?productIds=1,2',
+        type: 'compare',
+        description: 'Return a machine-readable comparison object for shortlisted products.'
+      },
+      {
+        path: '/api/open/commerce/products/1',
+        type: 'product',
+        description: 'Fetch a public product payload by product id.'
+      },
+      {
+        path: '/api/open/commerce/products/1/offers',
+        type: 'offers',
+        description: 'Fetch public offer coverage and merchant context for a product.'
+      },
+      {
+        path: `/api/open/commerce/brands/${brands[0]?.slug || 'midea'}`,
+        type: 'brand',
+        description: 'Fetch public brand-level coverage including products and editorial assets.'
+      },
+      {
+        path: '/api/open/commerce/alerts?intent=standing%20desk',
+        type: 'alerts',
+        description: 'Resolve alert and wait-flow recommendations for a monitored buying intent.'
       }
     ]
   })

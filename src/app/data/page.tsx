@@ -6,8 +6,8 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildDatasetSchema, buildFaqSchema, buildHowToSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildDataCatalogSchema, buildDataFeedSchema, buildDatasetSchema, buildFaqSchema, buildHowToSchema, buildTrustSignalsSchema, buildWebApiSchema } from '@/lib/structured-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   const [brands, categories, articles, products] = await Promise.all([
@@ -37,7 +37,8 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function OpenDataPage() {
-  const [brands, categories, articles, products] = await Promise.all([
+  const [brandCategoryHubs, brands, categories, articles, products] = await Promise.all([
+    listBrandCategoryHubs(),
     listBrands(),
     listCategories(),
     listPublishedArticles(),
@@ -108,6 +109,19 @@ export default async function OpenDataPage() {
     }
   ]
 
+  const catalogEntries = [
+    {
+      name: 'Bes3 public buying feed',
+      path: '/api/open/buying-feed',
+      description: 'Sanitized product and editorial feed with price-history summaries, attribute facts, and decision actions.'
+    },
+    {
+      name: 'Bes3 coverage manifest',
+      path: '/api/open/coverage',
+      description: 'Machine-readable manifest for categories, brands, brand-category hubs, products, articles, locales, and endpoint discovery.'
+    }
+  ]
+
   const faqEntries = [
     {
       question: 'What is the purpose of the Bes3 open data page?',
@@ -147,6 +161,67 @@ export default async function OpenDataPage() {
             keywords: ['open buying data', 'public commerce feed', 'brand coverage manifest', 'product decision api'],
             variableMeasured: ['categories', 'brands', 'products', 'reviews', 'comparisons', 'guides', 'public endpoints']
           }),
+          buildDataCatalogSchema({
+            path: '/data',
+            name: 'Bes3 public data catalog',
+            description: 'Catalog of the public Bes3 machine-readable surfaces, including the buying feed and the coverage manifest.',
+            entries: catalogEntries,
+            dateModified: latestRefresh
+          }),
+          buildDatasetSchema({
+            path: '/api/open/coverage',
+            name: 'Bes3 coverage manifest',
+            description: 'Machine-readable coverage inventory for Bes3 locales, categories, brands, brand-category hubs, products, and editorial routes.',
+            dateModified: latestRefresh,
+            keywords: ['coverage manifest', 'brand-category hubs', 'public route inventory', 'locale footprint'],
+            variableMeasured: ['supported locales', 'categories', 'brands', 'brand-category hubs', 'products', 'reviews', 'comparisons', 'guides']
+          }),
+          buildDataFeedSchema({
+            path: '/api/open/buying-feed',
+            name: 'Bes3 public buying feed',
+            description: 'Public feed containing sanitized product entities, editorial entities, price-history summaries, and buyer-decision actions.',
+            dateModified: latestRefresh,
+            docsPath: '/data'
+          }),
+          ...[
+            {
+              path: '/api/open/buying-feed',
+              name: 'Bes3 buying feed API',
+              description: 'Read the public Bes3 buying feed for products, editorial assets, and machine-readable decision context.'
+            },
+            {
+              path: '/api/open/coverage',
+              name: 'Bes3 coverage manifest API',
+              description: 'Read the Bes3 coverage manifest for site graph counts, crawl surfaces, locale footprint, and endpoint discovery.'
+            },
+            {
+              path: '/api/open/commerce/search?q=standing%20desk',
+              name: 'Bes3 commerce search API',
+              description: 'Query the Bes3 commerce graph by keyword and optional category constraints.'
+            },
+            {
+              path: '/api/open/commerce/intent?intent=small%20desk%20setup',
+              name: 'Bes3 intent resolution API',
+              description: 'Resolve a buyer intent into products, route suggestions, and next actions.'
+            },
+            {
+              path: compareSampleIds.length >= 2 ? `/api/open/commerce/compare?productIds=${compareSampleIds.join(',')}` : '/api/open/commerce/compare?productIds=1,2',
+              name: 'Bes3 comparison API',
+              description: 'Fetch a machine-readable comparison object for multiple shortlisted products.'
+            },
+            {
+              path: `/api/open/commerce/brands/${brands[0]?.slug || 'midea'}`,
+              name: 'Bes3 brand coverage API',
+              description: 'Fetch brand-level product and editorial coverage from the Bes3 public commerce protocol.'
+            }
+          ].map((endpoint) =>
+            buildWebApiSchema({
+              path: endpoint.path,
+              name: endpoint.name,
+              description: endpoint.description,
+              documentationPath: '/data'
+            })
+          ),
           buildTrustSignalsSchema('/data'),
           buildHowToSchema(
             '/data',
@@ -215,11 +290,13 @@ export default async function OpenDataPage() {
           stats={[
             { label: 'Categories', value: String(categories.length), note: 'Top-level intent clusters already exposed through public pages and manifests.' },
             { label: 'Brands', value: String(brands.length), note: 'Brand hubs with public product and editorial coverage.' },
+            { label: 'Brand-category hubs', value: String(brandCategoryHubs.length), note: 'Programmatic long-tail spokes now reflected in the public manifest layer.' },
             { label: 'Reviews', value: String(reviewCount), note: 'Verdict-style editorial pages inside the public graph.' },
             { label: 'Comparisons + guides', value: String(comparisonCount + guideCount), note: 'Decision and education assets that can be discovered through HTML and JSON routes.' }
           ]}
           points={[
             'The feed and manifest create explicit machine-readable entry points instead of hiding the public graph behind only page-level HTML.',
+            'DataCatalog, DataFeed, and WebAPI schema now describe the public API surface in JSON-LD instead of leaving the endpoint graph implicit.',
             'The protocol routes keep product, brand, intent, and comparison lookups aligned with the same buyer-decision model used on the site.',
             'This page gives crawlers and humans a stable place to discover the public data surface without reverse-engineering internal endpoints.',
             'Sanitized outputs keep the public layer useful without leaking admin-only or workflow-specific internals.'
