@@ -101,6 +101,13 @@ export default async function OpenDataPage() {
       description: 'Standard XML description for discovering the Bes3 site-search entry point and search template.'
     },
     {
+      eyebrow: 'Trust',
+      title: 'security.txt',
+      href: '/.well-known/security.txt',
+      label: '/.well-known/security.txt',
+      description: 'Standard security disclosure file describing the public Bes3 contact and trust path for security issues.'
+    },
+    {
       eyebrow: 'Discovery',
       title: 'Image sitemap',
       href: '/media-sitemap.xml',
@@ -162,6 +169,11 @@ export default async function OpenDataPage() {
       name: 'Bes3 OpenSearch description',
       path: '/opensearch.xml',
       description: 'OpenSearch XML document for discovering and invoking the Bes3 site-search entry point.'
+    },
+    {
+      name: 'Bes3 security.txt',
+      path: '/.well-known/security.txt',
+      description: 'Well-known security disclosure file for the Bes3 trust and reporting surface.'
     },
     {
       name: 'Bes3 image sitemap',

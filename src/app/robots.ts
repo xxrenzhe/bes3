@@ -20,6 +20,7 @@ export default function robots(): MetadataRoute.Robots {
           '/feed.xml',
           '/feed.json',
           '/opensearch.xml',
+          '/.well-known/security.txt',
           '/directory',
           '/start',
           '/tools',

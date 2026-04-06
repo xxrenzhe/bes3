@@ -120,6 +120,7 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'Open Data Coverage', path: '/data' },
   { name: 'HTML Sitemap', path: '/site-map' },
   { name: 'LLMs Manifest', path: '/llms.txt' },
+  { name: 'security.txt', path: '/.well-known/security.txt' },
   { name: 'Coverage Manifest API', path: '/api/open/coverage' },
   { name: 'Buying Feed API', path: '/api/open/buying-feed' },
   { name: 'RSS Feed', path: '/feed.xml' },

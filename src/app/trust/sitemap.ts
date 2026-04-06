@@ -32,6 +32,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.5
     },
     {
+      url: new URL('/.well-known/security.txt', siteUrl).toString(),
+      lastModified,
+      changeFrequency: 'monthly',
+      priority: 0.44
+    },
+    {
       url: new URL('/feed.xml', siteUrl).toString(),
       lastModified,
       changeFrequency: 'daily',

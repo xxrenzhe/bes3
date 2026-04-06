@@ -51,6 +51,13 @@ const TRUST_ROUTES = [
     description: 'Inspect the text-first machine manifest that points agents and crawlers to the main HTML routes and public data endpoints.'
   },
   {
+    eyebrow: 'Trust',
+    title: 'security.txt',
+    href: '/.well-known/security.txt',
+    label: 'Open security.txt',
+    description: 'Review the public security disclosure and contact file exposed through the standard well-known path.'
+  },
+  {
     eyebrow: 'Machine Layer',
     title: 'Coverage Manifest API',
     href: '/api/open/coverage',
@@ -122,7 +129,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, feed endpoints, and sitemap routes from one clear entry point.',
     path: '/trust',
     locale: getRequestLocale(),
-    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'llms.txt', 'rss feed', 'json feed', 'opensearch xml', 'image sitemap', 'html sitemap']
+    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'llms.txt', 'security.txt', 'rss feed', 'json feed', 'opensearch xml', 'image sitemap', 'html sitemap']
   })
 }
 
@@ -189,14 +196,14 @@ export default function TrustPage() {
           stats={[
             { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Methodology, legal, support, machine-entry, syndication, and discovery routes exposed directly.' },
             { label: 'Policy pages', value: '2', note: 'Privacy and terms pages with explicit structured trust signals.' },
-            { label: 'Machine-entry pages', value: '8', note: 'Open data, llms.txt, raw API manifests, feed endpoints, the OpenSearch description, and the image sitemap exposed as first-class machine routes.' },
+            { label: 'Machine-entry pages', value: '9', note: 'Open data, llms.txt, security.txt, raw API manifests, feed endpoints, the OpenSearch description, and the image sitemap exposed as first-class machine routes.' },
             { label: 'Support paths', value: '2', note: 'About and Contact clarify the product method and human fallback path.' }
           ]}
           points={[
             'The trust center gives search engines one stable hub for methodology, legal, support, and machine-readable routes.',
             'It reduces the chance that trust pages become isolated footer links with weak crawl depth.',
             'The same routes are now suitable for policy review, citation, and recurring admin SEO audits.',
-            'Open data, llms.txt, machine manifests, feed endpoints, the OpenSearch description, and the image sitemap sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
+            'Open data, llms.txt, security.txt, machine manifests, feed endpoints, the OpenSearch description, and the image sitemap sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
           ]}
         />
 
