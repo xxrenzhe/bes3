@@ -40,7 +40,7 @@ export async function generateMetadata({
   if (!articles.length && !products.length) {
     return buildPageMetadata({
       title: `${toTitleCaseWords(deslugify(slug) || 'Category')} Recovery`,
-      description: 'The exact Bes3 category page is not published yet. Use nearby category, product, and editorial routes instead of ending on a thin page.',
+      description: 'The exact Bes3 category page is not ready yet. Use nearby category, product, and review pages instead of hitting a dead end.',
       path: `/categories/${slug}`,
       locale: getRequestLocale(),
       robots: {
@@ -102,17 +102,17 @@ export default async function CategoryPage({
         <RouteRecoveryPanel
           kicker="Category Recovery"
           title="This exact category page is not populated yet."
-          description="Bes3 could not find published coverage for that exact category slug, so this route falls back to the nearest category hubs, product pages, and editorial paths."
+          description="Bes3 could not find that exact category page yet, so this route points you to the nearest category, product, and review pages instead."
           queryLabel={queryLabel}
           searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
           sections={[
             {
               eyebrow: 'Nearby categories',
-              title: 'Closest category hubs',
+              title: 'Closest category pages',
               links: findSuggestedCategories(categories, slug, 6).map((category) => ({
                 href: buildCategoryPath(category),
                 label: getCategoryLabel(category),
-                note: 'Open the nearest published category hub.'
+                note: 'Open the nearest live category page.'
               }))
             },
             {
@@ -127,12 +127,12 @@ export default async function CategoryPage({
                 }))
             },
             {
-              eyebrow: 'Nearby editorial',
+              eyebrow: 'Nearby reviews',
               title: 'Reviews, comparisons, and guides nearby',
               links: findSuggestedArticles(allArticles, slug, { limit: 6 }).map((article) => ({
                 href: getArticlePath(article.type, article.slug),
                 label: article.title,
-                note: article.summary || 'Open the closest editorial page.'
+                note: article.summary || 'Open the closest review or guide.'
               }))
             }
           ]}
@@ -182,7 +182,7 @@ export default async function CategoryPage({
       name: 'Validate with a full review',
       text: featuredReview
         ? 'Open the lead review once one candidate already looks promising and you want product-fit context before comparing.'
-        : 'Use the strongest available page in the category to see whether the coverage is strong enough to act on.'
+        : 'Use the strongest available page in the category to see whether there is already enough here to act on.'
     },
     {
       name: 'Compare or track the category',
@@ -264,9 +264,9 @@ export default async function CategoryPage({
   const seoHubSections = [
     {
       id: 'category-products',
-      eyebrow: 'Category products',
-      title: `Lead ${categoryLabel} product paths`,
-      description: 'These links preserve a tight product cluster around the category instead of sending searchers back into a broad archive.',
+      eyebrow: 'Top products',
+      title: `Good ${categoryLabel} products to open next`,
+      description: 'Use these links when you want to move straight into the strongest product pages in this category.',
       links: products.slice(0, 4).map((product) => ({
         href: product.slug ? `/products/${product.slug}` : path,
         label: product.productName,
@@ -275,19 +275,19 @@ export default async function CategoryPage({
     },
     {
       id: 'category-spokes',
-      eyebrow: 'Category spokes',
-      title: 'Brand and editorial spokes around this category',
-      description: 'These spokes turn the category page into the hub for brand-specific and editorial-intent paths.',
+      eyebrow: 'More ways to narrow it',
+      title: 'Brand pages and reviews worth checking',
+      description: 'Use these links if you want to stay with one brand or read a strong review before deciding.',
       links: [
         ...topBrands.slice(0, 2).map((brand) => ({
           href: buildBrandCategoryPath(brand.slug, resolvedCategory),
           label: `${brand.name} ${categoryLabel}`,
-          note: 'Open the exact brand-and-category hub.'
+          note: 'Open the brand-specific page for this category.'
         })),
         ...articles.slice(0, 2).map((article) => ({
           href: getArticlePath(article.type, article.slug),
           label: article.title,
-          note: article.summary || 'Open the strongest supporting editorial page.'
+          note: article.summary || 'Open a strong review or guide next.'
         }))
       ]
     }
@@ -311,7 +311,8 @@ export default async function CategoryPage({
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Product deep-dives</p>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Product pages</p>
+                
                 <p className="mt-3 text-3xl font-black">{products.length}</p>
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
@@ -320,7 +321,7 @@ export default async function CategoryPage({
               </div>
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Last checked</p>
-                <p className="mt-3 text-lg font-black">{formatEditorialDate(latestRefresh, 'Building coverage')}</p>
+                <p className="mt-3 text-lg font-black">{formatEditorialDate(latestRefresh, 'Still building')}</p>
               </div>
             </div>
           </div>
@@ -338,8 +339,8 @@ export default async function CategoryPage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {products.length >= 2
-                    ? 'This category already has enough product coverage to shortlist and compare. Start with the top candidates below, then use a review or comparison page once the field is smaller.'
-                    : 'Coverage here is still early. Start with the strongest available product or review, then use alerts to wait for deeper category coverage if needed.'}
+                    ? 'This category already has enough products to shortlist and compare. Start with the top candidates below, then use a review or comparison page once the field is smaller.'
+                    : 'This category is still early. Start with the strongest available product or review, then use alerts if you want to wait for more options.'}
                 </p>
               </div>
             </div>
@@ -361,8 +362,8 @@ export default async function CategoryPage({
         </section>
 
         <SeoHubLinksPanel
-          title="Category hub and spoke links"
-          description="This category page is the hub for broad intent. From here, Bes3 fans out into product pages, editorial validation, and narrower brand-category spokes."
+          title="More pages worth checking"
+          description="Use these links to open strong product pages, stay with one brand, or read a review before you decide."
           sections={seoHubSections}
         />
 
@@ -391,7 +392,7 @@ export default async function CategoryPage({
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Open the brand pages already active in this category.</h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-                These brand pages help when shoppers search by brand without breaking the current {categoryLabel} category view.
+                These brand pages help when one brand already looks promising but you still want to stay inside {categoryLabel}.
               </p>
             </div>
             <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
@@ -406,7 +407,7 @@ export default async function CategoryPage({
                     {brand.name} {categoryLabel}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this exact brand-and-category view without making you restart your research.
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this brand-specific view without making you restart your research.
                   </p>
                   <p className="mt-5 text-sm font-semibold text-primary">Open this view →</p>
                 </Link>
@@ -466,9 +467,9 @@ export default async function CategoryPage({
           </div>
         ) : (
           <div className="rounded-[2rem] bg-white p-10 text-center shadow-panel">
-            <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Editorial coverage is still being built.</h2>
+            <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">More reviews are still on the way.</h2>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Bes3 already recognizes this category, but the supporting review and comparison archive is still being expanded.
+              Bes3 already recognizes this category, but the supporting review and comparison pages are still being expanded.
             </p>
           </div>
         )}
