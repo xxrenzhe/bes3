@@ -45,7 +45,19 @@ const STYLES: Record<string, string> = {
   title_path_mismatch: 'bg-rose-100 text-rose-800',
   heading_hierarchy_gap: 'bg-amber-100 text-amber-800',
   heading_depth_excess: 'bg-amber-100 text-amber-800',
-  missing_h2_structure: 'bg-amber-100 text-amber-800'
+  missing_h2_structure: 'bg-amber-100 text-amber-800',
+  render_http_error: 'bg-rose-100 text-rose-800',
+  missing_canonical_tag: 'bg-amber-100 text-amber-800',
+  canonical_tag_mismatch: 'bg-rose-100 text-rose-800',
+  missing_meta_description_tag: 'bg-amber-100 text-amber-800',
+  missing_og_title: 'bg-amber-100 text-amber-800',
+  missing_og_description: 'bg-amber-100 text-amber-800',
+  missing_json_ld: 'bg-rose-100 text-rose-800',
+  missing_h1: 'bg-rose-100 text-rose-800',
+  multiple_h1: 'bg-rose-100 text-rose-800',
+  published_page_noindex: 'bg-rose-100 text-rose-800',
+  render_timeout: 'bg-amber-100 text-amber-800',
+  render_audit_error: 'bg-rose-100 text-rose-800'
 }
 
 function formatValue(value: string) {
