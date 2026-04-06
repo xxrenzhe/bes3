@@ -81,6 +81,35 @@ interface DatasetSchemaOptions {
   variableMeasured?: string[]
 }
 
+interface DataCatalogEntry {
+  name: string
+  path: string
+  description?: string
+}
+
+interface DataCatalogSchemaOptions {
+  path: string
+  name: string
+  description: string
+  entries: DataCatalogEntry[]
+  dateModified?: string | null
+}
+
+interface DataFeedSchemaOptions {
+  path: string
+  name: string
+  description: string
+  dateModified?: string | null
+  docsPath?: string
+}
+
+interface WebApiSchemaOptions {
+  path: string
+  name: string
+  description: string
+  documentationPath?: string
+}
+
 const SCHEMA_CONTEXT = 'https://schema.org'
 const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'About Bes3', path: '/about' },
@@ -285,6 +314,106 @@ export function buildDatasetSchema({
       name: item
     })),
     dateModified: dateModified || undefined
+  }
+}
+
+export function buildDataCatalogSchema({
+  path,
+  name,
+  description,
+  entries,
+  dateModified
+}: DataCatalogSchemaOptions): SchemaNode {
+  const url = toAbsoluteUrl(path)
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'DataCatalog',
+    '@id': `${url}#data-catalog`,
+    url,
+    name,
+    description,
+    creator: buildOrganizationReference(),
+    publisher: buildOrganizationReference(),
+    isPartOf: buildWebsiteReference(),
+    dateModified: dateModified || undefined,
+    dataset: entries.map((entry) => ({
+      '@type': 'Dataset',
+      '@id': `${toAbsoluteUrl(entry.path)}#dataset`,
+      url: toAbsoluteUrl(entry.path),
+      name: entry.name,
+      description: entry.description || undefined,
+      creator: buildOrganizationReference(),
+      publisher: buildOrganizationReference(),
+      isPartOf: {
+        '@id': `${url}#data-catalog`
+      }
+    }))
+  }
+}
+
+export function buildDataFeedSchema({
+  path,
+  name,
+  description,
+  dateModified,
+  docsPath
+}: DataFeedSchemaOptions): SchemaNode {
+  const url = toAbsoluteUrl(path)
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'DataFeed',
+    '@id': `${url}#data-feed`,
+    url,
+    name,
+    description,
+    dateModified: dateModified || undefined,
+    creator: buildOrganizationReference(),
+    publisher: buildOrganizationReference(),
+    isPartOf: buildWebsiteReference(),
+    includedInDataCatalog: docsPath
+      ? {
+          '@id': `${toAbsoluteUrl(docsPath)}#data-catalog`
+        }
+      : undefined
+  }
+}
+
+export function buildWebApiSchema({
+  path,
+  name,
+  description,
+  documentationPath
+}: WebApiSchemaOptions): SchemaNode {
+  const url = toAbsoluteUrl(path)
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'WebAPI',
+    '@id': `${url}#webapi`,
+    url,
+    name,
+    description,
+    provider: buildOrganizationReference(),
+    documentation: documentationPath ? toAbsoluteUrl(documentationPath) : undefined,
+    termsOfService: toAbsoluteUrl('/terms'),
+    isPartOf: buildWebsiteReference(),
+    audience: {
+      '@type': 'Audience',
+      audienceType: 'developers, automation, researchers, search systems'
+    },
+    potentialAction: {
+      '@type': 'ConsumeAction',
+      target: {
+        '@type': 'EntryPoint',
+        urlTemplate: url,
+        actionPlatform: [
+          'https://schema.org/DesktopWebPlatform',
+          'https://schema.org/MobileWebPlatform'
+        ]
+      }
+    }
   }
 }
 
