@@ -23,6 +23,8 @@ const PUBLIC_PATHS = [
   '/contact',
   '/data',
   '/deals',
+  '/feed.xml',
+  '/feed.json',
   '/guides',
   '/llms.txt',
   '/search',

@@ -120,7 +120,9 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'HTML Sitemap', path: '/site-map' },
   { name: 'LLMs Manifest', path: '/llms.txt' },
   { name: 'Coverage Manifest API', path: '/api/open/coverage' },
-  { name: 'Buying Feed API', path: '/api/open/buying-feed' }
+  { name: 'Buying Feed API', path: '/api/open/buying-feed' },
+  { name: 'RSS Feed', path: '/feed.xml' },
+  { name: 'JSON Feed', path: '/feed.json' }
 ]
 
 function buildOrganizationReference() {
@@ -137,7 +139,9 @@ function buildWebsiteReference() {
 
 function buildTrustPageReferences() {
   return TRUST_PAGE_LINKS.map((item) => ({
-    '@type': item.path.startsWith('/api/open/')
+    '@type': item.path === '/feed.xml' || item.path === '/feed.json'
+      ? 'DataFeed'
+      : item.path.startsWith('/api/open/')
       ? item.path.includes('buying-feed')
         ? 'DataFeed'
         : 'WebAPI'

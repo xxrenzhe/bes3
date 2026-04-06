@@ -65,6 +65,20 @@ const TRUST_ROUTES = [
     description: 'Read the sanitized buying feed that exposes products, editorial assets, and decision-support fields in one machine-readable payload.'
   },
   {
+    eyebrow: 'Syndication',
+    title: 'RSS Feed',
+    href: '/feed.xml',
+    label: 'Open RSS',
+    description: 'Subscribe to the latest Bes3 reviews, guides, and comparisons through a lightweight XML feed.'
+  },
+  {
+    eyebrow: 'Syndication',
+    title: 'JSON Feed',
+    href: '/feed.json',
+    label: 'Open JSON Feed',
+    description: 'Consume the latest Bes3 editorial updates through a machine-friendly JSON Feed endpoint.'
+  },
+  {
     eyebrow: 'Discovery',
     title: 'HTML Sitemap',
     href: '/site-map',
@@ -91,10 +105,10 @@ const faqEntries = [
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Trust Center',
-    description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
+    description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, feed endpoints, and sitemap routes from one clear entry point.',
     path: '/trust',
     locale: getRequestLocale(),
-    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'llms.txt', 'html sitemap']
+    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'llms.txt', 'rss feed', 'json feed', 'html sitemap']
   })
 }
 
@@ -112,14 +126,14 @@ export default function TrustPage() {
           buildWebPageSchema({
             path: '/trust',
             title: 'Trust Center',
-            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
+            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, feed endpoints, and sitemap routes from one clear entry point.',
             type: 'CollectionPage',
             breadcrumbItems
           }),
           buildCollectionPageSchema({
             path: '/trust',
             title: 'Trust Center',
-            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
+            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, feed endpoints, and sitemap routes from one clear entry point.',
             breadcrumbItems,
             items: TRUST_ROUTES.map((route) => ({
               name: route.title,
@@ -137,7 +151,7 @@ export default function TrustPage() {
             The Bes3 trust and machine-entry surface in one place.
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page gathers the methodology, contact path, legal policies, open-data docs, llms manifest, machine APIs, and sitemap routes that explain how Bes3 works and how the public site should be interpreted.
+            This page gathers the methodology, contact path, legal policies, open-data docs, llms manifest, machine APIs, editorial feeds, and sitemap routes that explain how Bes3 works and how the public site should be interpreted.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {TRUST_ROUTES.map((route) => (
@@ -159,16 +173,16 @@ export default function TrustPage() {
           title="Why Bes3 treats trust as a crawlable product surface"
           description="Trust is not just footer boilerplate. Bes3 exposes methodology, legal clarity, support paths, open data, and site maps as deliberate machine-readable entry points."
           stats={[
-            { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Methodology, legal, support, and machine-entry pages exposed directly.' },
+            { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Methodology, legal, support, machine-entry, and syndication routes exposed directly.' },
             { label: 'Policy pages', value: '2', note: 'Privacy and terms pages with explicit structured trust signals.' },
-            { label: 'Machine-entry pages', value: '4', note: 'Open data, llms.txt, and raw API manifests exposed as first-class machine routes.' },
+            { label: 'Machine-entry pages', value: '6', note: 'Open data, llms.txt, raw API manifests, and feed endpoints exposed as first-class machine routes.' },
             { label: 'Support paths', value: '2', note: 'About and Contact clarify the product method and human fallback path.' }
           ]}
           points={[
             'The trust center gives search engines one stable hub for methodology, legal, support, and machine-readable routes.',
             'It reduces the chance that trust pages become isolated footer links with weak crawl depth.',
             'The same routes are now suitable for policy review, citation, and recurring admin SEO audits.',
-            'Open data, llms.txt, and machine manifests sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
+            'Open data, llms.txt, machine manifests, and feed endpoints sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
           ]}
         />
 

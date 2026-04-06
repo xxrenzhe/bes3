@@ -17,6 +17,8 @@ export default function robots(): MetadataRoute.Robots {
           '/compare',
           '/guides',
           '/deals',
+          '/feed.xml',
+          '/feed.json',
           '/directory',
           '/start',
           '/tools',

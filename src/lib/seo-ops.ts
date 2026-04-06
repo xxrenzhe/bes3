@@ -606,7 +606,7 @@ async function inspectRenderedPages(paths: string[]) {
 }
 
 const TRUST_SURFACE_PATHS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
-const MACHINE_ENTRY_PATHS = ['/llms.txt', '/api/open/coverage', '/api/open/buying-feed'] as const
+const MACHINE_ENTRY_PATHS = ['/llms.txt', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json'] as const
 const TRUST_SURFACE_LINK_TARGETS = [...TRUST_SURFACE_PATHS, ...MACHINE_ENTRY_PATHS]
 const MACHINE_ENTRY_ENDPOINTS = [
   {
@@ -620,6 +620,18 @@ const MACHINE_ENTRY_ENDPOINTS = [
     title: 'Buying feed',
     expectedContentType: 'application/json',
     requiredFields: ['protocolVersion', 'feedType', 'products', 'articles']
+  },
+  {
+    pathname: '/feed.json',
+    title: 'JSON feed',
+    expectedContentType: 'application/feed+json',
+    requiredFields: ['version', 'items']
+  },
+  {
+    pathname: '/feed.xml',
+    title: 'RSS feed',
+    expectedContentType: 'application/rss+xml',
+    requiredFields: ['<rss', '<item']
   }
 ] as const
 
@@ -774,7 +786,7 @@ async function inspectTrustSurface() {
         }
       ]
     } else {
-      const requiredRefs = ['/trust', '/data', '/site-map', '/about', '/api/open/coverage', '/api/open/buying-feed']
+      const requiredRefs = ['/trust', '/data', '/site-map', '/about', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json']
       const missing = requiredRefs.filter((ref) => !body.includes(ref))
       if (missing.length > 0) {
         llmsFinding = [
@@ -810,7 +822,7 @@ async function inspectTrustSurface() {
             signal: AbortSignal.timeout(8000),
             headers: {
               'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)',
-              Accept: 'application/json'
+              Accept: endpoint.expectedContentType.includes('rss') ? 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8' : 'application/json'
             }
           })
 
@@ -845,25 +857,23 @@ async function inspectTrustSurface() {
             })
           }
 
-          let parsed: Record<string, unknown> | null = null
-          try {
-            parsed = JSON.parse(body) as Record<string, unknown>
-          } catch {
-            parsed = null
-          }
+          const missingFields = endpoint.expectedContentType.includes('rss')
+            ? endpoint.requiredFields.filter((field) => !body.includes(field))
+            : (() => {
+                let parsed: Record<string, unknown> | null = null
+                try {
+                  parsed = JSON.parse(body) as Record<string, unknown>
+                } catch {
+                  parsed = null
+                }
 
-          if (!parsed) {
-            findings.push({
-              pathname: endpoint.pathname,
-              title: endpoint.title,
-              issueType: 'machine_entry_missing_field',
-              issueDetail: `${endpoint.title} did not return valid JSON with the expected manifest fields.`,
-              checkedAt
-            })
-            return findings
-          }
+                if (!parsed) {
+                  return endpoint.requiredFields
+                }
 
-          const missingFields = endpoint.requiredFields.filter((field) => !(field in parsed!))
+                return endpoint.requiredFields.filter((field) => !(field in parsed))
+              })()
+
           if (missingFields.length > 0) {
             findings.push({
               pathname: endpoint.pathname,
