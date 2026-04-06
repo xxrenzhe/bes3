@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 import { Globe2, Rss, Search } from 'lucide-react'
 import { toast } from 'sonner'
@@ -8,6 +9,19 @@ import { StatusBadge } from '@/components/admin/StatusBadge'
 
 type SeoOpsSummary = {
   supportedLocales: string[]
+  seoRemediationQueue: Array<{
+    severity: 'high' | 'medium' | 'low'
+    issueType: string
+    pathname: string
+    title: string
+    issueDetail: string
+    articleId: number | null
+    productId: number | null
+    adminHref: string | null
+    publicHref: string
+    recommendedAction: string
+    updatedAt: string | null
+  }>
   seoAlignmentAudit: {
     scannedPages: number
     affectedPages: number
@@ -172,11 +186,11 @@ export function SeoOpsConsole() {
           </div>
           <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Rendered Page Audit</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.renderedPageAudit.affectedPages || 0}</p>
+            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.seoRemediationQueue.length || 0}</p>
             <p className="mt-2 text-sm text-slate-600">
-              {summary?.renderedPageAudit
-                ? `${summary.renderedPageAudit.issuesFound} issue(s) across ${summary.renderedPageAudit.scannedPages} rendered pages.`
-                : 'No rendered-page audit snapshot yet.'}
+              {summary?.seoRemediationQueue.length
+                ? 'Prioritized remediation items ready for fixing.'
+                : 'No active remediation items in the current queue.'}
             </p>
           </div>
           <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
@@ -193,6 +207,50 @@ export function SeoOpsConsole() {
             </p>
             <p className="mt-2 text-sm text-slate-600">Recent indexing and syndication dispatch records stored in the publish event log.</p>
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Remediation Queue</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Priority fixes from current SEO audits</h2>
+          </div>
+          <StatusBadge value={summary?.seoRemediationQueue.length ? 'warning' : 'configured'} />
+        </div>
+        <div className="mt-6 space-y-4">
+          {summary?.seoRemediationQueue.length ? (
+            summary.seoRemediationQueue.map((item, index) => (
+              <div key={`${item.pathname}-${item.issueType}-${index}`} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-950">{item.title}</p>
+                    <p className="mt-2 break-all text-sm text-slate-500">{item.pathname}</p>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <StatusBadge value={item.severity} />
+                    <StatusBadge value={item.issueType} />
+                  </div>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{item.issueDetail}</p>
+                <p className="mt-2 text-sm font-medium text-slate-800">{item.recommendedAction}</p>
+                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                  <Link href={item.publicHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
+                    Open public page →
+                  </Link>
+                  {item.adminHref ? (
+                    <Link href={item.adminHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
+                      Open admin editor →
+                    </Link>
+                  ) : null}
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
+              No active remediation items. The current audits did not surface priority SEO fixes.
+            </div>
+          )}
         </div>
       </section>
 
