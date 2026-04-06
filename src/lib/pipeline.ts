@@ -9,6 +9,7 @@ import { getDecisionFunnelSummary } from '@/lib/decision-events'
 import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
+import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { dispatchSeoNotifications } from '@/lib/seo-ops'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getBrandSlug, listBrands, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
@@ -1061,31 +1062,66 @@ async function upsertArticle(input: {
   return Number(result.lastInsertRowid)
 }
 
-async function publishSeoPage(articleId: number, pageType: string, pathname: string, title: string, description: string, schemaJson: string) {
+async function publishSeoPage(
+  articleId: number,
+  pageType: string,
+  pathname: string,
+  title: string,
+  description: string,
+  schemaJson: string,
+  heroImageUrl?: string | null
+) {
   const db = await getDatabase()
+  const payload = buildSeoPagePersistencePayload({
+    pageType,
+    pathname,
+    title,
+    description,
+    image: heroImageUrl,
+    schemaJson
+  })
   const existing =
     (await db.queryOne<{ id: number }>('SELECT id FROM seo_pages WHERE article_id = ? LIMIT 1', [articleId])) ||
-    (await db.queryOne<{ id: number }>('SELECT id FROM seo_pages WHERE pathname = ? LIMIT 1', [pathname]))
+    (await db.queryOne<{ id: number }>('SELECT id FROM seo_pages WHERE pathname = ? LIMIT 1', [payload.pathname]))
   if (existing?.id) {
     await db.exec(
       `
         UPDATE seo_pages
-        SET article_id = ?, page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, schema_json = ?,
+        SET article_id = ?, page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, open_graph_json = ?, schema_json = ?,
             status = 'published', published_at = COALESCE(published_at, CURRENT_TIMESTAMP),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      [articleId, pageType, pathname, title, description, pathname, schemaJson, existing.id]
+      [
+        articleId,
+        payload.pageType,
+        payload.pathname,
+        payload.title,
+        payload.metaDescription,
+        payload.canonicalUrl,
+        payload.openGraphJson,
+        payload.schemaJson,
+        existing.id
+      ]
     )
     return existing.id
   }
 
   const result = await db.exec(
     `
-      INSERT INTO seo_pages (article_id, page_type, pathname, title, meta_description, canonical_url, schema_json, status, published_at)
-      VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
+      INSERT INTO seo_pages (article_id, page_type, pathname, title, meta_description, canonical_url, open_graph_json, schema_json, status, published_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
     `,
-    [articleId, pageType, pathname, title, description, pathname, schemaJson]
+    [
+      articleId,
+      payload.pageType,
+      payload.pathname,
+      payload.title,
+      payload.metaDescription,
+      payload.canonicalUrl,
+      payload.openGraphJson,
+      payload.schemaJson
+    ]
   )
   return Number(result.lastInsertRowid)
 }
@@ -1251,7 +1287,15 @@ async function persistPublishedArticle(
     schemaJson: seo.schemaJson
   })
   const path = getArticlePath(draft.articleType, draft.slug)
-  const seoPageId = await publishSeoPage(articleId, draft.articleType, path, draft.title, draft.summary, seo.schemaJson)
+  const seoPageId = await publishSeoPage(
+    articleId,
+    draft.articleType,
+    path,
+    seo.seoTitle,
+    seo.seoDescription,
+    seo.schemaJson,
+    draft.heroImageUrl
+  )
   return { articleId, path, seoPageId }
 }
 
@@ -1826,8 +1870,24 @@ async function executeFullPipelineRun(
     await markRun(runId, 'running', 'publishPages')
     const reviewPath = `/reviews/${slugify(`${product.productName} review`)}`
     const comparisonPath = `/compare/${slugify(`${product.productName} alternatives`)}`
-    const reviewSeoPageId = await publishSeoPage(reviewArticleId, 'review', reviewPath, `${product.productName} Review`, reviewCopy.summary, reviewSeo.schemaJson)
-    const comparisonSeoPageId = await publishSeoPage(comparisonArticleId, 'comparison', comparisonPath, `${product.productName} Alternatives`, comparisonCopy.summary, comparisonSeo.schemaJson)
+    const reviewSeoPageId = await publishSeoPage(
+      reviewArticleId,
+      'review',
+      reviewPath,
+      reviewSeo.seoTitle,
+      reviewSeo.seoDescription,
+      reviewSeo.schemaJson,
+      persistedMediaUrls[0] || null
+    )
+    const comparisonSeoPageId = await publishSeoPage(
+      comparisonArticleId,
+      'comparison',
+      comparisonPath,
+      comparisonSeo.seoTitle,
+      comparisonSeo.seoDescription,
+      comparisonSeo.schemaJson,
+      persistedMediaUrls[0] || null
+    )
     await assertRunNotCancelled(runId)
     await finishJob(publishJob, 'completed', 'SEO pages published', { reviewSeoPageId, comparisonSeoPageId })
 

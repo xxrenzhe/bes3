@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/db'
 import { slugify } from '@/lib/slug'
 import { getArticlePath } from '@/lib/article-path'
+import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 
 export interface AdminArticleListItem {
   id: number
@@ -245,28 +246,54 @@ export async function updateAdminArticle(articleId: number, input: UpdateAdminAr
 
   const resolvedSeoTitle = seoTitle || title
   const resolvedSeoDescription = seoDescription || summary || ''
+  const seoPagePayload = buildSeoPagePersistencePayload({
+    pageType: existing.article_type,
+    pathname,
+    title: resolvedSeoTitle,
+    description: resolvedSeoDescription,
+    image: heroImageUrl,
+    schemaJson
+  })
 
   if (primarySeoPage?.id) {
     if (status === 'published') {
       await db.exec(
         `
           UPDATE seo_pages
-          SET page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, schema_json = ?,
+          SET page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, open_graph_json = ?, schema_json = ?,
               status = 'published', published_at = COALESCE(published_at, CURRENT_TIMESTAMP),
               updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `,
-        [existing.article_type, pathname, resolvedSeoTitle, resolvedSeoDescription, pathname, schemaJson, primarySeoPage.id]
+        [
+          seoPagePayload.pageType,
+          seoPagePayload.pathname,
+          seoPagePayload.title,
+          seoPagePayload.metaDescription,
+          seoPagePayload.canonicalUrl,
+          seoPagePayload.openGraphJson,
+          seoPagePayload.schemaJson,
+          primarySeoPage.id
+        ]
       )
     } else {
       await db.exec(
         `
           UPDATE seo_pages
-          SET page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, schema_json = ?,
+          SET page_type = ?, pathname = ?, title = ?, meta_description = ?, canonical_url = ?, open_graph_json = ?, schema_json = ?,
               status = 'draft', published_at = NULL, updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `,
-        [existing.article_type, pathname, resolvedSeoTitle, resolvedSeoDescription, pathname, schemaJson, primarySeoPage.id]
+        [
+          seoPagePayload.pageType,
+          seoPagePayload.pathname,
+          seoPagePayload.title,
+          seoPagePayload.metaDescription,
+          seoPagePayload.canonicalUrl,
+          seoPagePayload.openGraphJson,
+          seoPagePayload.schemaJson,
+          primarySeoPage.id
+        ]
       )
     }
   } else {
@@ -274,19 +301,37 @@ export async function updateAdminArticle(articleId: number, input: UpdateAdminAr
       await db.exec(
         `
           INSERT INTO seo_pages (
-            article_id, page_type, pathname, title, meta_description, canonical_url, schema_json, status, published_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
+            article_id, page_type, pathname, title, meta_description, canonical_url, open_graph_json, schema_json, status, published_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
         `,
-        [articleId, existing.article_type, pathname, resolvedSeoTitle, resolvedSeoDescription, pathname, schemaJson]
+        [
+          articleId,
+          seoPagePayload.pageType,
+          seoPagePayload.pathname,
+          seoPagePayload.title,
+          seoPagePayload.metaDescription,
+          seoPagePayload.canonicalUrl,
+          seoPagePayload.openGraphJson,
+          seoPagePayload.schemaJson
+        ]
       )
     } else {
       await db.exec(
         `
           INSERT INTO seo_pages (
-            article_id, page_type, pathname, title, meta_description, canonical_url, schema_json, status
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'draft')
+            article_id, page_type, pathname, title, meta_description, canonical_url, open_graph_json, schema_json, status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'draft')
         `,
-        [articleId, existing.article_type, pathname, resolvedSeoTitle, resolvedSeoDescription, pathname, schemaJson]
+        [
+          articleId,
+          seoPagePayload.pageType,
+          seoPagePayload.pathname,
+          seoPagePayload.title,
+          seoPagePayload.metaDescription,
+          seoPagePayload.canonicalUrl,
+          seoPagePayload.openGraphJson,
+          seoPagePayload.schemaJson
+        ]
       )
     }
   }
