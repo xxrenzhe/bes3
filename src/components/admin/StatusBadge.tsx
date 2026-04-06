@@ -60,6 +60,8 @@ const STYLES: Record<string, string> = {
   multiple_h1: 'bg-rose-100 text-rose-800',
   published_page_noindex: 'bg-rose-100 text-rose-800',
   trust_http_error: 'bg-rose-100 text-rose-800',
+  machine_entry_invalid_content_type: 'bg-amber-100 text-amber-800',
+  machine_entry_missing_field: 'bg-amber-100 text-amber-800',
   trust_missing_canonical_tag: 'bg-amber-100 text-amber-800',
   trust_missing_json_ld: 'bg-amber-100 text-amber-800',
   trust_missing_trust_links: 'bg-amber-100 text-amber-800',

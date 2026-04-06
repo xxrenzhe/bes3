@@ -117,7 +117,10 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'Privacy Policy', path: '/privacy' },
   { name: 'Terms of Service', path: '/terms' },
   { name: 'Open Data Coverage', path: '/data' },
-  { name: 'HTML Sitemap', path: '/site-map' }
+  { name: 'HTML Sitemap', path: '/site-map' },
+  { name: 'LLMs Manifest', path: '/llms.txt' },
+  { name: 'Coverage Manifest API', path: '/api/open/coverage' },
+  { name: 'Buying Feed API', path: '/api/open/buying-feed' }
 ]
 
 function buildOrganizationReference() {
@@ -134,7 +137,11 @@ function buildWebsiteReference() {
 
 function buildTrustPageReferences() {
   return TRUST_PAGE_LINKS.map((item) => ({
-    '@type': 'WebPage',
+    '@type': item.path.startsWith('/api/open/')
+      ? item.path.includes('buying-feed')
+        ? 'DataFeed'
+        : 'WebAPI'
+      : 'WebPage',
     name: item.name,
     url: toAbsoluteUrl(item.path)
   }))

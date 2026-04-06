@@ -1,8 +1,10 @@
 import type { MetadataRoute } from 'next'
+import { getSiteUrl } from '@/lib/site-url'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
 import { listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getSiteUrl()
   const [articles, brands, products] = await Promise.all([
     listPublishedArticles(),
     listBrands(),
@@ -22,6 +24,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...buildLocalizedSitemapRoute('/privacy', { lastModified, changeFrequency: 'yearly', priority: 0.3 }),
     ...buildLocalizedSitemapRoute('/terms', { lastModified, changeFrequency: 'yearly', priority: 0.3 }),
     ...buildLocalizedSitemapRoute('/data', { lastModified, changeFrequency: 'weekly', priority: 0.74 }),
-    ...buildLocalizedSitemapRoute('/site-map', { lastModified, changeFrequency: 'weekly', priority: 0.7 })
+    ...buildLocalizedSitemapRoute('/site-map', { lastModified, changeFrequency: 'weekly', priority: 0.7 }),
+    {
+      url: new URL('/llms.txt', siteUrl).toString(),
+      lastModified,
+      changeFrequency: 'weekly',
+      priority: 0.5
+    }
   ]
 }
