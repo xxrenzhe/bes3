@@ -1,9 +1,11 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
+import { buildBreadcrumbSchema, buildFaqSchema, buildTrustSignalsSchema, buildWebPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -60,9 +62,41 @@ export default function TermsPage() {
       label: 'Open Contact'
     }
   ]
+  const faqEntries = [
+    {
+      question: 'What is Bes3 promising through these terms?',
+      answer: 'Bes3 promises buyer guidance and clear editorial context, while the final merchant remains authoritative for checkout, live pricing, and stock-sensitive details.'
+    },
+    {
+      question: 'Do affiliate links override the recommendation?',
+      answer: 'No. The terms explicitly frame Bes3 as a buyer-first guide, with affiliate monetization sitting next to the decision flow rather than deciding it.'
+    },
+    {
+      question: 'Where should a reader go after checking the terms?',
+      answer: 'Usually back to About for methodology, Deals when price is the real next step, or Contact for edge cases and corrections.'
+    }
+  ]
+  const structuredData = [
+    buildBreadcrumbSchema('/terms', [
+      { name: 'Home', path: '/' },
+      { name: 'Terms', path: '/terms' }
+    ]),
+    buildWebPageSchema({
+      path: '/terms',
+      title: 'Terms of Service',
+      description: 'Understand how Bes3 works as a shopping guide, where affiliate links fit, and when store terms take over.',
+      breadcrumbItems: [
+        { name: 'Home', path: '/' },
+        { name: 'Terms', path: '/terms' }
+      ]
+    }),
+    buildTrustSignalsSchema('/terms'),
+    buildFaqSchema('/terms', faqEntries)
+  ]
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-16 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">

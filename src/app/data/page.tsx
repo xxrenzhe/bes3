@@ -6,7 +6,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildDatasetSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildDatasetSchema, buildFaqSchema, buildHowToSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -147,6 +147,7 @@ export default async function OpenDataPage() {
             keywords: ['open buying data', 'public commerce feed', 'brand coverage manifest', 'product decision api'],
             variableMeasured: ['categories', 'brands', 'products', 'reviews', 'comparisons', 'guides', 'public endpoints']
           }),
+          buildTrustSignalsSchema('/data'),
           buildHowToSchema(
             '/data',
             'How to use the Bes3 open data layer',

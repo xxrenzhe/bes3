@@ -1,9 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { StructuredData } from '@/components/site/StructuredData'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
+import { buildBreadcrumbSchema, buildFaqSchema, buildTrustSignalsSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { toAbsoluteUrl } from '@/lib/site-url'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -60,9 +63,44 @@ export default function PrivacyPage() {
       label: 'Open Contact'
     }
   ]
+  const faqEntries = [
+    {
+      question: 'What data does Bes3 keep?',
+      answer: 'Bes3 keeps the minimum site, subscriber, and admin data required to run the public site, secure the admin area, and deliver the updates a subscriber explicitly requested.'
+    },
+    {
+      question: 'Does Bes3 use privacy terms to justify generic tracking?',
+      answer: 'No. This policy exists to explain the site operations clearly, not to hide broad marketing-data collection behind vague legal language.'
+    },
+    {
+      question: 'Where should a reader go after checking privacy details?',
+      answer: 'Usually back to the page that fits the question: About for methodology, Newsletter for selected updates, or Contact for a human answer.'
+    }
+  ]
+  const structuredData = [
+    buildBreadcrumbSchema('/privacy', [
+      { name: 'Home', path: '/' },
+      { name: 'Privacy', path: '/privacy' }
+    ]),
+    buildWebPageSchema({
+      path: '/privacy',
+      title: 'Privacy Policy',
+      description: 'Read how Bes3 handles subscriber and internal admin data while keeping the buyer-first product promise aligned with privacy expectations.',
+      about: {
+        '@id': `${toAbsoluteUrl('/')}#organization`
+      },
+      breadcrumbItems: [
+        { name: 'Home', path: '/' },
+        { name: 'Privacy', path: '/privacy' }
+      ]
+    }),
+    buildTrustSignalsSchema('/privacy'),
+    buildFaqSchema('/privacy', faqEntries)
+  ]
 
   return (
     <PublicShell>
+      <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-16 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
