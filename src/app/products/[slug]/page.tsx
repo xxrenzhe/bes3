@@ -52,7 +52,7 @@ export async function generateMetadata({
   if (!product) {
     return buildPageMetadata({
       title: `${deslugify(slug) || 'Product'} Recovery`,
-      description: 'The exact Bes3 product page is unavailable. Use nearby products, categories, and editorial pages instead of hitting a dead end.',
+      description: 'The exact Bes3 product page is unavailable. Use nearby products, categories, and reviews instead of hitting a dead end.',
       path: `/products/${slug}`,
       locale: getRequestLocale(),
       robots: {
@@ -105,7 +105,7 @@ export default async function ProductPage({
         <RouteRecoveryPanel
           kicker="Product Recovery"
           title="This exact product page is not available."
-          description="Bes3 could not find that exact product slug, so this route falls back to nearby product pages, editorial pages, and category hubs instead of ending on 404."
+          description="Bes3 could not find that exact product slug, so this route falls back to nearby product pages, reviews, and category pages instead of ending on 404."
           queryLabel={queryLabel}
           searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
           sections={[
@@ -121,7 +121,7 @@ export default async function ProductPage({
                 }))
             },
             {
-              eyebrow: 'Nearby editorial',
+              eyebrow: 'Nearby reviews',
               title: 'Reviews, comparisons, and guides nearby',
               links: findSuggestedArticles(articles, slug, { limit: 6 }).map((article) => ({
                 href: getArticlePath(article.type, article.slug),
@@ -131,11 +131,11 @@ export default async function ProductPage({
             },
             {
               eyebrow: 'Nearby categories',
-              title: 'Category hubs that may match',
+              title: 'Category pages that may match',
               links: findSuggestedCategories(categories, slug, 6).map((category) => ({
                 href: buildCategoryPath(category),
                 label: getCategoryLabelValue(category),
-                note: 'Open the category hub if the exact model was wrong but the intent is still right.'
+                note: 'Open the category page if the exact model was wrong but the product type is still right.'
               }))
             }
           ]}
@@ -192,7 +192,7 @@ export default async function ProductPage({
       name: 'Validate the pick',
       text: reviewArticle
         ? 'Open the full review when you need deeper fit context before you save or click through.'
-        : 'Use the product facts and review signals here to decide whether the product deserves a place on the shortlist.'
+        : 'Use the product facts and review evidence here to decide whether the product deserves a place on the shortlist.'
     },
     {
       name: 'Compare or set a price alert',
@@ -272,7 +272,7 @@ export default async function ProductPage({
     {
       question: 'When should I use the brand page from here?',
       answer: product.brand
-        ? `Use the ${product.brand} page when you want to see nearby products and editorial pages from the same brand without reopening site-wide search.`
+        ? `Use the ${product.brand} page when you want to see nearby products, reviews, and comparisons from the same brand without reopening site-wide search.`
         : 'Use the category page when you still need adjacent products and articles around this product before comparing or buying.'
     },
     {
@@ -305,7 +305,7 @@ export default async function ProductPage({
       ? {
           eyebrow: 'Brand',
           title: `More from ${product.brand}`,
-          description: 'Open the brand page when you want adjacent products and editorial pages from the same brand without broadening the search too early.',
+          description: 'Open the brand page when you want adjacent products, reviews, and comparisons from the same brand without broadening the search too early.',
           href: `/brands/${brandSlug}`,
           label: `Open ${product.brand} page`
         }
@@ -340,7 +340,7 @@ export default async function ProductPage({
   const seoHubSections: SeoHubSection[] = [
     {
       id: 'category',
-      eyebrow: 'Category hub',
+      eyebrow: 'Category page',
       title: `Stay inside ${categoryLabel}`,
       description: 'Use the category layer to keep adjacent products, reviews, and comparisons tightly grouped around the same buying intent.',
       links: compactSeoHubLinks([
@@ -348,7 +348,7 @@ export default async function ProductPage({
           ? {
               href: buildCategoryPath(product.category),
               label: `Browse ${categoryLabel}`,
-              note: 'Return to the category hub without widening the search.'
+              note: 'Return to the category page without widening the search.'
             }
           : null,
         comparisonArticle
@@ -377,7 +377,7 @@ export default async function ProductPage({
           ? {
               href: `/brands/${brandSlug}`,
               label: `${product.brand} brand page`,
-              note: 'See every related product and editorial page from the same brand.'
+              note: 'See every related product page, review, and comparison from the same brand.'
             }
           : null,
         ...peerProducts.slice(0, 3).map((candidate) => ({
@@ -597,14 +597,14 @@ export default async function ProductPage({
                     <Link href={buildCategoryPath(product.category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{categoryLabel}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main category page if you need adjacent coverage before committing to this product.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Return to the main category page if you need more nearby products, reviews, or comparisons before committing to this product.</p>
                     </Link>
                   ) : null}
                   {brandSlug && product.brand ? (
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Stay with the same brand if you want adjacent products and brand-level editorial context.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Stay with the same brand if you want adjacent products, reviews, and comparisons in one place.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (

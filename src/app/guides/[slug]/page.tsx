@@ -27,7 +27,7 @@ export async function generateMetadata({
   if (!article || article.type !== 'guide') {
     return buildPageMetadata({
       title: `${deslugify(slug) || 'Guide'} Recovery`,
-      description: 'The exact Bes3 buying guide is unavailable. Use nearby guides, products, and category routes instead of a dead end.',
+      description: 'The exact Bes3 buying guide is unavailable. Use nearby guides, products, and category pages instead of a dead end.',
       path: `/guides/${slug}`,
       locale: getRequestLocale(),
       robots: {
@@ -82,7 +82,7 @@ export default async function GuidePage({
         <RouteRecoveryPanel
           kicker="Guide Recovery"
           title="This exact buying guide is not available."
-          description="Bes3 could not find that exact guide slug, so this route falls back to nearby guides, likely products, and category hubs instead of a dead end."
+          description="Bes3 could not find that exact guide, so this route points you to nearby guides, likely products, and category pages instead."
           queryLabel={queryLabel}
           searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=guide`}
           sections={[
@@ -108,11 +108,11 @@ export default async function GuidePage({
             },
             {
               eyebrow: 'Nearby categories',
-              title: 'Category hubs that may match',
+              title: 'Category pages that may match',
               links: findSuggestedCategories(categories, slug, 6).map((category) => ({
                 href: buildCategoryPath(category),
                 label: getCategoryLabel(category),
-                note: 'Open the category hub if the guide topic is still right but the exact slug was wrong.'
+                note: 'Open the category page if the guide topic is still right but the exact slug was wrong.'
               }))
             }
           ]}
@@ -212,7 +212,7 @@ export default async function GuidePage({
     {
       question: 'When should I open a brand page from a guide?',
       answer: article.product?.brand
-        ? `Open the ${article.product.brand} page when the brand already looks promising and you want its related Bes3 coverage in one place.`
+        ? `Open the ${article.product.brand} page when the brand already looks promising and you want its related products and reviews in one place.`
         : 'Use the category page when you still need broader discovery before focusing on one brand.'
     },
     {
@@ -304,7 +304,7 @@ export default async function GuidePage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedReview
-                    ? 'This guide already has enough nearby coverage to hand you into a real review next. Use it to narrow what matters, then move on.'
+        ? 'This guide already has enough nearby pages to hand you into a real review next. Use it to narrow what matters, then move on.'
                     : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or alert rather than another abstract explainer.'}
                 </p>
               </div>
@@ -364,7 +364,7 @@ export default async function GuidePage({
                     <Link href={`/brands/${brandSlug}`} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
                       <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                       <p className="mt-2 text-base font-semibold text-foreground">{article.product.brand}</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand page if one brand now looks promising and you want the rest of its Bes3 coverage in one place.</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">Use the brand page if one brand now looks promising and you want the rest of its related products and reviews in one place.</p>
                     </Link>
                   ) : null}
                   {peerProducts.map((candidate) => (

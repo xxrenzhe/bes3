@@ -21,14 +21,14 @@ export async function generateMetadata(): Promise<Metadata> {
     null
 
   return buildPageMetadata({
-    title: 'Category Hubs',
-    description: 'Browse Bes3 category hubs to see the strongest products, live reviews, comparisons, and brand-category paths for each buying intent cluster.',
+    title: 'Categories',
+    description: 'Browse Bes3 categories to see strong products, reviews, comparisons, and brand-specific pages in one place.',
     path: '/categories',
     locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['category hubs', 'category reviews', 'product comparisons', 'brand-category pages']
+    keywords: ['categories', 'category reviews', 'product comparisons', 'brand pages']
   })
 }
 
@@ -54,16 +54,16 @@ export default async function CategoriesIndexPage() {
 
   const faqEntries = [
     {
-      question: 'Why use the category hub instead of a generic archive?',
-      answer: 'Because a category hub should collect the strongest products, reviews, comparisons, and exact brand-category pages around one buying intent, rather than forcing a new search.'
+      question: 'Why use the category page instead of a generic list?',
+      answer: 'Because a category page should collect the strongest products, reviews, comparisons, and brand-specific pages in one place instead of forcing a new search.'
     },
     {
-      question: 'When should I leave a category hub?',
-      answer: 'Leave it when the brand already looks right or one product is already strong enough to validate. Stay in the category when cross-brand comparison still matters.'
+      question: 'When should I leave a category page?',
+      answer: 'Leave it when the brand already looks right or one product is already strong enough to check more closely. Stay in the category when cross-brand comparison still matters.'
     },
     {
       question: 'What makes these pages useful for SEO and buyers at the same time?',
-      answer: 'They act as clean crawl surfaces for related URLs and also give buyers the next page that matches their actual stage: shortlist, validate, compare, or track.'
+      answer: 'They keep related pages together and also give buyers the next page that matches their stage: shortlist, check more closely, compare, or track.'
     }
   ]
 
@@ -71,8 +71,8 @@ export default async function CategoriesIndexPage() {
     buildBreadcrumbSchema('/categories', breadcrumbItems),
     buildCollectionPageSchema({
       path: '/categories',
-      title: 'Category Hubs',
-      description: 'Browse Bes3 category hubs to see the strongest products, live reviews, comparisons, and brand-category paths for each buying intent cluster.',
+      title: 'Categories',
+      description: 'Browse Bes3 categories to see strong products, reviews, comparisons, and brand-specific pages in one place.',
       breadcrumbItems,
       dateModified: latestRefresh,
       items: categories.map((category) => ({
@@ -82,20 +82,20 @@ export default async function CategoriesIndexPage() {
     }),
     buildHowToSchema(
       '/categories',
-      'How to use Bes3 category hubs',
-      'Use category hubs to stay inside one buying intent, open the strongest review or comparison, and only narrow to a brand when the shortlist is ready.',
+      'How to use Bes3 categories',
+      'Use category pages to stay inside one product type, open the strongest review or comparison, and only narrow to a brand when the shortlist is ready.',
       [
         {
           name: 'Open the right category',
-          text: 'Start with the category that matches the product type you actually want to buy so Bes3 can keep adjacent products and editorial pages aligned.'
+          text: 'Start with the category that matches the product type you actually want to buy so Bes3 can keep the most useful products and reviews together.'
         },
         {
-          name: 'Use the strongest validation page',
+          name: 'Use the strongest next page',
           text: 'Open the lead review or comparison after the category narrowed the field enough that a product-level decision starts to make sense.'
         },
         {
           name: 'Switch to a brand-category lane only when needed',
-          text: 'Use exact brand-category pages after both the brand and the category matter at the same time.'
+          text: 'Use brand-specific category pages after both the brand and the category matter at the same time.'
         }
       ]
     ),
@@ -107,10 +107,10 @@ export default async function CategoriesIndexPage() {
       <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">Category Hub Index</p>
-          <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse every Bes3 category hub.</h1>
+          <p className="editorial-kicker">Categories</p>
+          <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse every Bes3 category page.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page exists as a crawlable category matrix. Each hub bundles the strongest products, supporting reviews, comparison pages, and brand-category spokes around one buyer intent.
+            This page gathers the strongest category pages. Each one bundles strong products, reviews, comparisons, and brand-specific pages around one product type.
           </p>
         </section>
 
@@ -133,11 +133,11 @@ export default async function CategoriesIndexPage() {
             return (
               <div key={category} className="rounded-[2rem] bg-white p-7 shadow-panel">
                 <Link href={buildCategoryPath(category)} className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
-                  Category Hub
+                  Category Page
                 </Link>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  {categoryProducts.length} products and {categoryArticles.length} editorial pages currently support this hub.
+                  {categoryProducts.length} products and {categoryArticles.length} reviews or guides are currently live here.
                 </p>
                 <div className="mt-5 space-y-3">
                   {leadReview ? (
@@ -154,7 +154,7 @@ export default async function CategoriesIndexPage() {
                   ) : null}
                   {topBrands.map((brand) => (
                     <Link key={brand.slug} href={buildBrandCategoryPath(brand.slug, category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
-                      <p className="text-xs font-semibold text-foreground">Brand-category lane</p>
+                      <p className="text-xs font-semibold text-foreground">Brand-specific page</p>
                       <p className="mt-1 text-sm text-muted-foreground">{brand.name} in {getCategoryLabel(category)}</p>
                     </Link>
                   ))}

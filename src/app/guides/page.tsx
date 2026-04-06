@@ -15,14 +15,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const freshnessDate = guides[0]?.updatedAt || guides[0]?.publishedAt || guides[0]?.createdAt || null
 
   return buildPageMetadata({
-    title: 'Buying Guide Index',
-    description: 'Browse Bes3 buying guides directly when you want category education, framework-level advice, and earlier-stage decision support.',
+    title: 'Buying Guides',
+    description: 'Browse Bes3 buying guides when you want to understand a category before narrowing your options.',
     path: '/guides',
     locale: getRequestLocale(),
     image: guides[0]?.heroImageUrl || guides[0]?.product?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['buying guides', 'guide index', 'category education', 'buying framework']
+    keywords: ['buying guides', 'guides', 'category help', 'buying advice']
   })
 }
 
@@ -45,7 +45,7 @@ export default async function GuidesIndexPage() {
     },
     {
       question: 'What should a buying guide solve?',
-      answer: 'A guide should reduce uncertainty about what matters, what to ignore, and which next page should handle validation.'
+      answer: 'A guide should make it clearer what matters, what to ignore, and which page to open next.'
     }
   ]
 
@@ -56,8 +56,8 @@ export default async function GuidesIndexPage() {
           buildBreadcrumbSchema('/guides', breadcrumbItems),
           buildCollectionPageSchema({
             path: '/guides',
-            title: 'Buying Guide Index',
-            description: 'Browse Bes3 buying guides directly when you want category education, framework-level advice, and earlier-stage decision support.',
+            title: 'Buying Guides',
+            description: 'Browse Bes3 buying guides when you want to understand a category before narrowing your options.',
             breadcrumbItems,
             dateModified: latestRefresh,
             items: guides.map((article) => ({
@@ -67,7 +67,7 @@ export default async function GuidesIndexPage() {
           }),
           buildHowToSchema(
             '/guides',
-            'How to use the Bes3 buying guide index',
+            'How to use Bes3 buying guides',
             'Use guides when the category is still fuzzy, then move into reviews or comparisons once the market is narrower.',
             [
               {
@@ -75,7 +75,7 @@ export default async function GuidesIndexPage() {
                 text: 'Start with the guide that best matches your category or use case so the rest of the journey gets cleaner.'
               },
               {
-                name: 'Move into validation pages',
+                name: 'Move into product pages or reviews',
                 text: 'After the guide reduces uncertainty, switch into reviews, comparisons, or product pages for proof and action.'
               }
             ]
@@ -85,27 +85,27 @@ export default async function GuidesIndexPage() {
       />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">Buying Guide Hub</p>
+          <p className="editorial-kicker">Buying Guides</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse every Bes3 buying guide.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This guide index is for buyers and crawlers who need category education, buying frameworks, and earlier-stage intent pages before product-level validation starts.
+            These guides are for buyers who still need the basics before moving on to product pages, reviews, or comparisons.
           </p>
         </section>
 
         <section className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {guides.map((article) => (
             <Link key={article.id} href={getArticlePath(article.type, article.slug)} className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1">
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Guide Page</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Guide</p>
               <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{article.title}</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                {article.summary || 'Use this guide to understand the category, the key tradeoffs, and the next validation page to open.'}
+                {article.summary || 'Use this guide to understand the category, the key tradeoffs, and the best next page to open.'}
               </p>
               <div className="mt-5 flex items-center justify-between gap-4 text-sm">
-                <span className="font-semibold text-foreground">{article.product?.productName || 'Guide coverage'}</span>
+                <span className="font-semibold text-foreground">{article.product?.productName || 'Buying guide'}</span>
                 <span className="text-muted-foreground">{formatEditorialDate(article.updatedAt || article.publishedAt || article.createdAt, 'recently')}</span>
               </div>
               <p className="mt-4 text-sm font-semibold text-primary">
-                {article.product?.category ? `${getCategoryLabel(article.product.category)} guide lane` : 'Open guide page'} →
+                {article.product?.category ? `${getCategoryLabel(article.product.category)} guides` : 'Open guide page'} →
               </p>
             </Link>
           ))}
@@ -118,11 +118,11 @@ export default async function GuidesIndexPage() {
             return (
               <div key={category} className="rounded-[2rem] bg-white p-7 shadow-panel">
                 <Link href={buildCategoryPath(category)} className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
-                  Category Hub
+                  Category Page
                 </Link>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  These guide pages help frame the category before you narrow into product-level verdicts or direct comparisons.
+                  These guides help explain the category before you narrow into product pages or direct comparisons.
                 </p>
                 <div className="mt-5 space-y-3 text-sm text-muted-foreground">
                   {categoryGuides.map((article) => (
