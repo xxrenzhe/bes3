@@ -180,6 +180,8 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
   if ([
     'canonical_missing',
     'thin_description',
+    'missing_open_graph_json',
+    'missing_schema_json',
     'heading_hierarchy_gap',
     'heading_depth_excess',
     'missing_h2_structure',
@@ -208,6 +210,10 @@ function getRecommendedAction(issueType: string) {
     case 'thin_description':
     case 'missing_meta_description_tag':
       return 'Rewrite the page description so the intent is explicit and complete.'
+    case 'missing_open_graph_json':
+      return 'Persist the Open Graph payload in seo_pages so previews and audits stay aligned.'
+    case 'missing_schema_json':
+      return 'Persist the structured data payload in seo_pages so machine-readable markup stays publish-ready.'
     case 'title_path_mismatch':
       return 'Align the title with the URL slug and the underlying entity.'
     case 'missing_json_ld':
@@ -478,6 +484,8 @@ function collectSeoAlignmentFindings(row: {
   title: string
   meta_description: string
   canonical_url: string | null
+  open_graph_json: string | null
+  schema_json: string | null
   updated_at: string | null
   article_type: string | null
   article_title: string | null
@@ -496,6 +504,8 @@ function collectSeoAlignmentFindings(row: {
   const normalizedCanonical = normalizePath(row.canonical_url || row.pathname)
   const title = sanitizeText(row.title)
   const description = sanitizeText(row.meta_description)
+  const openGraphJson = sanitizeText(row.open_graph_json)
+  const schemaJson = sanitizeText(row.schema_json)
   const titleTerms = tokenizeForAudit(title)
   const pathLeaf = normalizedPath.split('/').filter(Boolean).pop() || normalizedPath
   const pathTerms = tokenizeForAudit(pathLeaf)
@@ -550,6 +560,24 @@ function collectSeoAlignmentFindings(row: {
       productId: null,
       issueType: 'thin_description',
       issueDetail: `Meta description is only ${description.length} characters and may underspecify page intent.`
+    })
+  }
+
+  if (!openGraphJson) {
+    findings.push({
+      articleId: row.article_id,
+      productId: null,
+      issueType: 'missing_open_graph_json',
+      issueDetail: 'Published page has no Open Graph payload recorded in seo_pages.'
+    })
+  }
+
+  if (!schemaJson) {
+    findings.push({
+      articleId: row.article_id,
+      productId: null,
+      issueType: 'missing_schema_json',
+      issueDetail: 'Published page has no schema payload recorded in seo_pages.'
     })
   }
 
@@ -1287,6 +1315,8 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       title: string
       meta_description: string
       canonical_url: string | null
+      open_graph_json: string | null
+      schema_json: string | null
       updated_at: string | null
       article_type: string | null
       article_title: string | null
@@ -1297,7 +1327,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       category: string | null
     }>(
       `
-        SELECT sp.article_id, sp.pathname, sp.page_type, sp.title, sp.meta_description, sp.canonical_url, sp.updated_at,
+        SELECT sp.article_id, sp.pathname, sp.page_type, sp.title, sp.meta_description, sp.canonical_url, sp.open_graph_json, sp.schema_json, sp.updated_at,
           a.article_type, a.title AS article_title, a.content_html, p.id AS product_id, p.product_name, p.brand, p.category
         FROM seo_pages sp
         LEFT JOIN articles a ON a.id = sp.article_id

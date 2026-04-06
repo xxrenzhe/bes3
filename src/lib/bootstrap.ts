@@ -1,6 +1,7 @@
 import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
+import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
 
 let bootstrapPromise: Promise<void> | null = null
@@ -305,6 +306,14 @@ async function ensureSeedContent(): Promise<void> {
   )
   if (!article) return
 
+  const seededSeoPage = buildSeoPagePersistencePayload({
+    pageType: 'review',
+    pathname: `/reviews/${article.slug}`,
+    title: article.title,
+    description: 'Seeded SEO record for the first Bes3 article.',
+    schemaJson: JSON.stringify({ '@type': 'FAQPage', mainEntity: [] })
+  })
+
   await ignoreUniqueViolation(() =>
     db.exec(
       `
@@ -323,12 +332,12 @@ async function ensureSeedContent(): Promise<void> {
       `,
       [
         article.id,
-        `/reviews/${article.slug}`,
-        article.title,
-        'Seeded SEO record for the first Bes3 article.',
-        `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/reviews/${article.slug}`,
-        JSON.stringify({ title: article.title }),
-        JSON.stringify({ '@type': 'FAQPage', mainEntity: [] })
+        seededSeoPage.pathname,
+        seededSeoPage.title,
+        seededSeoPage.metaDescription,
+        seededSeoPage.canonicalUrl,
+        seededSeoPage.openGraphJson,
+        seededSeoPage.schemaJson
       ]
     )
   )

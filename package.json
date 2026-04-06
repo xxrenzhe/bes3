@@ -21,6 +21,7 @@
     "ops:health-check": "bash ./scripts/health-check.sh",
     "seo:index": "tsx scripts/google-indexing.ts",
     "seo:inspect-links": "tsx scripts/link-inspector.ts",
+    "seo:repair-pages": "tsx scripts/repair-seo-pages.ts",
     "seo:syndicate": "tsx scripts/syndicate-pages.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate:sqlite": "DB_TYPE=sqlite tsx scripts/migrate.ts",
