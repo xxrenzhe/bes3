@@ -67,6 +67,18 @@ export type SeoOpsSummary = {
       updatedAt: string | null
     }>
   }
+  renderedPageAudit: {
+    scannedPages: number
+    affectedPages: number
+    issuesFound: number
+    findings: Array<{
+      pathname: string
+      title: string
+      issueType: string
+      issueDetail: string
+      checkedAt: string
+    }>
+  }
   lastLinkInspectorRun: LinkInspectorSummary | null
   latestLinkIssues: Array<{
     id: number
@@ -198,6 +210,182 @@ function inspectHeadingHierarchy(contentHtml: string | null | undefined) {
     h3Count: $('h3').length,
     deepHeadingCount: $('h4, h5, h6').length,
     bodyTextLength: sanitizeText($.text()).length
+  }
+}
+
+function buildAbsolutePath(siteUrl: string, pathname: string) {
+  return new URL(pathname, siteUrl).toString()
+}
+
+async function inspectRenderedPages(paths: string[]) {
+  const uniquePaths = Array.from(new Set(paths.filter(Boolean))).slice(0, 8)
+  if (!uniquePaths.length) {
+    return {
+      scannedPages: 0,
+      affectedPages: 0,
+      issuesFound: 0,
+      findings: [] as Array<{
+        pathname: string
+        title: string
+        issueType: string
+        issueDetail: string
+        checkedAt: string
+      }>
+    }
+  }
+
+  const { siteUrl } = await getSiteIdentity()
+  const checkedAt = new Date().toISOString()
+
+  const allFindings = (
+    await Promise.all(
+      uniquePaths.map(async (pathname) => {
+        try {
+          const response = await fetch(buildAbsolutePath(siteUrl, pathname), {
+            method: 'GET',
+            redirect: 'follow',
+            signal: AbortSignal.timeout(8000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; Bes3RenderedSeoAudit/1.0; +https://bes3.local)',
+              'Accept-Language': 'en-US,en;q=0.9'
+            }
+          })
+
+          const html = await response.text()
+          const $ = load(html)
+          const findings: Array<{
+            pathname: string
+            title: string
+            issueType: string
+            issueDetail: string
+            checkedAt: string
+          }> = []
+          const title = sanitizeText($('title').first().text()) || pathname
+          const canonicalHref = sanitizeText($('link[rel="canonical"]').attr('href'))
+          const description = sanitizeText($('meta[name="description"]').attr('content'))
+          const ogTitle = sanitizeText($('meta[property="og:title"]').attr('content'))
+          const ogDescription = sanitizeText($('meta[property="og:description"]').attr('content'))
+          const robotsContent = sanitizeText($('meta[name="robots"]').attr('content')).toLowerCase()
+          const h1Count = $('h1').length
+          const jsonLdScripts = $('script[type="application/ld+json"]').length
+
+          if (!response.ok) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'render_http_error',
+              issueDetail: `Rendered page returned HTTP ${response.status}.`,
+              checkedAt
+            })
+          }
+
+          if (!canonicalHref) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_canonical_tag',
+              issueDetail: 'Rendered page is missing a canonical tag.',
+              checkedAt
+            })
+          } else if (normalizePath(canonicalHref) !== normalizePath(pathname)) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'canonical_tag_mismatch',
+              issueDetail: `Rendered canonical ${normalizePath(canonicalHref)} does not match pathname ${normalizePath(pathname)}.`,
+              checkedAt
+            })
+          }
+
+          if (!description) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_meta_description_tag',
+              issueDetail: 'Rendered page is missing a meta description tag.',
+              checkedAt
+            })
+          }
+
+          if (!ogTitle) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_og_title',
+              issueDetail: 'Rendered page is missing og:title.',
+              checkedAt
+            })
+          }
+
+          if (!ogDescription) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_og_description',
+              issueDetail: 'Rendered page is missing og:description.',
+              checkedAt
+            })
+          }
+
+          if (jsonLdScripts === 0) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_json_ld',
+              issueDetail: 'Rendered page has no JSON-LD script block.',
+              checkedAt
+            })
+          }
+
+          if (h1Count === 0) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'missing_h1',
+              issueDetail: 'Rendered page has no H1 element.',
+              checkedAt
+            })
+          } else if (h1Count > 1) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'multiple_h1',
+              issueDetail: `Rendered page exposes ${h1Count} H1 elements.`,
+              checkedAt
+            })
+          }
+
+          if (robotsContent.includes('noindex')) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'published_page_noindex',
+              issueDetail: 'Rendered page emits a noindex robots directive.',
+              checkedAt
+            })
+          }
+
+          return findings
+        } catch (error: any) {
+          return [
+            {
+              pathname,
+              title: pathname,
+              issueType: error?.name === 'TimeoutError' ? 'render_timeout' : 'render_audit_error',
+              issueDetail: error?.message || String(error),
+              checkedAt
+            }
+          ]
+        }
+      })
+    )
+  ).flat()
+
+  return {
+    scannedPages: uniquePaths.length,
+    affectedPages: new Set(allFindings.map((item) => item.pathname)).size,
+    issuesFound: allFindings.length,
+    findings: allFindings.slice(0, 12)
   }
 }
 
@@ -931,7 +1119,7 @@ export async function rerunSyndication(paths?: string[]) {
 
 export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
   const db = await getDatabase()
-  const [lastRun, latestIssues, recentIndexingEvents, recentSyndicationEvents, seoAuditRows] = await Promise.all([
+  const [lastRun, latestIssues, recentIndexingEvents, recentSyndicationEvents, seoAuditRows, recentPublishedPaths] = await Promise.all([
     db.queryOne<{
       id: number
       status: string
@@ -1009,7 +1197,8 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
         ORDER BY sp.updated_at DESC, sp.id DESC
         LIMIT 80
       `
-    )
+    ),
+    listRecentPublishedPaths(8)
   ])
 
   const seoAlignmentFindings = seoAuditRows.flatMap((row) =>
@@ -1024,6 +1213,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
     }))
   )
   const affectedPages = new Set(seoAlignmentFindings.map((item) => item.pathname)).size
+  const renderedPageAudit = await inspectRenderedPages(recentPublishedPaths)
 
   return {
     supportedLocales: [...SUPPORTED_LOCALES],
@@ -1033,6 +1223,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       issuesFound: seoAlignmentFindings.length,
       findings: seoAlignmentFindings.slice(0, 12)
     },
+    renderedPageAudit,
     lastLinkInspectorRun: lastRun
       ? {
           runId: lastRun.id,
