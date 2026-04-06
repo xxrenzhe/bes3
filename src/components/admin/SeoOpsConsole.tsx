@@ -8,6 +8,20 @@ import { StatusBadge } from '@/components/admin/StatusBadge'
 
 type SeoOpsSummary = {
   supportedLocales: string[]
+  seoAlignmentAudit: {
+    scannedPages: number
+    affectedPages: number
+    issuesFound: number
+    findings: Array<{
+      pathname: string
+      title: string
+      pageType: string
+      articleType: string | null
+      issueType: string
+      issueDetail: string
+      updatedAt: string | null
+    }>
+  }
   lastLinkInspectorRun: {
     runId: number
     status: string
@@ -136,6 +150,15 @@ export function SeoOpsConsole() {
             <p className="mt-2 text-sm text-slate-600">Public locale variants currently exposed through hreflang and sitemap.</p>
           </div>
           <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Alignment Audit</p>
+            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.seoAlignmentAudit.affectedPages || 0}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              {summary?.seoAlignmentAudit
+                ? `${summary.seoAlignmentAudit.issuesFound} issue(s) across ${summary.seoAlignmentAudit.scannedPages} published SEO pages.`
+                : 'No alignment audit snapshot yet.'}
+            </p>
+          </div>
+          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
             <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Latest Link Run</p>
             <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.lastLinkInspectorRun?.totalChecked || 0}</p>
             <p className="mt-2 text-sm text-slate-600">
@@ -169,7 +192,44 @@ export function SeoOpsConsole() {
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+      <section className="grid gap-6 xl:grid-cols-[1fr_1fr_0.9fr]">
+        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Alignment Audit</p>
+              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">URL, title, canonical, and heading-tree issues</h2>
+            </div>
+            <StatusBadge value={summary?.seoAlignmentAudit.issuesFound ? 'warning' : 'configured'} />
+          </div>
+
+          <div className="mt-6 space-y-4">
+            {summary?.seoAlignmentAudit.findings.length ? (
+              summary.seoAlignmentAudit.findings.map((finding, index) => (
+                <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-slate-950">{finding.title}</p>
+                      <p className="mt-2 break-all text-sm text-slate-500">{finding.pathname}</p>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <StatusBadge value={finding.issueType} />
+                      <StatusBadge value={finding.articleType || finding.pageType} />
+                    </div>
+                  </div>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{finding.issueDetail}</p>
+                  <p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
+                    Updated {formatDate(finding.updatedAt)}
+                  </p>
+                </div>
+              ))
+            ) : (
+              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
+                No current alignment issues found in the latest published SEO page snapshot.
+              </div>
+            )}
+          </div>
+        </div>
+
         <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
           <div className="flex items-center justify-between gap-4">
             <div>

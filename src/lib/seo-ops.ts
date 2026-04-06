@@ -53,6 +53,20 @@ export type LinkInspectorSummary = {
 
 export type SeoOpsSummary = {
   supportedLocales: string[]
+  seoAlignmentAudit: {
+    scannedPages: number
+    affectedPages: number
+    issuesFound: number
+    findings: Array<{
+      pathname: string
+      title: string
+      pageType: string
+      articleType: string | null
+      issueType: string
+      issueDetail: string
+      updatedAt: string | null
+    }>
+  }
   lastLinkInspectorRun: LinkInspectorSummary | null
   latestLinkIssues: Array<{
     id: number
@@ -95,6 +109,32 @@ function sanitizeText(value: string | null | undefined) {
   return String(value || '')
     .replace(/\s+/g, ' ')
     .trim()
+}
+
+function normalizePath(value: string | null | undefined) {
+  const normalized = sanitizeText(value)
+    .replace(/^https?:\/\/[^/]+/i, '')
+    .replace(/[?#].*$/, '')
+    .replace(/\/+$/, '')
+  return normalized || '/'
+}
+
+function tokenizeForAudit(value: string | null | undefined) {
+  return Array.from(
+    new Set(
+      sanitizeText(value)
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, ' ')
+        .split(' ')
+        .map((item) => item.trim())
+        .filter((item) => item.length >= 2 && !['the', 'and', 'for', 'with', 'from', 'bes3'].includes(item))
+    )
+  )
+}
+
+function countOverlap(left: string[], right: string[]) {
+  const rightSet = new Set(right)
+  return left.reduce((total, item) => total + (rightSet.has(item) ? 1 : 0), 0)
 }
 
 function truncate(value: string, maxLength: number) {
@@ -140,6 +180,129 @@ function extractExcerpt(contentHtml: string | null | undefined, fallbackSummary:
   }
 
   return truncate(sanitizeText(fallbackSummary || fallbackDescription), 420)
+}
+
+function inspectHeadingHierarchy(contentHtml: string | null | undefined) {
+  if (!contentHtml) {
+    return {
+      h2Count: 0,
+      h3Count: 0,
+      deepHeadingCount: 0,
+      bodyTextLength: 0
+    }
+  }
+
+  const $ = load(contentHtml)
+  return {
+    h2Count: $('h2').length,
+    h3Count: $('h3').length,
+    deepHeadingCount: $('h4, h5, h6').length,
+    bodyTextLength: sanitizeText($.text()).length
+  }
+}
+
+function collectSeoAlignmentFindings(row: {
+  pathname: string
+  page_type: string
+  title: string
+  meta_description: string
+  canonical_url: string | null
+  updated_at: string | null
+  article_type: string | null
+  article_title: string | null
+  content_html: string | null
+  product_name: string | null
+  brand: string | null
+  category: string | null
+}) {
+  const findings: Array<{
+    issueType: string
+    issueDetail: string
+  }> = []
+  const normalizedPath = normalizePath(row.pathname)
+  const normalizedCanonical = normalizePath(row.canonical_url || row.pathname)
+  const title = sanitizeText(row.title)
+  const description = sanitizeText(row.meta_description)
+  const titleTerms = tokenizeForAudit(title)
+  const pathLeaf = normalizedPath.split('/').filter(Boolean).pop() || normalizedPath
+  const pathTerms = tokenizeForAudit(pathLeaf)
+  const entityTerms = tokenizeForAudit(
+    [row.article_title, row.product_name, row.brand, row.category].filter(Boolean).join(' ')
+  )
+
+  if (!row.canonical_url) {
+    findings.push({
+      issueType: 'canonical_missing',
+      issueDetail: 'Published page has no canonical URL recorded in seo_pages.'
+    })
+  } else if (normalizedCanonical !== normalizedPath) {
+    findings.push({
+      issueType: 'canonical_mismatch',
+      issueDetail: `Canonical path ${normalizedCanonical} does not match pathname ${normalizedPath}.`
+    })
+  }
+
+  if (row.article_type === 'review' && !normalizedPath.startsWith('/reviews/')) {
+    findings.push({
+      issueType: 'route_type_mismatch',
+      issueDetail: 'Review article is not published under /reviews/.'
+    })
+  }
+  if (row.article_type === 'comparison' && !normalizedPath.startsWith('/compare/')) {
+    findings.push({
+      issueType: 'route_type_mismatch',
+      issueDetail: 'Comparison article is not published under /compare/.'
+    })
+  }
+  if (row.article_type === 'guide' && !normalizedPath.startsWith('/guides/')) {
+    findings.push({
+      issueType: 'route_type_mismatch',
+      issueDetail: 'Guide article is not published under /guides/.'
+    })
+  }
+
+  if (description.length < 110) {
+    findings.push({
+      issueType: 'thin_description',
+      issueDetail: `Meta description is only ${description.length} characters and may underspecify page intent.`
+    })
+  }
+
+  if (/not found|unavailable|recovery/i.test(title) || /not found|unavailable/i.test(description)) {
+    findings.push({
+      issueType: 'low_signal_copy',
+      issueDetail: 'Published SEO title or description contains low-signal fallback language.'
+    })
+  }
+
+  if (pathTerms.length > 0 && countOverlap(titleTerms, pathTerms) === 0 && countOverlap(titleTerms, entityTerms) === 0) {
+    findings.push({
+      issueType: 'title_path_mismatch',
+      issueDetail: 'Title tokens do not align with the path slug or the primary entity fields.'
+    })
+  }
+
+  const headingStats = inspectHeadingHierarchy(row.content_html)
+  if (headingStats.h3Count > 0 && headingStats.h2Count === 0) {
+    findings.push({
+      issueType: 'heading_hierarchy_gap',
+      issueDetail: `Body uses ${headingStats.h3Count} H3 headings without any H2 headings.`
+    })
+  }
+  if (headingStats.deepHeadingCount > 0) {
+    findings.push({
+      issueType: 'heading_depth_excess',
+      issueDetail: `Body uses ${headingStats.deepHeadingCount} deep headings below H3, which weakens the flat heading tree.`
+    })
+  }
+  if (row.article_type && headingStats.bodyTextLength >= 900 && headingStats.h2Count === 0) {
+    findings.push({
+      issueType: 'missing_h2_structure',
+      issueDetail: 'Long editorial body has no H2 headings, which weakens section parsing.'
+    })
+  }
+
+  return findings
 }
 
 async function parseSyndicationTargets(): Promise<SyndicationTarget[]> {
@@ -768,7 +931,7 @@ export async function rerunSyndication(paths?: string[]) {
 
 export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
   const db = await getDatabase()
-  const [lastRun, latestIssues, recentIndexingEvents, recentSyndicationEvents] = await Promise.all([
+  const [lastRun, latestIssues, recentIndexingEvents, recentSyndicationEvents, seoAuditRows] = await Promise.all([
     db.queryOne<{
       id: number
       status: string
@@ -821,11 +984,55 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
         ORDER BY id DESC
         LIMIT 8
       `
+    ),
+    db.query<{
+      pathname: string
+      page_type: string
+      title: string
+      meta_description: string
+      canonical_url: string | null
+      updated_at: string | null
+      article_type: string | null
+      article_title: string | null
+      content_html: string | null
+      product_name: string | null
+      brand: string | null
+      category: string | null
+    }>(
+      `
+        SELECT sp.pathname, sp.page_type, sp.title, sp.meta_description, sp.canonical_url, sp.updated_at,
+          a.article_type, a.title AS article_title, a.content_html, p.product_name, p.brand, p.category
+        FROM seo_pages sp
+        LEFT JOIN articles a ON a.id = sp.article_id
+        LEFT JOIN products p ON p.id = a.product_id
+        WHERE sp.status = 'published'
+        ORDER BY sp.updated_at DESC, sp.id DESC
+        LIMIT 80
+      `
     )
   ])
 
+  const seoAlignmentFindings = seoAuditRows.flatMap((row) =>
+    collectSeoAlignmentFindings(row).map((finding) => ({
+      pathname: row.pathname,
+      title: row.title,
+      pageType: row.page_type,
+      articleType: row.article_type,
+      issueType: finding.issueType,
+      issueDetail: finding.issueDetail,
+      updatedAt: row.updated_at
+    }))
+  )
+  const affectedPages = new Set(seoAlignmentFindings.map((item) => item.pathname)).size
+
   return {
     supportedLocales: [...SUPPORTED_LOCALES],
+    seoAlignmentAudit: {
+      scannedPages: seoAuditRows.length,
+      affectedPages,
+      issuesFound: seoAlignmentFindings.length,
+      findings: seoAlignmentFindings.slice(0, 12)
+    },
     lastLinkInspectorRun: lastRun
       ? {
           runId: lastRun.id,
