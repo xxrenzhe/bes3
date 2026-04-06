@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import { DEFAULT_SITE_NAME } from '@/lib/constants'
-import { buildLanguageAlternates, getOgLocale, type SiteLocale, addLocaleToPath } from '@/lib/i18n'
+import { buildLanguageAlternatesWithDefault, getOgLocale, type SiteLocale, addLocaleToPath } from '@/lib/i18n'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 interface PageMetadataOptions {
@@ -115,7 +115,7 @@ export function buildPageMetadata({
   const normalizedDescription = buildFreshMetadataDescription(description, freshnessDate)
   const imageUrl = image ? toAbsoluteUrl(image) : undefined
   const resolvedModifiedTime = modifiedTime || publishedTime || freshnessDate || undefined
-  const alternates = buildLanguageAlternates(path)
+  const alternates = buildLanguageAlternatesWithDefault(path)
 
   const openGraphBase = {
     title: normalizedTitle,

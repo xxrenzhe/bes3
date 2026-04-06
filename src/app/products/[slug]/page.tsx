@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -18,6 +18,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -50,13 +51,13 @@ export async function generateMetadata({
 
   if (!product) {
     return buildPageMetadata({
-      title: 'Product Not Found',
-      description: 'This Bes3 product page is unavailable.',
+      title: `${deslugify(slug) || 'Product'} Recovery`,
+      description: 'The exact Bes3 product page is unavailable. Use nearby products, categories, and editorial pages instead of hitting a dead end.',
       path: `/products/${slug}`,
       locale: getRequestLocale(),
       robots: {
         index: false,
-        follow: false
+        follow: true
       }
     })
   }
@@ -86,8 +87,62 @@ export default async function ProductPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const product = await getProductBySlug((await params).slug)
-  if (!product) notFound()
+  const slug = (await params).slug
+  const product = await getProductBySlug(slug)
+
+  if (!product) {
+    const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+    const categories = Array.from(
+      new Set([
+        ...products.map((candidate) => candidate.category).filter(Boolean),
+        ...articles.map((article) => article.product?.category).filter(Boolean)
+      ] as string[])
+    ).sort((left, right) => left.localeCompare(right))
+    const queryLabel = deslugify(slug) || slug
+
+    return (
+      <PublicShell>
+        <RouteRecoveryPanel
+          kicker="Product Recovery"
+          title="This exact product page is not available."
+          description="Bes3 could not find that exact product slug, so this route falls back to nearby product pages, editorial pages, and category hubs instead of ending on 404."
+          queryLabel={queryLabel}
+          searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
+          sections={[
+            {
+              eyebrow: 'Nearby products',
+              title: 'Closest product pages',
+              links: findSuggestedProducts(products, slug, 6)
+                .filter((candidate) => candidate.slug)
+                .map((candidate) => ({
+                  href: `/products/${candidate.slug}`,
+                  label: candidate.productName,
+                  note: candidate.description || 'Open the closest product page.'
+                }))
+            },
+            {
+              eyebrow: 'Nearby editorial',
+              title: 'Reviews, comparisons, and guides nearby',
+              links: findSuggestedArticles(articles, slug, { limit: 6 }).map((article) => ({
+                href: getArticlePath(article.type, article.slug),
+                label: article.title,
+                note: article.summary || 'Open the closest decision page.'
+              }))
+            },
+            {
+              eyebrow: 'Nearby categories',
+              title: 'Category hubs that may match',
+              links: findSuggestedCategories(categories, slug, 6).map((category) => ({
+                href: buildCategoryPath(category),
+                label: getCategoryLabelValue(category),
+                note: 'Open the category hub if the exact model was wrong but the intent is still right.'
+              }))
+            }
+          ]}
+        />
+      </PublicShell>
+    )
+  }
 
   const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),

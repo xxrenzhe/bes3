@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
@@ -7,6 +6,7 @@ import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatr
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -18,6 +18,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -60,13 +61,13 @@ export async function generateMetadata({
 
   if (!article || article.type !== 'comparison') {
     return buildPageMetadata({
-      title: 'Comparison Not Found',
-      description: 'This Bes3 comparison page is unavailable.',
+      title: `${deslugify(slug) || 'Comparison'} Recovery`,
+      description: 'The exact Bes3 comparison page is unavailable. Use nearby comparisons, products, and reviews instead of a dead end.',
       path: `/compare/${slug}`,
       locale: getRequestLocale(),
       robots: {
         index: false,
-        follow: false
+        follow: true
       }
     })
   }
@@ -98,8 +99,56 @@ export default async function ComparisonPage({
 }: {
   params: Promise<{ slug: string }>
 }) {
-  const article = await getArticleBySlug((await params).slug)
-  if (!article || article.type !== 'comparison') notFound()
+  const slug = (await params).slug
+  const article = await getArticleBySlug(slug)
+
+  if (!article || article.type !== 'comparison') {
+    const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+    const queryLabel = deslugify(slug) || slug
+
+    return (
+      <PublicShell>
+        <RouteRecoveryPanel
+          kicker="Comparison Recovery"
+          title="This exact comparison page is not available."
+          description="Bes3 could not find that exact comparison slug, so this route falls back to nearby comparison pages, likely products, and supporting reviews."
+          queryLabel={queryLabel}
+          searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=comparison`}
+          sections={[
+            {
+              eyebrow: 'Nearby comparisons',
+              title: 'Closest comparison pages',
+              links: findSuggestedArticles(articles, slug, { type: 'comparison', limit: 6 }).map((candidate) => ({
+                href: getArticlePath(candidate.type, candidate.slug),
+                label: candidate.title,
+                note: candidate.summary || 'Open the nearest comparison page.'
+              }))
+            },
+            {
+              eyebrow: 'Nearby products',
+              title: 'Likely product matches',
+              links: findSuggestedProducts(products, slug, 6)
+                .filter((candidate) => candidate.slug)
+                .map((candidate) => ({
+                  href: `/products/${candidate.slug}`,
+                  label: candidate.productName,
+                  note: candidate.description || 'Open the most likely winning product page.'
+                }))
+            },
+            {
+              eyebrow: 'Nearby reviews',
+              title: 'Review pages around this intent',
+              links: findSuggestedArticles(articles, slug, { type: 'review', limit: 6 }).map((candidate) => ({
+                href: getArticlePath(candidate.type, candidate.slug),
+                label: candidate.title,
+                note: candidate.summary || 'Open the nearest related review.'
+              }))
+            }
+          ]}
+        />
+      </PublicShell>
+    )
+  }
 
   const category = article.product?.category || null
   const [allArticles, allProducts, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([

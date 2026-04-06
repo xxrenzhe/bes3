@@ -292,3 +292,12 @@ export function buildLanguageAlternates(pathname: string | null | undefined) {
     SUPPORTED_LOCALES.map((locale) => [locale, addLocaleToPath(stripped, locale)])
   ) as Record<SiteLocale, string>
 }
+
+export function buildLanguageAlternatesWithDefault(pathname: string | null | undefined) {
+  const alternates = buildLanguageAlternates(pathname)
+
+  return {
+    ...alternates,
+    'x-default': addLocaleToPath(pathname, DEFAULT_LOCALE)
+  }
+}

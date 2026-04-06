@@ -1,16 +1,17 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
-import { buildBrandCategoryPath } from '@/lib/category'
+import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { deslugify, findSuggestedBrands, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import {
@@ -18,6 +19,8 @@ import {
   getBrandSlug,
   getBrandPolicyBySlug,
   listBrandCompatibilityFacts,
+  listBrands,
+  listCategories,
   listPublishedArticles,
   listPublishedProducts
 } from '@/lib/site-data'
@@ -32,13 +35,13 @@ export async function generateMetadata({
 
   if (!brand) {
     return buildPageMetadata({
-      title: 'Brand Not Found',
-      description: 'This Bes3 brand page is unavailable.',
+      title: `${deslugify(slug) || 'Brand'} Recovery`,
+      description: 'The exact Bes3 brand page is unavailable. Use nearby brand, category, and product routes instead of ending on a dead page.',
       path: `/brands/${slug}`,
       locale: getRequestLocale(),
       robots: {
         index: false,
-        follow: false
+        follow: true
       }
     })
   }
@@ -64,15 +67,62 @@ export default async function BrandPage({
   params: Promise<{ slug: string }>
 }) {
   const slug = (await params).slug
-  const [brand, allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
-    getBrandBySlug(slug),
+  const brand = await getBrandBySlug(slug)
+
+  if (!brand) {
+    const [brands, categories, products] = await Promise.all([listBrands(), listCategories(), listPublishedProducts()])
+    const queryLabel = deslugify(slug) || slug
+
+    return (
+      <PublicShell>
+        <RouteRecoveryPanel
+          kicker="Brand Recovery"
+          title="This exact brand page is not published."
+          description="Bes3 could not find that exact brand slug, so this route falls back to the closest brands, categories, and products instead of returning a dead end."
+          queryLabel={queryLabel}
+          searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
+          sections={[
+            {
+              eyebrow: 'Nearby brands',
+              title: 'Closest brand hubs',
+              links: findSuggestedBrands(brands, slug, 6).map((candidate) => ({
+                href: `/brands/${candidate.slug}`,
+                label: candidate.name,
+                note: `${candidate.productCount} products and ${candidate.articleCount} editorial pages already live on Bes3.`
+              }))
+            },
+            {
+              eyebrow: 'Nearby categories',
+              title: 'Category routes that may match',
+              links: findSuggestedCategories(categories, slug, 6).map((category) => ({
+                href: buildCategoryPath(category),
+                label: getCategoryLabel(category),
+                note: 'Open the category hub if the brand was wrong but the buyer intent is still right.'
+              }))
+            },
+            {
+              eyebrow: 'Nearby products',
+              title: 'Likely product matches',
+              links: findSuggestedProducts(products, slug, 6)
+                .filter((product) => product.slug)
+                .map((product) => ({
+                  href: `/products/${product.slug}`,
+                  label: product.productName,
+                  note: product.description || 'Open the strongest nearby product page.'
+                }))
+            }
+          ]}
+        />
+      </PublicShell>
+    )
+  }
+
+  const [allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     getBrandPolicyBySlug(slug),
     listBrandCompatibilityFacts(slug, { limit: 6 })
   ])
-
-  if (!brand) notFound()
 
   const brandProducts = allProducts.filter((product) => getBrandSlug(product.brand) === slug)
   const brandArticles = allArticles.filter((article) => getBrandSlug(article.product?.brand) === slug)
