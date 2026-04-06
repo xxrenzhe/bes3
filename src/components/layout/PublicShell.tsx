@@ -134,6 +134,7 @@ export async function PublicShell({
             <h3 className="text-sm font-semibold uppercase tracking-[0.22em] text-foreground">{copy.footerCompany}</h3>
             <nav aria-label="Company links" className="mt-4 flex flex-col gap-3 text-sm text-muted-foreground">
               <Link href={addLocaleToPath('/about', locale)}>{copy.navAbout}</Link>
+              <Link href={addLocaleToPath('/trust', locale)}>Trust Center</Link>
               <Link href={addLocaleToPath('/contact', locale)}>Contact</Link>
               <Link href={addLocaleToPath('/privacy', locale)}>Privacy</Link>
               <Link href={addLocaleToPath('/terms', locale)}>Terms</Link>

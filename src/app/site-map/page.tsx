@@ -53,7 +53,8 @@ export default async function HtmlSitemapPage() {
     { href: '/reviews', label: 'Reviews' },
     { href: '/compare', label: 'Compare' },
     { href: '/guides', label: 'Guides' },
-    { href: '/data', label: 'Open Data' }
+    { href: '/data', label: 'Open Data' },
+    { href: '/trust', label: 'Trust Center' }
   ]
 
   const structuredData = [
@@ -183,6 +184,7 @@ export default async function HtmlSitemapPage() {
             <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
               {[
                 { href: '/about', label: 'About' },
+                { href: '/trust', label: 'Trust Center' },
                 { href: '/contact', label: 'Contact' },
                 { href: '/newsletter', label: 'Newsletter' },
                 { href: '/privacy', label: 'Privacy' },
