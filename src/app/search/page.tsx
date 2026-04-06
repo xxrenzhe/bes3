@@ -123,7 +123,7 @@ export async function generateMetadata({
   const categorySuffix = selectedCategory ? ` in ${getCategoryLabel(selectedCategory)}` : ''
 
   return buildPageMetadata({
-    title: query ? `${mode === 'intent' ? 'Need-based search' : 'Search'} "${query}"` : 'Search',
+    title: query ? `Search "${query}"` : 'Search',
     description: query
       ? mode === 'intent'
         ? `Tell Bes3 what you need and get a tighter shortlist${categorySuffix} with clearer next steps.`
@@ -172,8 +172,8 @@ const SEARCH_FAQ_ENTRIES = [
     answer: 'Use search when you already know the product name, feature, or problem to solve. Use a category page when the market is still too broad and you need Bes3 to narrow the field first.'
   },
   {
-    question: 'Why are Bes3 search result pages not meant to rank like normal landing pages?',
-    answer: 'Because query-result pages change too easily and often stay thin. Bes3 keeps the reusable search entry page crawlable, while result states focus on helping the user move to a stronger product, review, comparison, or category page.'
+    question: 'Why does Bes3 try to send me to another page after search?',
+    answer: 'Because search is meant to help you find the right next step fast. The best answer is usually a stronger product page, review, comparison, or category page.'
   },
   {
     question: 'What is the fastest way to get useful search results?',
@@ -318,8 +318,8 @@ export default async function SearchPage({
           avoid: resolvedParams.avoid,
           urgency: resolvedParams.urgency
         }),
-        title: `Need-based search "${intentResult.normalizedQuery}"`,
-        description: 'Need-based Bes3 search results translated into a shortlist, next move, and product recommendations.',
+        title: `Search "${intentResult.normalizedQuery}"`,
+        description: 'Bes3 search results with the strongest matches, next steps, and product recommendations.',
         query: intentResult.normalizedQuery,
         items: intentResult.recommendations.map((item) => ({
           name: item.product.productName,
@@ -456,7 +456,7 @@ export default async function SearchPage({
               <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
                 <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No strong shortlist yet.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Bes3 could not find enough evidence-backed matches for "{intentResult.normalizedQuery}" yet. Broaden the category or remove one blocker first.
+                  Bes3 could not find enough strong matches for "{intentResult.normalizedQuery}" yet. Broaden the category or remove one blocker first.
                 </p>
                 <div className="mt-8 flex flex-wrap justify-center gap-3">
                   <Link href="/directory" className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
@@ -526,7 +526,7 @@ export default async function SearchPage({
               {filteredArticles.length ? (
                 <div className="space-y-5">
                   <div>
-                    <p className="editorial-kicker">Editorial matches</p>
+                    <p className="editorial-kicker">Reviews and Guides</p>
                     <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Reviews and guides that help you decide</h3>
                   </div>
                   <div className="grid gap-6">
@@ -537,7 +537,7 @@ export default async function SearchPage({
                           <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
                             {article.product?.productName || article.title}
                           </h3>
-                          <p className="mt-3 text-sm text-muted-foreground">{article.product?.category?.replace(/-/g, ' ') || 'Editorial archive'}</p>
+                          <p className="mt-3 text-sm text-muted-foreground">{article.product?.category?.replace(/-/g, ' ') || 'Buying guide'}</p>
                         </div>
                         <div className="space-y-4">
                           <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{article.title}</h3>
@@ -624,7 +624,8 @@ export default async function SearchPage({
               </div>
 
               <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel">
-                <p className="editorial-kicker">How Bes3 Search Works</p>
+                <p className="editorial-kicker">Search Tips</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">How to get better results</h2>
                 <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
                   <p>Search a product name if you already have one option in mind and want to validate it fast.</p>
                   <p>Search a category or use case if you still need Bes3 to narrow the list for you.</p>
@@ -637,8 +638,8 @@ export default async function SearchPage({
             {!hasActiveSearch ? (
               <SeoFaqSection
                 eyebrow="Search FAQ"
-                title="How to use Bes3 search without creating dead-end research"
-                description="The search entry page is meant to route people into stronger product, review, comparison, and category pages instead of trapping them in thin result states."
+                title="How to use Bes3 search without getting stuck"
+                description="Search should move you into stronger product, review, comparison, and category pages instead of trapping you in weak result pages."
                 entries={[...SEARCH_FAQ_ENTRIES]}
               />
             ) : null}

@@ -32,12 +32,12 @@ export function IntentSearchPanel({
   return (
     <form action={action} className={`rounded-[2rem] bg-white p-8 shadow-panel ${className}`.trim()}>
       <input type="hidden" name="mode" value="intent" />
-      <p className="editorial-kicker">Need-Based Search</p>
+      <p className="editorial-kicker">Describe What You Need</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
         Tell Bes3 what you actually need.
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-        Describe the use case, budget, must-haves, and what you want to avoid. Bes3 will turn that into a tighter shortlist instead of a loose keyword dump.
+        Describe the use case, budget, must-haves, and what you want to avoid. Bes3 will turn that into a tighter set of options instead of a loose keyword search.
       </p>
 
       <div className={`mt-6 grid gap-4 ${compact ? 'lg:grid-cols-[1.4fr_220px_220px]' : 'lg:grid-cols-[1.6fr_220px_220px]'}`}>
