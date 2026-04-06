@@ -94,6 +94,13 @@ export default async function OpenDataPage() {
       description: 'JSON Feed for the latest Bes3 reviews, comparisons, and guides.'
     },
     {
+      eyebrow: 'Discovery',
+      title: 'Image sitemap',
+      href: '/media-sitemap.xml',
+      label: '/media-sitemap.xml',
+      description: 'XML image sitemap exposing the main product, editorial, brand, and hub visuals for crawl discovery.'
+    },
+    {
       eyebrow: 'Search',
       title: 'Commerce search',
       href: '/api/open/commerce/search?q=standing%20desk',
@@ -143,6 +150,11 @@ export default async function OpenDataPage() {
       name: 'Bes3 editorial JSON feed',
       path: '/feed.json',
       description: 'Chronological JSON Feed of Bes3 editorial updates for machine consumers and integrations.'
+    },
+    {
+      name: 'Bes3 image sitemap',
+      path: '/media-sitemap.xml',
+      description: 'XML image sitemap for product, editorial, brand, and long-tail hub visuals.'
     }
   ]
 
@@ -218,6 +230,13 @@ export default async function OpenDataPage() {
             path: '/feed.json',
             name: 'Bes3 editorial JSON feed',
             description: 'JSON Feed exposing the latest Bes3 reviews, guides, and comparisons in chronological order.',
+            dateModified: latestRefresh,
+            docsPath: '/data'
+          }),
+          buildDataFeedSchema({
+            path: '/media-sitemap.xml',
+            name: 'Bes3 image sitemap',
+            description: 'XML image sitemap exposing the key product, editorial, brand, and brand-category hub visuals.',
             dateModified: latestRefresh,
             docsPath: '/data'
           }),
@@ -358,6 +377,7 @@ export default async function OpenDataPage() {
               <Link href="/site-map" className="block transition-colors hover:text-primary">Open HTML sitemap</Link>
               <Link href="/directory" className="block transition-colors hover:text-primary">Open category directory</Link>
               <Link href="/llms.txt" className="block transition-colors hover:text-primary">Open llms.txt</Link>
+              <Link href="/media-sitemap.xml" className="block transition-colors hover:text-primary">Open image sitemap</Link>
             </div>
           </div>
         </section>
