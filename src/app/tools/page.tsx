@@ -32,9 +32,14 @@ export default function ToolsPage() {
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               Bes3 also exposes a lightweight public feed for verified products and live editorial coverage so external tools and automation can reuse a sanitized subset of the catalog.
             </p>
-            <Link href="/api/open/buying-feed" className="mt-4 inline-flex text-sm font-semibold text-primary">
-              Open public JSON feed →
-            </Link>
+            <div className="mt-4 flex flex-wrap gap-4">
+              <Link href="/data" className="inline-flex text-sm font-semibold text-primary">
+                Open data docs →
+              </Link>
+              <Link href="/api/open/buying-feed" className="inline-flex text-sm font-semibold text-primary">
+                Open public JSON feed →
+              </Link>
+            </div>
           </div>
         </section>
 

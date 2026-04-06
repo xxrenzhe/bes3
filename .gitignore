@@ -27,10 +27,14 @@ node_modules/
 dist/
 build/
 coverage/
+!src/app/api/open/coverage/
+!src/app/api/open/coverage/route.ts
 .cache/
 tsconfig.tsbuildinfo
 
 # Runtime data
 data/
+!src/app/data/
+!src/app/data/page.tsx
 storage/media/
 backups/

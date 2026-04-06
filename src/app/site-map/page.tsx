@@ -52,7 +52,8 @@ export default async function HtmlSitemapPage() {
     { href: '/products', label: 'Products' },
     { href: '/reviews', label: 'Reviews' },
     { href: '/compare', label: 'Compare' },
-    { href: '/guides', label: 'Guides' }
+    { href: '/guides', label: 'Guides' },
+    { href: '/data', label: 'Open Data' }
   ]
 
   const structuredData = [
@@ -186,7 +187,8 @@ export default async function HtmlSitemapPage() {
                 { href: '/newsletter', label: 'Newsletter' },
                 { href: '/privacy', label: 'Privacy' },
                 { href: '/terms', label: 'Terms' },
-                { href: '/shortlist', label: 'Shortlist' }
+                { href: '/shortlist', label: 'Shortlist' },
+                { href: '/data', label: 'Open Data' }
               ].map((page) => (
                 <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
                   {page.label}
