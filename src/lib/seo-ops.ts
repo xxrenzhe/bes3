@@ -53,6 +53,19 @@ export type LinkInspectorSummary = {
 
 export type SeoOpsSummary = {
   supportedLocales: string[]
+  seoRemediationQueue: Array<{
+    severity: 'high' | 'medium' | 'low'
+    issueType: string
+    pathname: string
+    title: string
+    issueDetail: string
+    articleId: number | null
+    productId: number | null
+    adminHref: string | null
+    publicHref: string
+    recommendedAction: string
+    updatedAt: string | null
+  }>
   seoAlignmentAudit: {
     scannedPages: number
     affectedPages: number
@@ -147,6 +160,75 @@ function tokenizeForAudit(value: string | null | undefined) {
 function countOverlap(left: string[], right: string[]) {
   const rightSet = new Set(right)
   return left.reduce((total, item) => total + (rightSet.has(item) ? 1 : 0), 0)
+}
+
+function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
+  if ([
+    'canonical_mismatch',
+    'route_type_mismatch',
+    'title_path_mismatch',
+    'render_http_error',
+    'canonical_tag_mismatch',
+    'missing_json_ld',
+    'missing_h1',
+    'multiple_h1',
+    'published_page_noindex'
+  ].includes(issueType)) {
+    return 'high'
+  }
+
+  if ([
+    'canonical_missing',
+    'thin_description',
+    'heading_hierarchy_gap',
+    'heading_depth_excess',
+    'missing_h2_structure',
+    'missing_canonical_tag',
+    'missing_meta_description_tag',
+    'missing_og_title',
+    'missing_og_description',
+    'render_timeout',
+    'render_audit_error'
+  ].includes(issueType)) {
+    return 'medium'
+  }
+
+  return 'low'
+}
+
+function getRecommendedAction(issueType: string) {
+  switch (issueType) {
+    case 'canonical_mismatch':
+    case 'canonical_tag_mismatch':
+    case 'canonical_missing':
+    case 'missing_canonical_tag':
+      return 'Fix canonical alignment between stored SEO record and rendered page.'
+    case 'route_type_mismatch':
+      return 'Correct the published pathname so the article type and route family stay aligned.'
+    case 'thin_description':
+    case 'missing_meta_description_tag':
+      return 'Rewrite the page description so the intent is explicit and complete.'
+    case 'title_path_mismatch':
+      return 'Align the title with the URL slug and the underlying entity.'
+    case 'missing_json_ld':
+      return 'Restore the JSON-LD block so the page exposes machine-readable entities.'
+    case 'missing_h1':
+    case 'multiple_h1':
+      return 'Fix H1 usage so the page exposes one clear primary topic.'
+    case 'heading_hierarchy_gap':
+    case 'heading_depth_excess':
+    case 'missing_h2_structure':
+      return 'Flatten the heading tree and restore parseable section structure.'
+    case 'missing_og_title':
+    case 'missing_og_description':
+      return 'Restore Open Graph metadata for consistent page summaries.'
+    case 'published_page_noindex':
+      return 'Remove the unintended noindex directive from the published page.'
+    case 'render_http_error':
+      return 'Fix the rendered route before further indexing or syndication.'
+    default:
+      return 'Review the page in admin and correct the SEO field or rendered output causing the issue.'
+  }
 }
 
 function truncate(value: string, maxLength: number) {
@@ -390,6 +472,7 @@ async function inspectRenderedPages(paths: string[]) {
 }
 
 function collectSeoAlignmentFindings(row: {
+  article_id: number | null
   pathname: string
   page_type: string
   title: string
@@ -404,6 +487,8 @@ function collectSeoAlignmentFindings(row: {
   category: string | null
 }) {
   const findings: Array<{
+    articleId: number | null
+    productId: number | null
     issueType: string
     issueDetail: string
   }> = []
@@ -420,11 +505,15 @@ function collectSeoAlignmentFindings(row: {
 
   if (!row.canonical_url) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'canonical_missing',
       issueDetail: 'Published page has no canonical URL recorded in seo_pages.'
     })
   } else if (normalizedCanonical !== normalizedPath) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'canonical_mismatch',
       issueDetail: `Canonical path ${normalizedCanonical} does not match pathname ${normalizedPath}.`
     })
@@ -432,18 +521,24 @@ function collectSeoAlignmentFindings(row: {
 
   if (row.article_type === 'review' && !normalizedPath.startsWith('/reviews/')) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'route_type_mismatch',
       issueDetail: 'Review article is not published under /reviews/.'
     })
   }
   if (row.article_type === 'comparison' && !normalizedPath.startsWith('/compare/')) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'route_type_mismatch',
       issueDetail: 'Comparison article is not published under /compare/.'
     })
   }
   if (row.article_type === 'guide' && !normalizedPath.startsWith('/guides/')) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'route_type_mismatch',
       issueDetail: 'Guide article is not published under /guides/.'
     })
@@ -451,6 +546,8 @@ function collectSeoAlignmentFindings(row: {
 
   if (description.length < 110) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'thin_description',
       issueDetail: `Meta description is only ${description.length} characters and may underspecify page intent.`
     })
@@ -458,6 +555,8 @@ function collectSeoAlignmentFindings(row: {
 
   if (/not found|unavailable|recovery/i.test(title) || /not found|unavailable/i.test(description)) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'low_signal_copy',
       issueDetail: 'Published SEO title or description contains low-signal fallback language.'
     })
@@ -465,6 +564,8 @@ function collectSeoAlignmentFindings(row: {
 
   if (pathTerms.length > 0 && countOverlap(titleTerms, pathTerms) === 0 && countOverlap(titleTerms, entityTerms) === 0) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'title_path_mismatch',
       issueDetail: 'Title tokens do not align with the path slug or the primary entity fields.'
     })
@@ -473,18 +574,24 @@ function collectSeoAlignmentFindings(row: {
   const headingStats = inspectHeadingHierarchy(row.content_html)
   if (headingStats.h3Count > 0 && headingStats.h2Count === 0) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'heading_hierarchy_gap',
       issueDetail: `Body uses ${headingStats.h3Count} H3 headings without any H2 headings.`
     })
   }
   if (headingStats.deepHeadingCount > 0) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'heading_depth_excess',
       issueDetail: `Body uses ${headingStats.deepHeadingCount} deep headings below H3, which weakens the flat heading tree.`
     })
   }
   if (row.article_type && headingStats.bodyTextLength >= 900 && headingStats.h2Count === 0) {
     findings.push({
+      articleId: row.article_id,
+      productId: null,
       issueType: 'missing_h2_structure',
       issueDetail: 'Long editorial body has no H2 headings, which weakens section parsing.'
     })
@@ -1174,6 +1281,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       `
     ),
     db.query<{
+      article_id: number | null
       pathname: string
       page_type: string
       title: string
@@ -1183,13 +1291,14 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       article_type: string | null
       article_title: string | null
       content_html: string | null
+      product_id: number | null
       product_name: string | null
       brand: string | null
       category: string | null
     }>(
       `
-        SELECT sp.pathname, sp.page_type, sp.title, sp.meta_description, sp.canonical_url, sp.updated_at,
-          a.article_type, a.title AS article_title, a.content_html, p.product_name, p.brand, p.category
+        SELECT sp.article_id, sp.pathname, sp.page_type, sp.title, sp.meta_description, sp.canonical_url, sp.updated_at,
+          a.article_type, a.title AS article_title, a.content_html, p.id AS product_id, p.product_name, p.brand, p.category
         FROM seo_pages sp
         LEFT JOIN articles a ON a.id = sp.article_id
         LEFT JOIN products p ON p.id = a.product_id
@@ -1207,6 +1316,8 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       title: row.title,
       pageType: row.page_type,
       articleType: row.article_type,
+      articleId: finding.articleId,
+      productId: row.product_id,
       issueType: finding.issueType,
       issueDetail: finding.issueDetail,
       updatedAt: row.updated_at
@@ -1214,9 +1325,54 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
   )
   const affectedPages = new Set(seoAlignmentFindings.map((item) => item.pathname)).size
   const renderedPageAudit = await inspectRenderedPages(recentPublishedPaths)
+  const auditRowByPath = new Map(
+    seoAuditRows.map((row) => [
+      row.pathname,
+      row
+    ])
+  )
+  const seoRemediationQueue = [
+    ...seoAlignmentFindings.map((finding) => ({
+      severity: getSeverity(finding.issueType),
+      issueType: finding.issueType,
+      pathname: finding.pathname,
+      title: finding.title,
+      issueDetail: finding.issueDetail,
+      articleId: finding.articleId,
+      productId: finding.productId,
+      adminHref: finding.articleId ? `/admin/articles?article=${finding.articleId}` : null,
+      publicHref: finding.pathname,
+      recommendedAction: getRecommendedAction(finding.issueType),
+      updatedAt: finding.updatedAt
+    })),
+    ...renderedPageAudit.findings.map((finding) => {
+      const related = auditRowByPath.get(finding.pathname)
+      return {
+        severity: getSeverity(finding.issueType),
+        issueType: finding.issueType,
+        pathname: finding.pathname,
+        title: finding.title,
+        issueDetail: finding.issueDetail,
+        articleId: related?.article_id || null,
+        productId: related?.product_id || null,
+        adminHref: related?.article_id ? `/admin/articles?article=${related.article_id}` : null,
+        publicHref: finding.pathname,
+        recommendedAction: getRecommendedAction(finding.issueType),
+        updatedAt: finding.checkedAt
+      }
+    })
+  ]
+    .sort((left, right) => {
+      const severityRank = { high: 3, medium: 2, low: 1 }
+      const rankDelta = severityRank[right.severity] - severityRank[left.severity]
+      if (rankDelta !== 0) return rankDelta
+      return (Date.parse(right.updatedAt || '') || 0) - (Date.parse(left.updatedAt || '') || 0)
+    })
+    .slice(0, 16)
 
   return {
     supportedLocales: [...SUPPORTED_LOCALES],
+    seoRemediationQueue,
     seoAlignmentAudit: {
       scannedPages: seoAuditRows.length,
       affectedPages,
