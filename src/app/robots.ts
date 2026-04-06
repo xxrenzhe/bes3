@@ -7,8 +7,26 @@ export default function robots(): MetadataRoute.Robots {
     rules: [
       {
         userAgent: '*',
-        allow: ['/','/site-map','/brands','/categories','/products','/reviews','/compare','/guides','/deals','/directory','/start','/tools','/about','/search','/data'],
-        disallow: ['/admin', '/api', '/login', '/thank-you']
+        allow: [
+          '/',
+          '/site-map',
+          '/brands',
+          '/categories',
+          '/products',
+          '/reviews',
+          '/compare',
+          '/guides',
+          '/deals',
+          '/directory',
+          '/start',
+          '/tools',
+          '/about',
+          '/search',
+          '/data',
+          '/llms.txt',
+          '/api/open/'
+        ],
+        disallow: ['/admin', '/api/admin', '/api/auth', '/api/internal', '/api/newsletter', '/api/decision-events', '/login', '/thank-you']
       }
     ],
     host: siteUrl,
