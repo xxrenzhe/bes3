@@ -47,6 +47,13 @@ export default async function HtmlSitemapPage() {
       products.filter((product) => categoryMatches(product.category, category)).slice(0, 6)
     ])
   )
+  const hubPages = [
+    { href: '/categories', label: 'Categories' },
+    { href: '/products', label: 'Products' },
+    { href: '/reviews', label: 'Reviews' },
+    { href: '/compare', label: 'Compare' },
+    { href: '/guides', label: 'Guides' }
+  ]
 
   const structuredData = [
     buildWebPageSchema({
@@ -67,6 +74,7 @@ export default async function HtmlSitemapPage() {
         { name: 'Directory', path: '/directory' },
         { name: 'Brands', path: '/brands' },
         { name: 'Tools', path: '/tools' },
+        ...hubPages.map((page) => ({ name: page.label, path: page.href })),
         ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: buildCategoryPath(category) })),
         ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` }))
       ]
@@ -99,7 +107,8 @@ export default async function HtmlSitemapPage() {
               { href: '/deals', label: 'Deals' },
               { href: '/directory', label: 'Directory' },
               { href: '/brands', label: 'Brands' },
-              { href: '/tools', label: 'Tools' }
+              { href: '/tools', label: 'Tools' },
+              ...hubPages
             ].map((item) => (
               <Link key={item.href} href={item.href} className="rounded-[1.25rem] bg-white px-5 py-4 text-sm font-semibold text-foreground shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)] transition-transform hover:-translate-y-0.5">
                 {item.label}
@@ -148,6 +157,16 @@ export default async function HtmlSitemapPage() {
         />
 
         <section className="grid gap-6 lg:grid-cols-2">
+          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Editorial hubs</p>
+            <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
+              {hubPages.map((page) => (
+                <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
+                  {page.label}
+                </Link>
+              ))}
+            </div>
+          </div>
           <div className="rounded-[2rem] bg-white p-6 shadow-panel">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brands</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
