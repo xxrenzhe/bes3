@@ -127,6 +127,8 @@ export async function PublicShell({
               <Link href={addLocaleToPath('/site-map', locale)}>{copy.footerSiteMap}</Link>
               <Link href={addLocaleToPath('/tools', locale)}>Tools</Link>
               <Link href={addLocaleToPath('/data', locale)}>Open Data</Link>
+              <Link href="/feed.xml">RSS Feed</Link>
+              <Link href="/feed.json">JSON Feed</Link>
               <Link href={addLocaleToPath('/shortlist', locale)}>{copy.footerShortlist}</Link>
             </nav>
           </div>
