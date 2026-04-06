@@ -21,7 +21,7 @@ import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildItemListSchema, buildProductSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { buildProductDecisionContent } from '@/lib/decision-content'
 import {
@@ -220,6 +220,48 @@ export default async function ProductPage({
       }
     }),
     buildProductSchema(product, path, productDescription, heroImageUrl),
+    buildItemListSchema(
+      path,
+      [
+        product.category
+          ? {
+              name: `Browse ${categoryLabel}`,
+              path: buildCategoryPath(product.category)
+            }
+          : null,
+        reviewArticle
+          ? {
+              name: reviewArticle.title,
+              path: getArticlePath(reviewArticle.type, reviewArticle.slug)
+            }
+          : null,
+        comparisonArticle
+          ? {
+              name: comparisonArticle.title,
+              path: getArticlePath(comparisonArticle.type, comparisonArticle.slug)
+            }
+          : null,
+        guideArticle
+          ? {
+              name: guideArticle.title,
+              path: getArticlePath(guideArticle.type, guideArticle.slug)
+            }
+          : null,
+        brandSlug && product.brand
+          ? {
+              name: `${product.brand} brand page`,
+              path: `/brands/${brandSlug}`
+            }
+          : null,
+        ...peerProducts
+          .filter((candidate) => candidate.slug)
+          .slice(0, 3)
+          .map((candidate) => ({
+            name: candidate.productName,
+            path: `/products/${candidate.slug}`
+          }))
+      ].filter(Boolean) as Array<{ name: string; path: string }>
+    ),
     buildHowToSchema(path, `How to use ${product.productName} on Bes3`, 'Use the product page to validate fit, read the supporting review when needed, and choose the clearest next step.', howToSteps)
   ]
   const faqEntries = [
