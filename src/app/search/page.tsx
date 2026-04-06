@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
@@ -11,7 +12,7 @@ import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/com
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildCollectionPageSchema, buildFaqSchema, buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, searchArticles, searchProducts } from '@/lib/site-data'
 
 const SEARCH_SCOPES = [
@@ -68,6 +69,24 @@ function buildCurrentSearchPath(input: {
   return `/search${params.size ? `?${params.toString()}` : ''}`
 }
 
+function hasActiveSearchState(input: {
+  mode: 'keyword' | 'intent'
+  query?: string
+  scope: SearchScope
+  category?: string
+  intentQuery?: string
+  budget?: string
+  must?: string
+  avoid?: string
+  urgency?: string
+}) {
+  if (input.mode === 'intent') {
+    return Boolean(input.intentQuery || input.category || input.budget || input.must || input.avoid || input.urgency)
+  }
+
+  return Boolean(input.query || input.category || input.scope !== 'all')
+}
+
 export async function generateMetadata({
   searchParams
 }: {
@@ -80,6 +99,17 @@ export async function generateMetadata({
   const categories = await listCategories()
   const selectedCategory = categories.find((category) => categoryMatches(category, resolvedParams.category || '')) || ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
+  const hasActiveSearch = hasActiveSearchState({
+    mode,
+    query,
+    scope: selectedScope,
+    category: selectedCategory,
+    intentQuery: intentInput.query,
+    budget: resolvedParams.budget,
+    must: resolvedParams.must,
+    avoid: resolvedParams.avoid,
+    urgency: resolvedParams.urgency
+  })
   const scopeLabel =
     selectedScope === 'all'
       ? 'products, reviews, comparisons, and guides'
@@ -102,7 +132,7 @@ export async function generateMetadata({
     path: '/search',
     locale: getRequestLocale(),
     robots: {
-      index: false,
+      index: !hasActiveSearch,
       follow: true
     },
     keywords: ['site search', 'product search', 'reviews', 'comparisons']
@@ -136,6 +166,21 @@ const SEARCH_STARTER_ROUTES = [
   }
 ] as const
 
+const SEARCH_FAQ_ENTRIES = [
+  {
+    question: 'Should I use search or start with a category page?',
+    answer: 'Use search when you already know the product name, feature, or problem to solve. Use a category page when the market is still too broad and you need Bes3 to narrow the field first.'
+  },
+  {
+    question: 'Why are Bes3 search result pages not meant to rank like normal landing pages?',
+    answer: 'Because query-result pages change too easily and often stay thin. Bes3 keeps the reusable search entry page crawlable, while result states focus on helping the user move to a stronger product, review, comparison, or category page.'
+  },
+  {
+    question: 'What is the fastest way to get useful search results?',
+    answer: 'Search the product name if you already have a likely candidate. Search a category or use case if you still need Bes3 to narrow the shortlist and point you to the right next page.'
+  }
+] as const
+
 function buildSearchHref(query: string, scope: SearchScope, category: string) {
   const params = new URLSearchParams()
   if (query) params.set('q', query)
@@ -164,6 +209,17 @@ export default async function SearchPage({
   const selectedCategory = categories.find((category) => categoryMatches(category, resolvedParams.category || '')) || ''
   const selectedScope = normalizeSearchScope(resolvedParams.scope)
   const intentQuery = intentInput.query
+  const hasActiveSearch = hasActiveSearchState({
+    mode,
+    query,
+    scope: selectedScope,
+    category: selectedCategory,
+    intentQuery,
+    budget: resolvedParams.budget,
+    must: resolvedParams.must,
+    avoid: resolvedParams.avoid,
+    urgency: resolvedParams.urgency
+  })
   const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
 
   const filteredProducts =
@@ -287,12 +343,29 @@ export default async function SearchPage({
           }))
         ]
       })
-    : buildWebPageSchema({
-        path: '/search',
-        title: 'Search',
-        description: 'Search Bes3 products, reviews, comparisons, and guides to find the right option faster.',
-        type: 'CollectionPage'
-      })
+    : [
+        buildCollectionPageSchema({
+          path: '/search',
+          title: 'Search',
+          description: 'Search Bes3 products, reviews, comparisons, and guides to find the right option faster.',
+          items: [
+            ...SEARCH_STARTER_ROUTES.map((route) => ({
+              name: route.title,
+              path: route.href
+            })),
+            { name: 'Assistant', path: '/assistant' },
+            { name: 'Directory', path: '/directory' },
+            { name: 'Deals', path: '/deals' }
+          ]
+        }),
+        buildWebPageSchema({
+          path: '/search',
+          title: 'Search',
+          description: 'Search Bes3 products, reviews, comparisons, and guides to find the right option faster.',
+          type: 'CollectionPage'
+        }),
+        buildFaqSchema('/search', [...SEARCH_FAQ_ENTRIES])
+      ]
 
   return (
     <PublicShell>
@@ -532,32 +605,43 @@ export default async function SearchPage({
             </section>
           )
         ) : mode === 'intent' ? null : (
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <div className="rounded-[2rem] bg-white p-8 shadow-panel">
-              <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
-              <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better deal.
-              </p>
-              <div className="mt-6 grid gap-4 sm:grid-cols-2">
-                {SEARCH_STARTER_ROUTES.map((route) => (
-                  <Link key={route.title} href={route.href} className="rounded-[1.5rem] bg-muted px-5 py-5 transition-colors hover:bg-emerald-50">
-                    <p className="text-sm font-semibold text-foreground">{route.title}</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">{route.description}</p>
-                    <p className="mt-4 text-sm font-semibold text-primary">{route.label} →</p>
-                  </Link>
-                ))}
+          <div className="space-y-6">
+            <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-[2rem] bg-white p-8 shadow-panel">
+                <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better deal.
+                </p>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2">
+                  {SEARCH_STARTER_ROUTES.map((route) => (
+                    <Link key={route.title} href={route.href} className="rounded-[1.5rem] bg-muted px-5 py-5 transition-colors hover:bg-emerald-50">
+                      <p className="text-sm font-semibold text-foreground">{route.title}</p>
+                      <p className="mt-2 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                      <p className="mt-4 text-sm font-semibold text-primary">{route.label} →</p>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+
+              <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel">
+                <p className="editorial-kicker">How Bes3 Search Works</p>
+                <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
+                  <p>Search a product name if you already have one option in mind and want to validate it fast.</p>
+                  <p>Search a category or use case if you still need Bes3 to narrow the list for you.</p>
+                  <p>Use the scope filter to jump between products, reviews, comparisons, and guides.</p>
+                  <p>When search still feels too broad, open a category page or shortlist instead of widening the query forever.</p>
+                </div>
               </div>
             </div>
 
-            <div className="rounded-[2rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel">
-              <p className="editorial-kicker">How Bes3 Search Works</p>
-              <div className="mt-4 space-y-4 text-sm leading-7 text-muted-foreground">
-                <p>Search a product name if you already have one option in mind and want to validate it fast.</p>
-                <p>Search a category or use case if you still need Bes3 to narrow the list for you.</p>
-                <p>Use the scope filter to jump between products, reviews, comparisons, and guides.</p>
-                <p>When search still feels too broad, open a category page or shortlist instead of widening the query forever.</p>
-              </div>
-            </div>
+            {!hasActiveSearch ? (
+              <SeoFaqSection
+                eyebrow="Search FAQ"
+                title="How to use Bes3 search without creating dead-end research"
+                description="The search entry page is meant to route people into stronger product, review, comparison, and category pages instead of trapping them in thin result states."
+                entries={[...SEARCH_FAQ_ENTRIES]}
+              />
+            ) : null}
           </div>
         )}
       </div>
