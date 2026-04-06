@@ -1,4 +1,5 @@
 import { DEFAULT_SITE_NAME } from '@/lib/constants'
+import { buildIntentMetadataDescription } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 type SeoPageOpenGraphType = 'article' | 'website'
@@ -33,7 +34,11 @@ function getOpenGraphType(pageType: string): SeoPageOpenGraphType {
 export function buildSeoPagePersistencePayload(input: BuildSeoPagePersistenceInput): SeoPagePersistencePayload {
   const pathname = normalizeText(input.pathname) || '/'
   const title = normalizeText(input.title) || DEFAULT_SITE_NAME
-  const metaDescription = normalizeText(input.description) || title
+  const metaDescription = buildIntentMetadataDescription({
+    title,
+    description: input.description,
+    pageType: input.pageType
+  })
   const canonicalUrl = toAbsoluteUrl(pathname)
   const image = normalizeText(input.image)
 
