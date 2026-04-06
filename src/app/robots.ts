@@ -19,6 +19,7 @@ export default function robots(): MetadataRoute.Robots {
           '/deals',
           '/feed.xml',
           '/feed.json',
+          '/opensearch.xml',
           '/directory',
           '/start',
           '/tools',

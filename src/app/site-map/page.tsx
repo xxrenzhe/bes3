@@ -68,6 +68,7 @@ export default async function HtmlSitemapPage() {
     { href: '/api/open/buying-feed', label: 'Buying Feed API' },
     { href: '/feed.xml', label: 'RSS Feed' },
     { href: '/feed.json', label: 'JSON Feed' },
+    { href: '/opensearch.xml', label: 'OpenSearch XML' },
     { href: '/media-sitemap.xml', label: 'Image Sitemap' }
   ]
 

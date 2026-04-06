@@ -80,6 +80,7 @@ export async function GET(request: Request) {
         '/llms.txt',
         '/api/open/buying-feed',
         '/api/open/coverage',
+        '/opensearch.xml',
         '/media-sitemap.xml'
       ]
     },
@@ -98,6 +99,11 @@ export async function GET(request: Request) {
         path: '/media-sitemap.xml',
         type: 'sitemap',
         description: 'XML image sitemap for product, editorial, brand, and brand-category hub visuals.'
+      },
+      {
+        path: '/opensearch.xml',
+        type: 'search-discovery',
+        description: 'OpenSearch description XML for discovering the Bes3 site-search entry point.'
       },
       {
         path: '/api/open/commerce/search?q=standing%20desk',
