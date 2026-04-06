@@ -47,6 +47,12 @@ export default async function HtmlSitemapPage() {
       products.filter((product) => categoryMatches(product.category, category)).slice(0, 6)
     ])
   )
+  const brandCategoryHubsByCategory = new Map(
+    categories.map((category) => [
+      category,
+      brandCategoryHubs.filter((hub) => categoryMatches(hub.category, category))
+    ])
+  )
   const hubPages = [
     { href: '/categories', label: 'Categories' },
     { href: '/products', label: 'Products' },
@@ -78,7 +84,11 @@ export default async function HtmlSitemapPage() {
         { name: 'Tools', path: '/tools' },
         ...hubPages.map((page) => ({ name: page.label, path: page.href })),
         ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: buildCategoryPath(category) })),
-        ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` }))
+        ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` })),
+        ...brandCategoryHubs.slice(0, 48).map((hub) => ({
+          name: `${hub.brandName} ${hub.category}`,
+          path: buildBrandCategoryPath(hub.brandSlug, hub.category)
+        }))
       ]
     }),
     buildDatasetSchema({
@@ -152,11 +162,54 @@ export default async function HtmlSitemapPage() {
           ]}
           points={[
             'The XML sitemaps are now segmented by core pages, products, editorial pages, and taxonomy hubs.',
-            'This HTML sitemap mirrors the same graph in plain text links, making deeper pages easier to discover and revisit.',
+            'This HTML sitemap mirrors the same graph in plain text links, including long-tail brand-category spokes that would otherwise sit deeper in the crawl tree.',
             'Brand-category hubs capture long-tail intent without flattening everything into one directory layer.',
             'The page is intentionally lightweight so both users and crawlers can traverse the site structure quickly.'
           ]}
         />
+
+        <section className="rounded-[2rem] bg-white p-6 shadow-panel">
+          <div className="flex flex-wrap items-end justify-between gap-4">
+            <div>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brand-Category Spokes</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Long-tail hub pages exposed directly for crawl depth.</h2>
+              <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+                These exact-match brand and category combinations are part of the programmatic hub-and-spoke layer. Listing them here keeps the long-tail graph visible to both shoppers and crawlers instead of hiding them behind only brand or category entry points.
+              </p>
+            </div>
+            <div className="rounded-[1.25rem] bg-muted px-5 py-4 text-sm text-muted-foreground">
+              <span className="font-semibold text-foreground">{brandCategoryHubs.length}</span> brand-category pages
+            </div>
+          </div>
+          <div className="mt-8 grid gap-6 lg:grid-cols-3">
+            {categories.map((category) => {
+              const hubs = brandCategoryHubsByCategory.get(category) || []
+              if (!hubs.length) return null
+
+              return (
+                <div key={`hub-${category}`} className="rounded-[1.5rem] bg-muted/40 p-5">
+                  <Link href={buildCategoryPath(category)} className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
+                    {category.replace(/-/g, ' ')}
+                  </Link>
+                  <div className="mt-4 space-y-3 text-sm text-muted-foreground">
+                    {hubs.map((hub) => (
+                      <Link
+                        key={`${hub.brandSlug}-${hub.category}`}
+                        href={buildBrandCategoryPath(hub.brandSlug, hub.category)}
+                        className="block rounded-2xl bg-white px-4 py-3 transition-colors hover:text-primary"
+                      >
+                        <p className="font-semibold text-foreground">{hub.brandName}</p>
+                        <p className="mt-1 text-xs text-muted-foreground">
+                          {hub.productCount} products · {hub.articleCount} editorial pages
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
 
         <section className="grid gap-6 lg:grid-cols-2">
           <div className="rounded-[2rem] bg-white p-6 shadow-panel">
