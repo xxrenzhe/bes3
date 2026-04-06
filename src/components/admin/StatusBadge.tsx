@@ -36,7 +36,16 @@ const STYLES: Record<string, string> = {
   revalidateAndSitemap: 'bg-fuchsia-100 text-fuchsia-800',
   pingAndIndexing: 'bg-pink-100 text-pink-800',
   http_error: 'bg-rose-100 text-rose-800',
-  out_of_stock: 'bg-amber-100 text-amber-800'
+  out_of_stock: 'bg-amber-100 text-amber-800',
+  canonical_missing: 'bg-amber-100 text-amber-800',
+  canonical_mismatch: 'bg-rose-100 text-rose-800',
+  route_type_mismatch: 'bg-rose-100 text-rose-800',
+  thin_description: 'bg-amber-100 text-amber-800',
+  low_signal_copy: 'bg-amber-100 text-amber-800',
+  title_path_mismatch: 'bg-rose-100 text-rose-800',
+  heading_hierarchy_gap: 'bg-amber-100 text-amber-800',
+  heading_depth_excess: 'bg-amber-100 text-amber-800',
+  missing_h2_structure: 'bg-amber-100 text-amber-800'
 }
 
 function formatValue(value: string) {
