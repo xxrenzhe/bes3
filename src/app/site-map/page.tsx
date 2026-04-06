@@ -67,7 +67,8 @@ export default async function HtmlSitemapPage() {
     { href: '/api/open/coverage', label: 'Coverage Manifest API' },
     { href: '/api/open/buying-feed', label: 'Buying Feed API' },
     { href: '/feed.xml', label: 'RSS Feed' },
-    { href: '/feed.json', label: 'JSON Feed' }
+    { href: '/feed.json', label: 'JSON Feed' },
+    { href: '/media-sitemap.xml', label: 'Image Sitemap' }
   ]
 
   const structuredData = [
@@ -169,7 +170,7 @@ export default async function HtmlSitemapPage() {
             { label: 'Public pages', value: String(products.length + articles.length), note: 'Product and editorial URLs already feeding the public crawl graph.' }
           ]}
           points={[
-            'The XML sitemaps are now segmented by core pages, products, editorial pages, and taxonomy hubs.',
+            'The XML sitemaps are now segmented by core pages, products, editorial pages, taxonomy hubs, and image discovery.',
             'This HTML sitemap mirrors the same graph in plain text links, including long-tail brand-category spokes that would otherwise sit deeper in the crawl tree.',
             'Machine-entry routes like llms.txt and the public manifests are linked here too, so the trust and API graph stays visible instead of hidden behind docs copy.',
             'Brand-category hubs capture long-tail intent without flattening everything into one directory layer.',

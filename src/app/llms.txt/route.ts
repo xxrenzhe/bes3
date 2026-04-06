@@ -60,6 +60,7 @@ export async function GET(request: Request) {
     `- Coverage manifest: ${siteUrl}/api/open/coverage`,
     `- RSS feed: ${siteUrl}/feed.xml`,
     `- JSON feed: ${siteUrl}/feed.json`,
+    `- Image sitemap: ${siteUrl}/media-sitemap.xml`,
     `- Commerce search: ${siteUrl}/api/open/commerce/search?q=standing%20desk`,
     `- Commerce intent: ${siteUrl}/api/open/commerce/intent?intent=small%20desk%20setup`,
     `- Brand coverage example: ${siteUrl}/api/open/commerce/brands/${brands[0]?.slug || 'midea'}`,

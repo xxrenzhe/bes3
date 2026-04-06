@@ -38,7 +38,8 @@ export default function robots(): MetadataRoute.Robots {
       `${siteUrl}/products/sitemap.xml`,
       `${siteUrl}/editorial/sitemap.xml`,
       `${siteUrl}/taxonomy/sitemap.xml`,
-      `${siteUrl}/trust/sitemap.xml`
+      `${siteUrl}/trust/sitemap.xml`,
+      `${siteUrl}/media-sitemap.xml`
     ]
   }
 }

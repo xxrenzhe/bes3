@@ -42,6 +42,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified,
       changeFrequency: 'daily',
       priority: 0.5
+    },
+    {
+      url: new URL('/media-sitemap.xml', siteUrl).toString(),
+      lastModified,
+      changeFrequency: 'daily',
+      priority: 0.52
     }
   ]
 }

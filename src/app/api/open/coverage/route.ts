@@ -73,12 +73,14 @@ export async function GET(request: Request) {
         '/products/sitemap.xml',
         '/editorial/sitemap.xml',
         '/taxonomy/sitemap.xml',
-        '/trust/sitemap.xml'
+        '/trust/sitemap.xml',
+        '/media-sitemap.xml'
       ],
       machineEntry: [
         '/llms.txt',
         '/api/open/buying-feed',
-        '/api/open/coverage'
+        '/api/open/coverage',
+        '/media-sitemap.xml'
       ]
     },
     endpoints: [
@@ -91,6 +93,11 @@ export async function GET(request: Request) {
         path: '/api/open/coverage',
         type: 'manifest',
         description: 'Machine-readable coverage summary for brands, categories, products, and editorial counts.'
+      },
+      {
+        path: '/media-sitemap.xml',
+        type: 'sitemap',
+        description: 'XML image sitemap for product, editorial, brand, and brand-category hub visuals.'
       },
       {
         path: '/api/open/commerce/search?q=standing%20desk',

@@ -122,7 +122,8 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'Coverage Manifest API', path: '/api/open/coverage' },
   { name: 'Buying Feed API', path: '/api/open/buying-feed' },
   { name: 'RSS Feed', path: '/feed.xml' },
-  { name: 'JSON Feed', path: '/feed.json' }
+  { name: 'JSON Feed', path: '/feed.json' },
+  { name: 'Image Sitemap', path: '/media-sitemap.xml' }
 ]
 
 function buildOrganizationReference() {
@@ -140,6 +141,7 @@ function buildWebsiteReference() {
 function buildTrustPageReferences() {
   return TRUST_PAGE_LINKS.map((item) => ({
     '@type': item.path === '/feed.xml' || item.path === '/feed.json'
+      || item.path === '/media-sitemap.xml'
       ? 'DataFeed'
       : item.path.startsWith('/api/open/')
       ? item.path.includes('buying-feed')
