@@ -1,12 +1,13 @@
 import { getFeedEntries, escapeXml } from '@/lib/feed'
+import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
 import { listPublishedArticles } from '@/lib/site-data'
 import { getSiteUrl } from '@/lib/site-url'
 
-export async function GET() {
+export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
   const articles = await listPublishedArticles()
   const entries = getFeedEntries(articles, 30)
-  const latestBuildDate = entries[0]?.updatedAt || new Date().toISOString()
+  const latestBuildDate = getLatestTimestamp(entries.map((entry) => entry.updatedAt))
 
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',
@@ -34,10 +35,10 @@ export async function GET() {
     '</rss>'
   ].join('')
 
-  return new Response(body, {
-    headers: {
-      'Content-Type': 'application/rss+xml; charset=utf-8',
-      'Cache-Control': 'public, s-maxage=900, stale-while-revalidate=3600'
-    }
+  return createCacheableTextResponse({
+    request,
+    body,
+    contentType: 'application/rss+xml; charset=utf-8',
+    lastModified: latestBuildDate
   })
 }

@@ -1,7 +1,8 @@
+import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 import { getSiteUrl } from '@/lib/site-url'
 
-export async function GET() {
+export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
   const [brands, categories, articles, products] = await Promise.all([
     listBrands(),
@@ -13,6 +14,11 @@ export async function GET() {
   const reviewCount = articles.filter((article) => article.type === 'review').length
   const comparisonCount = articles.filter((article) => article.type === 'comparison').length
   const guideCount = articles.filter((article) => article.type === 'guide').length
+  const lastModified = getLatestTimestamp([
+    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
+    ...products.map((product) => product.updatedAt || product.publishedAt),
+    ...brands.map((brand) => brand.latestUpdate)
+  ])
 
   const body = [
     '# Bes3',
@@ -72,9 +78,10 @@ export async function GET() {
     '- Merchant pages remain the final source of truth for live price, stock, coupon, shipping, and return details.'
   ].join('\n')
 
-  return new Response(body, {
-    headers: {
-      'Content-Type': 'text/plain; charset=utf-8'
-    }
+  return createCacheableTextResponse({
+    request,
+    body,
+    contentType: 'text/plain; charset=utf-8',
+    lastModified
   })
 }

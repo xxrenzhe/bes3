@@ -1,10 +1,10 @@
-import { NextResponse } from 'next/server'
 import { buildBrandCategoryPath } from '@/lib/category'
+import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
 import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { SUPPORTED_LOCALES } from '@/lib/i18n'
 import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
-export async function GET() {
+export async function GET(request: Request) {
   const [brandCategoryHubs, brands, categories, articles, products] = await Promise.all([
     listBrandCategoryHubs(),
     listBrands(),
@@ -13,15 +13,16 @@ export async function GET() {
     listPublishedProducts()
   ])
 
-  const latestRefresh = [
+  const latestRefresh = getLatestTimestamp([
     ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
     ...products.map((product) => product.updatedAt || product.publishedAt),
-    ...brands.map((brand) => brand.latestUpdate)
-  ].find(Boolean) || null
+    ...brands.map((brand) => brand.latestUpdate),
+    ...brandCategoryHubs.map((hub) => hub.latestUpdate)
+  ])
 
-  return NextResponse.json({
+  const body = JSON.stringify({
     protocolVersion: COMMERCE_PROTOCOL_VERSION,
-    generatedAt: new Date().toISOString(),
+    generatedAt: latestRefresh,
     feedType: 'coverage-manifest-v1',
     latestRefresh,
     counts: {
@@ -127,5 +128,12 @@ export async function GET() {
         description: 'Resolve alert and wait-flow recommendations for a monitored buying intent.'
       }
     ]
+  })
+
+  return createCacheableTextResponse({
+    request,
+    body,
+    contentType: 'application/json; charset=utf-8',
+    lastModified: latestRefresh
   })
 }

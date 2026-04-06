@@ -205,6 +205,9 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
     'render_origin_unreachable',
     'machine_entry_invalid_content_type',
     'machine_entry_missing_field',
+    'machine_entry_missing_etag',
+    'machine_entry_missing_last_modified',
+    'machine_entry_revalidation_miss',
     'trust_missing_canonical_tag',
     'trust_missing_json_ld',
     'trust_missing_trust_links',
@@ -253,6 +256,10 @@ function getRecommendedAction(issueType: string) {
       return 'Point the rendered SEO audit at a reachable app origin so runtime page checks can execute instead of failing at the network layer.'
     case 'trust_origin_unreachable':
       return 'Point the trust-surface audit at a reachable app origin so About, Contact, policy pages, and llms.txt can be checked end to end.'
+    case 'machine_entry_missing_etag':
+    case 'machine_entry_missing_last_modified':
+    case 'machine_entry_revalidation_miss':
+      return 'Add stable ETag and Last-Modified headers, then honor conditional requests with 304 responses so machine-entry routes can be revalidated efficiently.'
     case 'trust_http_error':
       return 'Restore the trust or machine-entry route so the page can be fetched successfully.'
     case 'trust_missing_canonical_tag':
@@ -816,14 +823,17 @@ async function inspectTrustSurface() {
     await Promise.all(
       MACHINE_ENTRY_ENDPOINTS.map(async (endpoint) => {
         try {
+          const requestHeaders = {
+            'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)',
+            Accept: endpoint.expectedContentType.includes('rss')
+              ? 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8'
+              : `${endpoint.expectedContentType}, application/json;q=0.9`
+          }
           const response = await fetch(buildAbsolutePath(auditOrigin.origin, endpoint.pathname), {
             method: 'GET',
             redirect: 'follow',
             signal: AbortSignal.timeout(8000),
-            headers: {
-              'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)',
-              Accept: endpoint.expectedContentType.includes('rss') ? 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.8' : 'application/json'
-            }
+            headers: requestHeaders
           })
 
           const body = await response.text()
@@ -857,6 +867,30 @@ async function inspectTrustSurface() {
             })
           }
 
+          const etag = sanitizeText(response.headers.get('etag'))
+          if (!etag) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'machine_entry_missing_etag',
+              issueDetail: `${endpoint.title} is missing an ETag header.`,
+              checkedAt
+            })
+          }
+
+          const lastModified = sanitizeText(response.headers.get('last-modified'))
+          if (!lastModified || Number.isNaN(Date.parse(lastModified))) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'machine_entry_missing_last_modified',
+              issueDetail: lastModified
+                ? `${endpoint.title} returned an invalid Last-Modified header: "${lastModified}".`
+                : `${endpoint.title} is missing a Last-Modified header.`,
+              checkedAt
+            })
+          }
+
           const missingFields = endpoint.expectedContentType.includes('rss')
             ? endpoint.requiredFields.filter((field) => !body.includes(field))
             : (() => {
@@ -882,6 +916,41 @@ async function inspectTrustSurface() {
               issueDetail: `${endpoint.title} is missing required field(s): ${missingFields.join(', ')}.`,
               checkedAt
             })
+          }
+
+          const validatorHeaderName = etag ? 'If-None-Match' : lastModified ? 'If-Modified-Since' : null
+          const validatorHeaderValue = etag || lastModified
+
+          if (validatorHeaderName && validatorHeaderValue) {
+            try {
+              const revalidationResponse = await fetch(buildAbsolutePath(auditOrigin.origin, endpoint.pathname), {
+                method: 'GET',
+                redirect: 'follow',
+                signal: AbortSignal.timeout(8000),
+                headers: {
+                  ...requestHeaders,
+                  [validatorHeaderName]: validatorHeaderValue
+                }
+              })
+
+              if (revalidationResponse.status !== 304) {
+                findings.push({
+                  pathname: endpoint.pathname,
+                  title: endpoint.title,
+                  issueType: 'machine_entry_revalidation_miss',
+                  issueDetail: `${endpoint.title} returned HTTP ${revalidationResponse.status} instead of 304 for ${validatorHeaderName}.`,
+                  checkedAt
+                })
+              }
+            } catch (error: any) {
+              findings.push({
+                pathname: endpoint.pathname,
+                title: endpoint.title,
+                issueType: 'machine_entry_revalidation_miss',
+                issueDetail: error?.message || String(error),
+                checkedAt
+              })
+            }
           }
 
           return findings
