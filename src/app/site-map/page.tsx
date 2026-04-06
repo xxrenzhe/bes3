@@ -62,6 +62,11 @@ export default async function HtmlSitemapPage() {
     { href: '/data', label: 'Open Data' },
     { href: '/trust', label: 'Trust Center' }
   ]
+  const machinePages = [
+    { href: '/llms.txt', label: 'llms.txt' },
+    { href: '/api/open/coverage', label: 'Coverage Manifest API' },
+    { href: '/api/open/buying-feed', label: 'Buying Feed API' }
+  ]
 
   const structuredData = [
     buildWebPageSchema({
@@ -83,6 +88,7 @@ export default async function HtmlSitemapPage() {
         { name: 'Brands', path: '/brands' },
         { name: 'Tools', path: '/tools' },
         ...hubPages.map((page) => ({ name: page.label, path: page.href })),
+        ...machinePages.map((page) => ({ name: page.label, path: page.href })),
         ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: buildCategoryPath(category) })),
         ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` })),
         ...brandCategoryHubs.slice(0, 48).map((hub) => ({
@@ -163,6 +169,7 @@ export default async function HtmlSitemapPage() {
           points={[
             'The XML sitemaps are now segmented by core pages, products, editorial pages, and taxonomy hubs.',
             'This HTML sitemap mirrors the same graph in plain text links, including long-tail brand-category spokes that would otherwise sit deeper in the crawl tree.',
+            'Machine-entry routes like llms.txt and the public manifests are linked here too, so the trust and API graph stays visible instead of hidden behind docs copy.',
             'Brand-category hubs capture long-tail intent without flattening everything into one directory layer.',
             'The page is intentionally lightweight so both users and crawlers can traverse the site structure quickly.'
           ]}
@@ -211,7 +218,7 @@ export default async function HtmlSitemapPage() {
           </div>
         </section>
 
-        <section className="grid gap-6 lg:grid-cols-2">
+        <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-[2rem] bg-white p-6 shadow-panel">
             <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Editorial hubs</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
@@ -245,6 +252,16 @@ export default async function HtmlSitemapPage() {
                 { href: '/shortlist', label: 'Shortlist' },
                 { href: '/data', label: 'Open Data' }
               ].map((page) => (
+                <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
+                  {page.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Machine entry routes</p>
+            <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
+              {machinePages.map((page) => (
                 <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
                   {page.label}
                 </Link>

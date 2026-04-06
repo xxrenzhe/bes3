@@ -44,6 +44,27 @@ const TRUST_ROUTES = [
     description: 'Browse the public feed, coverage manifest, and commerce protocol routes without reverse-engineering the site.'
   },
   {
+    eyebrow: 'Machine Layer',
+    title: 'LLMs Manifest',
+    href: '/llms.txt',
+    label: 'Open llms.txt',
+    description: 'Inspect the text-first machine manifest that points agents and crawlers to the main HTML routes and public data endpoints.'
+  },
+  {
+    eyebrow: 'Machine Layer',
+    title: 'Coverage Manifest API',
+    href: '/api/open/coverage',
+    label: 'Open Coverage JSON',
+    description: 'Read the public coverage manifest for locale footprint, crawl surfaces, taxonomy counts, and endpoint discovery.'
+  },
+  {
+    eyebrow: 'Machine Layer',
+    title: 'Buying Feed API',
+    href: '/api/open/buying-feed',
+    label: 'Open Feed JSON',
+    description: 'Read the sanitized buying feed that exposes products, editorial assets, and decision-support fields in one machine-readable payload.'
+  },
+  {
     eyebrow: 'Discovery',
     title: 'HTML Sitemap',
     href: '/site-map',
@@ -55,7 +76,7 @@ const TRUST_ROUTES = [
 const faqEntries = [
   {
     question: 'What is the Bes3 trust center for?',
-    answer: 'It groups the methodology, contact, legal, open-data, and sitemap pages into one crawlable trust surface so readers and machines can verify how Bes3 works.'
+    answer: 'It groups the methodology, contact, legal, open-data, sitemap, and machine-manifest routes into one crawlable trust surface so readers and machines can verify how Bes3 works.'
   },
   {
     question: 'Why not hide these pages in the footer only?',
@@ -63,17 +84,17 @@ const faqEntries = [
   },
   {
     question: 'What should I open first from here?',
-    answer: 'Open About for methodology, Contact for unresolved edge cases, Privacy or Terms for legal clarity, and Open Data or the HTML sitemap when you need a machine-readable site entry point.'
+    answer: 'Open About for methodology, Contact for unresolved edge cases, Privacy or Terms for legal clarity, and Open Data, llms.txt, or the HTML sitemap when you need a machine-readable site entry point.'
   }
 ]
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Trust Center',
-    description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, and sitemap pages from one clear entry point.',
+    description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
     path: '/trust',
     locale: getRequestLocale(),
-    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'html sitemap']
+    keywords: ['trust center', 'about bes3', 'privacy policy', 'terms of service', 'open data', 'llms.txt', 'html sitemap']
   })
 }
 
@@ -91,14 +112,14 @@ export default function TrustPage() {
           buildWebPageSchema({
             path: '/trust',
             title: 'Trust Center',
-            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, and sitemap pages from one clear entry point.',
+            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
             type: 'CollectionPage',
             breadcrumbItems
           }),
           buildCollectionPageSchema({
             path: '/trust',
             title: 'Trust Center',
-            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, and sitemap pages from one clear entry point.',
+            description: 'Browse the Bes3 trust surface: methodology, contact, privacy, terms, open data, llms.txt, and sitemap routes from one clear entry point.',
             breadcrumbItems,
             items: TRUST_ROUTES.map((route) => ({
               name: route.title,
@@ -116,7 +137,7 @@ export default function TrustPage() {
             The Bes3 trust and machine-entry surface in one place.
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page gathers the methodology, contact path, legal policies, open-data docs, and sitemap routes that explain how Bes3 works and how the public site should be interpreted.
+            This page gathers the methodology, contact path, legal policies, open-data docs, llms manifest, machine APIs, and sitemap routes that explain how Bes3 works and how the public site should be interpreted.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {TRUST_ROUTES.map((route) => (
@@ -140,14 +161,14 @@ export default function TrustPage() {
           stats={[
             { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Methodology, legal, support, and machine-entry pages exposed directly.' },
             { label: 'Policy pages', value: '2', note: 'Privacy and terms pages with explicit structured trust signals.' },
-            { label: 'Machine-entry pages', value: '2', note: 'Open data and HTML sitemap routes for automation and crawl discovery.' },
+            { label: 'Machine-entry pages', value: '4', note: 'Open data, llms.txt, and raw API manifests exposed as first-class machine routes.' },
             { label: 'Support paths', value: '2', note: 'About and Contact clarify the product method and human fallback path.' }
           ]}
           points={[
             'The trust center gives search engines one stable hub for methodology, legal, support, and machine-readable routes.',
             'It reduces the chance that trust pages become isolated footer links with weak crawl depth.',
             'The same routes are now suitable for policy review, citation, and recurring admin SEO audits.',
-            'Open data and sitemap links sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
+            'Open data, llms.txt, and machine manifests sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
           ]}
         />
 

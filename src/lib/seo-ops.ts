@@ -203,6 +203,8 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
     'missing_og_title',
     'missing_og_description',
     'render_origin_unreachable',
+    'machine_entry_invalid_content_type',
+    'machine_entry_missing_field',
     'trust_missing_canonical_tag',
     'trust_missing_json_ld',
     'trust_missing_trust_links',
@@ -259,6 +261,10 @@ function getRecommendedAction(issueType: string) {
       return 'Restore machine-readable structured data on the trust page so the route contributes to the site trust graph.'
     case 'trust_missing_trust_links':
       return 'Reconnect the trust page to the rest of the trust surface with explicit internal links.'
+    case 'machine_entry_invalid_content_type':
+      return 'Return the machine-entry route with the expected content type so crawlers and agents can interpret it consistently.'
+    case 'machine_entry_missing_field':
+      return 'Restore the required manifest fields so the machine-entry route remains a stable discovery surface.'
     case 'llms_missing_reference':
       return 'Update llms.txt so it references the key trust and machine-entry routes.'
     case 'published_page_noindex':
@@ -600,7 +606,22 @@ async function inspectRenderedPages(paths: string[]) {
 }
 
 const TRUST_SURFACE_PATHS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
-const TRUST_SURFACE_LINK_TARGETS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map']
+const MACHINE_ENTRY_PATHS = ['/llms.txt', '/api/open/coverage', '/api/open/buying-feed'] as const
+const TRUST_SURFACE_LINK_TARGETS = [...TRUST_SURFACE_PATHS, ...MACHINE_ENTRY_PATHS]
+const MACHINE_ENTRY_ENDPOINTS = [
+  {
+    pathname: '/api/open/coverage',
+    title: 'Coverage manifest',
+    expectedContentType: 'application/json',
+    requiredFields: ['protocolVersion', 'counts', 'crawlSurfaces', 'endpoints', 'localeFootprint']
+  },
+  {
+    pathname: '/api/open/buying-feed',
+    title: 'Buying feed',
+    expectedContentType: 'application/json',
+    requiredFields: ['protocolVersion', 'feedType', 'products', 'articles']
+  }
+] as const
 
 async function inspectTrustSurface() {
   const checkedAt = new Date().toISOString()
@@ -617,7 +638,7 @@ async function inspectTrustSurface() {
       .join(' ')
 
     return {
-      scannedPages: TRUST_SURFACE_PATHS.length + 1,
+      scannedPages: TRUST_SURFACE_PATHS.length + 1 + MACHINE_ENTRY_ENDPOINTS.length,
       affectedPages: 1,
       issuesFound: 1,
       findings: [
@@ -753,7 +774,7 @@ async function inspectTrustSurface() {
         }
       ]
     } else {
-      const requiredRefs = ['/trust', '/data', '/site-map', '/about']
+      const requiredRefs = ['/trust', '/data', '/site-map', '/about', '/api/open/coverage', '/api/open/buying-feed']
       const missing = requiredRefs.filter((ref) => !body.includes(ref))
       if (missing.length > 0) {
         llmsFinding = [
@@ -779,9 +800,99 @@ async function inspectTrustSurface() {
     ]
   }
 
-  const findings = [...htmlFindings, ...llmsFinding]
+  const machineEntryFindings = (
+    await Promise.all(
+      MACHINE_ENTRY_ENDPOINTS.map(async (endpoint) => {
+        try {
+          const response = await fetch(buildAbsolutePath(auditOrigin.origin, endpoint.pathname), {
+            method: 'GET',
+            redirect: 'follow',
+            signal: AbortSignal.timeout(8000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)',
+              Accept: 'application/json'
+            }
+          })
+
+          const body = await response.text()
+          const findings: Array<{
+            pathname: string
+            title: string
+            issueType: string
+            issueDetail: string
+            checkedAt: string
+          }> = []
+
+          if (!response.ok) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'trust_http_error',
+              issueDetail: `${endpoint.title} returned HTTP ${response.status}.`,
+              checkedAt
+            })
+            return findings
+          }
+
+          const contentType = sanitizeText(response.headers.get('content-type')).toLowerCase()
+          if (!contentType.includes(endpoint.expectedContentType)) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'machine_entry_invalid_content_type',
+              issueDetail: `${endpoint.title} returned content type "${contentType || 'unknown'}" instead of ${endpoint.expectedContentType}.`,
+              checkedAt
+            })
+          }
+
+          let parsed: Record<string, unknown> | null = null
+          try {
+            parsed = JSON.parse(body) as Record<string, unknown>
+          } catch {
+            parsed = null
+          }
+
+          if (!parsed) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'machine_entry_missing_field',
+              issueDetail: `${endpoint.title} did not return valid JSON with the expected manifest fields.`,
+              checkedAt
+            })
+            return findings
+          }
+
+          const missingFields = endpoint.requiredFields.filter((field) => !(field in parsed!))
+          if (missingFields.length > 0) {
+            findings.push({
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'machine_entry_missing_field',
+              issueDetail: `${endpoint.title} is missing required field(s): ${missingFields.join(', ')}.`,
+              checkedAt
+            })
+          }
+
+          return findings
+        } catch (error: any) {
+          return [
+            {
+              pathname: endpoint.pathname,
+              title: endpoint.title,
+              issueType: 'trust_http_error',
+              issueDetail: error?.message || String(error),
+              checkedAt
+            }
+          ]
+        }
+      })
+    )
+  ).flat()
+
+  const findings = [...htmlFindings, ...llmsFinding, ...machineEntryFindings]
   return {
-    scannedPages: TRUST_SURFACE_PATHS.length + 1,
+    scannedPages: TRUST_SURFACE_PATHS.length + 1 + MACHINE_ENTRY_ENDPOINTS.length,
     affectedPages: new Set(findings.map((finding) => finding.pathname)).size,
     issuesFound: findings.length,
     findings: findings.slice(0, 12)
