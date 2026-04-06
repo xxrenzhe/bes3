@@ -6,7 +6,6 @@ import {
   LOCALE_COOKIE_NAME,
   REQUEST_DISPLAY_PATH_HEADER,
   REQUEST_LOCALE_HEADER,
-  SUPPORTED_LOCALES,
   addLocaleToPath,
   getLocaleFromPathname,
   isSupportedLocale,
@@ -17,26 +16,104 @@ import {
 const PUBLIC_PATHS = [
   '/',
   '/about',
+  '/assistant',
   '/brands',
+  '/categories',
+  '/compare',
   '/contact',
+  '/data',
   '/deals',
+  '/guides',
+  '/llms.txt',
   '/search',
   '/site-map',
   '/directory',
   '/newsletter',
   '/privacy',
+  '/products',
+  '/reviews',
   '/shortlist',
   '/start',
   '/terms',
+  '/trust',
   '/tools',
   '/login',
   '/thank-you',
   '/api/auth/login',
   '/api/newsletter',
   '/api/open/buying-feed',
+  '/api/open/coverage',
   '/api/health',
   '/sitemap.xml',
-  '/robots.txt'
+  '/robots.txt',
+  '/editorial/sitemap.xml',
+  '/products/sitemap.xml',
+  '/taxonomy/sitemap.xml',
+  '/trust/sitemap.xml'
+]
+
+const EXACT_PUBLIC_ALIASES: Record<string, string> = {
+  '/brand': '/brands',
+  '/brands-index': '/brands',
+  '/category': '/categories',
+  '/categories-index': '/categories',
+  '/comparison': '/compare',
+  '/comparisons': '/compare',
+  '/compare-index': '/compare',
+  '/deal': '/deals',
+  '/guide': '/guides',
+  '/guides-index': '/guides',
+  '/open-data': '/data',
+  '/privacy-policy': '/privacy',
+  '/product': '/products',
+  '/products-index': '/products',
+  '/review': '/reviews',
+  '/reviews-index': '/reviews',
+  '/sitemap': '/site-map',
+  '/site-map.xml': '/sitemap.xml',
+  '/trust-center': '/trust'
+}
+
+const PUBLIC_FAMILY_ALIASES: Array<{
+  pattern: RegExp
+  build: (...matches: string[]) => string
+}> = [
+  {
+    pattern: /^\/brand\/([^/]+)$/i,
+    build: (slug) => `/brands/${slug}`
+  },
+  {
+    pattern: /^\/category\/([^/]+)$/i,
+    build: (slug) => `/categories/${slug}`
+  },
+  {
+    pattern: /^\/product\/([^/]+)$/i,
+    build: (slug) => `/products/${slug}`
+  },
+  {
+    pattern: /^\/review\/([^/]+)$/i,
+    build: (slug) => `/reviews/${slug}`
+  },
+  {
+    pattern: /^\/guide\/([^/]+)$/i,
+    build: (slug) => `/guides/${slug}`
+  },
+  {
+    pattern: /^\/comparison\/([^/]+)$/i,
+    build: (slug) => `/compare/${slug}`
+  },
+  {
+    pattern: /^\/comparisons\/([^/]+)$/i,
+    build: (slug) => `/compare/${slug}`
+  },
+  {
+    pattern: /^\/brands\/([^/]+)\/category\/([^/]+)$/i,
+    build: (brandSlug, categorySlug) => `/brands/${brandSlug}/categories/${categorySlug}`
+  },
+  {
+    pattern: /^\/brand\/([^/]+)\/category\/([^/]+)$/i,
+    build: (brandSlug, categorySlug) => `/brands/${brandSlug}/categories/${categorySlug}`
+  }
 ]
 
 function isPublic(pathname: string): boolean {
@@ -50,8 +127,26 @@ function isPublic(pathname: string): boolean {
     pathname.startsWith('/media/') ||
     pathname.startsWith('/tools/') ||
     pathname.startsWith('/products/') ||
-    pathname.startsWith('/reviews/')
+    pathname.startsWith('/reviews/') ||
+    pathname.startsWith('/api/open/') ||
+    pathname.startsWith('/trust/')
   )
+}
+
+function resolveCanonicalPublicPath(pathname: string) {
+  const normalized = pathname.replace(/\/+$/, '') || '/'
+
+  if (EXACT_PUBLIC_ALIASES[normalized]) {
+    return EXACT_PUBLIC_ALIASES[normalized]
+  }
+
+  for (const alias of PUBLIC_FAMILY_ALIASES) {
+    const match = normalized.match(alias.pattern)
+    if (!match) continue
+    return alias.build(...match.slice(1))
+  }
+
+  return null
 }
 
 function isLocaleRedirectCandidate(pathname: string) {
@@ -91,6 +186,13 @@ export async function middleware(request: NextRequest) {
   const requestHeaders = new Headers(request.headers)
   requestHeaders.set(REQUEST_LOCALE_HEADER, activeLocale)
   requestHeaders.set(REQUEST_DISPLAY_PATH_HEADER, localeInPath ? pathname : addLocaleToPath(basePath, activeLocale))
+  const canonicalPublicPath = resolveCanonicalPublicPath(basePath)
+
+  if (canonicalPublicPath && canonicalPublicPath !== basePath) {
+    const redirectUrl = request.nextUrl.clone()
+    redirectUrl.pathname = localeInPath ? addLocaleToPath(canonicalPublicPath, activeLocale) : canonicalPublicPath
+    return withLocaleCookie(NextResponse.redirect(redirectUrl, 308), activeLocale)
+  }
 
   if (localeInPath && isPublic(basePath)) {
     const rewrittenUrl = request.nextUrl.clone()
