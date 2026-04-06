@@ -70,7 +70,7 @@ export default async function RootLayout({
   return (
     <html lang={getHtmlLang(locale)} suppressHydrationWarning>
       <body className="font-sans">
-        <StructuredData data={[buildOrganizationSchema(), buildWebsiteSchema()]} />
+        <StructuredData data={[buildOrganizationSchema(locale), buildWebsiteSchema(locale)]} />
         <ShortlistProvider>
           {children}
           <ToasterProvider />

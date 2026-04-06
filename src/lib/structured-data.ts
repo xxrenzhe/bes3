@@ -1,5 +1,6 @@
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
 import { getCategoryLabel } from '@/lib/editorial'
+import { DEFAULT_LOCALE, SUPPORTED_LOCALES, addLocaleToPath, getHtmlLang, getLocaleLabel, type SiteLocale } from '@/lib/i18n'
 import { pickMetadataDescription, sanitizeMetadataTitle } from '@/lib/metadata'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import type { ArticleRecord, ProductRecord } from '@/lib/site-data'
@@ -126,6 +127,20 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'Image Sitemap', path: '/media-sitemap.xml' }
 ]
 
+const CORE_ENTRY_LINKS: ItemListEntry[] = [
+  { name: 'Assistant', path: '/assistant' },
+  { name: 'Start Here', path: '/start' },
+  { name: 'Search', path: '/search' },
+  { name: 'Directory', path: '/directory' },
+  { name: 'Deals', path: '/deals' },
+  { name: 'Brands', path: '/brands' },
+  { name: 'Categories', path: '/categories' },
+  { name: 'Products', path: '/products' },
+  { name: 'Reviews', path: '/reviews' },
+  { name: 'Compare', path: '/compare' },
+  { name: 'Guides', path: '/guides' }
+]
+
 function buildOrganizationReference() {
   return {
     '@id': `${toAbsoluteUrl('/')}#organization`
@@ -150,6 +165,23 @@ function buildTrustPageReferences() {
       : 'WebPage',
     name: item.name,
     url: toAbsoluteUrl(item.path)
+  }))
+}
+
+function buildCoreEntryReferences() {
+  return CORE_ENTRY_LINKS.map((item) => ({
+    '@type': 'WebPage',
+    name: item.name,
+    url: toAbsoluteUrl(item.path)
+  }))
+}
+
+function buildLanguageReferences() {
+  return SUPPORTED_LOCALES.map((locale) => ({
+    '@type': 'Language',
+    name: getLocaleLabel(locale),
+    alternateName: getHtmlLang(locale),
+    url: toAbsoluteUrl(addLocaleToPath('/', locale))
   }))
 }
 
@@ -437,22 +469,25 @@ export function buildTrustSignalsSchema(pagePath: string): SchemaNode {
   }
 }
 
-export function buildOrganizationSchema(): SchemaNode {
+export function buildOrganizationSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaNode {
   const publicContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL
   const publicContactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE
+  const localizedHome = toAbsoluteUrl(addLocaleToPath('/', locale))
+  const supportedLanguages = SUPPORTED_LOCALES.map((entry) => getHtmlLang(entry))
 
   return {
     '@context': SCHEMA_CONTEXT,
     '@type': 'Organization',
     '@id': `${toAbsoluteUrl('/')}#organization`,
     name: DEFAULT_SITE_NAME,
-    url: toAbsoluteUrl('/'),
+    url: localizedHome,
     logo: {
       '@type': 'ImageObject',
       url: toAbsoluteUrl('/icon.svg')
     },
     description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
     slogan: DEFAULT_SITE_TAGLINE,
+    availableLanguage: supportedLanguages,
     email: publicContactEmail || undefined,
     telephone: publicContactPhone || undefined,
     knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'buyer decision systems', 'price tracking', 'shortlist workflows', 'brand and category discovery'],
@@ -464,7 +499,7 @@ export function buildOrganizationSchema(): SchemaNode {
         email: publicContactEmail || undefined,
         telephone: publicContactPhone || undefined,
         url: toAbsoluteUrl('/contact'),
-        availableLanguage: ['en'],
+        availableLanguage: supportedLanguages,
         areaServed: 'Worldwide'
       },
       {
@@ -472,7 +507,7 @@ export function buildOrganizationSchema(): SchemaNode {
         contactType: 'editorial corrections',
         email: publicContactEmail || undefined,
         url: toAbsoluteUrl('/contact'),
-        availableLanguage: ['en'],
+        availableLanguage: supportedLanguages,
         areaServed: 'Worldwide'
       },
       {
@@ -480,32 +515,40 @@ export function buildOrganizationSchema(): SchemaNode {
         contactType: 'partnerships',
         email: publicContactEmail || undefined,
         url: toAbsoluteUrl('/contact'),
-        availableLanguage: ['en'],
+        availableLanguage: supportedLanguages,
         areaServed: 'Worldwide'
       }
     ],
-    hasPart: buildTrustPageReferences()
+    hasPart: [...buildCoreEntryReferences(), ...buildTrustPageReferences()],
+    knowsLanguage: buildLanguageReferences()
   }
 }
 
-export function buildWebsiteSchema(): SchemaNode {
+export function buildWebsiteSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaNode {
+  const localizedHome = toAbsoluteUrl(addLocaleToPath('/', locale))
+  const localizedSearch = toAbsoluteUrl(addLocaleToPath('/search', locale))
+
   return {
     '@context': SCHEMA_CONTEXT,
     '@type': 'WebSite',
     '@id': `${toAbsoluteUrl('/')}#website`,
-    url: toAbsoluteUrl('/'),
+    url: localizedHome,
     name: DEFAULT_SITE_NAME,
     alternateName: DEFAULT_SITE_TAGLINE,
     description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
-    inLanguage: 'en-US',
+    inLanguage: SUPPORTED_LOCALES.map((entry) => getHtmlLang(entry)),
     about: buildOrganizationReference(),
     publisher: buildOrganizationReference(),
-    hasPart: buildTrustPageReferences(),
+    hasPart: [...buildCoreEntryReferences(), ...buildTrustPageReferences()],
     potentialAction: {
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${toAbsoluteUrl('/search')}?q={search_term_string}&scope=products`
+        urlTemplate: `${localizedSearch}?q={search_term_string}&scope=products`,
+        actionPlatform: [
+          'https://schema.org/DesktopWebPlatform',
+          'https://schema.org/MobileWebPlatform'
+        ]
       },
       'query-input': 'required name=search_term_string'
     }
