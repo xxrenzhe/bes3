@@ -292,7 +292,7 @@ export default async function ReviewPage({
     {
       question: 'When should I open the brand page from a review?',
       answer: article.product?.brand
-        ? `Open the ${article.product.brand} page when the brand itself looks promising and you want the rest of that brand's Bes3 coverage without broadening your search too early.`
+        ? `Open the ${article.product.brand} page when the brand itself looks promising and you want the rest of that brand's Bes3 products, reviews, and comparisons without broadening your search too early.`
         : 'Use the category page instead when you still need nearby context before comparing or clicking through.'
     },
     {
@@ -314,7 +314,7 @@ export default async function ReviewPage({
   ].slice(0, 3)
   const reviewRoutes = [
     {
-      eyebrow: 'Deep Dive',
+      eyebrow: 'Product',
       title: article.product?.slug ? 'Open the product page' : 'Stay with this review',
       description: article.product?.slug
         ? 'Move into the product page when this recommendation already looks right and you want specs, pricing, and current store details.'
@@ -340,7 +340,7 @@ export default async function ReviewPage({
       title: relatedGuide ? 'Read the supporting guide' : 'Browse the category page',
       description: relatedGuide
         ? 'Use the guide if you still need category basics, compatibility context, or setup advice before finalizing the shortlist.'
-        : 'Return to the category page when you still need broader coverage before acting on this review.',
+        : 'Return to the category page when you still need more nearby options before acting on this review.',
       href: relatedGuide ? getArticlePath(relatedGuide.type, relatedGuide.slug) : buildCategoryPath(category),
       label: relatedGuide ? 'Open category guide' : 'Visit category page'
     },
@@ -400,10 +400,10 @@ export default async function ReviewPage({
           ? {
               href: `/brands/${brandSlug}`,
               label: `${article.product.brand} brand page`,
-              note: 'See the rest of the same-brand coverage without broadening the market too early.'
+              note: 'See the rest of the same-brand products, reviews, and comparisons without broadening the market too early.'
             }
           : null,
-        ...(category ? [{ href: buildCategoryPath(category), label: `${categoryLabel} category page`, note: 'Return to the category hub when cross-brand comparison matters again.' }] : []),
+        ...(category ? [{ href: buildCategoryPath(category), label: `${categoryLabel} category page`, note: 'Return to the category page when cross-brand comparison matters again.' }] : []),
         ...peerProducts.slice(0, 2).map((candidate) => ({
           href: `/products/${candidate.slug}`,
           label: candidate.productName,
@@ -477,7 +477,7 @@ export default async function ReviewPage({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedComparison
-                    ? `This review already has enough adjacent coverage in ${categoryLabel} to support a head-to-head comparison. Move into the comparison once the core fit feels right.`
+                    ? `This review already has enough nearby options in ${categoryLabel} to support a head-to-head comparison. Move into the comparison once the core fit feels right.`
                     : 'This review is the clearest current answer. Use the product page or a price watch next if you do not need another comparison yet.'}
                 </p>
               </div>
@@ -606,7 +606,7 @@ export default async function ReviewPage({
                         href={productHref}
                         className="inline-flex rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-lg font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
                       >
-                        Open Deep-Dive
+                        Open product page
                       </Link>
                       {product?.resolvedUrl ? (
                         <PrimaryCta
@@ -668,14 +668,14 @@ export default async function ReviewPage({
                 <Link href={buildCategoryPath(category)} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Category Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{categoryLabel}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category page if you still need adjacent reviews, comparisons, or shortlist coverage.</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Return to the main category page if you still need adjacent reviews, comparisons, or shortlist options.</p>
                 </Link>
               ) : null}
               {brandSlug && article.product?.brand ? (
                 <Link href={`/brands/${brandSlug}`} className="rounded-[1.75rem] bg-white p-6 transition-transform hover:-translate-y-1">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Brand Page</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{article.product.brand}</h3>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay with the same brand if it already looks promising and you want related Bes3 coverage in one place.</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Stay with the same brand if it already looks promising and you want related Bes3 products, reviews, and comparisons in one place.</p>
                 </Link>
               ) : null}
               {relatedGuide ? (

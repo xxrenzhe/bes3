@@ -54,19 +54,19 @@ export default async function AboutPage() {
       description: 'Reviews, comparisons, and guides already live.'
     },
     {
-      label: 'Brand hubs',
+      label: 'Brands',
       value: String(brands.length),
-      description: 'Brands with dedicated discovery and buying coverage.'
+      description: 'Brands you can browse directly on Bes3.'
     },
     {
-      label: 'Product deep-dives',
+      label: 'Product pages',
       value: String(products.length),
       description: 'Product pages with pricing, specs, and save actions.'
     },
     {
-      label: 'Brand-category hubs',
+      label: 'Brand + category pages',
       value: String(brandCategoryHubs.length),
-      description: 'Programmatic hub pages that connect exact brand + category intent.'
+      description: 'Pages for specific brand and product-type combinations.'
     }
   ]
 
@@ -106,7 +106,7 @@ export default async function AboutPage() {
       title: 'Use a review when one product is close',
       description: 'Reviews answer whether a product really fits, what can go wrong, and whether it deserves a place on your shortlist.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
-      label: leadReview ? 'Open a live review' : 'Browse review coverage'
+      label: leadReview ? 'Open a live review' : 'Browse reviews'
     },
     {
       eyebrow: 'Compare',
@@ -132,7 +132,7 @@ export default async function AboutPage() {
   ]
 
   const antiPatterns = [
-    'We do not pad the page with 20 nearly identical picks to simulate coverage.',
+    'We do not pad the page with 20 nearly identical picks just to look bigger.',
     'We do not treat raw review count as automatic proof without category and fit context.',
     'We do not push compare before the shortlist is narrow enough to support a real choice.',
     'We do not turn alerts into generic blasts that lose the original shopping context.'
@@ -206,7 +206,7 @@ export default async function AboutPage() {
                 How Bes3 helps you buy with more confidence.
               </h1>
               <p className="max-w-3xl text-xl leading-9 text-muted-foreground">
-                Bes3 is not a generic review archive. We narrow noisy categories into a few serious options, explain the tradeoffs that matter, and help you act when the timing is right.
+                Bes3 is not a generic review site. We narrow noisy categories into a few serious options, explain the tradeoffs that matter, and help you act when the timing is right.
               </p>
               <div className="flex flex-wrap gap-4">
                 <Link
@@ -276,7 +276,7 @@ export default async function AboutPage() {
                   note: 'Product pages hold pricing, proof, and the next steps before you buy.'
                 },
                 {
-                  label: 'Editorial pages',
+                  label: 'Reviews + guides',
                   value: String(articles.length),
                   note: 'Reviews, comparisons, and guides answer different shopping questions instead of forcing everything into one format.'
                 }
@@ -317,7 +317,7 @@ export default async function AboutPage() {
                 <SectionHeader
                   eyebrow="Formats"
                   title="Use the format that matches the buying moment."
-                  description="The public site works best when you choose the page that matches what is still unclear. That is why Bes3 separates discovery, reviews, comparisons, and alerts instead of blending everything into one archive."
+                  description="The public site works best when you choose the page that matches what is still unclear. That is why Bes3 separates discovery, reviews, comparisons, and alerts instead of blending everything into one giant list."
                 />
                 <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
@@ -347,7 +347,7 @@ export default async function AboutPage() {
         <section className="px-4 sm:px-6 lg:px-8">
           <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
             <div className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
-              <p className="editorial-kicker">Editorial Guardrails</p>
+              <p className="editorial-kicker">Buyer Guardrails</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">What Bes3 promises buyers.</h2>
               <div className="mt-6 space-y-4">
                 {guardrails.map((item) => (
@@ -399,7 +399,7 @@ export default async function AboutPage() {
                 <p className="editorial-kicker">Use Bes3 Live</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Trust is only useful if it leads to a cleaner next action.</h2>
                 <p className="mt-4 max-w-2xl text-sm leading-8 text-muted-foreground">
-                  The public site is built to turn trust into action. Use one of these next steps instead of reading this page and then reopening the same research problem from scratch.
+                  The public site is built to turn trust into action. Use one of these next steps instead of reading this page and then starting over.
                 </p>
               </div>
               <div className="grid gap-4 sm:grid-cols-3">

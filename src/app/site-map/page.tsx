@@ -120,7 +120,7 @@ export default async function HtmlSitemapPage() {
           <p className="editorial-kicker">HTML Sitemap</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse the full Bes3 directory.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page is a lightweight directory for shoppers and crawlers who want a fast text-first view of the main categories, brands, products, reviews, comparisons, guides, and utility pages.
+            This page is a lightweight directory for anyone who wants one fast view of the main categories, brands, products, reviews, comparisons, guides, and shopping tools.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
@@ -163,30 +163,30 @@ export default async function HtmlSitemapPage() {
         </section>
 
         <SeoTrustSignalsPanel
-          title="Why this sitemap exists as more than a crawler afterthought"
-          description="Bes3 uses the HTML sitemap as a public text-first crawl surface that reinforces the structured URL graph created by category hubs, brand hubs, and decision pages."
+          title="Why this page is useful beyond simple navigation"
+          description="Bes3 uses this page to keep major shopping paths easy to spot, whether you want a category, a brand, or a specific product page."
           stats={[
-            { label: 'Categories', value: String(categories.length), note: 'Top-level hubs for broad buyer intent.' },
-            { label: 'Brands', value: String(brands.length), note: 'Exact-match brand entry points with product and editorial coverage.' },
-            { label: 'Brand-category hubs', value: String(brandCategoryHubs.length), note: 'Programmatic spokes for narrow long-tail intent.' },
-            { label: 'Public pages', value: String(products.length + articles.length), note: 'Product and editorial URLs already feeding the public crawl graph.' }
+            { label: 'Categories', value: String(categories.length), note: 'Start here when you know the product type but not the exact pick.' },
+            { label: 'Brands', value: String(brands.length), note: 'Use brand pages when you already trust one brand and want nearby options.' },
+            { label: 'Brand + category pages', value: String(brandCategoryHubs.length), note: 'These pages narrow one brand inside one product type.' },
+            { label: 'Public pages', value: String(products.length + articles.length), note: 'Product pages, reviews, comparisons, and guides already live on the site.' }
           ]}
           points={[
-            'The XML sitemaps are now segmented by core pages, products, editorial pages, taxonomy hubs, and image discovery.',
-            'This HTML sitemap mirrors the same graph in plain text links, including long-tail brand-category spokes that would otherwise sit deeper in the crawl tree.',
-            'Machine-entry routes like llms.txt and the public manifests are linked here too, so the trust and API graph stays visible instead of hidden behind docs copy.',
-            'Brand-category hubs capture long-tail intent without flattening everything into one directory layer.',
-            'The page is intentionally lightweight so both users and crawlers can traverse the site structure quickly.'
+            'Category, brand, and product paths stay visible here so you do not have to guess where to start.',
+            'Brand + category pages are listed directly when you want a narrower shortcut instead of extra clicking.',
+            'Machine-readable routes still live here for transparency, but the main focus stays on shopper-friendly paths.',
+            'The page stays lightweight so it loads fast and makes the site structure easy to scan.',
+            'You can use this page as a backup route whenever search feels broader than you want.'
           ]}
         />
 
         <section className="rounded-[2rem] bg-white p-6 shadow-panel">
           <div className="flex flex-wrap items-end justify-between gap-4">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brand-Category Spokes</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Long-tail hub pages exposed directly for crawl depth.</h2>
+              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brand + Category Pages</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Brand + category pages listed in one place.</h2>
               <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These exact-match brand and category combinations are part of the programmatic hub-and-spoke layer. Listing them here keeps the long-tail graph visible to both shoppers and crawlers instead of hiding them behind only brand or category entry points.
+                These exact brand and category combinations help when you already know both the brand and the product type. Listing them here saves extra clicks.
               </p>
             </div>
             <div className="rounded-[1.25rem] bg-muted px-5 py-4 text-sm text-muted-foreground">
@@ -212,7 +212,7 @@ export default async function HtmlSitemapPage() {
                       >
                         <p className="font-semibold text-foreground">{hub.brandName}</p>
                         <p className="mt-1 text-xs text-muted-foreground">
-                          {hub.productCount} products · {hub.articleCount} editorial pages
+                          {hub.productCount} products · {hub.articleCount} reviews and guides
                         </p>
                       </Link>
                     ))}
@@ -225,7 +225,7 @@ export default async function HtmlSitemapPage() {
 
         <section className="grid gap-6 lg:grid-cols-3">
           <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Editorial hubs</p>
+            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Browse pages</p>
             <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
               {hubPages.map((page) => (
                 <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">

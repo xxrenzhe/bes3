@@ -14,14 +14,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const freshnessDate = products[0]?.updatedAt || products[0]?.publishedAt || null
 
   return buildPageMetadata({
-    title: 'Product Index',
-    description: 'Browse Bes3 product pages directly when you already know the model or want a text-first product directory with price and category context.',
+    title: 'Products',
+    description: 'Browse Bes3 product pages directly when you already know the model or want to jump straight into price and category details.',
     path: '/products',
     locale: getRequestLocale(),
     image: products[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['product index', 'product directory', 'product pages', 'live price context']
+    keywords: ['products', 'product pages', 'product directory', 'live price context']
   })
 }
 
@@ -35,8 +35,8 @@ export default async function ProductsIndexPage() {
 
   const faqEntries = [
     {
-      question: 'When should I use the product index?',
-      answer: 'Use it when you already know the model or want to jump straight into product-level pages without opening a broader category hub first.'
+      question: 'When should I use the products page?',
+      answer: 'Use it when you already know the model or want to jump straight into product pages without opening a broader category page first.'
     },
     {
       question: 'What should a product page help me do?',
@@ -51,8 +51,8 @@ export default async function ProductsIndexPage() {
           buildBreadcrumbSchema('/products', breadcrumbItems),
           buildCollectionPageSchema({
             path: '/products',
-            title: 'Product Index',
-            description: 'Browse Bes3 product pages directly when you already know the model or want a text-first product directory with price and category context.',
+            title: 'Products',
+            description: 'Browse Bes3 product pages directly when you already know the model or want to jump straight into price and category details.',
             breadcrumbItems,
             dateModified: latestRefresh,
             items: products.map((product) => ({
@@ -62,11 +62,11 @@ export default async function ProductsIndexPage() {
           }),
           buildHowToSchema(
             '/products',
-            'How to use the Bes3 product index',
-            'Use the product index when the product itself is already known and you want to validate it quickly.',
+            'How to use Bes3 products',
+            'Use the products page when the product itself is already known and you want to check it quickly.',
             [
               { name: 'Open the exact product page', text: 'Start with the model that already looks likely so you do not widen the research unnecessarily.' },
-              { name: 'Check fit and evidence', text: 'Use the product page for price, specs, brand policy context, and surrounding decision modules.' }
+              { name: 'Check fit and details', text: 'Use the product page for price, specs, warranty details, and the best next step.' }
             ]
           ),
           buildFaqSchema('/products', faqEntries)
@@ -74,10 +74,10 @@ export default async function ProductsIndexPage() {
       />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] sm:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Product Directory</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Products</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">Browse every Bes3 product page.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-200">
-            This is the text-first product directory for buyers and crawlers who already know the model and want the shortest path into fit, price, and decision context.
+            This page is for buyers who already know the model and want the shortest path into fit, price, and next steps.
           </p>
         </section>
 
@@ -92,7 +92,7 @@ export default async function ProductsIndexPage() {
                 <span className="text-muted-foreground">{product.category ? `in ${product.category.replace(/-/g, ' ')}` : 'Category pending'}</span>
               </div>
               {product.category ? (
-                <p className="mt-4 text-sm font-semibold text-primary">Category hub: {buildCategoryPath(product.category)} →</p>
+                <p className="mt-4 text-sm font-semibold text-primary">Category page: {buildCategoryPath(product.category)} →</p>
               ) : (
                 <p className="mt-4 text-sm font-semibold text-primary">Open product page →</p>
               )}

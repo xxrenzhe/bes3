@@ -1,6 +1,6 @@
 export function SeoTrustSignalsPanel({
-  title = 'How Bes3 turns data into decision confidence',
-  description = 'These signals explain how the site keeps coverage structured, updated, and tied to real buyer decisions instead of filler content.',
+  title = 'How Bes3 checks what it publishes',
+  description = 'These details explain how Bes3 keeps pages current, useful, and grounded in real shopping decisions.',
   stats,
   points
 }: {
@@ -17,7 +17,7 @@ export function SeoTrustSignalsPanel({
 
   return (
     <section className="rounded-[2rem] bg-white p-6 shadow-panel sm:p-8">
-      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Trust Signals</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Trust Checks</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{title}</h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p>
 
