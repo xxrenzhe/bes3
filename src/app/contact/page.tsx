@@ -7,7 +7,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildContactPageSchema, buildFaqSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -97,12 +97,16 @@ export default async function ContactPage() {
     }
   ]
   const structuredData = [
-    buildWebPageSchema({
-      path: '/contact',
-      title: 'Contact Bes3',
-      description: 'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
-      type: 'ContactPage'
-    }),
+    buildBreadcrumbSchema('/contact', [
+      { name: 'Home', path: '/' },
+      { name: 'Contact', path: '/contact' }
+    ]),
+    buildContactPageSchema(
+      '/contact',
+      'Contact Bes3',
+      'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.'
+    ),
+    buildTrustSignalsSchema('/contact'),
     buildFaqSchema('/contact', faqEntries)
   ]
 

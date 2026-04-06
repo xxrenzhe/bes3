@@ -9,7 +9,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildDatasetSchema, buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildAboutPageSchema, buildBreadcrumbSchema, buildDatasetSchema, buildFaqSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
 import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -173,12 +173,15 @@ export default async function AboutPage() {
     }
   ]
   const structuredData = [
-    buildWebPageSchema({
-      path: '/about',
-      title: 'Bes3 Method',
-      description: 'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.',
-      type: 'AboutPage'
-    }),
+    buildBreadcrumbSchema('/about', [
+      { name: 'Home', path: '/' },
+      { name: 'About', path: '/about' }
+    ]),
+    buildAboutPageSchema(
+      '/about',
+      'Bes3 Method',
+      'Learn how Bes3 uses real buyer reviews, price history, and spec checks to help you choose the right product.'
+    ),
     buildDatasetSchema({
       path: '/about',
       name: 'Bes3 coverage and decision dataset',
@@ -187,6 +190,7 @@ export default async function AboutPage() {
       keywords: ['product review dataset', 'buying guide coverage', 'brand-category hubs', 'price-aware commerce graph'],
       variableMeasured: ['categories', 'brands', 'brand-category hubs', 'product pages', 'editorial pages']
     }),
+    buildTrustSignalsSchema('/about'),
     buildFaqSchema('/about', faqEntries)
   ]
 

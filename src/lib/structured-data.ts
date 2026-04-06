@@ -82,6 +82,14 @@ interface DatasetSchemaOptions {
 }
 
 const SCHEMA_CONTEXT = 'https://schema.org'
+const TRUST_PAGE_LINKS: ItemListEntry[] = [
+  { name: 'About Bes3', path: '/about' },
+  { name: 'Contact Bes3', path: '/contact' },
+  { name: 'Privacy Policy', path: '/privacy' },
+  { name: 'Terms of Service', path: '/terms' },
+  { name: 'Open Data Coverage', path: '/data' },
+  { name: 'HTML Sitemap', path: '/site-map' }
+]
 
 function buildOrganizationReference() {
   return {
@@ -93,6 +101,14 @@ function buildWebsiteReference() {
   return {
     '@id': `${toAbsoluteUrl('/')}#website`
   }
+}
+
+function buildTrustPageReferences() {
+  return TRUST_PAGE_LINKS.map((item) => ({
+    '@type': 'WebPage',
+    name: item.name,
+    url: toAbsoluteUrl(item.path)
+  }))
 }
 
 export function buildItemListSchema(pagePath: string, items: ItemListEntry[]) {
@@ -272,8 +288,16 @@ export function buildDatasetSchema({
   }
 }
 
+export function buildTrustSignalsSchema(pagePath: string): SchemaNode {
+  return {
+    '@context': SCHEMA_CONTEXT,
+    ...buildItemListSchema(pagePath, TRUST_PAGE_LINKS)
+  }
+}
+
 export function buildOrganizationSchema(): SchemaNode {
   const publicContactEmail = process.env.NEXT_PUBLIC_CONTACT_EMAIL
+  const publicContactPhone = process.env.NEXT_PUBLIC_CONTACT_PHONE
 
   return {
     '@context': SCHEMA_CONTEXT,
@@ -287,15 +311,38 @@ export function buildOrganizationSchema(): SchemaNode {
     },
     description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
     slogan: DEFAULT_SITE_TAGLINE,
-    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'buyer decision systems', 'price tracking'],
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer support',
-      email: publicContactEmail || undefined,
-      url: toAbsoluteUrl('/contact'),
-      availableLanguage: ['en'],
-      areaServed: 'Worldwide'
-    }
+    email: publicContactEmail || undefined,
+    telephone: publicContactPhone || undefined,
+    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'buyer decision systems', 'price tracking', 'shortlist workflows', 'brand and category discovery'],
+    areaServed: 'Worldwide',
+    contactPoint: [
+      {
+        '@type': 'ContactPoint',
+        contactType: 'customer support',
+        email: publicContactEmail || undefined,
+        telephone: publicContactPhone || undefined,
+        url: toAbsoluteUrl('/contact'),
+        availableLanguage: ['en'],
+        areaServed: 'Worldwide'
+      },
+      {
+        '@type': 'ContactPoint',
+        contactType: 'editorial corrections',
+        email: publicContactEmail || undefined,
+        url: toAbsoluteUrl('/contact'),
+        availableLanguage: ['en'],
+        areaServed: 'Worldwide'
+      },
+      {
+        '@type': 'ContactPoint',
+        contactType: 'partnerships',
+        email: publicContactEmail || undefined,
+        url: toAbsoluteUrl('/contact'),
+        availableLanguage: ['en'],
+        areaServed: 'Worldwide'
+      }
+    ],
+    hasPart: buildTrustPageReferences()
   }
 }
 
@@ -309,7 +356,9 @@ export function buildWebsiteSchema(): SchemaNode {
     alternateName: DEFAULT_SITE_TAGLINE,
     description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
     inLanguage: 'en-US',
+    about: buildOrganizationReference(),
     publisher: buildOrganizationReference(),
+    hasPart: buildTrustPageReferences(),
     potentialAction: {
       '@type': 'SearchAction',
       target: {
@@ -319,6 +368,36 @@ export function buildWebsiteSchema(): SchemaNode {
       'query-input': 'required name=search_term_string'
     }
   }
+}
+
+export function buildAboutPageSchema(path: string, title: string, description: string): SchemaNode {
+  return buildWebPageSchema({
+    path,
+    title,
+    description,
+    type: 'AboutPage',
+    about: buildOrganizationReference(),
+    mainEntity: buildOrganizationReference(),
+    breadcrumbItems: [
+      { name: 'Home', path: '/' },
+      { name: 'About', path }
+    ]
+  })
+}
+
+export function buildContactPageSchema(path: string, title: string, description: string): SchemaNode {
+  return buildWebPageSchema({
+    path,
+    title,
+    description,
+    type: 'ContactPage',
+    about: buildOrganizationReference(),
+    mainEntity: buildOrganizationReference(),
+    breadcrumbItems: [
+      { name: 'Home', path: '/' },
+      { name: 'Contact', path }
+    ]
+  })
 }
 
 function buildProductThing(product: ProductRecord, path: string, description?: string | null, image?: string | null): SchemaNode {
