@@ -21,6 +21,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...buildLocalizedSitemapRoute('/categories', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
     ...buildLocalizedSitemapRoute('/compare', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.84 }),
     ...buildLocalizedSitemapRoute('/contact', { lastModified: siteFreshness, changeFrequency: 'monthly', priority: 0.4 }),
+    ...buildLocalizedSitemapRoute('/data', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.74 }),
     ...buildLocalizedSitemapRoute('/deals', { lastModified: siteFreshness, changeFrequency: 'daily', priority: 0.9 }),
     ...buildLocalizedSitemapRoute('/directory', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
     ...buildLocalizedSitemapRoute('/guides', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.8 }),
