@@ -20,6 +20,12 @@ interface PageMetadataOptions {
   freshnessInTitle?: boolean
 }
 
+interface IntentMetadataDescriptionOptions {
+  title: string
+  description: string
+  pageType?: string | null
+}
+
 const LOW_SIGNAL_DESCRIPTIONS = new Set([
   'Seeded review page for Bes3.',
   'Seeded comparison page for Bes3.',
@@ -62,6 +68,53 @@ export function pickMetadataDescription(...candidates: Array<string | null | und
   }
 
   return ''
+}
+
+function truncateDescription(value: string, maxLength = 160) {
+  const normalized = normalizeText(value)
+  if (normalized.length <= maxLength) return normalized
+
+  const sliced = normalized.slice(0, maxLength + 1)
+  const lastSpace = sliced.lastIndexOf(' ')
+  const trimmed = (lastSpace >= 120 ? sliced.slice(0, lastSpace) : normalized.slice(0, maxLength)).trim()
+  return `${trimmed.replace(/[.,;:!?\s]+$/g, '')}.`
+}
+
+function getIntentCompressionTail(pageType?: string | null) {
+  switch ((pageType || '').toLowerCase()) {
+    case 'review':
+    case 'article':
+      return 'It includes buyer-fit guidance, current pricing context, and the clearest next step before you buy.'
+    case 'comparison':
+    case 'compare':
+      return 'It breaks down tradeoffs, pricing context, and which option deserves the shortlist.'
+    case 'guide':
+      return 'It maps the decision checkpoints, related products, and the next pages to open as you narrow the shortlist.'
+    case 'product':
+      return 'It covers live pricing, key specs, offer coverage, and the right next action before checkout.'
+    case 'category':
+      return 'It connects the strongest products, reviews, comparisons, and next-step pages for this buying intent.'
+    case 'brand':
+      return 'It connects brand-specific products, reviews, and adjacent routes for faster shortlist building.'
+    default:
+      return 'It gives a concise decision summary, linked evidence, and the next useful step for this buying journey.'
+  }
+}
+
+export function buildIntentMetadataDescription({ title, description, pageType }: IntentMetadataDescriptionOptions) {
+  const normalizedTitle = sanitizeMetadataTitle(title)
+  const primary = pickMetadataDescription(description)
+  const fallbackTail = getIntentCompressionTail(pageType)
+
+  if (!primary) {
+    return truncateDescription(`${normalizedTitle}. ${fallbackTail}`)
+  }
+
+  if (primary.length >= 110) {
+    return truncateDescription(primary)
+  }
+
+  return truncateDescription(`${primary.replace(/[.\s]+$/g, '')}. ${fallbackTail}`)
 }
 
 export function toTitleCaseWords(value: string) {
@@ -112,7 +165,10 @@ export function buildPageMetadata({
   const localizedPath = addLocaleToPath(path, locale || 'en')
   const canonical = toAbsoluteUrl(localizedPath)
   const normalizedTitle = freshnessInTitle ? buildFreshMetadataTitle(title, freshnessDate) : sanitizeMetadataTitle(title)
-  const normalizedDescription = buildFreshMetadataDescription(description, freshnessDate)
+  const normalizedDescription = buildFreshMetadataDescription(
+    buildIntentMetadataDescription({ title, description, pageType: type }),
+    freshnessDate
+  )
   const imageUrl = image ? toAbsoluteUrl(image) : undefined
   const resolvedModifiedTime = modifiedTime || publishedTime || freshnessDate || undefined
   const alternates = buildLanguageAlternatesWithDefault(path)
