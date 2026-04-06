@@ -22,13 +22,13 @@ export function IntentRecommendationPanel({
       <section className="rounded-[2rem] bg-white p-8 shadow-panel">
         <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="editorial-kicker">Intent Result</p>
+            <p className="editorial-kicker">Best Matches</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-              Bes3 translated the need into a shortlist.
+              Here are the strongest options for what you need.
             </h2>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            The system is optimizing for fit first, then price timing, then the shortest next move into compare, shortlist, or a store check.
+            We start with product fit, then look at price timing, then point you to the fastest next step.
           </p>
         </div>
 
@@ -45,7 +45,7 @@ export function IntentRecommendationPanel({
 
         <div className="mt-6 grid gap-4 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Lead recommendation</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Best match</p>
             <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{note.title}</h3>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{note.description}</p>
             <div className="mt-5 flex flex-wrap gap-3">
@@ -98,7 +98,7 @@ export function IntentRecommendationPanel({
             <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{result.nextAction.title}</h3>
             <p className="mt-3 text-sm leading-7 text-slate-200">{result.nextAction.description}</p>
             <div className="mt-5 rounded-[1.25rem] bg-white/10 p-4">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Fallback</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">If this is not it</p>
               <p className="mt-2 text-sm leading-7 text-slate-200">{result.fallbackAction.description}</p>
               <TrackedDecisionLink
                 href={result.fallbackAction.href}
@@ -134,7 +134,7 @@ export function IntentRecommendationPanel({
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it made the shortlist</p>
                   <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    Score {item.score}
+                    Match {item.score}
                   </span>
                 </div>
                 <div className="mt-4 space-y-2">

@@ -392,9 +392,9 @@ export default async function ReviewPage({
     },
     {
       id: 'review-neighbors',
-      eyebrow: 'Nearby nodes',
-      title: 'Brand and peer coverage around this review',
-      description: 'These spokes keep the reviewed product connected to its brand and closest alternatives.',
+      eyebrow: 'Similar options',
+      title: 'Brand page and close alternatives',
+      description: 'Use these links when you want the same brand or the closest similar picks.',
       links: compactSeoHubLinks([
         brandSlug && article.product?.brand
           ? {
@@ -505,19 +505,19 @@ export default async function ReviewPage({
           attributeFacts={attributeFacts}
           priceHistory={priceHistory}
           title="Review evidence"
-          description="These are the concrete offer and fact signals Bes3 checked before turning this product into a review recommendation."
+          description="These are the prices, specs, and product details Bes3 checked before recommending this pick."
           source="review-page-evidence"
         />
 
         <DecisionContentPanel
           modules={decisionModules}
-          title="Reusable review decision blocks"
-          description="These modules compress the review into structured reasoning Bes3 can reuse in assistant answers, search, and feeds."
+          title="Quick buying takeaways"
+          description="These sections boil the review down to the main reasons, tradeoffs, and next steps."
         />
 
         <SeoHubLinksPanel
-          title="Review hub and spoke links"
-          description="The review stays tied to the surrounding product, category, brand, and comparison graph so long-tail traffic keeps moving toward a decision."
+          title="More pages worth checking"
+          description="Use these links to open the product page, compare close alternatives, or stay with the same brand without starting over."
           sections={seoHubSections}
         />
 
@@ -527,7 +527,7 @@ export default async function ReviewPage({
             policy={brandKnowledge.brandPolicy}
             compatibilityFacts={brandKnowledge.compatibilityFacts}
             title="Brand policy and fit context"
-            description="Use brand policy and compatibility knowledge to decide whether the recommendation still works after shipping, returns, warranty, and accessory fit are considered."
+            description="Use shipping, returns, warranty, and accessory-fit notes to see whether this pick still makes sense after the purchase."
           />
         ) : null}
 

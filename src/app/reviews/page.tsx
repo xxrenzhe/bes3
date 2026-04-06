@@ -15,14 +15,14 @@ export async function generateMetadata(): Promise<Metadata> {
   const freshnessDate = reviews[0]?.updatedAt || reviews[0]?.publishedAt || reviews[0]?.createdAt || null
 
   return buildPageMetadata({
-    title: 'Review Index',
-    description: 'Browse Bes3 review pages directly when you want product-level verdicts, fit signals, and supporting evidence without starting from a broad category page.',
+    title: 'Reviews',
+    description: 'Browse Bes3 reviews when you want to check whether a product is really worth buying.',
     path: '/reviews',
     locale: getRequestLocale(),
     image: reviews[0]?.heroImageUrl || reviews[0]?.product?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['review index', 'product reviews', 'review directory', 'buyer verdicts']
+    keywords: ['reviews', 'product reviews', 'buying reviews', 'honest reviews']
   })
 }
 
@@ -41,7 +41,7 @@ export default async function ReviewsIndexPage() {
   const faqEntries = [
     {
       question: 'When should I start with the review index?',
-      answer: 'Use the review index when you want product-level verdict pages first. It is the fastest path when the model or shortlist is already fairly clear.'
+      answer: 'Use the reviews page when one product already looks promising and you want a clearer yes-or-no answer.'
     },
     {
       question: 'What should a review page help me confirm?',
@@ -56,8 +56,8 @@ export default async function ReviewsIndexPage() {
           buildBreadcrumbSchema('/reviews', breadcrumbItems),
           buildCollectionPageSchema({
             path: '/reviews',
-            title: 'Review Index',
-            description: 'Browse Bes3 review pages directly when you want product-level verdicts, fit signals, and supporting evidence without starting from a broad category page.',
+            title: 'Reviews',
+            description: 'Browse Bes3 reviews when you want to check whether a product is really worth buying.',
             breadcrumbItems,
             dateModified: latestRefresh,
             items: reviews.map((article) => ({
@@ -67,8 +67,8 @@ export default async function ReviewsIndexPage() {
           }),
           buildHowToSchema(
             '/reviews',
-            'How to use the Bes3 review index',
-            'Use the review index when you want verdict pages first and category exploration second.',
+            'How to use Bes3 reviews',
+            'Use reviews when one product already looks promising and you want a clearer answer before buying.',
             [
               {
                 name: 'Open the most relevant review',
@@ -88,7 +88,7 @@ export default async function ReviewsIndexPage() {
           <p className="editorial-kicker">Review Hub</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse every Bes3 review page.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This is the text-first review index for buyers and crawlers who want verdict pages, fit signals, and direct product paths without reopening a broad category search.
+            This page gathers Bes3 reviews for buyers who want straight answers, clear pros and cons, and a quick path to the next step.
           </p>
         </section>
 
@@ -105,7 +105,7 @@ export default async function ReviewsIndexPage() {
                 <span className="text-muted-foreground">{formatEditorialDate(article.updatedAt || article.publishedAt || article.createdAt, 'recently')}</span>
               </div>
               <p className="mt-4 text-sm font-semibold text-primary">
-                {article.product?.category ? `${getCategoryLabel(article.product.category)} review lane` : 'Open review page'} →
+                {article.product?.category ? `${getCategoryLabel(article.product.category)} reviews` : 'Open review page'} →
               </p>
             </Link>
           ))}
@@ -118,11 +118,11 @@ export default async function ReviewsIndexPage() {
             return (
               <div key={category} className="rounded-[2rem] bg-white p-7 shadow-panel">
                 <Link href={buildCategoryPath(category)} className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">
-                  Category Hub
+                  Category Page
                 </Link>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{getCategoryLabel(category)}</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Review coverage for this category stays grouped here so you can move from intent-level browsing to product-level verdicts without a new search.
+                  Reviews for this category stay together here so you can move from broad browsing to one product without starting a new search.
                 </p>
                 <div className="mt-5 space-y-3 text-sm text-muted-foreground">
                   {categoryReviews.map((article) => (

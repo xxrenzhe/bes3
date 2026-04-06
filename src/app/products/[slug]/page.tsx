@@ -369,9 +369,9 @@ export default async function ProductPage({
     },
     {
       id: 'brand-and-peers',
-      eyebrow: 'Adjacent nodes',
-      title: 'Brand and peer paths',
-      description: 'These spokes keep the current product connected to its closest brand and category alternatives.',
+      eyebrow: 'Similar options',
+      title: 'Brand page and similar picks',
+      description: 'Use these links if you want more options nearby without reopening the whole search.',
       links: compactSeoHubLinks([
         brandSlug && product.brand
           ? {
@@ -460,7 +460,7 @@ export default async function ProductPage({
                   productId={product.id}
                   trackingSource="product-page-primary-cta"
                   label="Check Current Price"
-                  note={`Why this looks strong: ${confidenceSignals.join(' · ')}`}
+                  note={`Why it stands out: ${confidenceSignals.join(' · ')}`}
                 />
               </div>
               <div className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel">
@@ -486,14 +486,14 @@ export default async function ProductPage({
 
         <DecisionContentPanel
           modules={decisionModules}
-          title="Reusable product decision blocks"
-          description="These structured modules turn the product page into more than one long read: they can also support search, feeds, and assistant answers."
+          title="Quick buying takeaways"
+          description="These sections pull the page into the key reasons, tradeoffs, and next steps."
           compact
         />
 
         <SeoHubLinksPanel
-          title="Product hub and spoke links"
-          description="This page is not an SEO dead end. It stays wired into the surrounding category, brand, and adjacent-product graph."
+          title="More pages worth checking"
+          description="Use these links to compare close alternatives, stay with the same brand, or reopen the category without starting from scratch."
           sections={seoHubSections}
         />
 
@@ -571,7 +571,7 @@ export default async function ProductPage({
               priceHistory={priceHistory}
               compact
               title="Offer and fact evidence"
-              description="These are the live offer and product-fact signals behind the current product recommendation."
+              description="These are the latest prices, product facts, and store details behind this recommendation."
               source="product-page-evidence"
             />
             <BrandPolicyPanel
@@ -580,7 +580,7 @@ export default async function ProductPage({
               compatibilityFacts={brandKnowledge.compatibilityFacts}
               compact
               title="Brand policy and compatibility"
-              description="Bring shipping, warranty, returns, and fit notes into the product decision before the merchant click."
+              description="Check shipping, warranty, returns, and compatibility before you click through to the store."
             />
             {guideArticle || peerProducts.length ? (
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">

@@ -19,8 +19,8 @@ export interface SeoHubSection {
 }
 
 export function SeoHubLinksPanel({
-  title = 'Explore the connected content graph',
-  description = 'These grouped links keep category, brand, product, and editorial coverage tightly connected so buyers and crawlers can move without restarting.',
+  title = 'More helpful pages',
+  description = 'These links keep the most useful category, brand, product, and guide pages close by so you can keep moving without starting over.',
   sections
 }: {
   title?: string
@@ -32,7 +32,7 @@ export function SeoHubLinksPanel({
 
   return (
     <section className="rounded-[2rem] bg-white p-6 shadow-panel sm:p-8">
-      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">SEO Link Graph</p>
+      <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Keep exploring</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">{title}</h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p>
 
