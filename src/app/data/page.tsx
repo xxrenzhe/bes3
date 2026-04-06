@@ -94,6 +94,13 @@ export default async function OpenDataPage() {
       description: 'JSON Feed for the latest Bes3 reviews, comparisons, and guides.'
     },
     {
+      eyebrow: 'Search',
+      title: 'OpenSearch description',
+      href: '/opensearch.xml',
+      label: '/opensearch.xml',
+      description: 'Standard XML description for discovering the Bes3 site-search entry point and search template.'
+    },
+    {
       eyebrow: 'Discovery',
       title: 'Image sitemap',
       href: '/media-sitemap.xml',
@@ -150,6 +157,11 @@ export default async function OpenDataPage() {
       name: 'Bes3 editorial JSON feed',
       path: '/feed.json',
       description: 'Chronological JSON Feed of Bes3 editorial updates for machine consumers and integrations.'
+    },
+    {
+      name: 'Bes3 OpenSearch description',
+      path: '/opensearch.xml',
+      description: 'OpenSearch XML document for discovering and invoking the Bes3 site-search entry point.'
     },
     {
       name: 'Bes3 image sitemap',
@@ -239,6 +251,12 @@ export default async function OpenDataPage() {
             description: 'XML image sitemap exposing the key product, editorial, brand, and brand-category hub visuals.',
             dateModified: latestRefresh,
             docsPath: '/data'
+          }),
+          buildWebApiSchema({
+            path: '/opensearch.xml',
+            name: 'Bes3 OpenSearch description',
+            description: 'OpenSearch XML document that describes the Bes3 search endpoint, search template, and discovery metadata.',
+            documentationPath: '/search'
           }),
           ...[
             {

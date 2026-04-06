@@ -613,7 +613,7 @@ async function inspectRenderedPages(paths: string[]) {
 }
 
 const TRUST_SURFACE_PATHS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
-const MACHINE_ENTRY_PATHS = ['/llms.txt', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json', '/media-sitemap.xml'] as const
+const MACHINE_ENTRY_PATHS = ['/llms.txt', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json', '/opensearch.xml', '/media-sitemap.xml'] as const
 const TRUST_SURFACE_LINK_TARGETS = [...TRUST_SURFACE_PATHS, ...MACHINE_ENTRY_PATHS]
 const MACHINE_ENTRY_ENDPOINTS = [
   {
@@ -639,6 +639,12 @@ const MACHINE_ENTRY_ENDPOINTS = [
     title: 'RSS feed',
     expectedContentType: 'application/rss+xml',
     requiredFields: ['<rss', '<item']
+  },
+  {
+    pathname: '/opensearch.xml',
+    title: 'OpenSearch description',
+    expectedContentType: 'application/opensearchdescription+xml',
+    requiredFields: ['<OpenSearchDescription', '<ShortName>', '<Url ']
   },
   {
     pathname: '/media-sitemap.xml',
@@ -799,7 +805,7 @@ async function inspectTrustSurface() {
         }
       ]
     } else {
-      const requiredRefs = ['/trust', '/data', '/site-map', '/about', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json', '/media-sitemap.xml']
+      const requiredRefs = ['/trust', '/data', '/site-map', '/about', '/api/open/coverage', '/api/open/buying-feed', '/feed.xml', '/feed.json', '/opensearch.xml', '/media-sitemap.xml']
       const missing = requiredRefs.filter((ref) => !body.includes(ref))
       if (missing.length > 0) {
         llmsFinding = [

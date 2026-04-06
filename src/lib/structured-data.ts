@@ -124,6 +124,7 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
   { name: 'Buying Feed API', path: '/api/open/buying-feed' },
   { name: 'RSS Feed', path: '/feed.xml' },
   { name: 'JSON Feed', path: '/feed.json' },
+  { name: 'OpenSearch Description', path: '/opensearch.xml' },
   { name: 'Image Sitemap', path: '/media-sitemap.xml' }
 ]
 
