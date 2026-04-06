@@ -430,9 +430,9 @@ export default async function ComparisonPage({
     },
     {
       id: 'comparison-neighbors',
-      eyebrow: 'Adjacent nodes',
-      title: 'Neighbor pages around the winner',
-      description: 'These spokes preserve crawl depth and buyer continuity across nearby brand and category assets.',
+      eyebrow: 'Similar options',
+      title: 'Pages around the winner',
+      description: 'Use these links if you want one more check on the winner, the brand, or close alternatives.',
       links: compactSeoHubLinks([
         brandSlug && article.product?.brand
           ? {
@@ -596,13 +596,13 @@ export default async function ComparisonPage({
 
         <DecisionContentPanel
           modules={decisionModules}
-          title="Reusable comparison decision blocks"
-          description="These modules turn the comparison into structured tradeoff logic that Bes3 can reuse across pages, feeds, and agent responses."
+          title="Quick comparison takeaways"
+          description="These sections summarize the biggest tradeoffs, the likely winner, and the cleanest next step."
         />
 
         <SeoHubLinksPanel
-          title="Comparison hub and spoke links"
-          description="This comparison stays connected to the winner, the category hub, and the surrounding editorial graph instead of becoming an orphan verdict page."
+          title="More pages around this choice"
+          description="Use these links to double-check the winner, revisit the category, or open close alternatives without starting over."
           sections={seoHubSections}
         />
 
@@ -612,7 +612,7 @@ export default async function ComparisonPage({
           attributeFacts={attributeFacts}
           priceHistory={priceHistory}
           title="Comparison evidence"
-          description="This comparison now carries the live offer and verified-fact signals behind the current winner, instead of relying on copy alone."
+          description="These are the latest prices, specs, and store details behind the current winner."
           source="comparison-page-evidence"
         />
 
@@ -622,7 +622,7 @@ export default async function ComparisonPage({
             policy={brandKnowledge.brandPolicy}
             compatibilityFacts={brandKnowledge.compatibilityFacts}
             title="Winner brand policy context"
-            description="Before treating the winner as final, fold in warranty, returns, support, and compatibility facts that can still change the decision."
+            description="Before you treat the winner as final, check returns, warranty, support, and compatibility details that can still change the call."
           />
         ) : null}
 

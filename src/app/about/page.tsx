@@ -257,35 +257,35 @@ export default async function AboutPage() {
         <section className="px-4 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <SeoTrustSignalsPanel
-              title="What makes the Bes3 SEO layer trustworthy"
-              description="The site is designed like a structured coverage graph: every category, brand, product, and editorial page exists to support a concrete buying step."
+              title="Why Bes3 is worth trusting"
+              description="Every category, brand, product, and guide page exists to help with a real shopping step."
               stats={[
                 {
                   label: 'Categories',
                   value: String(categories.length),
-                  note: 'Category hubs keep broad intent crawlable before the buyer narrows further.'
+                  note: 'Category pages help shoppers narrow the field before they compare products.'
                 },
                 {
                   label: 'Brands',
                   value: String(brands.length),
-                  note: 'Brand hubs create exact-match long-tail entry points without duplicating product pages.'
+                  note: 'Brand pages gather same-brand options in one place when brand preference matters.'
                 },
                 {
                   label: 'Products',
                   value: String(products.length),
-                  note: 'Product pages hold pricing, evidence, next steps, and merchant handoff context.'
+                  note: 'Product pages hold pricing, proof, and the next steps before you buy.'
                 },
                 {
                   label: 'Editorial pages',
                   value: String(articles.length),
-                  note: 'Reviews, comparisons, and guides capture different search intents without collapsing them into one template.'
+                  note: 'Reviews, comparisons, and guides answer different shopping questions instead of forcing everything into one format.'
                 }
               ]}
               points={[
-                'Freshness is pushed into titles, descriptions, and structured data so crawlers can see when coverage was last checked.',
-                'HTML sitemaps, segmented XML sitemaps, and brand-category hubs create a denser internal crawl graph than a flat archive.',
-                'Decision modules, evidence blocks, and how-to schemas make the public pages machine-readable instead of just visually readable.',
-                'The goal is not page count. The goal is to intercept narrow intent with a page that naturally leads to the next buying action.'
+                'We show when pages were last checked so you can judge how current the advice is.',
+                'Category pages, brand pages, and guides make it easier to move through the site without getting lost.',
+                'Clear summaries, proof, and step-by-step answers make pages easier to understand and compare.',
+                'We do not publish pages just to look bigger. Each page is meant to help with one real buying decision.'
               ]}
             />
           </div>
