@@ -1,0 +1,27 @@
+import type { MetadataRoute } from 'next'
+import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
+import { listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const [articles, brands, products] = await Promise.all([
+    listPublishedArticles(),
+    listBrands(),
+    listPublishedProducts()
+  ])
+
+  const lastModified = maxDate([
+    ...articles.flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt]),
+    ...products.flatMap((product) => [product.updatedAt, product.publishedAt]),
+    ...brands.map((brand) => brand.latestUpdate)
+  ])
+
+  return [
+    ...buildLocalizedSitemapRoute('/trust', { lastModified, changeFrequency: 'monthly', priority: 0.72 }),
+    ...buildLocalizedSitemapRoute('/about', { lastModified, changeFrequency: 'monthly', priority: 0.8 }),
+    ...buildLocalizedSitemapRoute('/contact', { lastModified, changeFrequency: 'monthly', priority: 0.5 }),
+    ...buildLocalizedSitemapRoute('/privacy', { lastModified, changeFrequency: 'yearly', priority: 0.3 }),
+    ...buildLocalizedSitemapRoute('/terms', { lastModified, changeFrequency: 'yearly', priority: 0.3 }),
+    ...buildLocalizedSitemapRoute('/data', { lastModified, changeFrequency: 'weekly', priority: 0.74 }),
+    ...buildLocalizedSitemapRoute('/site-map', { lastModified, changeFrequency: 'weekly', priority: 0.7 })
+  ]
+}

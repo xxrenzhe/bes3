@@ -21,6 +21,7 @@ export default function robots(): MetadataRoute.Robots {
           '/start',
           '/tools',
           '/about',
+          '/trust',
           '/search',
           '/data',
           '/llms.txt',
@@ -34,7 +35,8 @@ export default function robots(): MetadataRoute.Robots {
       `${siteUrl}/sitemap.xml`,
       `${siteUrl}/products/sitemap.xml`,
       `${siteUrl}/editorial/sitemap.xml`,
-      `${siteUrl}/taxonomy/sitemap.xml`
+      `${siteUrl}/taxonomy/sitemap.xml`,
+      `${siteUrl}/trust/sitemap.xml`
     ]
   }
 }

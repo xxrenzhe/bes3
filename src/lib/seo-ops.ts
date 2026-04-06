@@ -599,8 +599,8 @@ async function inspectRenderedPages(paths: string[]) {
   }
 }
 
-const TRUST_SURFACE_PATHS = ['/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
-const TRUST_SURFACE_LINK_TARGETS = ['/about', '/contact', '/privacy', '/terms', '/data', '/site-map']
+const TRUST_SURFACE_PATHS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
+const TRUST_SURFACE_LINK_TARGETS = ['/trust', '/about', '/contact', '/privacy', '/terms', '/data', '/site-map']
 
 async function inspectTrustSurface() {
   const checkedAt = new Date().toISOString()
@@ -753,7 +753,7 @@ async function inspectTrustSurface() {
         }
       ]
     } else {
-      const requiredRefs = ['/data', '/site-map', '/about']
+      const requiredRefs = ['/trust', '/data', '/site-map', '/about']
       const missing = requiredRefs.filter((ref) => !body.includes(ref))
       if (missing.length > 0) {
         llmsFinding = [
