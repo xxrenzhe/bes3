@@ -28,6 +28,7 @@ const DEFAULT_SETTINGS = [
   ['seo', 'siteName', 'Bes3', 'string', 0, 'Public site name'],
   ['seo', 'siteTagline', 'The Best 3 Tech Picks, Decoded.', 'string', 0, 'Public site tagline'],
   ['seo', 'appUrl', process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000', 'string', 0, 'Primary public site URL'],
+  ['seo', 'renderAuditBaseUrl', process.env.SEO_RENDER_AUDIT_BASE_URL || '', 'string', 0, 'Optional internal base URL used by rendered SEO audits when the public app URL is not directly reachable from the server runtime'],
   ['seo', 'pingomaticEnabled', process.env.PINGOMATIC_ENABLED || 'false', 'boolean', 0, 'Enable Ping-O-Matic notifications'],
   ['seo', 'googleIndexingEnabled', process.env.GOOGLE_INDEXING_ENABLED || 'false', 'boolean', 0, 'Enable Google Indexing API dispatch'],
   ['seo', 'googleServiceAccountJson', process.env.GOOGLE_SERVICE_ACCOUNT_JSON || '', 'secret', 1, 'Google service account JSON used for Indexing API dispatch'],
