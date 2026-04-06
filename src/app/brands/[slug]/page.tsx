@@ -78,17 +78,17 @@ export default async function BrandPage({
         <RouteRecoveryPanel
           kicker="Brand Recovery"
           title="This exact brand page is not published."
-          description="Bes3 could not find that exact brand slug, so this route falls back to the closest brands, categories, and products instead of returning a dead end."
+          description="Bes3 could not find that exact brand page, so this route points you to the closest brands, categories, and products instead."
           queryLabel={queryLabel}
           searchHref={`/search?q=${encodeURIComponent(queryLabel)}&scope=products`}
           sections={[
             {
               eyebrow: 'Nearby brands',
-              title: 'Closest brand hubs',
+              title: 'Closest brand pages',
               links: findSuggestedBrands(brands, slug, 6).map((candidate) => ({
                 href: `/brands/${candidate.slug}`,
                 label: candidate.name,
-                note: `${candidate.productCount} products and ${candidate.articleCount} editorial pages already live on Bes3.`
+                note: `${candidate.productCount} products and ${candidate.articleCount} review pages are already live on Bes3.`
               }))
             },
             {
@@ -97,7 +97,7 @@ export default async function BrandPage({
               links: findSuggestedCategories(categories, slug, 6).map((category) => ({
                 href: buildCategoryPath(category),
                 label: getCategoryLabel(category),
-                note: 'Open the category hub if the brand was wrong but the buyer intent is still right.'
+                note: 'Open the category page if the brand was wrong but the product type is still right.'
               }))
             },
             {
@@ -142,7 +142,7 @@ export default async function BrandPage({
       question: `What is the best next move after this brand page?`,
       answer: leadComparison
         ? 'Use the live comparison if the shortlist is already tight. Otherwise start with the strongest product or review, then come back to the category page only if you need wider context.'
-        : 'Start with the strongest product or review on this page. If coverage is still thin, return to the category page to keep the shortlist broader.'
+        : 'Start with the strongest product or review on this page. If there is not enough here yet, return to the category page to keep the shortlist broader.'
     }
   ]
   const breadcrumbItems = [
@@ -186,7 +186,7 @@ export default async function BrandPage({
           text: 'Open the strongest product page when you already trust the brand and want the shortest path into specs, price context, and shortlist actions.'
         },
         {
-          name: 'Validate with brand coverage',
+          name: 'Validate with brand reviews',
           text: 'Use the review or comparison pages tied to this brand once you need a clearer fit check or a head-to-head comparison.'
         },
         {
@@ -228,7 +228,8 @@ export default async function BrandPage({
         ? {
             eyebrow: 'Explore',
             title: `Open ${brand.name} in ${getCategoryLabel(leadCategory)}`,
-            description: 'Use the brand-and-category view when both filters already matter and you want the shortest path into exact-match products and next steps.',
+            description: 'Use the brand-and-category view when both filters already matter and you want the shortest path into matching products and next steps.',
+            
             href: buildBrandCategoryPath(brand.slug, leadCategory),
             label: 'Open this view'
           }
@@ -252,20 +253,20 @@ export default async function BrandPage({
   const seoHubSections = [
     {
       id: 'brand-categories',
-      eyebrow: 'Brand spokes',
-      title: `Brand + category paths for ${brand.name}`,
-      description: 'These exact-match hubs catch narrower long-tail searches without fragmenting the underlying brand coverage.',
+      eyebrow: 'Brand by category',
+      title: `${brand.name} pages by category`,
+      description: 'Use these links when you already trust the brand and want to jump into the right category faster.',
       links: brand.categories.slice(0, 4).map((category) => ({
         href: buildBrandCategoryPath(brand.slug, category),
         label: `${brand.name} ${getCategoryLabel(category)}`,
-        note: 'Open the exact brand-and-category hub.'
+        note: 'Open the brand-specific page for this category.'
       }))
     },
     {
       id: 'brand-editorial',
-      eyebrow: 'Brand coverage',
-      title: 'Lead product and editorial pages',
-      description: 'These links keep the brand page connected to the strongest product and editorial assets.',
+      eyebrow: 'Best next pages',
+      title: 'Top product pages and reviews',
+      description: 'Use these links to open the strongest product pages or read a review before buying.',
       links: [
         ...brandProducts.slice(0, 2).map((product) => ({
           href: product.slug ? `/products/${product.slug}` : `/brands/${brand.slug}`,
@@ -296,7 +297,7 @@ export default async function BrandPage({
                 {brand.name} on Bes3
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                {brand.description || `This page collects the current ${brand.name} product coverage, reviews, and category links currently available on Bes3.`}
+                {brand.description || `This page collects the current ${brand.name} products, reviews, and category pages available on Bes3.`}
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
@@ -304,12 +305,12 @@ export default async function BrandPage({
                   <p className="mt-2 text-2xl font-black text-foreground">{brand.productCount}</p>
                 </div>
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Editorial pages</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Reviews + comparisons</p>
                   <p className="mt-2 text-2xl font-black text-foreground">{brand.articleCount}</p>
                 </div>
                 <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
                   <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Last checked</p>
-                  <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(brand.latestUpdate, 'Building coverage')}</p>
+                  <p className="mt-2 text-lg font-black text-foreground">{formatEditorialDate(brand.latestUpdate, 'Still building')}</p>
                 </div>
               </div>
             </div>
@@ -334,13 +335,13 @@ export default async function BrandPage({
           brandName={brand.name}
           policy={brandPolicy}
           compatibilityFacts={compatibilityFacts}
-          title="Brand policy knowledge"
+          title="After-you-buy details"
           description="Bes3 uses these stored policy and compatibility notes to answer the questions product specs alone cannot settle: shipping, returns, warranty, and setup fit."
         />
 
         <SeoHubLinksPanel
-          title="Brand hub and spoke links"
-          description="The brand page acts like a long-tail hub: one entry point that fans out into exact brand-category pages, product pages, and editorial validation."
+          title="More pages worth checking"
+          description="Use these links to jump into the right category, open a strong product page, or read a review before deciding."
           sections={seoHubSections}
         />
 
@@ -385,8 +386,8 @@ export default async function BrandPage({
           </div>
 
           <div className="rounded-[2rem] bg-white p-8 shadow-panel">
-            <p className="editorial-kicker">Live Coverage</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Brand-related editorial already published.</h2>
+            <p className="editorial-kicker">Reviews and Comparisons</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Reviews and comparisons already published.</h2>
             <div className="mt-6 space-y-3">
               {brandArticles.slice(0, 5).map((article) => (
                 <Link
@@ -401,7 +402,7 @@ export default async function BrandPage({
               ))}
               {!brandArticles.length ? (
                 <p className="text-sm leading-7 text-muted-foreground">
-                  Editorial coverage for {brand.name} is still building. Use the product pages above or return to category pages for broader coverage.
+                  More reviews for {brand.name} are still being added. Use the product pages above or return to category pages for broader options.
                 </p>
               ) : null}
             </div>
