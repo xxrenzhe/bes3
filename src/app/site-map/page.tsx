@@ -64,6 +64,7 @@ export default async function HtmlSitemapPage() {
   ]
   const machinePages = [
     { href: '/llms.txt', label: 'llms.txt' },
+    { href: '/.well-known/security.txt', label: 'security.txt' },
     { href: '/api/open/coverage', label: 'Coverage Manifest API' },
     { href: '/api/open/buying-feed', label: 'Buying Feed API' },
     { href: '/feed.xml', label: 'RSS Feed' },

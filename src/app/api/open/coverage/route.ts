@@ -78,6 +78,7 @@ export async function GET(request: Request) {
       ],
       machineEntry: [
         '/llms.txt',
+        '/.well-known/security.txt',
         '/api/open/buying-feed',
         '/api/open/coverage',
         '/opensearch.xml',
@@ -104,6 +105,11 @@ export async function GET(request: Request) {
         path: '/opensearch.xml',
         type: 'search-discovery',
         description: 'OpenSearch description XML for discovering the Bes3 site-search entry point.'
+      },
+      {
+        path: '/.well-known/security.txt',
+        type: 'trust',
+        description: 'Standard security disclosure and contact file for the Bes3 public trust surface.'
       },
       {
         path: '/api/open/commerce/search?q=standing%20desk',

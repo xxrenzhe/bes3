@@ -51,6 +51,7 @@ export async function GET(request: Request) {
     `- Trust center: ${siteUrl}/trust`,
     `- Methodology / trust: ${siteUrl}/about`,
     `- Contact: ${siteUrl}/contact`,
+    `- Security disclosure: ${siteUrl}/.well-known/security.txt`,
     `- Privacy policy: ${siteUrl}/privacy`,
     `- Terms of service: ${siteUrl}/terms`,
     '',
