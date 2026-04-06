@@ -235,12 +235,13 @@ export default async function OpenDataPage() {
             </div>
           </div>
           <div className="rounded-[2rem] bg-white p-7 shadow-panel">
-            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Human Routes</p>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Human And Machine Routes</p>
             <div className="mt-5 space-y-3 text-sm text-muted-foreground">
               <Link href="/about" className="block transition-colors hover:text-primary">Open methodology and trust page</Link>
               <Link href="/tools" className="block transition-colors hover:text-primary">Open utility tools</Link>
               <Link href="/site-map" className="block transition-colors hover:text-primary">Open HTML sitemap</Link>
               <Link href="/directory" className="block transition-colors hover:text-primary">Open category directory</Link>
+              <Link href="/llms.txt" className="block transition-colors hover:text-primary">Open llms.txt</Link>
             </div>
           </div>
         </section>
