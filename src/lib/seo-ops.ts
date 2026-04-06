@@ -189,6 +189,7 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
     'missing_meta_description_tag',
     'missing_og_title',
     'missing_og_description',
+    'render_origin_unreachable',
     'render_timeout',
     'render_audit_error'
   ].includes(issueType)) {
@@ -228,6 +229,8 @@ function getRecommendedAction(issueType: string) {
     case 'missing_og_title':
     case 'missing_og_description':
       return 'Restore Open Graph metadata for consistent page summaries.'
+    case 'render_origin_unreachable':
+      return 'Point the rendered SEO audit at a reachable app origin so runtime page checks can execute instead of failing at the network layer.'
     case 'published_page_noindex':
       return 'Remove the unintended noindex directive from the published page.'
     case 'render_http_error':
@@ -253,9 +256,11 @@ async function recordPublishEvent(eventType: string, status: PublishEventStatus,
 async function getSiteIdentity() {
   const siteName = await getSettingValueOrEnv('seo', 'siteName', undefined, 'Bes3')
   const siteUrl = await getSettingValueOrEnv('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL', 'http://localhost:3000')
+  const renderAuditBaseUrl = await getSettingValueOrEnv('seo', 'renderAuditBaseUrl', 'SEO_RENDER_AUDIT_BASE_URL', '')
   return {
     siteName,
-    siteUrl: siteUrl.replace(/\/+$/, '')
+    siteUrl: siteUrl.replace(/\/+$/, ''),
+    renderAuditBaseUrl: renderAuditBaseUrl.replace(/\/+$/, '')
   }
 }
 
@@ -305,6 +310,67 @@ function buildAbsolutePath(siteUrl: string, pathname: string) {
   return new URL(pathname, siteUrl).toString()
 }
 
+function normalizeOrigin(value: string | null | undefined) {
+  const normalized = sanitizeText(value)
+  if (!normalized) return ''
+
+  try {
+    return new URL(normalized).origin
+  } catch {
+    return ''
+  }
+}
+
+function getAuditOriginCandidates(siteUrl: string, renderAuditBaseUrl: string) {
+  const defaultPort = process.env.PORT || '3000'
+  return Array.from(
+    new Set(
+      [
+        normalizeOrigin(renderAuditBaseUrl),
+        normalizeOrigin(siteUrl),
+        normalizeOrigin(`http://127.0.0.1:${defaultPort}`),
+        normalizeOrigin(`http://localhost:${defaultPort}`)
+      ].filter(Boolean)
+    )
+  )
+}
+
+async function resolveRenderedAuditOrigin(siteUrl: string, renderAuditBaseUrl: string) {
+  const candidates = getAuditOriginCandidates(siteUrl, renderAuditBaseUrl)
+  const failures: string[] = []
+
+  for (const origin of candidates) {
+    try {
+      const response = await fetch(buildAbsolutePath(origin, '/api/health'), {
+        method: 'GET',
+        redirect: 'follow',
+        signal: AbortSignal.timeout(3000),
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (compatible; Bes3RenderedSeoAudit/1.0; +https://bes3.local)'
+        }
+      })
+
+      if (response.ok) {
+        return {
+          origin,
+          candidates,
+          failures
+        }
+      }
+
+      failures.push(`${origin} -> HTTP ${response.status}`)
+    } catch (error: any) {
+      failures.push(`${origin} -> ${error?.message || String(error)}`)
+    }
+  }
+
+  return {
+    origin: null,
+    candidates,
+    failures
+  }
+}
+
 async function inspectRenderedPages(paths: string[]) {
   const uniquePaths = Array.from(new Set(paths.filter(Boolean))).slice(0, 8)
   if (!uniquePaths.length) {
@@ -322,14 +388,40 @@ async function inspectRenderedPages(paths: string[]) {
     }
   }
 
-  const { siteUrl } = await getSiteIdentity()
+  const { siteUrl, renderAuditBaseUrl } = await getSiteIdentity()
   const checkedAt = new Date().toISOString()
+  const auditOrigin = await resolveRenderedAuditOrigin(siteUrl, renderAuditBaseUrl)
+
+  if (!auditOrigin.origin) {
+    const detail = [
+      `Unable to reach any rendered-audit origin.`,
+      auditOrigin.candidates.length ? `Candidates: ${auditOrigin.candidates.join(', ')}` : null,
+      auditOrigin.failures.length ? `Failures: ${auditOrigin.failures.join(' | ')}` : null
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    return {
+      scannedPages: uniquePaths.length,
+      affectedPages: 1,
+      issuesFound: 1,
+      findings: [
+        {
+          pathname: uniquePaths[0],
+          title: 'Rendered audit origin unavailable',
+          issueType: 'render_origin_unreachable',
+          issueDetail: detail,
+          checkedAt
+        }
+      ]
+    }
+  }
 
   const allFindings = (
     await Promise.all(
       uniquePaths.map(async (pathname) => {
         try {
-          const response = await fetch(buildAbsolutePath(siteUrl, pathname), {
+          const response = await fetch(buildAbsolutePath(auditOrigin.origin, pathname), {
             method: 'GET',
             redirect: 'follow',
             signal: AbortSignal.timeout(8000),
