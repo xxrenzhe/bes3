@@ -80,6 +80,20 @@ export default async function OpenDataPage() {
       description: 'Machine-readable counts and endpoint inventory for categories, brands, products, and editorial coverage.'
     },
     {
+      eyebrow: 'Feed',
+      title: 'Editorial RSS feed',
+      href: '/feed.xml',
+      label: '/feed.xml',
+      description: 'RSS feed for the latest Bes3 reviews, comparisons, and guides.'
+    },
+    {
+      eyebrow: 'Feed',
+      title: 'Editorial JSON feed',
+      href: '/feed.json',
+      label: '/feed.json',
+      description: 'JSON Feed for the latest Bes3 reviews, comparisons, and guides.'
+    },
+    {
       eyebrow: 'Search',
       title: 'Commerce search',
       href: '/api/open/commerce/search?q=standing%20desk',
@@ -119,6 +133,16 @@ export default async function OpenDataPage() {
       name: 'Bes3 coverage manifest',
       path: '/api/open/coverage',
       description: 'Machine-readable manifest for categories, brands, brand-category hubs, products, articles, locales, and endpoint discovery.'
+    },
+    {
+      name: 'Bes3 editorial RSS feed',
+      path: '/feed.xml',
+      description: 'Chronological XML feed of Bes3 editorial updates for feed readers and syndication tools.'
+    },
+    {
+      name: 'Bes3 editorial JSON feed',
+      path: '/feed.json',
+      description: 'Chronological JSON Feed of Bes3 editorial updates for machine consumers and integrations.'
     }
   ]
 
@@ -180,6 +204,20 @@ export default async function OpenDataPage() {
             path: '/api/open/buying-feed',
             name: 'Bes3 public buying feed',
             description: 'Public feed containing sanitized product entities, editorial entities, price-history summaries, and buyer-decision actions.',
+            dateModified: latestRefresh,
+            docsPath: '/data'
+          }),
+          buildDataFeedSchema({
+            path: '/feed.xml',
+            name: 'Bes3 editorial RSS feed',
+            description: 'XML feed exposing the latest Bes3 reviews, guides, and comparisons in chronological order.',
+            dateModified: latestRefresh,
+            docsPath: '/data'
+          }),
+          buildDataFeedSchema({
+            path: '/feed.json',
+            name: 'Bes3 editorial JSON feed',
+            description: 'JSON Feed exposing the latest Bes3 reviews, guides, and comparisons in chronological order.',
             dateModified: latestRefresh,
             docsPath: '/data'
           }),

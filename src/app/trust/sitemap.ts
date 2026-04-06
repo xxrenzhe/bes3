@@ -30,6 +30,18 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       lastModified,
       changeFrequency: 'weekly',
       priority: 0.5
+    },
+    {
+      url: new URL('/feed.xml', siteUrl).toString(),
+      lastModified,
+      changeFrequency: 'daily',
+      priority: 0.55
+    },
+    {
+      url: new URL('/feed.json', siteUrl).toString(),
+      lastModified,
+      changeFrequency: 'daily',
+      priority: 0.5
     }
   ]
 }
