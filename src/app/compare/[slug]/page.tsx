@@ -21,7 +21,7 @@ import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildItemListSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { buildArticleDecisionContent } from '@/lib/decision-content'
 import {
@@ -261,6 +261,48 @@ export default async function ComparisonPage({
         }
       ]
     }),
+    buildItemListSchema(
+      path,
+      [
+        article.product?.slug
+          ? {
+              name: `${winner} product page`,
+              path: `/products/${article.product.slug}`
+            }
+          : null,
+        relatedReview
+          ? {
+              name: relatedReview.title,
+              path: getArticlePath(relatedReview.type, relatedReview.slug)
+            }
+          : null,
+        relatedGuide
+          ? {
+              name: relatedGuide.title,
+              path: getArticlePath(relatedGuide.type, relatedGuide.slug)
+            }
+          : null,
+        brandSlug && article.product?.brand
+          ? {
+              name: `${article.product.brand} brand page`,
+              path: `/brands/${brandSlug}`
+            }
+          : null,
+        category
+          ? {
+              name: `${categoryLabel} shortlist hub`,
+              path: buildCategoryPath(category, 'category-shortlist')
+            }
+          : null,
+        ...peerProducts
+          .filter((candidate) => candidate.slug)
+          .slice(0, 2)
+          .map((candidate) => ({
+            name: candidate.productName,
+            path: `/products/${candidate.slug}`
+          }))
+      ].filter(Boolean) as Array<{ name: string; path: string }>
+    ),
     buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the top picks, choose the better fit, and decide whether to buy now, set a price alert, or reopen the shortlist.', howToSteps)
   ]
   const faqEntries = [

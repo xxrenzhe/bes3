@@ -21,7 +21,7 @@ import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
-import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
+import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildItemListSchema, buildReviewSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
 import { buildArticleDecisionContent } from '@/lib/decision-content'
 import {
@@ -240,6 +240,48 @@ export default async function ReviewPage({
       type: 'Article'
     }),
     buildReviewSchema(article, path),
+    buildItemListSchema(
+      path,
+      [
+        article.product?.slug
+          ? {
+              name: `${article.product.productName} product page`,
+              path: `/products/${article.product.slug}`
+            }
+          : null,
+        relatedComparison
+          ? {
+              name: relatedComparison.title,
+              path: getArticlePath(relatedComparison.type, relatedComparison.slug)
+            }
+          : null,
+        relatedGuide
+          ? {
+              name: relatedGuide.title,
+              path: getArticlePath(relatedGuide.type, relatedGuide.slug)
+            }
+          : null,
+        brandSlug && article.product?.brand
+          ? {
+              name: `${article.product.brand} brand page`,
+              path: `/brands/${brandSlug}`
+            }
+          : null,
+        category
+          ? {
+              name: `${categoryLabel} category page`,
+              path: buildCategoryPath(category)
+            }
+          : null,
+        ...peerProducts
+          .filter((candidate) => candidate.slug)
+          .slice(0, 2)
+          .map((candidate) => ({
+            name: candidate.productName,
+            path: `/products/${candidate.slug}`
+          }))
+      ].filter(Boolean) as Array<{ name: string; path: string }>
+    ),
     buildHowToSchema(path, `How to use the ${article.title} review`, 'Use the review to confirm buyer fit, validate the product details, and choose the next useful step.', howToSteps)
   ]
   const faqEntries = [
