@@ -48,6 +48,18 @@ type SeoOpsSummary = {
       checkedAt: string
     }>
   }
+  trustSurfaceAudit: {
+    scannedPages: number
+    affectedPages: number
+    issuesFound: number
+    findings: Array<{
+      pathname: string
+      title: string
+      issueType: string
+      issueDetail: string
+      checkedAt: string
+    }>
+  }
   lastLinkInspectorRun: {
     runId: number
     status: string
@@ -191,6 +203,15 @@ export function SeoOpsConsole() {
               {summary?.seoRemediationQueue.length
                 ? 'Prioritized remediation items ready for fixing.'
                 : 'No active remediation items in the current queue.'}
+            </p>
+          </div>
+          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Trust Surface Audit</p>
+            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.trustSurfaceAudit.affectedPages || 0}</p>
+            <p className="mt-2 text-sm text-slate-600">
+              {summary?.trustSurfaceAudit
+                ? `${summary.trustSurfaceAudit.issuesFound} issue(s) across ${summary.trustSurfaceAudit.scannedPages} trust and machine-entry pages.`
+                : 'No trust-surface audit snapshot yet.'}
             </p>
           </div>
           <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
@@ -370,6 +391,35 @@ export function SeoOpsConsole() {
               ) : (
                 <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
                   No current rendered-page SEO issues found in the latest public-page snapshot.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Trust Surface Audit</p>
+                <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">About, contact, policy pages, data docs, and llms.txt checks</h2>
+              </div>
+              <StatusBadge value={summary?.trustSurfaceAudit.issuesFound ? 'warning' : 'configured'} />
+            </div>
+            <div className="mt-6 space-y-3">
+              {summary?.trustSurfaceAudit.findings.length ? (
+                summary.trustSurfaceAudit.findings.map((finding, index) => (
+                  <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/70 p-4">
+                    <div className="flex items-center justify-between gap-3">
+                      <p className="font-semibold text-slate-950">{finding.title}</p>
+                      <StatusBadge value={finding.issueType} />
+                    </div>
+                    <p className="mt-2 break-all text-sm text-slate-500">{finding.pathname}</p>
+                    <p className="mt-2 text-sm text-slate-600">{finding.issueDetail}</p>
+                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(finding.checkedAt)}</p>
+                  </div>
+                ))
+              ) : (
+                <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
+                  No current trust-surface issues found across trust and machine-entry pages.
                 </div>
               )}
             </div>

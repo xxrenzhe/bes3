@@ -92,6 +92,18 @@ export type SeoOpsSummary = {
       checkedAt: string
     }>
   }
+  trustSurfaceAudit: {
+    scannedPages: number
+    affectedPages: number
+    issuesFound: number
+    findings: Array<{
+      pathname: string
+      title: string
+      issueType: string
+      issueDetail: string
+      checkedAt: string
+    }>
+  }
   lastLinkInspectorRun: LinkInspectorSummary | null
   latestLinkIssues: Array<{
     id: number
@@ -172,6 +184,7 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
     'missing_json_ld',
     'missing_h1',
     'multiple_h1',
+    'trust_http_error',
     'published_page_noindex'
   ].includes(issueType)) {
     return 'high'
@@ -190,6 +203,11 @@ function getSeverity(issueType: string): 'high' | 'medium' | 'low' {
     'missing_og_title',
     'missing_og_description',
     'render_origin_unreachable',
+    'trust_missing_canonical_tag',
+    'trust_missing_json_ld',
+    'trust_missing_trust_links',
+    'llms_missing_reference',
+    'trust_origin_unreachable',
     'render_timeout',
     'render_audit_error'
   ].includes(issueType)) {
@@ -231,6 +249,18 @@ function getRecommendedAction(issueType: string) {
       return 'Restore Open Graph metadata for consistent page summaries.'
     case 'render_origin_unreachable':
       return 'Point the rendered SEO audit at a reachable app origin so runtime page checks can execute instead of failing at the network layer.'
+    case 'trust_origin_unreachable':
+      return 'Point the trust-surface audit at a reachable app origin so About, Contact, policy pages, and llms.txt can be checked end to end.'
+    case 'trust_http_error':
+      return 'Restore the trust or machine-entry route so the page can be fetched successfully.'
+    case 'trust_missing_canonical_tag':
+      return 'Add a canonical tag to the trust page so policy and methodology routes stay unambiguous.'
+    case 'trust_missing_json_ld':
+      return 'Restore machine-readable structured data on the trust page so the route contributes to the site trust graph.'
+    case 'trust_missing_trust_links':
+      return 'Reconnect the trust page to the rest of the trust surface with explicit internal links.'
+    case 'llms_missing_reference':
+      return 'Update llms.txt so it references the key trust and machine-entry routes.'
     case 'published_page_noindex':
       return 'Remove the unintended noindex directive from the published page.'
     case 'render_http_error':
@@ -566,6 +596,195 @@ async function inspectRenderedPages(paths: string[]) {
     affectedPages: new Set(allFindings.map((item) => item.pathname)).size,
     issuesFound: allFindings.length,
     findings: allFindings.slice(0, 12)
+  }
+}
+
+const TRUST_SURFACE_PATHS = ['/about', '/contact', '/privacy', '/terms', '/data', '/site-map'] as const
+const TRUST_SURFACE_LINK_TARGETS = ['/about', '/contact', '/privacy', '/terms', '/data', '/site-map']
+
+async function inspectTrustSurface() {
+  const checkedAt = new Date().toISOString()
+  const { siteUrl, renderAuditBaseUrl } = await getSiteIdentity()
+  const auditOrigin = await resolveRenderedAuditOrigin(siteUrl, renderAuditBaseUrl)
+
+  if (!auditOrigin.origin) {
+    const detail = [
+      'Unable to reach any trust-audit origin.',
+      auditOrigin.candidates.length ? `Candidates: ${auditOrigin.candidates.join(', ')}` : null,
+      auditOrigin.failures.length ? `Failures: ${auditOrigin.failures.join(' | ')}` : null
+    ]
+      .filter(Boolean)
+      .join(' ')
+
+    return {
+      scannedPages: TRUST_SURFACE_PATHS.length + 1,
+      affectedPages: 1,
+      issuesFound: 1,
+      findings: [
+        {
+          pathname: TRUST_SURFACE_PATHS[0],
+          title: 'Trust audit origin unavailable',
+          issueType: 'trust_origin_unreachable',
+          issueDetail: detail,
+          checkedAt
+        }
+      ]
+    }
+  }
+
+  const htmlFindings = (
+    await Promise.all(
+      TRUST_SURFACE_PATHS.map(async (pathname) => {
+        try {
+          const response = await fetch(buildAbsolutePath(auditOrigin.origin!, pathname), {
+            method: 'GET',
+            redirect: 'follow',
+            signal: AbortSignal.timeout(8000),
+            headers: {
+              'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)',
+              'Accept-Language': 'en-US,en;q=0.9'
+            }
+          })
+
+          const html = await response.text()
+          const $ = load(html)
+          const title = sanitizeText($('title').first().text()) || pathname
+          const findings: Array<{
+            pathname: string
+            title: string
+            issueType: string
+            issueDetail: string
+            checkedAt: string
+          }> = []
+
+          if (!response.ok) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'trust_http_error',
+              issueDetail: `Trust page returned HTTP ${response.status}.`,
+              checkedAt
+            })
+            return findings
+          }
+
+          const canonicalHref = sanitizeText($('link[rel="canonical"]').attr('href'))
+          const jsonLdScripts = $('script[type="application/ld+json"]').length
+          const linkedTrustTargets = new Set(
+            $('a[href]')
+              .map((_, node) => sanitizeText($(node).attr('href')))
+              .get()
+              .filter((href) => TRUST_SURFACE_LINK_TARGETS.some((target) => href === target || href.endsWith(target)))
+          )
+
+          if (!canonicalHref) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'trust_missing_canonical_tag',
+              issueDetail: 'Trust page is missing a canonical tag.',
+              checkedAt
+            })
+          }
+
+          if (jsonLdScripts === 0) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'trust_missing_json_ld',
+              issueDetail: 'Trust page has no JSON-LD script block.',
+              checkedAt
+            })
+          }
+
+          if (linkedTrustTargets.size < 2) {
+            findings.push({
+              pathname,
+              title,
+              issueType: 'trust_missing_trust_links',
+              issueDetail: `Trust page links to only ${linkedTrustTargets.size} trust-route target(s); expected at least 2.`,
+              checkedAt
+            })
+          }
+
+          return findings
+        } catch (error: any) {
+          return [
+            {
+              pathname,
+              title: pathname,
+              issueType: 'trust_http_error',
+              issueDetail: error?.message || String(error),
+              checkedAt
+            }
+          ]
+        }
+      })
+    )
+  ).flat()
+
+  let llmsFinding: Array<{
+    pathname: string
+    title: string
+    issueType: string
+    issueDetail: string
+    checkedAt: string
+  }> = []
+
+  try {
+    const response = await fetch(buildAbsolutePath(auditOrigin.origin, '/llms.txt'), {
+      method: 'GET',
+      redirect: 'follow',
+      signal: AbortSignal.timeout(8000),
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; Bes3TrustSurfaceAudit/1.0; +https://bes3.local)'
+      }
+    })
+
+    const body = await response.text()
+    if (!response.ok) {
+      llmsFinding = [
+        {
+          pathname: '/llms.txt',
+          title: 'llms.txt',
+          issueType: 'trust_http_error',
+          issueDetail: `llms.txt returned HTTP ${response.status}.`,
+          checkedAt
+        }
+      ]
+    } else {
+      const requiredRefs = ['/data', '/site-map', '/about']
+      const missing = requiredRefs.filter((ref) => !body.includes(ref))
+      if (missing.length > 0) {
+        llmsFinding = [
+          {
+            pathname: '/llms.txt',
+            title: 'llms.txt',
+            issueType: 'llms_missing_reference',
+            issueDetail: `llms.txt is missing references to: ${missing.join(', ')}.`,
+            checkedAt
+          }
+        ]
+      }
+    }
+  } catch (error: any) {
+    llmsFinding = [
+      {
+        pathname: '/llms.txt',
+        title: 'llms.txt',
+        issueType: 'trust_http_error',
+        issueDetail: error?.message || String(error),
+        checkedAt
+      }
+    ]
+  }
+
+  const findings = [...htmlFindings, ...llmsFinding]
+  return {
+    scannedPages: TRUST_SURFACE_PATHS.length + 1,
+    affectedPages: new Set(findings.map((finding) => finding.pathname)).size,
+    issuesFound: findings.length,
+    findings: findings.slice(0, 12)
   }
 }
 
@@ -1446,7 +1665,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
     }))
   )
   const affectedPages = new Set(seoAlignmentFindings.map((item) => item.pathname)).size
-  const renderedPageAudit = await inspectRenderedPages(recentPublishedPaths)
+  const [renderedPageAudit, trustSurfaceAudit] = await Promise.all([inspectRenderedPages(recentPublishedPaths), inspectTrustSurface()])
   const auditRowByPath = new Map(
     seoAuditRows.map((row) => [
       row.pathname,
@@ -1482,7 +1701,20 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
         recommendedAction: getRecommendedAction(finding.issueType),
         updatedAt: finding.checkedAt
       }
-    })
+    }),
+    ...trustSurfaceAudit.findings.map((finding) => ({
+      severity: getSeverity(finding.issueType),
+      issueType: finding.issueType,
+      pathname: finding.pathname,
+      title: finding.title,
+      issueDetail: finding.issueDetail,
+      articleId: null,
+      productId: null,
+      adminHref: null,
+      publicHref: finding.pathname,
+      recommendedAction: getRecommendedAction(finding.issueType),
+      updatedAt: finding.checkedAt
+    }))
   ]
     .sort((left, right) => {
       const severityRank = { high: 3, medium: 2, low: 1 }
@@ -1502,6 +1734,7 @@ export async function getSeoOperationsSummary(): Promise<SeoOpsSummary> {
       findings: seoAlignmentFindings.slice(0, 12)
     },
     renderedPageAudit,
+    trustSurfaceAudit,
     lastLinkInspectorRun: lastRun
       ? {
           runId: lastRun.id,
