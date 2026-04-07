@@ -138,6 +138,74 @@ function getDecisionBadgeClass(stage: ReturnType<typeof getShortlistDecisionStat
   return 'border-slate-200 bg-slate-100 text-slate-700'
 }
 
+type RankedShortlistEntry = {
+  item: ShortlistItem
+  state: ReturnType<typeof getShortlistDecisionState>
+  inCompare: boolean
+}
+
+function compareRankedShortlistEntries(left: RankedShortlistEntry, right: RankedShortlistEntry) {
+  const stageDelta = (DECISION_STAGE_PRIORITY[right.state.stage] || 0) - (DECISION_STAGE_PRIORITY[left.state.stage] || 0)
+  if (stageDelta !== 0) return stageDelta
+
+  const scoreDelta = right.state.score - left.state.score
+  if (scoreDelta !== 0) return scoreDelta
+
+  return (right.item.reviewCount || 0) - (left.item.reviewCount || 0)
+}
+
+function pickBestValueEntry(entries: RankedShortlistEntry[]) {
+  const pricedEntries = entries.filter(
+    (entry) =>
+      entry.item.priceAmount !== null &&
+      entry.item.priceAmount !== undefined &&
+      Number.isFinite(entry.item.priceAmount) &&
+      entry.item.priceAmount > 0
+  )
+
+  if (!pricedEntries.length) return entries[0] || null
+
+  const prices = pricedEntries.map((entry) => entry.item.priceAmount as number)
+  const minPrice = Math.min(...prices)
+  const maxPrice = Math.max(...prices)
+  const spread = Math.max(1, maxPrice - minPrice)
+
+  return pricedEntries
+    .slice()
+    .sort((left, right) => {
+      const leftValueScore = left.state.score + ((maxPrice - (left.item.priceAmount as number)) / spread) * 18
+      const rightValueScore = right.state.score + ((maxPrice - (right.item.priceAmount as number)) / spread) * 18
+
+      if (rightValueScore !== leftValueScore) return rightValueScore - leftValueScore
+      return compareRankedShortlistEntries(left, right)
+    })[0]
+}
+
+function pickBestWaitEntry(entries: RankedShortlistEntry[], excludedIds: number[] = []) {
+  const filteredEntries = entries.filter((entry) => !excludedIds.includes(entry.item.id))
+  const source = filteredEntries.length ? filteredEntries : entries
+
+  return source
+    .slice()
+    .sort((left, right) => {
+      const leftWaitScore =
+        left.state.score +
+        (left.inCompare ? 0 : 8) +
+        (left.item.priceAmount ? 8 : 0) +
+        (left.state.gaps.some((gap) => gap.toLowerCase().includes('price')) ? 14 : 0) +
+        (left.state.gaps.some((gap) => gap.toLowerCase().includes('fresher') || gap.toLowerCase().includes('newer check')) ? 6 : 0)
+      const rightWaitScore =
+        right.state.score +
+        (right.inCompare ? 0 : 8) +
+        (right.item.priceAmount ? 8 : 0) +
+        (right.state.gaps.some((gap) => gap.toLowerCase().includes('price')) ? 14 : 0) +
+        (right.state.gaps.some((gap) => gap.toLowerCase().includes('fresher') || gap.toLowerCase().includes('newer check')) ? 6 : 0)
+
+      if (rightWaitScore !== leftWaitScore) return rightWaitScore - leftWaitScore
+      return compareRankedShortlistEntries(left, right)
+    })[0] || null
+}
+
 export function ShortlistWorkspace({
   sharedItems = []
 }: {
@@ -209,6 +277,14 @@ export function ShortlistWorkspace({
       })
     ])
   )
+  const shortlistDecisionEntries = shortlist
+    .map((item) => ({
+      item,
+      state: shortlistDecisionStates.get(item.id),
+      inCompare: compareIds.includes(item.id)
+    }))
+    .filter((entry): entry is RankedShortlistEntry => Boolean(entry.state))
+    .sort(compareRankedShortlistEntries)
   const sharedDecisionStates = new Map(
     sharedItems.map((item) => [
       item.id,
@@ -223,6 +299,18 @@ export function ShortlistWorkspace({
   const compareMixesCategories = compare.length >= 2 && compareCategoryCount > 1
   const compareCandidates = shortlist.slice(0, Math.min(shortlist.length, 3))
   const compareCandidateNames = buildProductRollup(compareCandidates)
+  const bestCurrentEntry = shortlistDecisionEntries[0] || null
+  const rawBestValueEntry = pickBestValueEntry(shortlistDecisionEntries)
+  const bestValueEntry = rawBestValueEntry && rawBestValueEntry.item.id !== bestCurrentEntry?.item.id
+    ? rawBestValueEntry
+    : shortlistDecisionEntries.find((entry) => entry.item.id !== bestCurrentEntry?.item.id) || rawBestValueEntry || bestCurrentEntry
+  const bestWaitEntry = pickBestWaitEntry(
+    shortlistDecisionEntries,
+    [bestCurrentEntry?.item.id, bestValueEntry?.item.id].filter((value): value is number => Boolean(value))
+  ) || shortlistDecisionEntries.find((entry) => entry.item.id !== bestCurrentEntry?.item.id) || bestCurrentEntry
+  const decisionDeskCompareItems = compareCount >= 2
+    ? compare.slice(0, 2)
+    : dominantDecisionPath?.recommendedItems.slice(0, 2) || shortlist.slice(0, 2)
   const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
   const leadDecisionItem = compare[0] || dominantDecisionPath?.recommendedItems[0] || shortlist[0]
   const alertAnchorItem = dominantDecisionPath?.items[0] || compare[0] || shortlist[0]
@@ -461,6 +549,112 @@ export function ShortlistWorkspace({
           </div>
         </div>
       </section>
+
+      {shortlist.length ? (
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">Decision Desk</p>
+              <h2 className="mt-4 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                Current best calls for {dominantDecisionPath?.label || 'your shortlist'}.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                {dominantDecisionPath?.readiness.note || shortlistDecisionSummary.note} Use this summary to decide whether your next move is opening one product, loading compare, or switching into a price watch.
+              </p>
+              <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Recommended track</p>
+                <p className="mt-3 text-sm leading-7 text-slate-200">
+                  {dominantDecisionPath?.recommendedItems.length
+                    ? `${dominantDecisionPath.recommendedItems.map((item) => item.productName).join(' → ')}.`
+                    : 'Keep your shortlist narrow enough that the next move stays obvious.'}
+                </p>
+                <p className="mt-4 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.nextAction}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-3 xl:grid-cols-1">
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Most reliable now</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                  {bestCurrentEntry?.item.productName || 'Open your strongest saved pick'}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {bestCurrentEntry?.state.note || 'Use the strongest saved pick as your first decision checkpoint.'}
+                </p>
+                {bestCurrentEntry?.state.whySaved.length ? (
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {bestCurrentEntry.state.whySaved.slice(0, 3).map((reason) => (
+                      <span key={`current-${reason}`} className="rounded-full bg-muted px-3 py-1 text-[11px] font-medium text-foreground">
+                        {reason}
+                      </span>
+                    ))}
+                  </div>
+                ) : null}
+                <Link href={getShortlistProductPath(bestCurrentEntry?.item || shortlist[0])} className="mt-5 inline-flex text-sm font-semibold text-primary">
+                  Open details →
+                </Link>
+              </div>
+
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Best value signal</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                  {bestValueEntry?.item.productName || 'Pick the strongest low-regret option'}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {bestValueEntry
+                    ? `${formatPriceSnapshot(bestValueEntry.item.priceAmount, bestValueEntry.item.priceCurrency || 'USD')} with a ${bestValueEntry.state.score}/100 decision score.`
+                    : 'Use price as a tie-breaker only after the shortlist is strong enough to compare honestly.'}
+                </p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {decisionDeskCompareItems.length >= 2
+                    ? `Best next compare pair: ${decisionDeskCompareItems.map((item) => item.productName).join(' vs ')}.`
+                    : bestValueEntry?.state.note || 'Keep the shortlist narrow, then use compare to pressure-test the value call.'}
+                </p>
+                {decisionDeskCompareItems.length >= 2 ? (
+                  compareCount >= 2 ? (
+                    <Link href="/shortlist#decision-matrix" className="mt-5 inline-flex text-sm font-semibold text-primary">
+                      Jump to compare →
+                    </Link>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => setCompareFromItems(decisionDeskCompareItems, 'shortlist-decision-desk')}
+                      className="mt-5 inline-flex text-sm font-semibold text-primary"
+                    >
+                      Load compare →
+                    </button>
+                  )
+                ) : (
+                  <Link href={buildCategoryHubHref(bestValueEntry?.item)} className="mt-5 inline-flex text-sm font-semibold text-primary">
+                    Browse one more option →
+                  </Link>
+                )}
+              </div>
+
+              <div className="rounded-[1.75rem] bg-white p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Best one to wait on</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                  {bestWaitEntry?.item.productName || 'Switch into a price watch'}
+                </h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  {bestWaitEntry?.state.gaps[0]
+                    ? `${bestWaitEntry.state.gaps[0]}. If timing is the only blocker, keep this candidate warm instead of restarting later.`
+                    : `${shortlistDecisionSummary.topGap} If price timing is the issue, preserve this shortlist with an alert instead of reopening discovery.`}
+                </p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                  Best alert anchor: {bestWaitEntry?.item.category ? getCategoryLabel(bestWaitEntry.item) : 'your current shortlist'}.
+                </p>
+                <Link
+                  href={buildCategoryAlertHref(bestWaitEntry?.item || alertAnchorItem, 'price-alert', 'priority')}
+                  className="mt-5 inline-flex text-sm font-semibold text-primary"
+                >
+                  Start price watch →
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+      ) : null}
 
       {shortlist.length ? (
         <DecisionReasonPanel

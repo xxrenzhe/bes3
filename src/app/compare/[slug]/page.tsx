@@ -593,6 +593,32 @@ export default async function ComparisonPage({
           rightTitle={contenders.right}
           winner={winner}
           rows={comparisonMatrixRows}
+          scenarios={[
+            {
+              label: 'Safest default',
+              winner,
+              reason: `${winner} is still the cleanest answer when you want the lowest-regret recommendation and do not want to reopen the whole choice.`,
+              note: article.product?.slug ? 'Open the winning product page next and validate price, store, and final fit.' : 'Treat this as the default answer unless one real concern remains.'
+            },
+            {
+              label: 'Follow the main use case',
+              winner,
+              reason: buildBestFor(article.product, 'comparison'),
+              note: 'Stay with the page winner when the buying situation here sounds like your real job to be done.'
+            },
+            {
+              label: 'Different priority than the article',
+              winner: winner === contenders.left ? contenders.right : contenders.left,
+              reason: `${winner === contenders.left ? contenders.right : contenders.left} only becomes the better call when your priority differs enough from the page recommendation that the main tradeoff no longer feels right.`,
+              note: 'Use the alternative as the challenger, not as a reason to widen the shortlist again.'
+            },
+            {
+              label: 'Budget or timing is locked',
+              winner: category ? `Watch ${categoryLabel}` : 'Set a price alert',
+              reason: 'If price timing is the only blocker, neither finalist needs a new research cycle right now. Preserve this choice and wait for a better entry point.',
+              note: 'Switch into price watch instead of restarting comparison from zero.'
+            }
+          ]}
         />
 
         <DecisionReasonPanel

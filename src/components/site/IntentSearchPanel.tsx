@@ -34,6 +34,30 @@ const INTENT_PRESET_LINKS = [
   }
 ] as const
 
+const INTENT_GUIDE_STEPS = [
+  {
+    title: '1. What are you buying for?',
+    description: 'Start with the real job to be done, not the product spec.',
+    example: 'Example: long work sessions, travel, gaming, field work'
+  },
+  {
+    title: '2. What cannot go wrong?',
+    description: 'List the two or three things that would create regret later.',
+    example: 'Example: weak battery, noisy fan, dim panel, fragile build'
+  },
+  {
+    title: '3. What would make you skip it?',
+    description: 'Use deal-breakers so Bes3 can remove bad-fit options faster.',
+    example: 'Example: no USB-C, glossy screen, poor ports, bulky size'
+  }
+] as const
+
+const INTENT_URGENCY_HELP: Record<IntentUrgency, string> = {
+  'buy-now': 'Use this when you are close to buying and want Bes3 to narrow to the safest current picks.',
+  'compare-soon': 'Use this when you already know the category and only need the last compare-worthy shortlist.',
+  'wait-for-price': 'Use this when the fit is mostly clear but timing or price is the only blocker.'
+}
+
 function buildPresetHref(action: string, preset: (typeof INTENT_PRESET_LINKS)[number]) {
   const params = new URLSearchParams({
     mode: 'intent',
@@ -71,6 +95,8 @@ export function IntentSearchPanel({
   className?: string
   compact?: boolean
 }) {
+  const urgencyHelp = INTENT_URGENCY_HELP[defaultUrgency]
+
   return (
     <form action={action} className={`rounded-[2rem] bg-white p-8 shadow-panel ${className}`.trim()}>
       <input type="hidden" name="mode" value="intent" />
@@ -82,16 +108,29 @@ export function IntentSearchPanel({
         Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a tighter set of options instead of a loose keyword search.
       </p>
 
-      <div className="mt-5 flex flex-wrap gap-3">
-        {INTENT_PRESET_LINKS.map((preset) => (
-          <Link
-            key={preset.label}
-            href={buildPresetHref(action, preset)}
-            className="rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-slate-200"
-          >
-            {preset.label}
-          </Link>
+      <div className="mt-6 grid gap-3 lg:grid-cols-3">
+        {INTENT_GUIDE_STEPS.map((step) => (
+          <div key={step.title} className="rounded-[1.5rem] border border-slate-200 bg-slate-50/80 p-5">
+            <p className="text-sm font-semibold text-foreground">{step.title}</p>
+            <p className="mt-2 text-sm leading-6 text-muted-foreground">{step.description}</p>
+            <p className="mt-3 text-xs font-medium uppercase tracking-[0.18em] text-slate-500">{step.example}</p>
+          </div>
         ))}
+      </div>
+
+      <div className="mt-5">
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Need a head start? Use a starter intent.</p>
+        <div className="mt-3 flex flex-wrap gap-3">
+          {INTENT_PRESET_LINKS.map((preset) => (
+            <Link
+              key={preset.label}
+              href={buildPresetHref(action, preset)}
+              className="rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-slate-200"
+            >
+              {preset.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <div className={`mt-6 grid gap-4 ${compact ? 'lg:grid-cols-[1.4fr_220px_220px]' : 'lg:grid-cols-[1.6fr_220px_220px]'}`}>
@@ -104,6 +143,9 @@ export function IntentSearchPanel({
             className="min-h-[124px] w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-foreground outline-none"
             placeholder="Example: I need a quiet 4K monitor for long work sessions under $500, and I want to avoid dim panels or bad ports."
           />
+          <span className="block text-xs leading-6 text-muted-foreground">
+            Start with this sentence shape: “I need a <span className="font-semibold text-foreground">product</span> for <span className="font-semibold text-foreground">situation</span>, around <span className="font-semibold text-foreground">budget</span>, and I want to avoid <span className="font-semibold text-foreground">deal-breakers</span>.”
+          </span>
         </label>
 
         <div className="grid gap-4">
@@ -134,6 +176,7 @@ export function IntentSearchPanel({
               className="min-h-[52px] w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 text-sm text-foreground outline-none"
               placeholder="500"
             />
+            <span className="block text-xs leading-6 text-muted-foreground">Leave blank if the tradeoff matters more than the number.</span>
           </label>
 
           <label className="space-y-2">
@@ -149,6 +192,7 @@ export function IntentSearchPanel({
                 </option>
               ))}
             </select>
+            <span className="block text-xs leading-6 text-muted-foreground">{urgencyHelp}</span>
           </label>
         </div>
 
@@ -162,6 +206,7 @@ export function IntentSearchPanel({
               className="min-h-[84px] w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-foreground outline-none"
               placeholder="USB-C, quiet fan, good battery"
             />
+            <span className="block text-xs leading-6 text-muted-foreground">Use 2 to 4 concrete must-haves so the shortlist stays narrow.</span>
           </label>
 
           <label className="space-y-2">
@@ -173,6 +218,7 @@ export function IntentSearchPanel({
               className="min-h-[84px] w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-foreground outline-none"
               placeholder="glossy screen, weak battery, noisy cooling"
             />
+            <span className="block text-xs leading-6 text-muted-foreground">This is where you tell Bes3 what would make you reject an otherwise good option.</span>
           </label>
 
           <button
