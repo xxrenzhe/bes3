@@ -19,6 +19,7 @@
     "ops:restore-runtime": "bash ./scripts/restore-runtime.sh",
     "ops:deploy-ghcr": "bash ./scripts/deploy-ghcr.sh",
     "ops:health-check": "bash ./scripts/health-check.sh",
+    "ai:test-gemini": "tsx scripts/test-gemini.ts",
     "seo:index": "tsx scripts/google-indexing.ts",
     "seo:inspect-links": "tsx scripts/link-inspector.ts",
     "seo:repair-pages": "tsx scripts/repair-seo-pages.ts",

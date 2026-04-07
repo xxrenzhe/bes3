@@ -1,11 +1,5 @@
 import { getSettingValueOrEnv } from '@/lib/settings'
-
-export const GEMINI_ACTIVE_MODEL = 'gemini-3-flash-preview' as const
-
-const GEMINI_DEPRECATED_MODELS = new Set([
-  'gemini-2.5-flash',
-  'gemini-2.5-pro'
-])
+import { GEMINI_ACTIVE_MODEL, normalizeGeminiModel } from '@/lib/gemini-models'
 
 export type GeminiResponseSchema = {
   type?: 'STRING' | 'NUMBER' | 'INTEGER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT'
@@ -20,6 +14,8 @@ export type GeminiResponseSchema = {
 
 export type GeminiGenerateParams = {
   prompt: string
+  apiKey?: string | null
+  provider?: string | null
   model?: string | null
   temperature?: number
   maxOutputTokens?: number
@@ -42,14 +38,6 @@ export type GeminiGenerateResult = {
 
 function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
-}
-
-export function normalizeGeminiModel(model?: string | null): string {
-  const value = String(model || '').trim()
-  if (!value || GEMINI_DEPRECATED_MODELS.has(value)) {
-    return GEMINI_ACTIVE_MODEL
-  }
-  return value
 }
 
 function extractGeminiText(payload: any): string | null {
@@ -130,8 +118,10 @@ async function getGeminiConfig(): Promise<{
 
 export async function generateGeminiContent(params: GeminiGenerateParams): Promise<GeminiGenerateResult | null> {
   const config = await getGeminiConfig()
-  if (config.provider !== 'gemini') return null
-  if (!config.apiKey) return null
+  const provider = String(params.provider || config.provider || 'gemini').trim() || 'gemini'
+  const apiKey = String(params.apiKey || config.apiKey || '').trim()
+  if (provider !== 'gemini') return null
+  if (!apiKey) return null
 
   const model = normalizeGeminiModel(params.model || config.model)
   const timeoutMs = Math.max(5000, params.timeoutMs || config.timeoutMs)
@@ -144,7 +134,7 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${config.apiKey}`,
+        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -52,7 +52,7 @@ const CATEGORY_META: Record<string, { title: string; description: string }> = {
 
 const FIELD_META: Record<string, { label: string; placeholder?: string; rows?: number }> = {
   'ai.provider': { label: 'Provider', placeholder: 'gemini' },
-  'ai.geminiModel': { label: 'Gemini Model', placeholder: 'gemini-2.5-flash' },
+  'ai.geminiModel': { label: 'Gemini Model', placeholder: 'gemini-3-flash-preview' },
   'ai.geminiApiKey': { label: 'Gemini API Key', placeholder: 'AIza...' },
   'proxy.browserProxyUrlsJson': { label: 'Proxy Pool JSON', placeholder: '["http://user:pass@proxy:port"]', rows: 5 },
   'affiliateSync.partnerboostAmazonBaseUrl': { label: 'Amazon Base URL', placeholder: 'https://app.partnerboost.com' },
