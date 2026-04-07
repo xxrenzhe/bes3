@@ -1,5 +1,3 @@
-import 'server-only'
-
 export type RuntimeSecretSource = 'env' | 'missing'
 
 export interface RuntimeSecretState {
@@ -18,6 +16,10 @@ export const JWT_SECRET_PLACEHOLDERS = new Set([
   'dev-only-jwt-secret-change-me-before-production',
   'replace-with-a-long-random-secret-at-least-32-chars'
 ])
+
+if (typeof window !== 'undefined') {
+  throw new Error('Runtime secrets are server-only and cannot be imported in the browser.')
+}
 
 function normalizeSecretValue(value: string | undefined): string {
   return typeof value === 'string' ? value.trim() : ''
