@@ -14,7 +14,7 @@ export function getJwtSecret(): Uint8Array {
   const jwtSecretState = getRuntimeJwtSecretState()
   if (!jwtSecretState.value) {
     throw new Error(
-      'JWT_SECRET is required in production. Maintain it in your local .env or .env.production. For local development, the app can also generate an ignored secret under ./secrets/jwt-secret.txt.'
+      'JWT_SECRET is required. Use a local .env file in development and injected environment variables in production.'
     )
   }
   return new TextEncoder().encode(jwtSecretState.value)

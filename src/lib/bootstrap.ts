@@ -130,7 +130,7 @@ async function ensureDefaultAdmin(): Promise<void> {
   const adminPasswordState = getRuntimeAdminPasswordState()
   if (!adminPasswordState.value) {
     throw new Error(
-      'DEFAULT_ADMIN_PASSWORD is required in production. Maintain it in your local .env or .env.production. For local development, the app can also generate an ignored secret under ./secrets/bootstrap-admin-password.txt.'
+      'DEFAULT_ADMIN_PASSWORD is required. Use a local .env file in development and injected environment variables in production.'
     )
   }
   const passwordHash = await hashPassword(adminPasswordState.value)

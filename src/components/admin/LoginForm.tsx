@@ -41,7 +41,7 @@ export function LoginForm() {
         <p className="text-sm leading-7 text-slate-600">
           Internal access only. Default admin username is <span className="font-semibold text-slate-950">{DEFAULT_ADMIN_USERNAME}</span>.
         </p>
-        <p className="text-sm leading-7 text-slate-600">Password bootstrap is managed outside the repository through local `.env` files or ignored secret files.</p>
+        <p className="text-sm leading-7 text-slate-600">Password bootstrap is managed outside the repository through local `.env` files in development and injected environment variables in production.</p>
         <p className="text-sm leading-7 text-slate-600">
           If you were looking for product guidance rather than CMS access, go back to the <Link href="/" className="font-semibold text-primary">public buyer site</Link>.
         </p>

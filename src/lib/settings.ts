@@ -81,14 +81,10 @@ function getDiagnosticStatus(flags: boolean[]): SettingDiagnostic['status'] {
   return 'partial'
 }
 
-function describeSecretSource(label: string, source: 'env' | 'file' | 'generated' | 'missing'): string {
+function describeSecretSource(label: string, source: 'env' | 'missing'): string {
   switch (source) {
     case 'env':
-      return `${label} via env`
-    case 'file':
-      return `${label} via local secret file`
-    case 'generated':
-      return `${label} auto-generated locally`
+      return `${label} via environment`
     default:
       return `${label} missing`
   }
