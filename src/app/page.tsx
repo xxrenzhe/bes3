@@ -135,8 +135,14 @@ export default async function HomePage() {
             </div>
             <div className="flex flex-wrap gap-4">
               <Link
-                href="/assistant"
+                href="/start"
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
+              >
+                Help me choose where to start
+              </Link>
+              <Link
+                href="/assistant"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
               >
                 I need help narrowing
               </Link>
@@ -145,12 +151,6 @@ export default async function HomePage() {
                 className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
               >
                 I already have options
-              </Link>
-              <Link
-                href="/newsletter?intent=price-alert&cadence=priority"
-                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
-              >
-                I am waiting for price
               </Link>
             </div>
           </div>

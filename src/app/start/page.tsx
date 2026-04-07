@@ -11,6 +11,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
@@ -51,6 +52,17 @@ export default async function StartPage() {
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadBrand = brands[0] || null
   const leadCategoryLabel = getCategoryLabel(leadCategory)
+  const leadReviewHref = leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review'
+  const leadComparisonHref = leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist'
+  const leadGuideHref = leadGuide ? getArticlePath(leadGuide.type, leadGuide.slug) : '/directory'
+  const leadAlertHref = buildNewsletterPath({
+    intent: leadCategory ? 'category-brief' : 'deals',
+    category: leadCategory || '',
+    cadence: 'weekly',
+    returnTo: '/start',
+    returnLabel: 'Resume start page',
+    returnDescription: 'Come back to the same state-router page instead of restarting from broad browsing.'
+  })
   const latestRefresh =
     articles[0]?.updatedAt ||
     articles[0]?.publishedAt ||
@@ -78,7 +90,7 @@ export default async function StartPage() {
       description: 'Use a review when one option already has your attention and you want the real pros, cons, and reasons to skip it.',
       bestIf: 'You want to confirm one promising product before spending time on side-by-side compare.',
       notIf: 'You are still too early and need Bes3 to narrow the category first.',
-      href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
+      href: leadReviewHref,
       label: leadReview ? 'Open the full review' : 'Browse reviews'
     },
     {
@@ -87,7 +99,7 @@ export default async function StartPage() {
       description: 'Move into shortlist and comparisons once you have a small set of products worth checking side by side.',
       bestIf: 'You already have two or three serious candidates and want the clearest tradeoffs.',
       notIf: 'You still need broad discovery instead of decision pressure.',
-      href: leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist',
+      href: leadComparisonHref,
       label: leadComparison ? 'Open a comparison' : 'Open shortlist'
     },
     {
@@ -96,7 +108,62 @@ export default async function StartPage() {
       description: 'Set an alert when price is the only thing holding you back, so you can come back later without starting over.',
       bestIf: 'Product fit is mostly settled and timing is the last blocker left.',
       notIf: 'You still need help deciding what belongs on the shortlist.',
-      href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
+      href: leadAlertHref,
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+    }
+  ]
+  const selfCheckQuestions = [
+    {
+      question: 'Do you already know an exact product or model name?',
+      yesLabel: 'Use keyword search',
+      yesHref: '/search?scope=products',
+      yesDescription: 'Best when the job is landing on the right product, review, or comparison page fast.',
+      noLabel: 'Use assistant',
+      noHref: '/assistant',
+      noDescription: 'Best when you know the situation, budget, or blocker but not the final model.'
+    },
+    {
+      question: 'Do you already have two or three real options?',
+      yesLabel: 'Open shortlist or compare',
+      yesHref: leadComparisonHref,
+      yesDescription: 'Best when discovery is mostly done and the next job is choosing between finalists.',
+      noLabel: 'Read a review first',
+      noHref: leadReviewHref,
+      noDescription: 'Best when one product looks promising but still needs a fit check before compare.'
+    },
+    {
+      question: 'Is price the only thing still blocking the purchase?',
+      yesLabel: 'Start alerts',
+      yesHref: leadAlertHref,
+      yesDescription: 'Best when fit is mostly settled and you just need a better timing signal.',
+      noLabel: 'Open a guide',
+      noHref: leadGuideHref,
+      noDescription: 'Best when you still need category basics before narrowing harder.'
+    }
+  ]
+  const quickTriageOutcomes = [
+    {
+      title: 'Need direction',
+      description: 'You know the problem, but not the product. Start with the assistant and let Bes3 narrow the field.',
+      href: '/assistant',
+      label: 'Open assistant'
+    },
+    {
+      title: 'Need proof on one option',
+      description: 'One product already looks close. Use a review before you widen the list again.',
+      href: leadReviewHref,
+      label: leadReview ? 'Open lead review' : 'Browse reviews'
+    },
+    {
+      title: 'Need a final choice',
+      description: 'You already have contenders. Move into shortlist or compare instead of searching wider.',
+      href: leadComparisonHref,
+      label: leadComparison ? 'Open comparison' : 'Open shortlist'
+    },
+    {
+      title: 'Need better timing',
+      description: 'Price is the only blocker left. Save the task and let alerts bring you back with context.',
+      href: leadAlertHref,
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
   ]
@@ -272,6 +339,60 @@ export default async function StartPage() {
           />
         </div>
 
+        <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
+          <div className="grid gap-8 xl:grid-cols-[1fr_0.92fr] xl:items-start">
+            <div>
+              <p className="editorial-kicker">30-Second Check</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
+                Answer three quick questions before you pick a route.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
+                The goal here is not to teach the site map. It is to help you avoid one wrong first click when the real blocker is still direction, proof, compare, or timing.
+              </p>
+
+              <div className="mt-6 space-y-4">
+                {selfCheckQuestions.map((item) => (
+                  <div key={item.question} className="rounded-[1.75rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5">
+                    <p className="text-base font-semibold text-foreground">{item.question}</p>
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      <Link href={item.yesHref} className="rounded-[1.25rem] bg-white p-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Yes</p>
+                        <p className="mt-2 text-base font-semibold text-foreground">{item.yesLabel}</p>
+                        <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.yesDescription}</p>
+                      </Link>
+                      <Link href={item.noHref} className="rounded-[1.25rem] bg-white p-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">No</p>
+                        <p className="mt-2 text-base font-semibold text-foreground">{item.noLabel}</p>
+                        <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.noDescription}</p>
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-6 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)]">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-200">Quick Outcomes</p>
+              <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
+                Most buyers only need one of these four moves.
+              </h3>
+              <div className="mt-6 grid gap-3">
+                {quickTriageOutcomes.map((outcome) => (
+                  <Link
+                    key={outcome.title}
+                    href={outcome.href}
+                    className="rounded-[1.5rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm transition-transform hover:-translate-y-0.5"
+                  >
+                    <p className="text-lg font-semibold text-white">{outcome.title}</p>
+                    <p className="mt-2 text-sm leading-7 text-slate-200">{outcome.description}</p>
+                    <p className="mt-4 text-sm font-semibold text-emerald-200">{outcome.label} →</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
         <section className="grid gap-8 lg:grid-cols-[1fr_0.95fr]">
           <div className="rounded-[2rem] bg-white p-8 shadow-panel">
             <SectionHeader
@@ -342,6 +463,13 @@ export default async function StartPage() {
                 description: 'If one brand already looks promising, jump back into that brand instead of reopening the whole market.',
                 href: leadBrand ? `/brands/${leadBrand.slug}` : '/brands',
                 label: leadBrand ? `Open ${leadBrand.name}` : 'Browse brands'
+              },
+              {
+                eyebrow: 'Resume',
+                title: 'Return to this triage page',
+                description: 'Keep the same start-page context alive if you are still deciding which route fits best.',
+                href: '/start',
+                label: 'Resume start page'
               }
             ]}
           />
