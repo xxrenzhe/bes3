@@ -345,7 +345,7 @@ export default async function ComparisonPage({
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track a better deal',
-      description: 'If price is the only unresolved variable, convert this comparison into a price alert instead of restarting your research later.',
+      description: 'If price is the only unresolved variable, convert this comparison into a price alert so you can pick this back up later.',
       href: category
         ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
         : '/newsletter?intent=deals&cadence=priority',

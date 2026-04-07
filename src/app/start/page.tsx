@@ -86,7 +86,7 @@ export default async function StartPage() {
     {
       eyebrow: 'Step 04',
       title: 'I want to wait for a better price',
-      description: 'Set an alert when price is the only thing holding you back, so you can come back later without restarting all your research.',
+      description: 'Set an alert when price is the only thing holding you back, so you can come back later without starting over.',
       href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
@@ -140,7 +140,7 @@ export default async function StartPage() {
     {
       label: 'Brand pages',
       value: String(brands.length),
-      description: 'Brands with dedicated pages and coverage.'
+      description: 'Brands with dedicated pages already live.'
     },
     {
       label: 'Published pages',
@@ -174,7 +174,7 @@ export default async function StartPage() {
     },
     {
       question: 'Why does Bes3 include alerts as part of the product?',
-      answer: 'Because timing often blocks a purchase even when the product fit is already clear. Alerts help you wait for a better moment without restarting your research.'
+      answer: 'Because timing often blocks a purchase even when the product fit is already clear. Alerts help you wait for a better moment without starting over.'
     }
   ]
   const structuredData = [
@@ -224,7 +224,7 @@ export default async function StartPage() {
                 Use Bes3 to shop with less guesswork.
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
-                Bes3 is not a generic review archive. It helps you narrow the options, understand the tradeoffs, and keep your progress saved if you decide to wait.
+                Bes3 is not a generic review site. It helps you narrow the options, understand the tradeoffs, and keep your progress saved if you decide to wait.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="/assistant" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
@@ -285,7 +285,7 @@ export default async function StartPage() {
           <div className="rounded-[2rem] bg-white p-8 shadow-panel">
             <SectionHeader
               eyebrow="Positioning"
-              title="Why Bes3 behaves differently from a review archive."
+              title="Why Bes3 behaves differently from a typical review site."
               description="Bes3 is built around helping you decide faster, not around making you open more pages."
             />
             <div className="mt-6 grid gap-4 sm:grid-cols-2">

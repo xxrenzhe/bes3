@@ -52,7 +52,7 @@ export default async function NotFound() {
       <RouteRecoveryPanel
         kicker="404 Recovery"
         title="This exact page is not available."
-        description="Bes3 uses the missing route as a recovery step instead of a dead end. The suggestions below are based on the URL you tried to open, so you can jump back into the closest product, editorial, brand, or category path."
+        description="Bes3 uses the missing route as a recovery step instead of a dead end. The suggestions below are based on the URL you tried to open, so you can jump back into the closest product, review, brand, or category page."
         queryLabel={requestPath === '/' ? recoveryQuery : `${requestPath} → ${recoveryQuery}`}
         searchHref={`/search?q=${encodeURIComponent(recoveryQuery)}&scope=products`}
         sections={[
@@ -66,7 +66,7 @@ export default async function NotFound() {
             }))
           },
           {
-            eyebrow: 'Nearby editorial',
+            eyebrow: 'Nearby reviews',
             title: 'Reviews, guides, and comparisons nearby',
             links: suggestedArticles.map((article) => ({
               href: getArticlePath(article.type, article.slug),
@@ -76,20 +76,20 @@ export default async function NotFound() {
           },
           {
             eyebrow: 'Nearby brands',
-            title: 'Brand hubs that may match',
+            title: 'Brand pages that may match',
             links: suggestedBrands.map((brand) => ({
               href: `/brands/${brand.slug}`,
               label: brand.name,
-              note: `${brand.productCount} products and ${brand.articleCount} editorial pages already live on Bes3.`
+              note: `${brand.productCount} products and ${brand.articleCount} reviews or guides already live on Bes3.`
             }))
           },
           {
             eyebrow: 'Nearby categories',
-            title: 'Category hubs that may match',
+            title: 'Category pages that may match',
             links: suggestedCategories.map((category) => ({
               href: buildCategoryPath(category),
               label: getCategoryLabel(category),
-              note: 'Open the category hub if the exact URL was wrong but the buying intent is still right.'
+              note: 'Open the category page if the exact URL was wrong but the buying intent is still right.'
             }))
           }
         ]}

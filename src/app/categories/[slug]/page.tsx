@@ -228,7 +228,7 @@ export default async function CategoryPage({
     },
     {
       question: 'Why does this page push next moves instead of dumping every result?',
-      answer: 'Because category pages should help you move forward. They should cut down the noise, not recreate a giant archive that sends you back into broad research.'
+      answer: 'Because category pages should help you move forward. They should cut down the noise, not recreate a giant list that sends you back into broad browsing.'
     }
   ]
   const buyerRoutes = [
@@ -244,7 +244,7 @@ export default async function CategoryPage({
       title: 'Read the lead review',
       description: 'Use the strongest review when one product is already catching your eye and you want fit and tradeoffs before comparing.',
       href: featuredReview ? getArticlePath(featuredReview.type, featuredReview.slug) : '/search',
-      label: featuredReview ? 'Open lead review' : 'Search review archive'
+      label: featuredReview ? 'Open lead review' : 'Search reviews'
     },
     {
       eyebrow: 'Decide',
@@ -407,7 +407,7 @@ export default async function CategoryPage({
                     {brand.name} {categoryLabel}
                   </h3>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this brand-specific view without making you restart your research.
+                    {brand.count} live product {brand.count === 1 ? 'page' : 'pages'} already support this brand-specific view without making you start over.
                   </p>
                   <p className="mt-5 text-sm font-semibold text-primary">Open this view →</p>
                 </Link>
