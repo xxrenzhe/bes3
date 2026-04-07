@@ -5,14 +5,18 @@
 const fs = require('node:fs')
 const path = require('node:path')
 
-const DEFAULT_ADMIN_PASSWORD = 'replace-with-a-random-admin-password-before-first-run'
 const GEMINI_ACTIVE_MODEL = 'gemini-3-flash-preview'
 const GEMINI_SUPPORTED_MODELS = new Set([GEMINI_ACTIVE_MODEL])
 const GEMINI_DEPRECATED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro'])
+const DEFAULT_ADMIN_PASSWORD_PLACEHOLDERS = new Set([
+  'replace-before-first-run',
+  'replace-with-a-random-admin-password-before-first-run'
+])
 const DEFAULT_JWT_SECRETS = new Set([
   'change-me-to-a-long-random-secret',
   'dev-only-jwt-secret-change-me',
-  'dev-only-jwt-secret-change-me-before-production'
+  'dev-only-jwt-secret-change-me-before-production',
+  'replace-with-a-long-random-secret-at-least-32-chars'
 ])
 
 function parseEnvFile(filePath) {
@@ -48,7 +52,7 @@ function buildConfig() {
     port: read('PORT', '80'),
     appUrl: read('NEXT_PUBLIC_APP_URL'),
     jwtSecret: read('JWT_SECRET'),
-    adminPassword: read('DEFAULT_ADMIN_PASSWORD', DEFAULT_ADMIN_PASSWORD),
+    adminPassword: read('DEFAULT_ADMIN_PASSWORD'),
     databaseUrl: read('DATABASE_URL'),
     databasePath: read('DATABASE_PATH', './data/bes3.db'),
     mediaDriver: read('MEDIA_DRIVER', 'local'),
@@ -117,8 +121,11 @@ function validate() {
 
   if (!config.adminPassword) {
     errors.push('DEFAULT_ADMIN_PASSWORD is required')
-  } else if (config.adminPassword === DEFAULT_ADMIN_PASSWORD) {
-    const message = 'DEFAULT_ADMIN_PASSWORD is still using the seeded default value'
+  } else if (
+    DEFAULT_ADMIN_PASSWORD_PLACEHOLDERS.has(config.adminPassword) ||
+    config.adminPassword.length < 16
+  ) {
+    const message = 'DEFAULT_ADMIN_PASSWORD must be replaced with a unique password of at least 16 characters'
     if (config.nodeEnv === 'production' && !config.allowInsecureDefaults) {
       errors.push(message)
     } else {
