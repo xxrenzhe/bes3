@@ -182,22 +182,60 @@ export default async function NewsletterPage({
     label: string
   } => Boolean(route))
     .filter((route, index, list) => list.findIndex((candidate) => candidate.href === route.href) === index)
+  const taskAnchorLabel = resumeContext
+    ? resumeContext.label
+    : selectedCategory
+      ? `${selectedCategoryLabel} research`
+      : 'your current shopping task'
+  const heroTitle = resumeContext
+    ? `Keep ${resumeContext.label.toLowerCase()} alive while you wait.`
+    : selectedCategory
+      ? `Keep your ${selectedCategoryLabel.toLowerCase()} task alive while you wait.`
+      : 'Keep your shopping task alive while you wait.'
+  const heroDescription = resumeContext
+    ? `You are not joining a separate email funnel. You are preserving ${resumeContext.label.toLowerCase()} so Bes3 can bring you back when timing changes in a way that matters.`
+    : selectedCategory
+      ? `Use alerts to preserve your ${selectedCategoryLabel} research, shortlist, and next step so waiting for a better moment does not erase the work you already did.`
+      : 'Use alerts to preserve your shortlist, category context, and next step so waiting for a better moment does not force you to restart from zero.'
+  const alertExamples = [
+    {
+      label: 'Worth opening now',
+      title: selectedCategory
+        ? `${selectedCategoryLabel} pricing moved enough to justify another look`
+        : 'A tracked price move is big enough to justify another look',
+      description: 'This kind of alert should tell you the market changed in a way that may change the decision, not just that a tiny discount exists.'
+    },
+    {
+      label: 'Keep waiting',
+      title: 'The price moved, but the timing still is not strong enough',
+      description: 'A useful wait journey should also tell you when not to act yet, so alerts reduce pressure instead of creating it.'
+    },
+    {
+      label: 'Resume the task',
+      title: `Return to ${taskAnchorLabel} with the same context still intact`,
+      description: 'When you come back, Bes3 should reconnect you to the same shortlist, category, or comparison path instead of dropping you onto a generic landing page.'
+    }
+  ]
 
   return (
     <PublicShell>
       <div className="mx-auto grid max-w-7xl gap-14 px-4 py-16 sm:px-6 lg:grid-cols-[0.95fr_1.05fr] lg:px-8">
         <div className="space-y-8">
-          <p className="editorial-kicker">Email Updates</p>
+          <p className="editorial-kicker">Keep The Task Alive</p>
           <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-7xl">
-            Get useful updates, not marketing spam.
+            {heroTitle}
           </h1>
           <p className="max-w-2xl text-lg leading-8 text-muted-foreground">
-            Bes3 updates are tailored to what you are actually considering buying: deal alerts, category updates, and price watches{selectedCategory ? ` for ${selectedCategory.replace(/-/g, ' ')}` : ''}.
+            {heroDescription}
           </p>
           <div className="rounded-[1.5rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Smart defaults</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Current task</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Category and product pages can send you here with the right update already selected, so waiting for a better price or a category update never becomes a dead end.
+              {resumeContext
+                ? `Bes3 already knows you came from ${resumeContext.label.toLowerCase()}. The alert should preserve that exact route and bring you back there when waiting stops being the right move.`
+                : selectedCategory
+                  ? `This alert is anchored to ${selectedCategoryLabel}, so the waiting path stays tied to the same category instead of drifting into generic deal mail.`
+                  : 'Pages across Bes3 can send you here with the right context selected, so waiting for a better time never becomes a dead end.'}
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -254,6 +292,28 @@ export default async function NewsletterPage({
               variant: index === 0 ? 'primary' : 'secondary'
             }))}
           />
+          <section className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel sm:p-8">
+            <div className="flex flex-col gap-3 border-b border-border/40 pb-5 md:flex-row md:items-end md:justify-between">
+              <div>
+                <p className="editorial-kicker">Alert Preview</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
+                  The alert should tell you whether to act, not just that something changed.
+                </h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                These examples show the standard this wait flow should meet: explain the signal, say what changed, and reconnect you to the same task.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-4 md:grid-cols-3">
+              {alertExamples.map((example) => (
+                <div key={example.label} className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{example.label}</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{example.title}</h3>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{example.description}</p>
+                </div>
+              ))}
+            </div>
+          </section>
         </div>
         <DecisionReasonPanel
           eyebrow="Why alerts exist"

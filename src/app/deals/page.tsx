@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
@@ -367,6 +368,33 @@ export default async function DealsPage({
                 href: leadAlertHref,
                 label: 'Start price alert',
                 variant: 'secondary'
+              }
+            ]}
+          />
+        </section>
+
+        <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <DecisionReasonPanel
+            eyebrow="Deals Decision Summary"
+            title="A useful deal page should reduce bad urgency, not create it."
+            description="Live deals only help when the product or category already belongs in your decision set. If fit is still fuzzy, the right move is to step back into shortlist, product detail, or category context."
+            cards={[
+              {
+                eyebrow: 'Use this page if',
+                title: 'Product fit is already mostly clear',
+                description: 'Deals work best when you are validating timing on something that already deserves attention, not when you are still discovering what belongs on the shortlist.'
+              },
+              {
+                eyebrow: 'Leave this page if',
+                title: 'The discount is pulling you toward the wrong product',
+                description: 'If the offer looks exciting but category fit still is not clear, reopen the shortlist, product page, or category view before treating any price as a signal to act.',
+                tone: 'muted'
+              },
+              {
+                eyebrow: 'Wait instead if',
+                title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Preserve the task with an alert',
+                description: 'When price timing is the blocker, switch into a contextual alert so Bes3 can bring you back to the same decision later instead of forcing an impulse now.',
+                tone: 'strong'
               }
             ]}
           />
