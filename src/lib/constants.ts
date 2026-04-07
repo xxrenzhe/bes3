@@ -2,7 +2,6 @@ import type { PipelineStage } from '@/lib/types'
 
 export const DEFAULT_ADMIN_USERNAME = process.env.DEFAULT_ADMIN_USERNAME || 'autobes3'
 export const DEFAULT_ADMIN_EMAIL = process.env.DEFAULT_ADMIN_EMAIL || 'admin@bes3.local'
-export const DEFAULT_ADMIN_PASSWORD = process.env.DEFAULT_ADMIN_PASSWORD || 'replace-with-a-random-admin-password-before-first-run'
 
 export const PIPELINE_STAGES: PipelineStage[] = [
   'resolveAffiliateLink',

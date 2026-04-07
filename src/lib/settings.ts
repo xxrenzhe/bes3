@@ -1,5 +1,6 @@
 import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
+import { getRuntimeAdminPasswordState, getRuntimeJwtSecretState } from '@/lib/runtime-secrets'
 import type { SettingDataType } from '@/lib/types'
 
 export interface SettingRecord {
@@ -17,13 +18,6 @@ export interface SettingDiagnostic {
   status: 'configured' | 'partial' | 'missing'
   detail: string
 }
-
-const DEFAULT_ADMIN_PASSWORD = 'replace-with-a-random-admin-password-before-first-run'
-const DEFAULT_JWT_SECRETS = new Set([
-  'change-me-to-a-long-random-secret',
-  'dev-only-jwt-secret-change-me',
-  'dev-only-jwt-secret-change-me-before-production'
-])
 
 function mapSetting(row: {
   category: string
@@ -87,6 +81,19 @@ function getDiagnosticStatus(flags: boolean[]): SettingDiagnostic['status'] {
   return 'partial'
 }
 
+function describeSecretSource(label: string, source: 'env' | 'file' | 'generated' | 'missing'): string {
+  switch (source) {
+    case 'env':
+      return `${label} via env`
+    case 'file':
+      return `${label} via local secret file`
+    case 'generated':
+      return `${label} auto-generated locally`
+    default:
+      return `${label} missing`
+  }
+}
+
 export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const settings = await listSettings()
   const map = new Map(settings.map((item) => [`${item.category}.${item.key}`, item.value]))
@@ -124,11 +131,11 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const syndicationTargetsJson = read('seo', 'syndicationTargetsJson', 'SEO_SYNDICATION_TARGETS_JSON', '[]')
   const linkInspectorEnabled = read('seo', 'linkInspectorEnabled', 'LINK_INSPECTOR_ENABLED', 'true') === 'true'
   const linkInspectorMaxUrls = read('seo', 'linkInspectorMaxUrls', 'LINK_INSPECTOR_MAX_URLS', '60')
-  const jwtSecret = process.env.JWT_SECRET || ''
-  const adminPassword = process.env.DEFAULT_ADMIN_PASSWORD || DEFAULT_ADMIN_PASSWORD
+  const jwtSecretState = getRuntimeJwtSecretState()
+  const adminPasswordState = getRuntimeAdminPasswordState()
   const runtimePort = process.env.PORT || '80'
-  const isJwtStrong = Boolean(jwtSecret) && !DEFAULT_JWT_SECRETS.has(jwtSecret) && jwtSecret.length >= 32
-  const isAdminPasswordRotated = Boolean(adminPassword) && adminPassword !== DEFAULT_ADMIN_PASSWORD
+  const isJwtStrong = Boolean(jwtSecretState.value) && jwtSecretState.value.length >= 32
+  const isAdminPasswordRotated = Boolean(adminPasswordState.value) && adminPasswordState.value.length >= 16
   let parsedSyndicationTargets: unknown[] = []
   try {
     const parsed = JSON.parse(syndicationTargetsJson)
@@ -151,7 +158,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
       id: 'runtime-security',
       title: 'Runtime Security',
       status: getDiagnosticStatus([isJwtStrong, isAdminPasswordRotated]),
-      detail: `${isJwtStrong ? 'JWT secret ready' : 'JWT secret weak or default'} · ${isAdminPasswordRotated ? 'Admin password rotated' : 'Admin password still default'} · port ${runtimePort}`
+      detail: `${describeSecretSource('JWT secret', jwtSecretState.source)} · ${describeSecretSource('Admin password', adminPasswordState.source)} · port ${runtimePort}`
     },
     {
       id: 'ai',

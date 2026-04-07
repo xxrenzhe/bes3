@@ -1,6 +1,5 @@
 import bcrypt from 'bcryptjs'
-
-const JWT_SECRET = process.env.JWT_SECRET || 'dev-only-jwt-secret-change-me'
+import { getRuntimeJwtSecretState } from '@/lib/runtime-secrets'
 
 export async function hashPassword(password: string): Promise<string> {
   const salt = await bcrypt.genSalt(10)
@@ -12,5 +11,11 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 export function getJwtSecret(): Uint8Array {
-  return new TextEncoder().encode(JWT_SECRET)
+  const jwtSecretState = getRuntimeJwtSecretState()
+  if (!jwtSecretState.value) {
+    throw new Error(
+      'JWT_SECRET is required in production. Maintain it in your local .env or .env.production. For local development, the app can also generate an ignored secret under ./secrets/jwt-secret.txt.'
+    )
+  }
+  return new TextEncoder().encode(jwtSecretState.value)
 }

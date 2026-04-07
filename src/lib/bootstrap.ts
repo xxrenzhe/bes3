@@ -1,7 +1,8 @@
-import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
+import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
+import { getRuntimeAdminPasswordState } from '@/lib/runtime-secrets'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
 
@@ -126,7 +127,13 @@ async function ignoreUniqueViolation(operation: () => Promise<unknown>): Promise
 
 async function ensureDefaultAdmin(): Promise<void> {
   const db = await getDatabase()
-  const passwordHash = await hashPassword(DEFAULT_ADMIN_PASSWORD)
+  const adminPasswordState = getRuntimeAdminPasswordState()
+  if (!adminPasswordState.value) {
+    throw new Error(
+      'DEFAULT_ADMIN_PASSWORD is required in production. Maintain it in your local .env or .env.production. For local development, the app can also generate an ignored secret under ./secrets/bootstrap-admin-password.txt.'
+    )
+  }
+  const passwordHash = await hashPassword(adminPasswordState.value)
   const existing = await db.queryOne<{ id: number }>(
     'SELECT id FROM users WHERE username = ? OR email = ? LIMIT 1',
     [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL]
@@ -140,7 +147,15 @@ async function ensureDefaultAdmin(): Promise<void> {
             must_change_password = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL, passwordHash, 'Bes3 Administrator', 1, 0, userId]
+      [
+        DEFAULT_ADMIN_USERNAME,
+        DEFAULT_ADMIN_EMAIL,
+        passwordHash,
+        'Bes3 Administrator',
+        1,
+        adminPasswordState.source === 'env' ? 0 : 1,
+        userId
+      ]
     )
 
   if (existing?.id) {
@@ -152,9 +167,14 @@ async function ensureDefaultAdmin(): Promise<void> {
     await db.exec(
       `
         INSERT INTO users (username, email, password_hash, role, display_name, is_active, must_change_password)
-        VALUES (?, ?, ?, 'admin', 'Bes3 Administrator', 1, 0)
+        VALUES (?, ?, ?, 'admin', 'Bes3 Administrator', 1, ?)
       `,
-      [DEFAULT_ADMIN_USERNAME, DEFAULT_ADMIN_EMAIL, passwordHash]
+      [
+        DEFAULT_ADMIN_USERNAME,
+        DEFAULT_ADMIN_EMAIL,
+        passwordHash,
+        adminPasswordState.source === 'env' ? 0 : 1
+      ]
     )
   } catch (error) {
     if (!isUniqueConstraintError(error)) throw error
