@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
@@ -11,6 +12,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
@@ -168,6 +170,14 @@ export default async function CategoryPage({
     .sort((left, right) => right.count - left.count || left.name.localeCompare(right.name))
     .slice(0, 4)
   const path = buildCategoryPath(resolvedCategory)
+  const categoryAlertHref = buildNewsletterPath({
+    intent: 'category-brief',
+    category: resolvedCategory,
+    cadence: 'weekly',
+    returnTo: path,
+    returnLabel: `Resume ${categoryLabel}`,
+    returnDescription: 'Come back to the same category page with your shortlist, reviews, and next-step context intact.'
+  })
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: 'Directory', path: '/directory' },
@@ -257,7 +267,7 @@ export default async function CategoryPage({
       eyebrow: 'Watch',
       title: 'Track this category',
       description: 'If the purchase is not happening today, turn this category into a price alert or weekly update instead of losing your place.',
-      href: `/newsletter?intent=category-brief&category=${encodeURIComponent(slug)}&cadence=weekly`,
+      href: categoryAlertHref,
       label: 'Start category alerts'
     }
   ]
@@ -322,6 +332,9 @@ export default async function CategoryPage({
               <div className="rounded-[1.75rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Last checked</p>
                 <p className="mt-3 text-lg font-black">{formatEditorialDate(latestRefresh, 'Still building')}</p>
+                <p className="mt-2 text-sm leading-7 text-slate-200">
+                  This refresh tells you whether the shortlist and supporting review coverage are current enough to act on now.
+                </p>
               </div>
             </div>
           </div>
@@ -360,6 +373,33 @@ export default async function CategoryPage({
             </div>
           </div>
         </section>
+
+        <DecisionReasonPanel
+          eyebrow="Category Decision Summary"
+          title="This page should narrow the market, then hand you to the next decision."
+          description="A strong category page is not a dumping ground for every result. Its job is to shrink the field, point to the best validation page, and preserve context when timing is the blocker."
+          cards={[
+            {
+              eyebrow: 'Read this if',
+              title: 'You know the category, but not the best candidate yet',
+              description: 'Use this page when the market is clear enough to stay inside one category, but you still need Bes3 to narrow it into products actually worth your attention.'
+            },
+            {
+              eyebrow: 'Leave this page if',
+              title: featuredComparison ? 'Your shortlist is already down to a few serious finalists' : 'One product already looks strong enough to validate directly',
+              description: featuredComparison
+                ? 'Once the shortlist is tight, stop broad browsing and move into the comparison or lead review so the decision becomes concrete.'
+                : 'If one candidate is already standing out, the category page has done its job. Open the lead review or product page instead of browsing sideways.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Wait instead if',
+              title: 'Timing is the blocker, not category understanding',
+              description: 'If you already know this is the right category but price or timing is stopping the purchase, save the context with alerts instead of rebuilding the shortlist later.',
+              tone: 'strong'
+            }
+          ]}
+        />
 
         <SeoHubLinksPanel
           title="More pages worth checking"
