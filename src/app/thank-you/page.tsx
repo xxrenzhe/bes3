@@ -94,6 +94,43 @@ export default async function ThankYouPage({
   const leadGuide = articles.find((article) => article.type === 'guide') || null
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
+  const taskRecoveryTitle = resumeContext
+    ? `Return to ${resumeContext.label.toLowerCase()}`
+    : 'Return to your shortlist'
+  const taskRecoveryDescription = resumeContext
+    ? resumeContext.description
+    : 'Reopen the shortlist so the same saved options stay together while the team reviews your note.'
+  const taskRecoveryRoutes = [
+    {
+      eyebrow: 'Resume',
+      title: taskRecoveryTitle,
+      description: taskRecoveryDescription,
+      href: resumeContext?.href || '/shortlist',
+      label: resumeContext ? resumeContext.label : 'Open shortlist'
+    },
+    {
+      eyebrow: 'Price move',
+      title: 'Check today’s strongest price changes',
+      description: 'Open the live deals view when the next useful question is whether today changed the timing enough to act.',
+      href: '/deals',
+      label: 'Open deals'
+    },
+    leadComparison
+      ? {
+          eyebrow: 'Compare',
+          title: 'Continue comparing the finalists',
+          description: 'Use the lead comparison when the real job is still choosing between two or three serious options.',
+          href: getArticlePath(leadComparison.type, leadComparison.slug),
+          label: 'Open comparison'
+        }
+      : {
+          eyebrow: 'Compare',
+          title: 'Keep the finalist set together',
+          description: 'Use shortlist when the decision is already narrow enough that compare is the next meaningful move.',
+          href: '/shortlist',
+          label: 'Open shortlist'
+        }
+  ]
 
   const intentMeta: Record<
     ContactIntent,
@@ -331,6 +368,12 @@ export default async function ThankYouPage({
               {selectedMeta.title}
             </h1>
             <p className="mx-auto mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">{selectedMeta.description}</p>
+            <div className="mx-auto mt-6 max-w-3xl rounded-[1.75rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5 text-left shadow-panel">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Do not lose the task</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                The message is sent. The next useful move is to reopen the same shopping task, check whether price timing changed, or continue comparing the finalists instead of dropping back to generic browsing.
+              </p>
+            </div>
             <div className="mt-6 flex flex-wrap justify-center gap-2">
               <span className="rounded-full bg-muted px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
                 {selectedMeta.eyebrow}
@@ -341,6 +384,34 @@ export default async function ThankYouPage({
                 </span>
               ) : null}
             </div>
+          </div>
+        </section>
+
+        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
+          <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
+            <div>
+              <p className="editorial-kicker">Return To The Task</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
+                Pick back up where the decision actually was.
+              </h2>
+            </div>
+            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+              A thank-you page should not become a side alley. Use one of these routes to go back to the same shortlist, the strongest live price moves, or the finalist comparison.
+            </p>
+          </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-3">
+            {taskRecoveryRoutes.map((route) => (
+              <Link
+                key={`${route.eyebrow}-${route.title}`}
+                href={route.href}
+                className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
+                <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
+              </Link>
+            ))}
           </div>
         </section>
 
@@ -380,13 +451,13 @@ export default async function ThankYouPage({
           cards={[
             {
               eyebrow: 'Use now',
-              title: selectedMeta.routes[0]?.title || 'Pick one concrete next step',
-              description: selectedMeta.routes[0]?.description || 'Choose the next page that gets you closer to a real decision.'
+              title: taskRecoveryRoutes[0]?.title || 'Pick one concrete next step',
+              description: taskRecoveryRoutes[0]?.description || 'Choose the next page that gets you closer to a real decision.'
             },
             {
               eyebrow: 'Keep alive',
-              title: 'Return to shortlist or alerts if timing is the blocker',
-              description: 'If you are not buying this minute, the best outcome is to preserve the work already done instead of restarting later.',
+              title: 'Return to shortlist, compare, or price timing with context',
+              description: 'If you are not buying this minute, the best outcome is to preserve the work already done and reconnect it to the same candidates or category instead of restarting later.',
               tone: 'muted'
             },
             {
