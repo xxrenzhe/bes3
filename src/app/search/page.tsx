@@ -6,11 +6,13 @@ import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
+import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
 import { getCategoryLabel } from '@/lib/editorial'
+import { queryLooksIntentLed } from '@/lib/entry-routing'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema, buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -222,6 +224,8 @@ export default async function SearchPage({
     urgency: resolvedParams.urgency
   })
   const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
+  const shouldRouteKeywordToAssistant = mode === 'keyword' && queryLooksIntentLed(query)
+  const assistantSwitchHref = `/assistant?intent=${encodeURIComponent(query)}${selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : ''}`
 
   const filteredProducts =
     mode === 'keyword' && (selectedScope === 'all' || selectedScope === 'products')
@@ -451,6 +455,18 @@ export default async function SearchPage({
           </div>
         </form>
 
+        {shouldRouteKeywordToAssistant ? (
+          <EntryModeCoach
+            eyebrow="Better Entry"
+            title="This search reads more like a shopping situation than a product lookup."
+            description="You typed a use case, budget, or blocker instead of an exact model name. The assistant will usually narrow this faster than keyword search."
+            primaryHref={assistantSwitchHref}
+            primaryLabel="Open assistant instead"
+            secondaryHref={buildSearchHref(query, selectedScope, selectedCategory)}
+            secondaryLabel="Stay in keyword search"
+          />
+        ) : null}
+
         {mode === 'keyword' && query ? (
           <div className="flex flex-wrap items-center gap-3">
             {SEARCH_SCOPES.map((scope) => (
@@ -587,6 +603,11 @@ export default async function SearchPage({
                   {selectedScope !== 'all' ? (
                     <Link href={buildSearchHref(query, 'all', selectedCategory)} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
                       Search everything
+                    </Link>
+                  ) : null}
+                  {shouldRouteKeywordToAssistant ? (
+                    <Link href={assistantSwitchHref} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                      Try assistant instead
                     </Link>
                   ) : null}
                   <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
