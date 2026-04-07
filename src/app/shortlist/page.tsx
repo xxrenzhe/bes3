@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Shortlist',
     description:
-      'Keep your saved picks together, compare the best options, and switch to price alerts without restarting your research.',
+      'Keep your saved picks together, compare the best options, and switch to price alerts without starting over.',
     path: '/shortlist',
     locale: getRequestLocale(),
     robots: {

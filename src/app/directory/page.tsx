@@ -113,7 +113,7 @@ export default async function DirectoryPage() {
     {
       eyebrow: 'Watch',
       title: 'Start category updates',
-      description: 'If you are researching now but buying later, save the category as an alert instead of reopening the whole search later.',
+      description: 'If you are still deciding but buying later, save the category as an alert so you can pick back up later without starting over.',
       href: '/newsletter?intent=category-brief&cadence=weekly',
       label: 'Start alerts'
     },
