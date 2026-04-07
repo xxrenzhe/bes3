@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PublicShell } from '@/components/layout/PublicShell'
@@ -38,34 +39,31 @@ export default async function HomePage() {
   const featured = articles.slice(0, 3)
   const featuredBrands = brands.slice(0, 4)
   const directoryCategories = categories.slice(0, 3)
-  const featuredReview = articles.find((article) => article.type === 'review') || featured[0] || null
-  const featuredComparison = articles.find((article) => article.type === 'comparison') || featured[1] || featuredReview
-  const intentRoutes = [
+  const shoppingStateRoutes = [
     {
-      eyebrow: 'Assistant',
-      title: 'Tell Bes3 what you need',
-      description: 'Use the assistant when the problem is still fuzzy and you want a shortlist, proof, and a clear next move instead of another keyword search.',
+      eyebrow: 'State 01',
+      title: 'I need help narrowing the field',
+      description: 'Use the assistant when the situation is clear but the model names are not. Bes3 will turn the use case into a tighter shortlist.',
+      bestIf: 'You know the budget, use case, or deal-breakers, but not the exact product yet.',
+      notIf: 'You already have real finalists and only need one last compare.',
       href: '/assistant',
       label: 'Open assistant'
     },
     {
-      eyebrow: 'Go deep',
-      title: 'Read a full review',
-      description: 'Open the full review when one product already looks promising and you want the pros, cons, and reasons to skip it.',
-      href: featuredReview ? getArticlePath(featuredReview.type, featuredReview.slug) : '/search?scope=review',
-      label: 'Open a review'
+      eyebrow: 'State 02',
+      title: 'I already have a few serious options',
+      description: 'Use shortlist and comparisons when the goal is no longer discovery. At that point, the job is to choose.',
+      bestIf: 'You already have two or three good candidates and want the clearest tradeoffs.',
+      notIf: 'You are still unsure what category or model type makes sense.',
+      href: '/shortlist',
+      label: 'Open shortlist'
     },
     {
-      eyebrow: 'Compare',
-      title: 'See your best options side by side',
-      description: 'Use comparisons or shortlist once you already have two or three strong options.',
-      href: featuredComparison ? getArticlePath(featuredComparison.type, featuredComparison.slug) : '/shortlist',
-      label: 'Open comparisons'
-    },
-    {
-      eyebrow: 'Wait for a better price',
-      title: 'Track deals without the spam',
-      description: 'Use deals and alerts when you are not ready to buy today but still want to catch a worthwhile price drop.',
+      eyebrow: 'State 03',
+      title: 'I would buy if the price improved',
+      description: 'Use deals and alerts when product fit is already mostly clear and timing is the only blocker left.',
+      bestIf: 'You mostly know what to buy and just want a better moment to act.',
+      notIf: 'You still need to understand the category or narrow the shortlist.',
       href: '/deals',
       label: 'See current deals'
     }
@@ -140,19 +138,19 @@ export default async function HomePage() {
                 href="/assistant"
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
               >
-                Tell Bes3 what you need
-              </Link>
-              <Link
-                href="/start"
-                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
-              >
-                Open start page
+                I need help narrowing
               </Link>
               <Link
                 href="/shortlist"
                 className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
               >
-                Open My Shortlist
+                I already have options
+              </Link>
+              <Link
+                href="/newsletter?intent=price-alert&cadence=priority"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
+              >
+                I am waiting for price
               </Link>
             </div>
           </div>
@@ -197,38 +195,20 @@ export default async function HomePage() {
       </section>
 
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
-            <div>
-              <SectionHeader
-                eyebrow="Where To Start"
-                title="Pick the page that fits where you are."
-                description="Some shoppers need ideas. Others need a review, a comparison, or a price alert. Start with the page that matches your situation."
-              />
-              <div className="mt-6 grid gap-4 sm:grid-cols-3">
-                {decisionPrinciples.map(([title, description]) => (
-                  <div key={title} className="rounded-[1.5rem] bg-white/85 p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">{title}</p>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
-                  </div>
-                ))}
+        <div className="mx-auto max-w-7xl space-y-6">
+          <ShoppingStateRouter
+            eyebrow="Where To Start"
+            title="Start from your shopping state, not from the site map."
+            description="Most shoppers are in one of three states: they need help narrowing, they already have finalists, or they are waiting for a better price. Pick the state that matches your situation."
+            routes={shoppingStateRoutes}
+          />
+          <div className="grid gap-4 sm:grid-cols-3">
+            {decisionPrinciples.map(([title, description]) => (
+              <div key={title} className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.2)]">
+                <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">{title}</p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
               </div>
-            </div>
-
-            <div className="grid gap-4 sm:grid-cols-2">
-              {intentRoutes.map((route) => (
-                <Link
-                  key={route.title}
-                  href={route.href}
-                  className="group rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
-                >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
-                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground group-hover:text-primary">{route.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
-                  <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
-                </Link>
-              ))}
-            </div>
+            ))}
           </div>
         </div>
       </section>

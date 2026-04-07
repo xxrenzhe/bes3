@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
@@ -377,6 +378,31 @@ export default async function SearchPage({
             Search product names, reviews, comparisons, and category guides across the Bes3 site.
           </p>
         </section>
+
+        <DecisionReasonPanel
+          eyebrow="Choose the right entry"
+          title="Use the path that matches what you already know."
+          description="Search works best when you know the model or keyword. The assistant works best when you know the situation but not the product name yet."
+          cards={[
+            {
+              eyebrow: 'Use assistant',
+              title: 'The problem is clear, but the model is not',
+              description: 'Use the assistant when you can describe the use case, budget, or deal-breakers but still need Bes3 to narrow the field.'
+            },
+            {
+              eyebrow: 'Use keyword search',
+              title: 'You already know the product or keyword',
+              description: 'If you have a model name, feature phrase, or exact category query, keyword search is the shortest path to the right page.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Use the directory',
+              title: 'You are still too early for either',
+              description: 'If you cannot yet name the use case or the category, browse the directory first so the market gets smaller before you search again.',
+              tone: 'strong'
+            }
+          ]}
+        />
 
         <IntentSearchPanel
           categoryOptions={categories}

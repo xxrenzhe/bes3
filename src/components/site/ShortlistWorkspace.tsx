@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, BellRing, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
@@ -460,6 +461,40 @@ export function ShortlistWorkspace({
           </div>
         </div>
       </section>
+
+      {shortlist.length ? (
+        <DecisionReasonPanel
+          eyebrow="Resume your task"
+          title="Use the shortlist to decide, not just to store picks."
+          description="This page should tell you what to do next based on where the shortlist stands right now: choose, compare, or wait for price."
+          cards={[
+            {
+              eyebrow: 'Choose now',
+              title: leadDecisionItem ? `Start with ${leadDecisionItem.productName}` : 'Open the strongest saved pick',
+              description: leadDecisionItem
+                ? 'This is the strongest current candidate if you want one more fit check before clicking through or comparing.'
+                : 'Use the lead saved pick as the first checkpoint instead of reopening broad browsing.'
+            },
+            {
+              eyebrow: 'Compare next',
+              title: compareCount >= 2 ? 'Your finalists are already loaded' : compareCandidates.length >= 2 ? `Load ${compareCandidates.length} picks into compare` : 'Add one more serious option',
+              description: compareCount >= 2
+                ? 'The shortlist is narrow enough that the next gain comes from a cleaner compare, not more collecting.'
+                : compareCandidates.length >= 2
+                  ? 'You already have enough saved picks to stop collecting and start comparing side by side.'
+                  : 'One saved pick is still a preference. Add one nearby option before trying to decide.'
+            },
+            {
+              eyebrow: 'Wait instead',
+              title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Switch to a price watch',
+              description: alertAnchorItem?.category
+                ? `If timing is the only blocker, keep this ${getCategoryLabel(alertAnchorItem)} task alive with a price watch instead of losing the thread.`
+                : 'If price is the blocker, save the work and switch into alerts instead of starting over later.',
+              tone: 'strong'
+            }
+          ]}
+        />
+      ) : null}
 
       {hasSharedItems ? (
         <section className="rounded-[2.5rem] bg-[linear-gradient(180deg,#f8fbff,#eef4ff)] p-8 shadow-panel sm:p-10">

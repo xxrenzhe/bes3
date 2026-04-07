@@ -1,3 +1,4 @@
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { TrackedDecisionLink } from '@/components/site/TrackedDecisionLink'
 import {
@@ -15,10 +16,40 @@ export function IntentRecommendationPanel({
 }) {
   const chips = buildIntentContextChips(result)
   const note = buildIntentRecommendationNote(result)
-  const leadProductId = result.recommendations[0]?.product.id || null
+  const lead = result.recommendations[0] || null
+  const leadProductId = lead?.product.id || null
+  const comparisonReady = result.recommendations.length >= 2
 
   return (
     <div className="space-y-8">
+      <DecisionReasonPanel
+        eyebrow="Why these picks"
+        title="Bes3 is narrowing for a reason, not just listing options."
+        description="Every intent result should explain why these products made the shortlist, why the next step is what it is, and when you should stop browsing."
+        cards={[
+          {
+            eyebrow: 'Why these made it',
+            title: lead?.product.productName || 'Current shortlist',
+            description: lead?.reasons.join(' ') || 'These picks match the current use case, constraints, and available evidence best.',
+            tone: 'default'
+          },
+          {
+            eyebrow: 'Why this next',
+            title: result.nextAction.label,
+            description: result.nextAction.description,
+            tone: 'muted'
+          },
+          {
+            eyebrow: 'Who should skip',
+            title: lead?.concerns.length ? 'Keep one concern in mind' : 'Only skip this path if the problem changed',
+            description: lead?.concerns[0] || (comparisonReady
+              ? 'If you still do not have true finalists, go back and tighten the request instead of forcing a compare.'
+              : 'If the use case, budget, or deal-breakers changed, rerun the request instead of forcing the current shortlist.'),
+            tone: 'strong'
+          }
+        ]}
+      />
+
       <section className="rounded-[2rem] bg-white p-8 shadow-panel">
         <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
           <div>

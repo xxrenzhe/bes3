@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { AssistantSessionTracker } from '@/components/site/AssistantSessionTracker'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -114,10 +115,10 @@ export default async function AssistantPage({
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Buyer Copilot</p>
               <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">
-                Tell Bes3 what you need, not just what you can type.
+                Describe the situation, and Bes3 will narrow the shortlist.
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
-                This is the AI-first entry point for Bes3. Start with the use case, budget, must-haves, and deal-breakers, then let the system turn that into a shortlist with a clear next move.
+                Use this when the use case is clear but the exact model is not. Share the budget, must-haves, and deal-breakers, then let Bes3 cut the field down to a few options worth real attention.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <Link href="#assistant-form" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
@@ -153,6 +154,31 @@ export default async function AssistantPage({
             className="border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)]"
           />
         </div>
+
+        <DecisionReasonPanel
+          eyebrow="Use it when"
+          title="The assistant is for messy decisions, not exact model lookups."
+          description="This page should reduce ambiguity fast. If the problem is still fuzzy, Bes3 should tell you what belongs on the shortlist and why."
+          cards={[
+            {
+              eyebrow: 'Best if',
+              title: 'You know the situation, not the model',
+              description: 'You can explain the use case, budget, and deal-breakers, but you do not yet have the exact SKU you trust.'
+            },
+            {
+              eyebrow: 'What Bes3 does',
+              title: 'Turns the request into 2 to 3 serious options',
+              description: 'The assistant weighs fit, proof, timing, and constraints first, then routes you to the clearest next page instead of widening the search.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Skip this if',
+              title: 'You already know the exact product name',
+              description: 'When you already have a specific model or exact keyword, keyword search is faster than asking the assistant to rediscover it.',
+              tone: 'strong'
+            }
+          ]}
+        />
 
         {result && result.recommendations.length > 0 ? (
           <IntentRecommendationPanel result={result} source="assistant-page" />
