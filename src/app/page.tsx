@@ -39,6 +39,29 @@ export default async function HomePage() {
   const featured = articles.slice(0, 3)
   const featuredBrands = brands.slice(0, 4)
   const directoryCategories = categories.slice(0, 3)
+  const homeEntryStates = [
+    {
+      eyebrow: 'State 01',
+      title: 'I do not know what to buy yet',
+      description: 'Start here when the situation is clear but the product type or model still is not.',
+      href: '/assistant',
+      label: 'Help me narrow it down'
+    },
+    {
+      eyebrow: 'State 02',
+      title: 'I already have a few candidates',
+      description: 'Use this when discovery is mostly done and the real job is to compare, validate, and choose.',
+      href: '/shortlist',
+      label: 'Compare my options'
+    },
+    {
+      eyebrow: 'State 03',
+      title: 'I would buy if the price improved',
+      description: 'Use this when fit is mostly clear and timing is the only blocker left.',
+      href: '/deals',
+      label: 'Track price timing'
+    }
+  ]
   const shoppingStateRoutes = [
     {
       eyebrow: 'State 01',
@@ -123,14 +146,20 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <div className="space-y-8">
             <div className="inline-flex items-center rounded-full bg-secondary px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.28em] text-secondary-foreground">
-              Smarter Tech Shopping
+              Narrow faster. Compare easier. Wait without restarting.
             </div>
             <div className="space-y-6">
               <h1 className="max-w-4xl font-[var(--font-display)] text-5xl font-black tracking-tight text-balance text-foreground sm:text-7xl">
-                Clear advice for your next <span className="text-primary">tech buy.</span>
+                What step are you in <span className="text-primary">right now?</span>
               </h1>
               <p className="max-w-2xl text-lg leading-8 text-muted-foreground sm:text-xl">
-                Bes3 helps you cut through noisy research with useful reviews, easy comparisons, and deal tracking that does not waste your time.
+                Bes3 works best when it matches your current shopping state. Pick the one that fits, and the next page will narrow faster, compare more clearly, or help you wait without losing your progress.
+              </p>
+            </div>
+            <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Single low-cost start</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                You should not have to learn the site map before you can move. Choose the state that matches your situation, and Bes3 will route you into the right next step.
               </p>
             </div>
             <div className="flex flex-wrap gap-4">
@@ -138,56 +167,46 @@ export default async function HomePage() {
                 href="/start"
                 className="rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-8 py-4 text-base font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"
               >
-                Help me choose where to start
+                Choose your next step
               </Link>
               <Link
-                href="/assistant"
+                href="/search"
                 className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
               >
-                I need help narrowing
-              </Link>
-              <Link
-                href="/shortlist"
-                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
-              >
-                I already have options
+                I already know the product name
               </Link>
             </div>
           </div>
           <div className="relative">
             <div className="absolute inset-0 translate-x-4 translate-y-4 rounded-[2.5rem] bg-primary/10" />
             <div className="editorial-shadow relative overflow-hidden rounded-[2.5rem] bg-white">
-              <div className="relative aspect-[4/4.7] bg-[linear-gradient(135deg,#dfe9fa,#eef4ff)]">
-                {featured[0]?.heroImageUrl ? (
-                  <Image
-                    src={featured[0].heroImageUrl}
-                    alt={featured[0].title}
-                    fill
-                    priority
-                    sizes="(max-width: 1024px) 100vw, 42vw"
-                    className="object-cover"
-                  />
-                ) : (
-                  <div className="bg-grid absolute inset-0" />
-                )}
-              </div>
-              <div className="space-y-5 p-8">
-                <div className="flex items-center gap-3">
-                  <span className="rounded-full bg-primary px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-primary-foreground">
-                    Featured Review
-                  </span>
-                  {featured[0]?.product?.category ? (
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
-                      {featured[0].product.category.replace(/-/g, ' ')}
-                    </span>
-                  ) : null}
+              <div className="relative bg-[linear-gradient(135deg,#dfe9fa,#eef4ff)] p-8 sm:p-10">
+                <div className="bg-grid absolute inset-0 opacity-50" />
+                <div className="relative space-y-5">
+                  <div className="inline-flex items-center rounded-full bg-white/85 px-4 py-2 text-[10px] font-black uppercase tracking-[0.22em] text-primary">
+                    Choose your shopping state
+                  </div>
+                  <h2 className="max-w-2xl font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground sm:text-4xl">
+                    Start with the question that matches your buying situation.
+                  </h2>
+                  <p className="max-w-2xl text-base leading-8 text-muted-foreground">
+                    Bes3 is strongest when it removes one kind of uncertainty at a time: what belongs on the shortlist, which finalists deserve compare, or whether it is smarter to wait.
+                  </p>
                 </div>
-                <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-                  {featured[0]?.title || 'Straightforward reviews and smart picks.'}
-                </h2>
-                <p className="text-base leading-8 text-muted-foreground">
-                  {featured[0]?.summary || 'Clear pros and cons, honest buying advice, and direct paths to products worth your attention.'}
-                </p>
+              </div>
+              <div className="grid gap-4 p-8">
+                {homeEntryStates.map((state) => (
+                  <Link
+                    key={state.title}
+                    href={state.href}
+                    className="rounded-[1.75rem] border border-border/50 bg-white p-6 transition-transform hover:-translate-y-1"
+                  >
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{state.eyebrow}</p>
+                    <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{state.title}</h3>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{state.description}</p>
+                    <p className="mt-5 text-sm font-semibold text-primary">{state.label} →</p>
+                  </Link>
+                ))}
               </div>
             </div>
           </div>
