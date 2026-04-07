@@ -34,7 +34,7 @@ export async function generateMetadata({
 
   const description =
     selectedIntent === 'price-alert'
-      ? `Set Bes3 price alerts${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without restarting research.`
+      ? `Set Bes3 price alerts${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without making you start over.`
       : selectedIntent === 'category-brief'
         ? `Subscribe to Bes3 category updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so you can keep up with that category while you wait.`
         : 'Subscribe to Bes3 updates for deal alerts, category updates, and shopping advice tied to real products.'

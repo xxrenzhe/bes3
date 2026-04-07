@@ -154,7 +154,7 @@ export default async function DirectoryPage() {
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
-              <p className="editorial-kicker">Category Directory</p>
+              <p className="editorial-kicker">Categories</p>
               <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse Bes3 by category.</h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
                 Use the directory once you know the general category. Each card points you toward the most useful next step instead of acting like a plain list of links.
@@ -200,7 +200,7 @@ export default async function DirectoryPage() {
                   ? 'Read the lead review'
                   : featuredArticle
                     ? `Open the lead ${getArticleTypeLabel(featuredArticle.type)}`
-                  : 'Use alerts while coverage builds'
+                  : 'Use alerts while more pages arrive'
             const latestRefresh =
               featuredArticle?.updatedAt ||
               featuredArticle?.publishedAt ||
@@ -250,7 +250,7 @@ export default async function DirectoryPage() {
                       {article.title}
                     </Link>
                   ))}
-                  {!featuredArticle && !featuredProduct ? <p>We are still building coverage for this category.</p> : null}
+                  {!featuredArticle && !featuredProduct ? <p>More pages for this category are on the way.</p> : null}
                 </div>
 
                 <div className="mt-6 grid gap-3 sm:grid-cols-2">

@@ -374,7 +374,7 @@ export default async function SearchPage({
         <section className="mx-auto max-w-4xl text-center">
           <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Search the shortlist, not the noise.</h1>
           <p className="mt-4 text-lg leading-8 text-muted-foreground">
-            Search product names, reviews, comparisons, and category guides across the Bes3 archive.
+            Search product names, reviews, comparisons, and category guides across the Bes3 site.
           </p>
         </section>
 
@@ -390,7 +390,7 @@ export default async function SearchPage({
 
         <form className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 shadow-panel">
           <p className="editorial-kicker">Search</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Or use classic keyword search.</h2>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Or search by keyword.</h2>
           <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_220px_220px_auto]">
             <input
               name="q"

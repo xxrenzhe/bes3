@@ -261,7 +261,7 @@ export default async function DealsPage({
   const dealsRoutes = [
     {
       eyebrow: 'Validate',
-      title: leadProduct?.slug ? 'Open the lead deep-dive' : 'Recheck product fit',
+      title: leadProduct?.slug ? 'Open the lead product page' : 'Recheck product fit',
       description: 'Deals should be the last push, not the first filter. Recheck product fit before a discount pushes you toward the wrong item.',
       href: leadProduct?.slug ? `/products/${leadProduct.slug}` : '/directory',
       label: leadProduct?.slug ? 'Open product page' : 'Browse categories'
@@ -310,9 +310,9 @@ export default async function DealsPage({
           <div className="mx-auto flex max-w-7xl flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl space-y-5">
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Verified Deals</p>
-              <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">Use deals like a pricing decision layer.</h1>
+              <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">Use deals to decide when to buy.</h1>
               <p className="max-w-2xl text-lg leading-8 text-emerald-50/80">
-                Bes3 surfaces live deals with a tracked price window, a cleaner buy-or-wait signal, and a direct path into shortlist, alerts, or merchant checking.
+                Bes3 surfaces live deals with a tracked price window, a clearer read on whether to buy now or wait, and a direct path into shortlist, alerts, or store checking.
               </p>
             </div>
             <div className="glass-panel rounded-[2rem] px-8 py-6 text-center text-foreground">
@@ -368,7 +368,7 @@ export default async function DealsPage({
             <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
               <div>
                 <p className="editorial-kicker">Filter The Window</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Narrow deals by category, price ceiling, and timing signal.</h2>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Narrow deals by category, price ceiling, and timing.</h2>
               </div>
               <form action="/deals" className="grid gap-3 sm:grid-cols-5">
                 <select
@@ -397,7 +397,7 @@ export default async function DealsPage({
                   defaultValue={selectedSignal}
                   className="min-h-[44px] rounded-full border border-border bg-background px-4 text-sm text-foreground"
                 >
-                  <option value="">All timing signals</option>
+                  <option value="">All timing labels</option>
                   <option value="buy-now">Buy window</option>
                   <option value="good-value">Fair value</option>
                   <option value="watch">Wait if you can</option>
@@ -490,7 +490,7 @@ export default async function DealsPage({
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
               {products.length
                 ? 'Each card now shows the current price against the tracked low and high, so you can decide whether to buy now, save it, or wait.'
-                : 'No deals match the current filters yet. Loosen the price ceiling or timing signal to reopen the current market.'}
+                : 'No deals match the current filters yet. Loosen the price ceiling or timing filter to reopen the current market.'}
             </p>
           </div>
 
@@ -611,7 +611,7 @@ export default async function DealsPage({
                       <div className="flex flex-wrap gap-3">
                         {product.slug ? (
                           <Link href={`/products/${product.slug}`} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                            Open deep-dive
+                            Open product page
                           </Link>
                         ) : null}
                         <Link href={alertHref} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
@@ -643,7 +643,7 @@ export default async function DealsPage({
             <div className="rounded-[2rem] border border-dashed border-border/70 bg-white px-6 py-14 text-center">
               <p className="text-lg font-semibold text-foreground">No deals match the current filters.</p>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                Reset the timing signal or raise the price ceiling to reopen the current deals set.
+                Reset the timing filter or raise the price ceiling to reopen the current deals set.
               </p>
               <Link href="/deals" className="mt-6 inline-flex rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
                 Reset filters
