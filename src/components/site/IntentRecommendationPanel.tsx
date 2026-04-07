@@ -153,40 +153,103 @@ export function IntentRecommendationPanel({
         <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
           <div>
             <p className="editorial-kicker">Recommended products</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist, with reasons and risks.</h2>
           </div>
           <span className="text-sm text-muted-foreground">{result.recommendations.length} recommended pick{result.recommendations.length === 1 ? '' : 's'}</span>
         </div>
         <div className="grid gap-6 xl:grid-cols-2">
-          {result.recommendations.map((item) => (
+          {result.recommendations.map((item, index) => {
+            const itemHref = item.product.slug ? `/products/${item.product.slug}` : result.shortlistPath
+            const itemNextAction: {
+              href: string
+              label: string
+              eventType: 'alert_subscribe_from_assistant' | 'assistant_recommendation_accept'
+            } = index === 0
+              ? {
+                  href: result.nextAction.href,
+                  label: result.nextAction.label,
+                  eventType: result.nextAction.href.includes('/newsletter') ? 'alert_subscribe_from_assistant' : 'assistant_recommendation_accept'
+                }
+              : comparisonReady && index < 2
+                ? {
+                    href: result.comparePath,
+                    label: 'Open shortlist finalists',
+                    eventType: 'assistant_recommendation_accept' as const
+                  }
+                : {
+                    href: itemHref,
+                    label: 'Open product page',
+                    eventType: 'assistant_recommendation_accept' as const
+                  }
+
+            return (
             <div key={item.product.id} className="space-y-4">
               <ProductSpotlightCard product={item.product} source="intent-search-results" />
               <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it made the shortlist</p>
-                  <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                    Match {item.score}
-                  </span>
-                </div>
-                <div className="mt-4 space-y-2">
-                  {item.reasons.map((reason) => (
-                    <p key={reason} className="text-sm leading-7 text-muted-foreground">
-                      {reason}
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                      {index === 0 ? 'Lead recommendation' : 'Shortlist recommendation'}
                     </p>
-                  ))}
-                  {item.concerns.length ? (
-                    <div className="rounded-[1rem] border border-amber-200 bg-amber-50 px-4 py-3">
-                      {item.concerns.map((concern) => (
-                        <p key={concern} className="text-sm leading-7 text-amber-900">
-                          {concern}
+                    <h3 className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
+                      {item.product.productName}
+                    </h3>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {index === 0 ? (
+                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
+                        Best match now
+                      </span>
+                    ) : null}
+                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
+                      Match {item.score}
+                    </span>
+                  </div>
+                </div>
+                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                  <div className="rounded-[1.25rem] bg-muted/70 p-4 md:col-span-2">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Why it made the shortlist</p>
+                    <div className="mt-3 space-y-2">
+                      {item.reasons.map((reason) => (
+                        <p key={reason} className="text-sm leading-7 text-muted-foreground">
+                          {reason}
                         </p>
                       ))}
                     </div>
-                  ) : null}
+                  </div>
+                  <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 p-4">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-800">Biggest risk</p>
+                    <p className="mt-3 text-sm leading-7 text-amber-900">
+                      {item.concerns[0] || 'No major blocker is visible yet, but validate the product page before treating it as final.'}
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Next move</p>
+                  <p className="mt-3 text-sm leading-7 text-foreground">
+                    {index === 0
+                      ? result.nextAction.description
+                      : comparisonReady && index < 2
+                        ? 'This pick is strong enough to keep in the finalist set. Use compare next if you are down to the last serious options.'
+                        : 'Open the product page next if you need one more fit check before saving, comparing, or waiting.'}
+                  </p>
+                  <TrackedDecisionLink
+                    href={itemNextAction.href}
+                    className="mt-4 inline-flex text-sm font-semibold text-primary"
+                    eventType={itemNextAction.eventType}
+                    source={source}
+                    productId={item.product.id}
+                    metadata={{
+                      href: itemNextAction.href,
+                      label: itemNextAction.label
+                    }}
+                  >
+                    {itemNextAction.label} →
+                  </TrackedDecisionLink>
                 </div>
               </div>
             </div>
-          ))}
+          )})}
         </div>
       </section>
     </div>

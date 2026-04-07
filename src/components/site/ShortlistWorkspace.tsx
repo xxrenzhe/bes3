@@ -325,6 +325,15 @@ export function ShortlistWorkspace({
   const searchForAlternativesHref = buildCategoryHubHref(shortlist[0])
   const leadDecisionItem = compare[0] || dominantDecisionPath?.recommendedItems[0] || shortlist[0]
   const alertAnchorItem = dominantDecisionPath?.items[0] || compare[0] || shortlist[0]
+  const primaryCompareDescription = compareCount >= 2
+    ? `Your finalists are already loaded: ${buildProductRollup(decisionDeskCompareItems)}. Stay in compare until one winner feels obvious.`
+    : decisionDeskCompareItems.length >= 2
+      ? `Load ${buildProductRollup(decisionDeskCompareItems)} into compare now. The shortlist is already tight enough to stop collecting.`
+      : 'One saved product is still a preference, not a decision. Add one more serious option before compare.'
+  const primaryWaitDescription = bestWaitEntry?.state.gaps[0]
+    ? `${bestWaitEntry.state.gaps[0]}. If timing is the blocker, preserve this shortlist with an alert instead of reopening research later.`
+    : `Use ${alertAnchorItem?.category ? getCategoryLabel(alertAnchorItem) : 'this shortlist'} alerts when price timing matters more than more browsing.`
+  const primaryAlertHref = buildCategoryAlertHref(bestWaitEntry?.item || alertAnchorItem, 'price-alert', 'priority')
   const outcomeCards = shortlist.length
     ? [
         {
@@ -514,9 +523,9 @@ export function ShortlistWorkspace({
       <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
         <div id="compare-queue" className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Saved Shortlist</p>
-          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Keep your shortlist across visits.</h1>
+          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground sm:text-5xl">Use your shortlist to make the next decision.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            Bes3 now remembers your saved products locally, so you can collect strong options, return later, and continue comparing without starting over.
+            This page should not just remember what you saved. It should tell you which pick looks strongest now, whether the shortlist is ready for compare, and when price timing is the real reason to wait.
           </p>
         </div>
         <div className="rounded-[2.5rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_55%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)]">
@@ -536,6 +545,76 @@ export function ShortlistWorkspace({
             </div>
           </div>
           <p className="mt-6 max-w-xl text-sm leading-7 text-slate-200/80">{shortlistDecisionSummary.note}</p>
+          <div className="mt-6 rounded-[1.75rem] border border-white/12 bg-white/10 p-5">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-slate-200/85">Current best call</p>
+            <p className="mt-3 text-2xl font-black">{bestCurrentEntry?.item.productName || 'Open your strongest saved pick'}</p>
+            <p className="mt-3 text-sm leading-7 text-slate-200">
+              {bestCurrentEntry?.state.note || 'Use the lead pick as the first checkpoint before you compare, buy, or switch into watch mode.'}
+            </p>
+          </div>
+          <div className="mt-6 grid gap-3 sm:grid-cols-2">
+            {compareCount >= 2 || decisionDeskCompareItems.length >= 2 ? (
+              compareCount >= 2 ? (
+                <Link
+                  href="/shortlist#decision-matrix"
+                  className="rounded-[1.5rem] bg-white px-5 py-5 text-slate-950 transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Main action</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">
+                    Compare these picks
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{primaryCompareDescription}</p>
+                  <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Scale className="h-4 w-4" />
+                    Jump to compare
+                  </p>
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setCompareFromItems(decisionDeskCompareItems, 'shortlist-primary-actions')}
+                  className="rounded-[1.5rem] bg-white px-5 py-5 text-left text-slate-950 transition-transform hover:-translate-y-1"
+                >
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Main action</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">
+                    Compare these picks
+                  </h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{primaryCompareDescription}</p>
+                  <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Scale className="h-4 w-4" />
+                    Load compare
+                  </p>
+                </button>
+              )
+            ) : (
+              <Link
+                href={searchForAlternativesHref}
+                className="rounded-[1.5rem] bg-white px-5 py-5 text-slate-950 transition-transform hover:-translate-y-1"
+              >
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Main action</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">
+                  Add one more serious option
+                </h2>
+                <p className="mt-3 text-sm leading-7 text-slate-600">{primaryCompareDescription}</p>
+                <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                  <ArrowRight className="h-4 w-4" />
+                  Browse this category
+                </p>
+              </Link>
+            )}
+
+            <Link href={primaryAlertHref} className="rounded-[1.5rem] border border-white/20 bg-white/10 px-5 py-5 transition-transform hover:-translate-y-1">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Main action</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-white">
+                Wait for a better price
+              </h2>
+              <p className="mt-3 text-sm leading-7 text-slate-200">{primaryWaitDescription}</p>
+              <p className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-white">
+                <BellRing className="h-4 w-4" />
+                Start price watch
+              </p>
+            </Link>
+          </div>
           <div className="mt-6 flex flex-wrap gap-3">
             <button
               type="button"
@@ -580,6 +659,40 @@ export function ShortlistWorkspace({
                     : 'Keep your shortlist narrow enough that the next move stays obvious.'}
                 </p>
                 <p className="mt-4 text-sm leading-7 text-slate-200">{shortlistDecisionSummary.nextAction}</p>
+              </div>
+              <div className="mt-6 grid gap-4 md:grid-cols-2">
+                <div className="rounded-[1.75rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Primary compare move</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{primaryCompareDescription}</p>
+                  {compareCount >= 2 ? (
+                    <Link href="/shortlist#decision-matrix" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                      <Scale className="h-4 w-4" />
+                      Jump to compare
+                    </Link>
+                  ) : decisionDeskCompareItems.length >= 2 ? (
+                    <button
+                      type="button"
+                      onClick={() => setCompareFromItems(decisionDeskCompareItems, 'shortlist-decision-desk-primary')}
+                      className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary"
+                    >
+                      <Scale className="h-4 w-4" />
+                      Load compare
+                    </button>
+                  ) : (
+                    <Link href={searchForAlternativesHref} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                      <ArrowRight className="h-4 w-4" />
+                      Browse one more option
+                    </Link>
+                  )}
+                </div>
+                <div className="rounded-[1.75rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)]">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Primary wait move</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{primaryWaitDescription}</p>
+                  <Link href={primaryAlertHref} className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <BellRing className="h-4 w-4" />
+                    Start price watch
+                  </Link>
+                </div>
               </div>
             </div>
 
