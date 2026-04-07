@@ -173,11 +173,18 @@ export default async function ComparisonPage({
   ])
   const contenders = splitComparisonTitle(article.title)
   const winner = article.product?.productName || contenders.left
+  const alternateWinner = winner === contenders.left ? contenders.right : contenders.left
   const categoryLabel = getCategoryLabel(category)
   const brandSlug = brandKnowledge.brandSlug
   const priceLabel = formatPriceSnapshot(article.product?.priceAmount, article.product?.priceCurrency || 'USD')
   const snapshotDate = getSnapshotDate(article, article.product)
   const decisionChecklist = buildDecisionChecklist(article.product)
+  const budgetScenarioWinner =
+    typeof article.product?.priceAmount === 'number' && article.product.priceAmount >= 500 ? alternateWinner : winner
+  const stabilityScenarioWinner =
+    ((article.product?.reviewCount || 0) >= 500 || ((article.product?.rating || 0) >= 4.3 && (article.product?.reviewCount || 0) >= 200))
+      ? winner
+      : alternateWinner
   const relatedReview = allArticles.find((candidate) => {
     if (candidate.type !== 'review') return false
     if (article.productId && candidate.productId === article.productId) return true
@@ -595,25 +602,37 @@ export default async function ComparisonPage({
           rows={comparisonMatrixRows}
           scenarios={[
             {
-              label: 'Safest default',
+              label: 'Budget-first buyer',
+              winner: budgetScenarioWinner,
+              reason:
+                budgetScenarioWinner === winner
+                  ? `${winner} still makes the better budget-led call because it keeps the main recommendation without asking you to accept a major premium or reopen the whole shortlist.`
+                  : `${alternateWinner} becomes the better fit when lower upfront spend matters more than following the page's safer default winner. Keep it as a deliberate budget choice, not as a reason to widen the field again.`,
+              note:
+                budgetScenarioWinner === winner
+                  ? 'Stay with the main winner if the price still feels proportionate to the confidence and fit you are getting.'
+                  : 'Use the budget-led challenger only if the savings matter more to you than the default recommendation’s lower-regret profile.'
+            },
+            {
+              label: 'Performance-first buyer',
               winner,
-              reason: `${winner} is still the cleanest answer when you want the lowest-regret recommendation and do not want to reopen the whole choice.`,
-              note: article.product?.slug ? 'Open the winning product page next and validate price, store, and final fit.' : 'Treat this as the default answer unless one real concern remains.'
+              reason: `${buildBestFor(article.product, 'comparison')} If your main goal is the strongest capability for the intended use case, the page winner should stay ahead.`,
+              note: 'Choose the page winner when raw capability or better fit for the main job matters more than shaving off the last bit of cost.'
             },
             {
-              label: 'Follow the main use case',
-              winner,
-              reason: buildBestFor(article.product, 'comparison'),
-              note: 'Stay with the page winner when the buying situation here sounds like your real job to be done.'
+              label: 'Stable, low-regret buyer',
+              winner: stabilityScenarioWinner,
+              reason:
+                stabilityScenarioWinner === winner
+                  ? `${winner} stays ahead when you care most about a calmer ownership experience, stronger buyer proof, and the lowest chance of second-guessing after purchase.`
+                  : `${alternateWinner} may suit a stability-led buyer better if the default winner still feels too aggressive, too specialized, or too dependent on one tradeoff going right.`,
+              note:
+                stabilityScenarioWinner === winner
+                  ? 'Treat the default winner as the safer call when you want fewer surprises after checkout.'
+                  : 'Use the alternative only if what you really value is steadiness and lower complexity, not the article’s main upside.'
             },
             {
-              label: 'Different priority than the article',
-              winner: winner === contenders.left ? contenders.right : contenders.left,
-              reason: `${winner === contenders.left ? contenders.right : contenders.left} only becomes the better call when your priority differs enough from the page recommendation that the main tradeoff no longer feels right.`,
-              note: 'Use the alternative as the challenger, not as a reason to widen the shortlist again.'
-            },
-            {
-              label: 'Budget or timing is locked',
+              label: 'Timing-first buyer',
               winner: category ? `Watch ${categoryLabel}` : 'Set a price alert',
               reason: 'If price timing is the only blocker, neither finalist needs a new research cycle right now. Preserve this choice and wait for a better entry point.',
               note: 'Switch into price watch instead of restarting comparison from zero.'
