@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
@@ -507,6 +508,33 @@ export default async function ReviewPage({
           title="Review evidence"
           description="These are the prices, specs, and product details Bes3 checked before recommending this pick."
           source="review-page-evidence"
+        />
+
+        <DecisionReasonPanel
+          eyebrow="Why this review matters"
+          title="A review should tell you whether this product belongs on the shortlist at all."
+          description="The point of this page is not just to add more reading. It should confirm fit, surface the main risk, and tell you whether to compare, buy, or wait."
+          cards={[
+            {
+              eyebrow: 'Why it stayed',
+              title: article.product?.productName || 'This product',
+              description: buildBestFor(article.product, 'review')
+            },
+            {
+              eyebrow: 'Main risk',
+              title: 'One reason to pause',
+              description: buildNotFor(article.product, 'review'),
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Use next',
+              title: relatedComparison ? 'Move to compare when fit is clear' : 'Move to product or price watch next',
+              description: relatedComparison
+                ? 'Once the core fit feels right, the next gain comes from a side-by-side comparison, not more review browsing.'
+                : 'If fit already feels clear, the next useful move is validating price or waiting on timing rather than reading sideways.',
+              tone: 'strong'
+            }
+          ]}
         />
 
         <DecisionContentPanel

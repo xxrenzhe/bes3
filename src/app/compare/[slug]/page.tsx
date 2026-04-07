@@ -4,6 +4,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatrix'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
@@ -592,6 +593,31 @@ export default async function ComparisonPage({
           rightTitle={contenders.right}
           winner={winner}
           rows={comparisonMatrixRows}
+        />
+
+        <DecisionReasonPanel
+          eyebrow="Why this page exists"
+          title="This comparison should settle a shortlist, not reopen discovery."
+          description="A useful comparison explains why these finalists belong together, who should use this page, and what the clean next move is after reading it."
+          cards={[
+            {
+              eyebrow: 'Why these finalists',
+              title: 'These options are close enough to compare honestly',
+              description: `This page works because ${contenders.left} and ${contenders.right} solve a similar buying problem well enough to deserve a real tradeoff check.`
+            },
+            {
+              eyebrow: 'Best if',
+              title: 'You already have a narrow shortlist',
+              description: 'Use this page when discovery is mostly done and the real question is which finalist fits better for your priorities.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Stop if',
+              title: 'Neither finalist actually fits',
+              description: 'If both options still feel wrong, do not keep reading comparison content. Reopen the shortlist or category page on purpose instead.',
+              tone: 'strong'
+            }
+          ]}
         />
 
         <DecisionContentPanel

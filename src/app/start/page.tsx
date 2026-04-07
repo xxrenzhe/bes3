@@ -4,6 +4,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -66,6 +67,8 @@ export default async function StartPage() {
       eyebrow: 'Step 01',
       title: 'I know what I need, but not which model',
       description: 'Start with search when your use case is clear but you still need help narrowing the options.',
+      bestIf: 'You can describe the use case, budget, or deal-breakers, but not the final product name yet.',
+      notIf: 'You already have finalists and only need the last compare.',
       href: '/assistant',
       label: 'Open assistant'
     },
@@ -73,6 +76,8 @@ export default async function StartPage() {
       eyebrow: 'Step 02',
       title: 'One product already looks good',
       description: 'Use a review when one option already has your attention and you want the real pros, cons, and reasons to skip it.',
+      bestIf: 'You want to confirm one promising product before spending time on side-by-side compare.',
+      notIf: 'You are still too early and need Bes3 to narrow the category first.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
       label: leadReview ? 'Open the full review' : 'Browse reviews'
     },
@@ -80,6 +85,8 @@ export default async function StartPage() {
       eyebrow: 'Step 03',
       title: 'I already have a few options',
       description: 'Move into shortlist and comparisons once you have a small set of products worth checking side by side.',
+      bestIf: 'You already have two or three serious candidates and want the clearest tradeoffs.',
+      notIf: 'You still need broad discovery instead of decision pressure.',
       href: leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist',
       label: leadComparison ? 'Open a comparison' : 'Open shortlist'
     },
@@ -87,6 +94,8 @@ export default async function StartPage() {
       eyebrow: 'Step 04',
       title: 'I want to wait for a better price',
       description: 'Set an alert when price is the only thing holding you back, so you can come back later without starting over.',
+      bestIf: 'Product fit is mostly settled and timing is the last blocker left.',
+      notIf: 'You still need help deciding what belongs on the shortlist.',
       href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
@@ -221,14 +230,14 @@ export default async function StartPage() {
             <div>
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Start Here</p>
               <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">
-                Use Bes3 to shop with less guesswork.
+                Choose the next step that matches your current shopping state.
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
-                Bes3 is not a generic review site. It helps you narrow the options, understand the tradeoffs, and keep your progress saved if you decide to wait.
+                This page exists to remove one early decision: where to begin. Pick the state that matches what is still unresolved, then let Bes3 push the next useful move.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Link href="/assistant" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
-                  Tell Bes3 what you need
+                <Link href="#state-router" className="inline-flex min-h-[48px] items-center justify-center rounded-full bg-white px-6 text-sm font-semibold text-slate-950">
+                  Choose my state
                 </Link>
                 <Link href="/shortlist" className="inline-flex min-h-[48px] items-center justify-center rounded-full border border-white/20 px-6 text-sm font-semibold text-white transition-colors hover:bg-white/10">
                   Open shortlist
@@ -254,32 +263,14 @@ export default async function StartPage() {
           compact
         />
 
-        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <div className="flex flex-col gap-4 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
-            <SectionHeader
-              eyebrow="Buying States"
-              title="Choose the page that matches what is still unresolved."
-              description="Bes3 works best when you start with the page that matches what is still unclear."
-            />
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              Search if the need is still broad. Read a review if one product looks close. Compare if you already have top picks. Use alerts if price is the only thing holding you back.
-            </p>
-          </div>
-          <div className="mt-6 grid gap-4 xl:grid-cols-4">
-            {stateRoutes.map((route) => (
-              <Link
-                key={route.title}
-                href={route.href}
-                className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
-              >
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h2>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
-                <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
-              </Link>
-            ))}
-          </div>
-        </section>
+        <div id="state-router">
+          <ShoppingStateRouter
+            eyebrow="Buying States"
+            title="Choose the page that matches what is still unresolved."
+            description="Search if the need is still broad. Read a review if one product looks close. Compare if you already have top picks. Use alerts if price is the only thing holding you back."
+            routes={stateRoutes}
+          />
+        </div>
 
         <section className="grid gap-8 lg:grid-cols-[1fr_0.95fr]">
           <div className="rounded-[2rem] bg-white p-8 shadow-panel">

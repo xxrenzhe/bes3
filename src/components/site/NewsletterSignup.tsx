@@ -99,7 +99,7 @@ export function NewsletterSignup({
           <p className="editorial-kicker">Email saved</p>
           <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">You&apos;re signed up.</h3>
           <p className="text-sm leading-7 text-muted-foreground">
-            Bes3 will use this choice to keep future {selectedIntent.label.toLowerCase()} more relevant{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
+            Bes3 will use this choice to keep this shopping task alive with more relevant {selectedIntent.label.toLowerCase()}{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
           </p>
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
@@ -116,7 +116,7 @@ export function NewsletterSignup({
           </div>
           {afterSignupRoutes.length ? (
             <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">While you wait</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Resume this task</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {afterSignupRoutes.map((route) => (
                   <Link
@@ -158,8 +158,8 @@ export function NewsletterSignup({
         >
           <div className="space-y-2">
             <p className="editorial-kicker">Email Updates</p>
-            <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Tell Bes3 what to email you about.</h3>
-            <p className="text-sm leading-7 text-muted-foreground">{selectedIntent.description}</p>
+            <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Save this shopping task for later.</h3>
+            <p className="text-sm leading-7 text-muted-foreground">{selectedIntent.description} The goal is to help you pick back up later without restarting from zero.</p>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-3">

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { IntentUrgency } from '@/lib/commerce-intent'
 
 const INTENT_URGENCY_OPTIONS: Array<{ value: IntentUrgency; label: string }> = [
@@ -5,6 +6,47 @@ const INTENT_URGENCY_OPTIONS: Array<{ value: IntentUrgency; label: string }> = [
   { value: 'compare-soon', label: 'I need one last compare' },
   { value: 'wait-for-price', label: 'I only want a better price' }
 ]
+
+const INTENT_PRESET_LINKS = [
+  {
+    label: 'Quiet 4K monitor',
+    intent: 'I need a quiet 4K monitor for long work sessions under $500.',
+    budget: '500',
+    must: '4K, good ports',
+    avoid: 'dim panel, noisy fan',
+    urgency: 'compare-soon' as IntentUrgency
+  },
+  {
+    label: 'Rugged work tablet',
+    intent: 'I need a rugged Android tablet for field work and I can wait for a better price.',
+    budget: '',
+    must: 'durable build, long battery',
+    avoid: 'fragile shell, weak battery',
+    urgency: 'wait-for-price' as IntentUrgency
+  },
+  {
+    label: 'Only show 2 to 3 strong picks',
+    intent: 'I want a short list of the strongest options, not a giant list.',
+    budget: '',
+    must: '',
+    avoid: 'too many choices',
+    urgency: 'buy-now' as IntentUrgency
+  }
+] as const
+
+function buildPresetHref(action: string, preset: (typeof INTENT_PRESET_LINKS)[number]) {
+  const params = new URLSearchParams({
+    mode: 'intent',
+    intent: preset.intent,
+    urgency: preset.urgency
+  })
+
+  if (preset.budget) params.set('budget', preset.budget)
+  if (preset.must) params.set('must', preset.must)
+  if (preset.avoid) params.set('avoid', preset.avoid)
+
+  return `${action}${action.includes('?') ? '&' : '?'}${params.toString()}`
+}
 
 export function IntentSearchPanel({
   action = '/search',
@@ -37,8 +79,20 @@ export function IntentSearchPanel({
         Tell Bes3 what you actually need.
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-        Describe the use case, budget, must-haves, and what you want to avoid. Bes3 will turn that into a tighter set of options instead of a loose keyword search.
+        Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a tighter set of options instead of a loose keyword search.
       </p>
+
+      <div className="mt-5 flex flex-wrap gap-3">
+        {INTENT_PRESET_LINKS.map((preset) => (
+          <Link
+            key={preset.label}
+            href={buildPresetHref(action, preset)}
+            className="rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-slate-200"
+          >
+            {preset.label}
+          </Link>
+        ))}
+      </div>
 
       <div className={`mt-6 grid gap-4 ${compact ? 'lg:grid-cols-[1.4fr_220px_220px]' : 'lg:grid-cols-[1.6fr_220px_220px]'}`}>
         <label className="space-y-2">

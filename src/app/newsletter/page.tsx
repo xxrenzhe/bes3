@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { getArticlePath } from '@/lib/article-path'
@@ -202,6 +203,32 @@ export default async function NewsletterPage({
             </div>
           </div>
         </div>
+        <DecisionReasonPanel
+          eyebrow="Why alerts exist"
+          title="A price watch should keep your progress alive, not send you into a separate funnel."
+          description="This page is part of the same shopping task. Use it when timing is the blocker, not when the shortlist itself is still weak."
+          cards={[
+            {
+              eyebrow: 'Use it when',
+              title: 'Product fit is mostly settled',
+              description: 'Alerts work best when you already know the category or finalists worth following.'
+            },
+            {
+              eyebrow: 'What it should do',
+              title: 'Bring you back with context',
+              description: selectedCategory
+                ? `When ${selectedCategoryLabel} changes in a useful way, Bes3 should bring you back to the same category context, not make you restart.`
+                : 'Bes3 should bring you back to the same shortlist or category context, not just dump a generic deal into your inbox.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Skip it if',
+              title: 'You still do not know what belongs on the shortlist',
+              description: 'If the category still feels fuzzy, go back to assistant, search, or shortlist first. Alerts should follow a decision, not replace one.',
+              tone: 'strong'
+            }
+          ]}
+        />
         <NewsletterSignup
           categoryOptions={categories}
           source="newsletter-page"

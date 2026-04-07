@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildCategoryPath } from '@/lib/category'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
@@ -300,6 +301,31 @@ export default async function ThankYouPage({
             </div>
           </div>
         </section>
+
+        <DecisionReasonPanel
+          eyebrow="Resume your shopping task"
+          title="Sending a message should not end the buying journey."
+          description="This page should hand you back to the clearest next move while the team reviews your note, so you do not lose context or reopen broad browsing."
+          cards={[
+            {
+              eyebrow: 'Use now',
+              title: selectedMeta.routes[0]?.title || 'Pick one concrete next step',
+              description: selectedMeta.routes[0]?.description || 'Choose the next page that gets you closer to a real decision.'
+            },
+            {
+              eyebrow: 'Keep alive',
+              title: 'Return to shortlist or alerts if timing is the blocker',
+              description: 'If you are not buying this minute, the best outcome is to preserve the work already done instead of restarting later.',
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Avoid',
+              title: 'Do not go back to generic browsing',
+              description: 'The goal after contact is not to wander the site again. It is to reopen the most useful task with less friction.',
+              tone: 'strong'
+            }
+          ]}
+        />
 
         <section className="grid gap-6 md:grid-cols-3">
           {articles.slice(0, 3).map((article) => (
