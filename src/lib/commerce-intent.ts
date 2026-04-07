@@ -50,6 +50,14 @@ export interface IntentSearchResult {
   }
 }
 
+export interface IntentRefinementPrompt {
+  id: 'category' | 'budget' | 'must' | 'avoid' | 'timing'
+  label: string
+  title: string
+  description: string
+  example: string
+}
+
 function normalizeText(value: string | null | undefined) {
   return String(value || '')
     .trim()
@@ -409,4 +417,67 @@ export function buildIntentRecommendationNote(result: IntentSearchResult) {
     description: lead.reasons[0] || 'It best matches the current buying intent and available evidence.',
     brandHref
   }
+}
+
+export function buildIntentRefinementPrompts(input: {
+  query: string
+  inferredCategory?: string | null
+  budget?: number | null
+  mustHaves?: string[]
+  avoid?: string[]
+  urgency?: IntentUrgency | null
+}) {
+  const prompts: IntentRefinementPrompt[] = []
+
+  if (!input.inferredCategory) {
+    prompts.push({
+      id: 'category',
+      label: 'Question 01',
+      title: 'What type of product are you really trying to buy?',
+      description: 'Naming the category keeps Bes3 inside one market instead of forcing it to guess from broader language.',
+      example: 'Try a phrase like: “27-inch 4K monitor”, “Android tablet”, or “wireless gaming router”.'
+    })
+  }
+
+  if (input.budget == null) {
+    prompts.push({
+      id: 'budget',
+      label: 'Question 02',
+      title: 'What price ceiling still feels realistic?',
+      description: 'A budget cap helps Bes3 stop recommending good products that would still feel like the wrong spend.',
+      example: 'Try a phrase like: “under $500”, “around $900”, or “max $250”.'
+    })
+  }
+
+  if (!(input.mustHaves || []).length) {
+    prompts.push({
+      id: 'must',
+      label: 'Question 03',
+      title: 'What two things absolutely must go right?',
+      description: 'Concrete must-haves shrink the shortlist faster than broad quality words like “good” or “best”.',
+      example: 'Try details like: “quiet fan, USB-C charging, long battery, bright screen”.'
+    })
+  }
+
+  if (!(input.avoid || []).length) {
+    prompts.push({
+      id: 'avoid',
+      label: 'Question 04',
+      title: 'What would make you reject an otherwise good option?',
+      description: 'Skip conditions help Bes3 remove low-regret traps before they ever hit the shortlist.',
+      example: 'Try deal-breakers like: “dim panel, bulky size, weak ports, glossy screen”.'
+    })
+  }
+
+  if (input.urgency == null) {
+    prompts.push({
+      id: 'timing',
+      label: 'Question 05',
+      title: 'Are you trying to buy now, compare soon, or wait for a better price?',
+      description: 'Timing changes the right next step. The same shortlist can point to a product page, compare flow, or price alert depending on urgency.',
+      example: 'Choose one: buy now, compare soon, or wait for price.'
+    })
+  }
+
+  return prompts.slice(0, 3)
 }

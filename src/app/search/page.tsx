@@ -7,10 +7,11 @@ import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { EntryModeCoach } from '@/components/site/EntryModeCoach'
+import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
-import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
+import { buildIntentRefinementPrompts, parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
 import { getCategoryLabel } from '@/lib/editorial'
 import { queryLooksIntentLed } from '@/lib/entry-routing'
 import { buildPageMetadata } from '@/lib/metadata'
@@ -284,6 +285,14 @@ export default async function SearchPage({
   const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
   const shouldRouteKeywordToAssistant = mode === 'keyword' && queryLooksIntentLed(query)
   const assistantSwitchHref = `/assistant?intent=${encodeURIComponent(query)}${selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : ''}`
+  const intentRefinementPrompts = buildIntentRefinementPrompts({
+    query: intentQuery,
+    inferredCategory: intentResult?.inferredCategory || effectiveCategory,
+    budget: intentResult?.normalizedBudget ?? intentInput.budget,
+    mustHaves: intentInput.mustHaves,
+    avoid: intentInput.avoid,
+    urgency: mode === 'intent' && intentQuery ? intentResult?.urgency || intentInput.urgency : null
+  })
   const currentSearchReturnHref = mode === 'intent'
     ? buildCurrentSearchPath({
         mode,
@@ -495,15 +504,17 @@ export default async function SearchPage({
           ]}
         />
 
-        <IntentSearchPanel
-          categoryOptions={categories}
-          defaultIntent={intentQuery}
-          defaultCategory={effectiveCategory}
-          defaultBudget={resolvedParams.budget || ''}
-          defaultMust={resolvedParams.must || ''}
-          defaultAvoid={resolvedParams.avoid || ''}
-          defaultUrgency={intentInput.urgency}
-        />
+        <div id="intent-form">
+          <IntentSearchPanel
+            categoryOptions={categories}
+            defaultIntent={intentQuery}
+            defaultCategory={effectiveCategory}
+            defaultBudget={resolvedParams.budget || ''}
+            defaultMust={resolvedParams.must || ''}
+            defaultAvoid={resolvedParams.avoid || ''}
+            defaultUrgency={intentInput.urgency}
+          />
+        </div>
 
         <form className="mx-auto max-w-5xl rounded-[2rem] bg-white p-8 shadow-panel">
           <p className="editorial-kicker">Search</p>
@@ -597,6 +608,20 @@ export default async function SearchPage({
             title="The query is close, but the current search path is still too narrow."
             description="Weak results should explain what is missing and what the smarter fallback is, instead of leaving you to guess whether Bes3 is empty or the query is off."
             cards={keywordSearchReasonCards}
+          />
+        ) : null}
+
+        {mode === 'intent' && intentResult ? (
+          <IntentRefinementPanel
+            eyebrow="Progressive Follow-Up"
+            title={intentResult.recommendations.length ? 'You can tighten this shortlist without restarting.' : 'This intent needs one or two sharper details.'}
+            description={
+              intentResult.recommendations.length
+                ? 'Bes3 should ask for the next most useful detail only when it would improve the recommendation, not force a long form before helping at all.'
+                : 'The request is still broad enough that one or two clearer answers will do more than another generic search.'
+            }
+            prompts={intentRefinementPrompts}
+            href="#intent-form"
           />
         ) : null}
 
