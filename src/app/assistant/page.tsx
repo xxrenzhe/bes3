@@ -4,6 +4,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { AssistantSessionTracker } from '@/components/site/AssistantSessionTracker'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { EntryModeCoach } from '@/components/site/EntryModeCoach'
+import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -12,7 +13,7 @@ import { queryLooksExactSearchLed } from '@/lib/entry-routing'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
+import { buildIntentRefinementPrompts, parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
 import { listCategories } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -65,6 +66,14 @@ export default async function AssistantPage({
   const input = parseIntentInputFromSearchParams(params)
   const categories = await listCategories()
   const result = input.query ? await resolveIntentSearch(input) : null
+  const refinementPrompts = buildIntentRefinementPrompts({
+    query: input.query,
+    inferredCategory: result?.inferredCategory || input.category,
+    budget: result?.normalizedBudget ?? input.budget,
+    mustHaves: input.mustHaves,
+    avoid: input.avoid,
+    urgency: input.query ? result?.urgency || input.urgency : null
+  })
   const shouldRouteAssistantToSearch = queryLooksExactSearchLed(input.query)
   const searchSwitchHref = `/search?q=${encodeURIComponent(input.query)}&scope=products${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}`
 
@@ -168,6 +177,20 @@ export default async function AssistantPage({
             primaryLabel="Search this instead"
             secondaryHref={input.query ? `/assistant?intent=${encodeURIComponent(input.query)}${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}` : '/assistant'}
             secondaryLabel="Keep using assistant"
+          />
+        ) : null}
+
+        {input.query ? (
+          <IntentRefinementPanel
+            eyebrow="Progressive Follow-Up"
+            title={result?.recommendations.length ? 'One more answer can make this shortlist sharper.' : 'Bes3 still needs a few tighter signals.'}
+            description={
+              result?.recommendations.length
+                ? 'You should not have to fill every field up front. Add the next most useful details only if you want a tighter shortlist or cleaner next step.'
+                : 'The first pass is enough to start. These are simply the next questions most likely to improve the shortlist instead of making you start over.'
+            }
+            prompts={refinementPrompts}
+            href="#assistant-form"
           />
         ) : null}
 
