@@ -1,4 +1,5 @@
 import { getDatabase } from '@/lib/db'
+import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
 import type { SettingDataType } from '@/lib/types'
 
 export interface SettingRecord {
@@ -100,7 +101,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   }
 
   const aiProvider = read('ai', 'provider', undefined, 'gemini')
-  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', 'gemini-3-flash-preview')
+  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   const aiKey = read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
   const aiTimeoutMs = read('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000')
   const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')

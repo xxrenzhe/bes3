@@ -6,6 +6,9 @@ const fs = require('node:fs')
 const path = require('node:path')
 
 const DEFAULT_ADMIN_PASSWORD = 'replace-with-a-random-admin-password-before-first-run'
+const GEMINI_ACTIVE_MODEL = 'gemini-3-flash-preview'
+const GEMINI_SUPPORTED_MODELS = new Set([GEMINI_ACTIVE_MODEL])
+const GEMINI_DEPRECATED_MODELS = new Set(['gemini-2.5-flash', 'gemini-2.5-pro'])
 const DEFAULT_JWT_SECRETS = new Set([
   'change-me-to-a-long-random-secret',
   'dev-only-jwt-secret-change-me',
@@ -60,6 +63,7 @@ function buildConfig() {
     amazonToken: read('PARTNERBOOST_AMAZON_TOKEN'),
     dtcToken: read('PARTNERBOOST_DTC_TOKEN'),
     geminiApiKey: read('GEMINI_API_KEY'),
+    geminiModel: read('GEMINI_MODEL', GEMINI_ACTIVE_MODEL),
     pipelineWorkerEnabled: read('PIPELINE_WORKER_ENABLED', 'true'),
     pipelineWorkerPollMs: read('PIPELINE_WORKER_POLL_MS', '2500'),
     pipelineWorkerConcurrency: read('PIPELINE_WORKER_CONCURRENCY', '1'),
@@ -193,6 +197,14 @@ function validate() {
 
   if (!config.geminiApiKey) {
     warnings.push('GEMINI_API_KEY is not set, content generation will fall back to the built-in copy generator')
+  } else {
+    addResult(results, 'info', `Gemini model: ${config.geminiModel}`)
+  }
+
+  if (GEMINI_DEPRECATED_MODELS.has(config.geminiModel)) {
+    warnings.push(`GEMINI_MODEL ${config.geminiModel} is deprecated; switch to ${GEMINI_ACTIVE_MODEL}`)
+  } else if (!GEMINI_SUPPORTED_MODELS.has(config.geminiModel)) {
+    warnings.push(`GEMINI_MODEL ${config.geminiModel} is unsupported in Bes3; using ${GEMINI_ACTIVE_MODEL} is recommended`)
   }
 
   for (const message of errors) {

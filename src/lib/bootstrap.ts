@@ -1,6 +1,7 @@
 import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_PASSWORD, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
+import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
 
@@ -8,7 +9,7 @@ let bootstrapPromise: Promise<void> | null = null
 
 const DEFAULT_SETTINGS = [
   ['ai', 'provider', 'gemini', 'string', 0, 'AI provider'],
-  ['ai', 'geminiModel', 'gemini-3-flash-preview', 'string', 0, 'Gemini model'],
+  ['ai', 'geminiModel', GEMINI_ACTIVE_MODEL, 'string', 0, 'Gemini model'],
   ['ai', 'geminiApiKey', '', 'secret', 1, 'Gemini API key used for keyword and article generation'],
   ['ai', 'geminiTimeoutMs', '30000', 'string', 0, 'Gemini request timeout in milliseconds'],
   ['proxy', 'browserProxyUrlsJson', '[]', 'json', 0, 'Proxy pool list'],
