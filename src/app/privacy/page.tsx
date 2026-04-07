@@ -33,7 +33,7 @@ export default function PrivacyPage() {
     {
       label: 'Why it matters',
       title: 'Privacy supports buyer trust',
-      description: 'A buyer-first guide loses credibility fast if the data model is more aggressive than the editorial promise. This page exists to keep those two things aligned.'
+      description: 'A buyer-first guide loses credibility fast if the data collection is more aggressive than the promise made to readers. This page exists to keep those two things aligned.'
     }
   ]
 
@@ -46,7 +46,7 @@ export default function PrivacyPage() {
   const routeCards = [
     {
       title: 'Read how Bes3 works',
-      description: 'Use the trust page if you want the product and editorial context behind the legal summary.',
+      description: 'Use the trust page if you want the product and writing context behind the legal summary.',
       href: '/about',
       label: 'Open About'
     },
@@ -108,7 +108,7 @@ export default function PrivacyPage() {
               <p className="editorial-kicker">Legal Framework</p>
               <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Privacy Policy</h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                Last updated April 4, 2026. This page explains what Bes3 stores, why it is stored, and how that data supports the public buying-guide experience without turning the site into a generic marketing machine.
+                Last updated April 4, 2026. This page explains what Bes3 stores, why it is stored, and how that data supports the public buying-guide experience without turning the site into a generic email-and-tracking operation.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Plain-language summary</p>

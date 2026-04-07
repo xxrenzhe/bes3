@@ -19,7 +19,7 @@ export function ComparisonSummaryMatrix({
     <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
       <div className="mb-6 flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
         <div>
-          <p className="editorial-kicker">Sticky Compare Matrix</p>
+          <p className="editorial-kicker">Comparison Table</p>
           <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Keep both finalists visible while you scroll.</h2>
         </div>
         <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
