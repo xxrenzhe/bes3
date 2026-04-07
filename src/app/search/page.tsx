@@ -91,6 +91,63 @@ function hasActiveSearchState(input: {
   return Boolean(input.query || input.category || input.scope !== 'all')
 }
 
+function buildKeywordSearchReasonCards(input: {
+  query: string
+  totalResults: number
+  selectedScope: SearchScope
+  selectedCategory: string
+  shouldRouteKeywordToAssistant: boolean
+}) {
+  const cards: Array<{
+    eyebrow: string
+    title: string
+    description: string
+    tone?: 'default' | 'muted' | 'strong'
+  }> = []
+
+  if (input.shouldRouteKeywordToAssistant) {
+    cards.push({
+      eyebrow: 'Why results are thin',
+      title: 'This query sounds like a situation, not a model lookup',
+      description: 'Keyword search is strongest when you already know the product phrase. If the query mostly describes needs, constraints, or price timing, the assistant will usually narrow it faster.'
+    })
+  } else {
+    cards.push({
+      eyebrow: input.totalResults ? 'Why results are limited' : 'Why there is no exact match',
+      title: 'Bes3 may not have this exact model or phrase covered yet',
+      description: 'Search is good at landing you on known product, review, and comparison pages. When the exact phrase is too narrow, the fastest next move is often a category, review, or guide page instead.',
+      tone: 'muted'
+    })
+  }
+
+  if (input.selectedScope !== 'all') {
+    cards.push({
+      eyebrow: 'Current filter',
+      title: `You are only searching ${input.selectedScope === 'products' ? 'products' : input.selectedScope}`,
+      description: 'The current scope is intentionally narrow. If the answer is not here, search everything before assuming Bes3 has no useful page for this topic.',
+      tone: 'muted'
+    })
+  }
+
+  if (input.selectedCategory) {
+    cards.push({
+      eyebrow: 'Current category',
+      title: `Results are limited to ${getCategoryLabel(input.selectedCategory)}`,
+      description: 'That category filter is useful when you already know the market. If the fit is still uncertain, remove it or reopen the broader category path.',
+      tone: cards.length ? 'strong' : 'muted'
+    })
+  } else if (cards.length < 3) {
+    cards.push({
+      eyebrow: 'Better next move',
+      title: 'Broaden by category before broadening by noise',
+      description: 'When keyword search stops being useful, the clean fallback is a category page or the assistant, not endlessly wider search phrases.',
+      tone: 'strong'
+    })
+  }
+
+  return cards.slice(0, 3)
+}
+
 export async function generateMetadata({
   searchParams
 }: {
@@ -252,6 +309,7 @@ export default async function SearchPage({
   })
 
   const totalResults = filteredProducts.length + filteredArticles.length
+  const weakKeywordResults = mode === 'keyword' && query && totalResults > 0 && totalResults <= 2
   const suggestedCategory = effectiveCategory || filteredProducts[0]?.category || filteredArticles[0]?.product?.category || ''
   const firstReview = filteredArticles.find((article) => article.type === 'review') || null
   const firstComparison = filteredArticles.find((article) => article.type === 'comparison') || null
@@ -265,6 +323,16 @@ export default async function SearchPage({
     return label.includes(queryLower) || queryLower.includes(label)
   })
   const fallbackCategories = (matchedCategorySlugs.length ? matchedCategorySlugs : categories).slice(0, 3)
+  const keywordSearchReasonCards =
+    mode === 'keyword' && query
+      ? buildKeywordSearchReasonCards({
+          query,
+          totalResults,
+          selectedScope,
+          selectedCategory,
+          shouldRouteKeywordToAssistant
+        })
+      : []
   const resultRoutes = mode === 'keyword' && query
     ? [
         filteredProducts[0]
@@ -472,6 +540,20 @@ export default async function SearchPage({
               Search
             </button>
           </div>
+          <div className="mt-5 grid gap-4 md:grid-cols-2">
+            <div className="rounded-[1.5rem] bg-muted/70 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Use search if</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                You already know the model name, a concrete keyword, or the exact phrase likely to appear on a product, review, or comparison page.
+              </p>
+            </div>
+            <div className="rounded-[1.5rem] bg-muted/70 p-5">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Use assistant if</p>
+              <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                You only know the situation, budget, or blockers. That is a shopping problem, not a keyword problem, so the assistant will usually get you to a shortlist faster.
+              </p>
+            </div>
+          </div>
         </form>
 
         {shouldRouteKeywordToAssistant ? (
@@ -507,6 +589,15 @@ export default async function SearchPage({
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Search mode</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">{SEARCH_SCOPE_META[selectedScope]}</p>
           </div>
+        ) : null}
+
+        {weakKeywordResults ? (
+          <DecisionReasonPanel
+            eyebrow="Why This Search Feels Thin"
+            title="The query is close, but the current search path is still too narrow."
+            description="Weak results should explain what is missing and what the smarter fallback is, instead of leaving you to guess whether Bes3 is empty or the query is off."
+            cards={keywordSearchReasonCards}
+          />
         ) : null}
 
         {mode === 'intent' && intentResult ? (
@@ -613,6 +704,13 @@ export default async function SearchPage({
             </section>
           ) : (
             <section className="space-y-8">
+              <DecisionReasonPanel
+                eyebrow="Why No Exact Match"
+                title="This search needs a route change, not more blind retries."
+                description="When an exact keyword does not land, Bes3 should explain whether the phrase is too narrow, too situational, or filtered too tightly before sending you somewhere else."
+                cards={keywordSearchReasonCards}
+              />
+
               <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
                 <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No exact match yet.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
