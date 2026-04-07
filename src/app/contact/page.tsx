@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Contact Bes3',
     description:
-      'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.',
+      'Contact Bes3 for unusual buyer questions, correction requests, and partnership conversations when the public pages are not enough.',
     path: '/contact',
     locale: getRequestLocale(),
     keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
@@ -48,7 +48,7 @@ export default async function ContactPage() {
       title: 'Read the clearest review',
       description: 'When one product is already promising, a review usually answers your fit questions faster than a custom reply.',
       href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
-      label: leadReview ? 'Open review' : 'Browse review archive'
+      label: leadReview ? 'Open review' : 'Browse reviews'
     },
     {
       eyebrow: 'Wait',
@@ -60,7 +60,7 @@ export default async function ContactPage() {
   ]
 
   const bestUseCases = [
-    'A real buyer edge case still feels unresolved after search, shortlist, and review pages.',
+    'A real buyer question still feels unresolved after search, shortlist, and review pages.',
     'You spotted a factual issue, stale price cue, or navigation problem on a public Bes3 page.',
     'You want to discuss editorial partnerships, content distribution, or platform collaboration.'
   ]
@@ -69,7 +69,7 @@ export default async function ContactPage() {
     {
       label: 'Buyer support path',
       value: 'Use the form below',
-      note: 'Best for buyer support edge cases and public-site questions that still feel blocked after using search, shortlist, or review pages.'
+      note: 'Best for unusual buyer questions and public-site issues that still feel blocked after using search, shortlist, or review pages.'
     },
     {
       label: 'Corrections path',
@@ -85,7 +85,7 @@ export default async function ContactPage() {
   const faqEntries = [
     {
       question: 'When should I contact Bes3 instead of using the public pages?',
-      answer: 'Use contact when a real edge case still feels unresolved after search, shortlist, reviews, and comparisons, or when you need to report a factual problem on a public page.'
+      answer: 'Use contact when a real buyer question still feels unresolved after search, shortlist, reviews, and comparisons, or when you need to report a factual problem on a public page.'
     },
     {
       question: 'Is email the main support option?',
@@ -104,7 +104,7 @@ export default async function ContactPage() {
     buildContactPageSchema(
       '/contact',
       'Contact Bes3',
-      'Contact Bes3 for support edge cases, correction requests, and partnership conversations when the public pages are not enough.'
+      'Contact Bes3 for unusual buyer questions, correction requests, and partnership conversations when the public pages are not enough.'
     ),
     buildTrustSignalsSchema('/contact'),
     buildFaqSchema('/contact', faqEntries)
@@ -127,7 +127,7 @@ export default async function ContactPage() {
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  If your question is about which product to buy, start with search or a review first. Contact is most useful for edge cases, factual corrections, and conversations that do not fit a standard shopping path.
+                  If your question is about which product to buy, start with search or a review first. Contact is most useful for unusual situations, factual corrections, and conversations that do not fit a standard shopping path.
                 </p>
               </div>
             </div>

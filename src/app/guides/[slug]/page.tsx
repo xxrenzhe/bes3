@@ -44,7 +44,7 @@ export async function generateMetadata({
     title: article.seoTitle || article.title,
     description:
       pickMetadataDescription(article.seoDescription, article.summary) ||
-      'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.',
+      'Use this guide to understand what matters, narrow your options, and avoid starting over later.',
     path: `/guides/${article.slug}`,
     locale: getRequestLocale(),
     image: article.heroImageUrl || article.product?.heroImageUrl,
@@ -144,7 +144,7 @@ export default async function GuidePage({
   const path = `/guides/${article.slug}`
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
-    'Use this guide to understand what matters, narrow your options, and avoid repeating the same research later.'
+    'Use this guide to understand what matters, narrow your options, and avoid starting over later.'
   const guideDocument = prepareEditorialHtmlWithToc(article.contentHtml)
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
@@ -164,7 +164,7 @@ export default async function GuidePage({
     },
     {
       name: 'Keep your place',
-      text: 'If you are not ready to buy yet, turn the category into a weekly update or alert instead of repeating the same research later.'
+      text: 'If you are not ready to buy yet, turn the category into a weekly update or alert so you can pick back up later without starting over.'
     }
   ]
   const structuredData = [
@@ -207,7 +207,7 @@ export default async function GuidePage({
   const faqEntries = [
     {
       question: 'What is this guide supposed to solve?',
-      answer: 'Guides reduce confusion before your shortlist is tight enough for a review or comparison. They should help you understand the category, not trap you in abstract research.'
+      answer: 'Guides reduce confusion before your shortlist is tight enough for a review or comparison. They should help you understand the category, not keep you stuck in general browsing.'
     },
     {
       question: 'When should I open a brand page from a guide?',
@@ -265,7 +265,7 @@ export default async function GuidePage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Buying Guide</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-6xl">{article.title}</h1>
               <p className="max-w-3xl text-lg leading-8 text-slate-200">
-                {article.summary || 'Use this guide to understand the category well enough to narrow a shortlist, validate tradeoffs, and avoid repeating the same research later.'}
+                {article.summary || 'Use this guide to understand the category well enough to narrow a shortlist, validate tradeoffs, and avoid starting over later.'}
               </p>
             </div>
             <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
@@ -298,14 +298,14 @@ export default async function GuidePage({
               <p className="editorial-kicker">How To Use This Guide</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Turn category knowledge into a clearer shortlist.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Guides exist to make the category clearer before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of staying stuck in research mode.
+                Guides exist to make the category clearer before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of circling the same choices again.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedReview
         ? 'This guide already has enough nearby pages to hand you into a real review next. Use it to narrow what matters, then move on.'
-                    : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or alert rather than another abstract explainer.'}
+                    : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or alert rather than another general explainer.'}
                 </p>
               </div>
             </div>

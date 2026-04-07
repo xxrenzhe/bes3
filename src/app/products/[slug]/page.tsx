@@ -196,7 +196,7 @@ export default async function ProductPage({
     },
     {
       name: 'Compare or set a price alert',
-      text: `If the product looks good but not final, move into ${categoryLabel} comparisons or a price alert instead of restarting research.`
+      text: `If the product looks good but not final, move into ${categoryLabel} comparisons or a price alert instead of starting over.`
     }
   ]
   const structuredData = [
