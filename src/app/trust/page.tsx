@@ -41,14 +41,14 @@ const TRUST_ROUTES = [
     title: 'Open Data',
     href: '/data',
     label: 'Open Data Docs',
-    description: 'Browse the public feed, coverage manifest, and commerce protocol routes without reverse-engineering the site.'
+    description: 'Browse the public data pages and feeds Bes3 exposes for anyone who wants a deeper look.'
   },
   {
     eyebrow: 'Machine Layer',
     title: 'LLMs Manifest',
     href: '/llms.txt',
     label: 'Open llms.txt',
-    description: 'Inspect the text-first machine manifest that points agents and crawlers to the main HTML routes and public data endpoints.'
+    description: 'Open the plain-text file that points AI tools and other systems to the main Bes3 pages and public data endpoints.'
   },
   {
     eyebrow: 'Trust',
@@ -62,14 +62,14 @@ const TRUST_ROUTES = [
     title: 'Coverage Manifest API',
     href: '/api/open/coverage',
     label: 'Open Coverage JSON',
-    description: 'Read the public coverage manifest for locale footprint, crawl surfaces, taxonomy counts, and endpoint discovery.'
+    description: 'Read the public site summary JSON for available locales, sections, and data endpoints.'
   },
   {
     eyebrow: 'Machine Layer',
     title: 'Buying Feed API',
     href: '/api/open/buying-feed',
     label: 'Open Feed JSON',
-    description: 'Read the sanitized buying feed that exposes products, editorial assets, and decision-support fields in one machine-readable payload.'
+    description: 'Read the public buying feed with products, reviews, and comparison data in one JSON response.'
   },
   {
     eyebrow: 'Syndication',
@@ -83,7 +83,7 @@ const TRUST_ROUTES = [
     title: 'JSON Feed',
     href: '/feed.json',
     label: 'Open JSON Feed',
-    description: 'Consume the latest Bes3 editorial updates through a machine-friendly JSON Feed endpoint.'
+    description: 'Read the latest Bes3 reviews, guides, and comparisons through a JSON feed.'
   },
   {
     eyebrow: 'Machine Layer',
@@ -97,29 +97,29 @@ const TRUST_ROUTES = [
     title: 'Image Sitemap',
     href: '/media-sitemap.xml',
     label: 'Open Image Sitemap',
-    description: 'Crawl the product, editorial, brand, and hub visuals through a dedicated XML image sitemap.'
+    description: 'Open the XML file that lists product, review, brand, and category images used across Bes3.'
   },
   {
     eyebrow: 'Discovery',
     title: 'HTML Sitemap',
     href: '/site-map',
     label: 'Open Site Map',
-    description: 'Traverse the public crawl graph through one lightweight directory of categories, brands, products, and editorial pages.'
+    description: 'Browse one lightweight directory of categories, brands, products, reviews, and guides.'
   }
 ] as const
 
 const faqEntries = [
   {
     question: 'What is the Bes3 trust center for?',
-    answer: 'It groups the methodology, contact, legal, open-data, sitemap, and machine-manifest routes into one crawlable trust surface so readers and machines can verify how Bes3 works.'
+    answer: 'It keeps the methodology, contact, legal, open-data, and site-map pages in one place so people can quickly verify how Bes3 works.'
   },
   {
     question: 'Why not hide these pages in the footer only?',
-    answer: 'Because trust pages should be easy to revisit, cite, and audit. A dedicated hub makes the trust surface clearer for both users and crawlers.'
+    answer: 'Because trust pages should be easy to revisit and verify. Keeping them together makes them easier to find than burying them in the footer.'
   },
   {
     question: 'What should I open first from here?',
-    answer: 'Open About for methodology, Contact for unresolved edge cases, Privacy or Terms for legal clarity, and Open Data, llms.txt, or the HTML sitemap when you need a machine-readable site entry point.'
+    answer: 'Open About if you want the method, Contact if you still need a human answer, Privacy or Terms for legal questions, and Open Data or the site map if you want the technical or structural side.'
   }
 ]
 
@@ -169,10 +169,10 @@ export default function TrustPage() {
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <p className="editorial-kicker">Trust Center</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">
-            The Bes3 trust and machine-entry surface in one place.
+            The Bes3 trust pages in one place.
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page gathers the methodology, contact path, legal policies, open-data docs, llms manifest, machine APIs, editorial feeds, and sitemap routes that explain how Bes3 works and how the public site should be interpreted.
+            This page gathers the methodology, contact path, legal policies, open-data docs, feeds, and site maps that explain how Bes3 works and what the public site publishes.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {TRUST_ROUTES.map((route) => (
@@ -191,19 +191,19 @@ export default function TrustPage() {
         </section>
 
         <SeoTrustSignalsPanel
-          title="Why Bes3 treats trust as a crawlable product surface"
-          description="Trust is not just footer boilerplate. Bes3 exposes methodology, legal clarity, support paths, open data, and site maps as deliberate machine-readable entry points."
+          title="Why Bes3 keeps trust pages easy to verify"
+          description="Trust is not just footer boilerplate. Bes3 keeps its method, legal pages, support paths, open data, and site maps easy to find."
           stats={[
-            { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Methodology, legal, support, machine-entry, syndication, and discovery routes exposed directly.' },
-            { label: 'Policy pages', value: '2', note: 'Privacy and terms pages with explicit structured trust signals.' },
-            { label: 'Machine-entry pages', value: '9', note: 'Open data, llms.txt, security.txt, raw API manifests, feed endpoints, the OpenSearch description, and the image sitemap exposed as first-class machine routes.' },
-            { label: 'Support paths', value: '2', note: 'About and Contact clarify the product method and human fallback path.' }
+            { label: 'Trust routes', value: String(TRUST_ROUTES.length), note: 'Method, legal, support, feed, and discovery pages linked directly.' },
+            { label: 'Policy pages', value: '2', note: 'Privacy and terms pages that explain how Bes3 handles trust and responsibility.' },
+            { label: 'Data routes', value: '9', note: 'Open data, llms.txt, security.txt, feeds, search description files, and sitemap files are all visible here.' },
+            { label: 'Support paths', value: '2', note: 'About and Contact explain the product method and where to get a human answer.' }
           ]}
           points={[
-            'The trust center gives search engines one stable hub for methodology, legal, support, and machine-readable routes.',
-            'It reduces the chance that trust pages become isolated footer links with weak crawl depth.',
-            'The same routes are now suitable for policy review, citation, and recurring admin SEO audits.',
-            'Open data, llms.txt, security.txt, machine manifests, feed endpoints, the OpenSearch description, and the image sitemap sit next to legal and methodology pages because they also affect crawl trust and machine interpretation.'
+            'The trust center keeps the most important trust pages easy to find from one place.',
+            'It prevents privacy, terms, support, and site-structure pages from becoming buried footer links.',
+            'The same routes can be reused for reviews, citations, or technical checks when needed.',
+            'Open data, llms.txt, security.txt, feeds, the search description file, and the image sitemap sit next to legal and methodology pages so the full picture stays easy to verify.'
           ]}
         />
 

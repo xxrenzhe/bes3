@@ -70,7 +70,7 @@ export async function generateMetadata({
   const description = hasDirectCoverage
     ? pickMetadataDescription(hub?.description) ||
       `Browse ${brand.name} ${categoryLabel} products, reviews, and next steps in one place.`
-    : `Bes3 is still building this exact ${brand.name} ${categoryLabel} page. Use the closest brand and category alternatives without restarting research.`
+    : `Bes3 is still building this exact ${brand.name} ${categoryLabel} page. Use the closest brand and category alternatives without starting over.`
 
   return buildPageMetadata({
     title: `${brand.name} ${toTitleCaseWords(categoryLabel)} Buying Guide`,
@@ -267,7 +267,7 @@ export default async function BrandCategoryPage({
           title: 'Search nearby options',
           description: 'Use search when your need may be broader than this page and you want the fastest way back to useful results.',
           href: `/search?q=${encodeURIComponent(`${brand.name} ${categoryLabel}`)}&scope=products`,
-          label: 'Search the archive'
+          label: 'Search the site'
         }
       ]
   const structuredData = [
@@ -278,7 +278,7 @@ export default async function BrandCategoryPage({
       description: hasDirectCoverage
         ? pickMetadataDescription(hub?.description) ||
           `Browse ${brand.name} ${categoryLabel} products, reviews, and next steps in one place.`
-        : `Bes3 is still building this exact ${brand.name} ${categoryLabel} page. Use the closest brand and category alternatives without restarting research.`,
+        : `Bes3 is still building this exact ${brand.name} ${categoryLabel} page. Use the closest brand and category alternatives without starting over.`,
       image: hub?.heroImageUrl || brand.heroImageUrl,
       breadcrumbItems,
       dateModified: latestRefresh,
@@ -350,7 +350,7 @@ export default async function BrandCategoryPage({
               <p className="mt-4 max-w-3xl text-lg leading-8 text-slate-200">
                 {hasDirectCoverage
                   ? hub?.description || `This page helps buyers who already know both the brand and the category move straight to the most useful next step without reopening a broad search.`
-                  : `This exact ${brand.name} ${categoryLabel} page is still being built. This page still gives you the nearest next steps so your research does not hit a dead end.`}
+                  : `This exact ${brand.name} ${categoryLabel} page is still being built. This page still gives you the nearest next steps so your shopping does not hit a dead end.`}
               </p>
               <div className="mt-6 grid gap-4 sm:grid-cols-3">
                 <div className="rounded-[1.5rem] border border-white/12 bg-white/10 p-5 backdrop-blur-sm">
@@ -480,7 +480,7 @@ export default async function BrandCategoryPage({
             </div>
             <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
               {hasDirectCoverage
-                ? 'These pages support this exact brand-and-category search instead of forcing buyers back into a broad archive.'
+                ? 'These pages support this exact brand-and-category search instead of forcing buyers back into a broad list.'
                 : 'Even when this exact combination is not ready, Bes3 can still show the nearest reviews instead of dropping you into an empty page.'}
             </p>
           </div>
@@ -498,7 +498,7 @@ export default async function BrandCategoryPage({
             ))}
             {!directArticles.length && !fallbackArticles.length ? (
               <p className="text-sm leading-7 text-muted-foreground">
-                Review support for this page is still being assembled. Use the cards above to recover through the broader brand or category pages instead of restarting the search.
+                Review support for this page is still being assembled. Use the cards above to recover through the broader brand or category pages instead of starting the search over.
               </p>
             ) : null}
           </div>

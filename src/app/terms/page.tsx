@@ -38,19 +38,19 @@ export default function TermsPage() {
 
   const buyerRules = [
     'Treat Bes3 as shopping guidance, not as a replacement for final store terms or checkout confirmation.',
-    'Use price as a last-stage buying signal, since the public site is designed to narrow fit before it accelerates a purchase.',
+    'Use price as a last-stage buying cue, since the public site is designed to narrow fit before it pushes a purchase.',
     'Assume the store remains authoritative for current price, availability, shipping, warranties, and returns.'
   ]
 
   const routeCards = [
     {
       title: 'See how Bes3 works',
-      description: 'Use the methodology page if you want the editorial logic that sits behind these terms.',
+      description: 'Use the methodology page if you want the product logic that sits behind these terms.',
       href: '/about',
       label: 'Open About'
     },
     {
-      title: 'Browse live deal coverage',
+      title: 'Browse live deals',
       description: 'Use deals only after the product already looks right and price is what matters next.',
       href: '/deals',
       label: 'Open Deals'
@@ -65,7 +65,7 @@ export default function TermsPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 promising through these terms?',
-      answer: 'Bes3 promises buyer guidance and clear editorial context, while the final merchant remains authoritative for checkout, live pricing, and stock-sensitive details.'
+      answer: 'Bes3 promises buyer guidance and clear explanations, while the final merchant remains authoritative for checkout, live pricing, and stock-sensitive details.'
     },
     {
       question: 'Do affiliate links override the recommendation?',
@@ -131,7 +131,7 @@ export default function TermsPage() {
             <SectionHeader
               eyebrow="Buyer Rules"
               title="How to use Bes3 responsibly."
-              description="These are the practical limits of the product. The site should reduce research noise and clarify tradeoffs, but it should not be mistaken for the store, the warranty issuer, or the checkout system."
+              description="These are the practical limits of the product. The site should reduce confusion and clarify tradeoffs, but it should not be mistaken for the store, the warranty issuer, or the checkout system."
             />
             <div className="mt-8 space-y-4">
               {buyerRules.map((item) => (
@@ -180,7 +180,7 @@ export default function TermsPage() {
             </ul>
             <h3>Affiliate disclosure</h3>
             <p>
-              Some links on Bes3 are affiliate links. That relationship does not change the editorial goal of publishing clear, buyer-first guidance and honest reasons to skip a product when appropriate.
+              Some links on Bes3 are affiliate links. That relationship does not change the goal of publishing clear, buyer-first guidance and honest reasons to skip a product when appropriate.
             </p>
             <h3>Store responsibility</h3>
             <p>
