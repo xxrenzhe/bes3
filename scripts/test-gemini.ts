@@ -1,3 +1,4 @@
+import './load-env'
 import { generateGeminiContent } from '@/lib/gemini'
 import { GEMINI_ACTIVE_MODEL, normalizeGeminiModel } from '@/lib/gemini-models'
 

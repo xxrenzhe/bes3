@@ -8,6 +8,7 @@
  * 日志输出到 stdout，由 supervisord 捕获到独立日志文件。
  */
 
+import './load-env'
 import { getDatabase } from '../src/lib/db'
 import { startPipelineWorker } from '../src/lib/pipeline'
 

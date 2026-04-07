@@ -1,3 +1,4 @@
+import './load-env'
 import { bootstrapApplication } from '../src/lib/bootstrap'
 
 bootstrapApplication()

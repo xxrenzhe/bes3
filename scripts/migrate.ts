@@ -16,6 +16,7 @@
  *   npm run db:migrate:postgres # 强制 PostgreSQL
  */
 
+import './load-env'
 import fs from 'fs'
 import path from 'path'
 import { splitSqlStatements } from '../src/lib/sql-splitter'
