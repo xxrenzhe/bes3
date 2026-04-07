@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { GuideTableOfContents } from '@/components/site/GuideTableOfContents'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -10,6 +11,7 @@ import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
@@ -142,6 +144,14 @@ export default async function GuidePage({
     .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/guides/${article.slug}`
+  const guideAlertHref = buildNewsletterPath({
+    intent: category ? 'category-brief' : 'deals',
+    category: category || '',
+    cadence: 'weekly',
+    returnTo: path,
+    returnLabel: `Resume ${article.title}`,
+    returnDescription: 'Come back to the same guide with the category framing and next-step context still intact.'
+  })
   const guideDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     'Use this guide to understand what matters, narrow your options, and avoid starting over later.'
@@ -245,9 +255,7 @@ export default async function GuidePage({
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track market changes',
       description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the category in view with a weekly update or alert.',
-      href: category
-        ? `/newsletter?intent=category-brief&category=${encodeURIComponent(category)}&cadence=weekly`
-        : '/newsletter?intent=deals&cadence=weekly',
+      href: guideAlertHref,
       label: 'Start category alerts'
     }
   ]
@@ -326,6 +334,32 @@ export default async function GuidePage({
           </div>
         </section>
 
+        <DecisionReasonPanel
+          eyebrow="Guide Decision Summary"
+          title="This guide should remove ambiguity, then get out of the way."
+          description="A strong guide is not the final answer. Its job is to clarify the category, surface what matters, and hand you into the next page where a real decision happens."
+          cards={[
+            {
+              eyebrow: 'Read this if',
+              title: 'You still need category logic',
+              description: 'Use the guide when you are still figuring out what matters, what to avoid, or how to evaluate products honestly before you start comparing.'
+            },
+            {
+              eyebrow: 'Leave this page if',
+              title: relatedReview ? 'One product already looks like a serious candidate' : 'The category now feels clear enough to shortlist',
+              description: relatedReview
+                ? 'Once one product looks promising, the guide has done its job. Move into the review instead of reading sideways forever.'
+                : 'Once the category rules make sense, stop collecting more explanation and move into a category page or shortlist.'
+            },
+            {
+              eyebrow: 'Wait instead if',
+              title: 'Timing matters more than more reading',
+              description: 'If this guide already changed how you think about the category but you are not buying today, save the task with alerts instead of restarting later.',
+              tone: 'strong'
+            }
+          ]}
+        />
+
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">
           <article className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
             <div className="editorial-prose" dangerouslySetInnerHTML={{ __html: guideDocument.html }} />
@@ -384,6 +418,33 @@ export default async function GuidePage({
               <p className="mt-4 text-sm leading-7 text-muted-foreground">
                 A Bes3 guide is successful when it removes just enough ambiguity for you to narrow the field. If you still cannot act after reading, the next problem is usually shortlist quality, not missing more generic advice.
               </p>
+            </div>
+            <div className="rounded-[2rem] bg-white p-6 shadow-panel">
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Leave This Guide With A Plan</p>
+              <div className="mt-5 space-y-3">
+                <Link href={relatedReview ? getArticlePath(relatedReview.type, relatedReview.slug) : buildCategoryPath(category)} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                  <p className="text-sm font-semibold text-foreground">{relatedReview ? 'Open the lead review next' : 'Open the category page next'}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                    {relatedReview
+                      ? 'Use the review when one product now looks close enough for a real fit check.'
+                      : 'Use the category page when the guide made the market clearer and you are ready to narrow real candidates.'}
+                  </p>
+                </Link>
+                <Link href={relatedComparison ? getArticlePath(relatedComparison.type, relatedComparison.slug) : buildCategoryPath(category, 'category-shortlist')} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                  <p className="text-sm font-semibold text-foreground">{relatedComparison ? 'Compare top picks' : 'Build a shortlist'}</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                    {relatedComparison
+                      ? 'Use comparison only after the guide has made the tradeoff criteria obvious.'
+                      : 'If you still need options, move into shortlist instead of opening more generic explainers.'}
+                  </p>
+                </Link>
+                <Link href={guideAlertHref} className="block rounded-[1.25rem] bg-muted px-4 py-4 transition-colors hover:bg-emerald-50">
+                  <p className="text-sm font-semibold text-foreground">Track this category and come back later</p>
+                  <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                    Save the category if timing is the blocker, so this guide stays attached to the same shopping task.
+                  </p>
+                </Link>
+              </div>
             </div>
           </aside>
         </section>
