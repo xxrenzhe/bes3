@@ -6,6 +6,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { resolveResumeContext } from '@/lib/resume-context'
 import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 
@@ -54,7 +55,7 @@ function buildThankYouMeta(intent: ContactIntent) {
 export async function generateMetadata({
   searchParams
 }: {
-  searchParams: Promise<{ intent?: string; subject?: string; name?: string }>
+  searchParams: Promise<{ intent?: string; subject?: string; name?: string; returnTo?: string; returnLabel?: string; returnDescription?: string }>
 }): Promise<Metadata> {
   const resolvedParams = await searchParams
   const intent = normalizeIntent(resolvedParams.intent)
@@ -75,12 +76,17 @@ export async function generateMetadata({
 export default async function ThankYouPage({
   searchParams
 }: {
-  searchParams: Promise<{ intent?: string; subject?: string; name?: string }>
+  searchParams: Promise<{ intent?: string; subject?: string; name?: string; returnTo?: string; returnLabel?: string; returnDescription?: string }>
 }) {
   const resolvedParams = await searchParams
   const intent = normalizeIntent(resolvedParams.intent)
   const subject = String(resolvedParams.subject || '').trim().slice(0, 80)
   const firstName = String(resolvedParams.name || '').trim().split(/\s+/)[0] || ''
+  const resumeContext = resolveResumeContext({
+    returnTo: resolvedParams.returnTo,
+    returnLabel: resolvedParams.returnLabel,
+    returnDescription: resolvedParams.returnDescription
+  })
   const articles = await listPublishedArticles()
   const categories = await listCategories()
   const leadReview = articles.find((article) => article.type === 'review') || null
@@ -112,6 +118,14 @@ export default async function ThankYouPage({
       bestRoute:
         'Use search, shortlist, or alerts so you do not lose your place while we review your message.',
       routes: [
+        resumeContext
+          ? {
+              title: resumeContext.label,
+              description: resumeContext.description,
+              href: resumeContext.href,
+              label: 'Resume task'
+            }
+          : null,
         {
           title: 'Search products',
           description: 'Best when your use case is clear and you still need Bes3 to narrow the field.',
@@ -130,7 +144,12 @@ export default async function ThankYouPage({
           href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
           label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
         }
-      ]
+      ].filter(Boolean) as Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
     },
     'editorial-feedback': {
       eyebrow: 'Editorial Feedback',
@@ -140,6 +159,14 @@ export default async function ThankYouPage({
       bestRoute:
         'The clearest next move is to stay on a real page, so the feedback remains tied to an actual shopping moment.',
       routes: [
+        resumeContext
+          ? {
+              title: resumeContext.label,
+              description: resumeContext.description,
+              href: resumeContext.href,
+              label: 'Resume task'
+            }
+          : null,
         {
           title: 'Read a live review',
           description: 'Use a real review page to anchor what felt clear or unclear in the current writing style.',
@@ -158,7 +185,12 @@ export default async function ThankYouPage({
           href: buildCategoryPath(leadCategory),
           label: leadCategory ? 'Open category page' : 'Open directory'
         }
-      ]
+      ].filter(Boolean) as Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
     },
     correction: {
       eyebrow: 'Correction',
@@ -168,6 +200,14 @@ export default async function ThankYouPage({
       bestRoute:
         'If the issue was tied to one page or one category, keep that page open while the team reviews the correction so your context stays intact.',
       routes: [
+        resumeContext
+          ? {
+              title: resumeContext.label,
+              description: resumeContext.description,
+              href: resumeContext.href,
+              label: 'Resume task'
+            }
+          : null,
         {
           title: 'See how Bes3 checks recommendations',
           description: 'Use the About page to understand the rules Bes3 is trying to maintain on the public site.',
@@ -186,7 +226,12 @@ export default async function ThankYouPage({
           href: '/shortlist',
           label: 'Open shortlist'
         }
-      ]
+      ].filter(Boolean) as Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
     },
     partnership: {
       eyebrow: 'Partnership',
@@ -196,6 +241,14 @@ export default async function ThankYouPage({
       bestRoute:
         'If you are evaluating fit with Bes3, the best context comes from the live site rather than a generic media kit.',
       routes: [
+        resumeContext
+          ? {
+              title: resumeContext.label,
+              description: resumeContext.description,
+              href: resumeContext.href,
+              label: 'Resume task'
+            }
+          : null,
         {
           title: 'See how Bes3 works',
           description: 'Review the buyer-first model and the public-site rules that shape Bes3.',
@@ -214,7 +267,12 @@ export default async function ThankYouPage({
           href: '/deals',
           label: 'Open deals'
         }
-      ]
+      ].filter(Boolean) as Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
     },
     general: {
       eyebrow: 'General',
@@ -224,6 +282,14 @@ export default async function ThankYouPage({
       bestRoute:
         'Use one concrete next step instead of reopening broad browsing. That keeps the question closer to a real buying action.',
       routes: [
+        resumeContext
+          ? {
+              title: resumeContext.label,
+              description: resumeContext.description,
+              href: resumeContext.href,
+              label: 'Resume task'
+            }
+          : null,
         {
           title: 'Search the site',
           description: 'Best when the question is really about a product or use case that needs narrowing.',
@@ -242,7 +308,12 @@ export default async function ThankYouPage({
           href: '/shortlist',
           label: 'Open shortlist'
         }
-      ]
+      ].filter(Boolean) as Array<{
+        title: string
+        description: string
+        href: string
+        label: string
+      }>
     }
   }
 

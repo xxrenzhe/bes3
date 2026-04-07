@@ -20,6 +20,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -186,6 +187,17 @@ export default async function ProductPage({
   const priceWindowSummary = summarizePriceHistoryWindow(priceHistory, product.priceAmount, product.priceCurrency || 'USD')
   const priceSignal = buildDealDecisionSignal(priceWindowSummary)
   const priceSignalTone = priceSignal.id === 'buy-now' ? 'positive' : priceSignal.id === 'watch' ? 'warning' : 'default'
+  const path = `/products/${product.slug}`
+  const newsletterReturnDescription = `Return to ${product.productName} with the current product fit, price timing, and next-step context still intact.`
+  const newsletterReturnLabel = `Resume ${product.productName}`
+  const newsletterPath = buildNewsletterPath({
+    intent: 'price-alert',
+    category: product.category || '',
+    cadence: 'priority',
+    returnTo: path,
+    returnLabel: newsletterReturnLabel,
+    returnDescription: newsletterReturnDescription
+  })
   const timingDecisionText =
     priceSignal.id === 'buy-now'
       ? 'Product fit and price timing are aligned. If the checklist is already clear, this is one of the cleaner moments to move from research into store check.'
@@ -194,7 +206,6 @@ export default async function ProductPage({
         : priceSignal.id === 'watch'
           ? 'The product may still fit, but the current price timing looks weak. Save the progress and wait on purpose instead of letting urgency make the call.'
           : 'The product can still stay on the shortlist, but the price window is too thin to justify a strong buy-now or wait-now call yet.'
-  const path = `/products/${product.slug}`
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
     `${product.productName} on Bes3 includes specs, shortlist context, and fit notes before you click through to a store.`
@@ -334,7 +345,7 @@ export default async function ProductPage({
       eyebrow: 'Watch',
       title: `Track ${categoryLabel}`,
       description: 'If you are not ready to buy yet, turn this product interest into a category-level watch instead of losing the thread.',
-      href: `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category || '')}&cadence=priority`,
+      href: newsletterPath,
       label: 'Start a price watch'
     },
     {
@@ -544,7 +555,7 @@ export default async function ProductPage({
                   label: 'Browse category'
                 },
             {
-              href: `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category || '')}&cadence=priority`,
+              href: newsletterPath,
               label: 'Start price watch',
               variant: 'secondary'
             }
