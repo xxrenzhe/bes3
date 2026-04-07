@@ -5,6 +5,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { ArrowRight, BellRing, Copy, ExternalLink, RefreshCcw, Scale, Share2, Trash2 } from 'lucide-react'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
@@ -334,6 +335,34 @@ export function ShortlistWorkspace({
     ? `${bestWaitEntry.state.gaps[0]}. If timing is the blocker, preserve this shortlist with an alert instead of reopening research later.`
     : `Use ${alertAnchorItem?.category ? getCategoryLabel(alertAnchorItem) : 'this shortlist'} alerts when price timing matters more than more browsing.`
   const primaryAlertHref = buildCategoryAlertHref(bestWaitEntry?.item || alertAnchorItem, 'price-alert', 'priority')
+  const shortlistTimingTitle =
+    compareCount >= 2
+      ? 'Should you compare now or wait for a better entry point?'
+      : bestCurrentEntry?.item.productName
+        ? `Should you move on ${bestCurrentEntry.item.productName} now or keep waiting?`
+        : 'Should you buy now, compare, or wait?'
+  const shortlistTimingDescription =
+    compareCount >= 2
+      ? 'Your shortlist is already tight enough that the remaining question is whether to finish compare now or preserve the finalists until timing improves.'
+      : 'A shortlist should not just collect products. It should help you decide whether one pick deserves action now, whether compare should happen next, or whether timing is the only blocker left.'
+  const shortlistTimingBadge =
+    compareCount >= 2 ? 'Compare-ready shortlist' : bestWaitEntry?.item.category ? `${getCategoryLabel(bestWaitEntry.item)} wait signal` : 'Shortlist timing'
+  const shortlistTimingSignalTitle =
+    compareCount >= 2
+      ? 'The shortlist is already narrow enough to pressure-test the finalists.'
+      : bestWaitEntry?.state.gaps[0]
+        ? 'The shortlist has one main reason to wait before you force a decision.'
+        : 'The shortlist is close, but timing still matters as much as fit.'
+  const shortlistTimingSignalDescription =
+    compareCount >= 2
+      ? `Finalists in compare: ${buildProductRollup(compare)}. The next gain comes from resolving the last tradeoff, not adding more candidates.`
+      : primaryWaitDescription
+  const shortlistTimingDecisionText =
+    compareCount >= 2
+      ? 'Finish the compare if one winner already feels likely. If the only open question is price timing, keep the same finalists warm with an alert instead of reopening research.'
+      : shortlist.length >= 2
+        ? `Use ${bestCurrentEntry?.item.productName || 'the strongest saved pick'} as the lead checkpoint, then compare or wait based on whether fit or timing is still unresolved.`
+        : 'One saved product is not enough to force a purchase. Validate the lead pick or add one more contender before treating timing as the only blocker.'
   const outcomeCards = shortlist.length
     ? [
         {
@@ -639,6 +668,51 @@ export function ShortlistWorkspace({
           </div>
         </div>
       </section>
+
+      {shortlist.length ? (
+        <TimingDecisionPanel
+          eyebrow="Buy Or Wait"
+          title={shortlistTimingTitle}
+          description={shortlistTimingDescription}
+          signalBadge={shortlistTimingBadge}
+          signalTitle={shortlistTimingSignalTitle}
+          signalDescription={shortlistTimingSignalDescription}
+          decisionText={shortlistTimingDecisionText}
+          metrics={[
+            {
+              label: 'Saved now',
+              value: String(shortlist.length),
+              note: 'The current shortlist size driving this decision.'
+            },
+            {
+              label: 'Compare-ready',
+              value: String(shortlistDecisionSummary.compareReadyCount),
+              note: 'Picks that are strong enough to move into compare without widening the field.'
+            },
+            {
+              label: 'Best wait anchor',
+              value: bestWaitEntry?.item.productName || 'Current shortlist',
+              note: 'If timing is the blocker, preserve this candidate or category instead of restarting later.'
+            }
+          ]}
+          actions={[
+            {
+              href: getShortlistProductPath(bestCurrentEntry?.item || shortlist[0]),
+              label: bestCurrentEntry?.item.productName ? `Open ${bestCurrentEntry.item.productName}` : 'Open lead pick'
+            },
+            {
+              href: compareCount >= 2 ? '/shortlist#decision-matrix' : '/shortlist#saved-candidates',
+              label: compareCount >= 2 ? 'Jump to compare' : 'Review shortlist',
+              variant: 'secondary'
+            },
+            {
+              href: primaryAlertHref,
+              label: 'Start price watch',
+              variant: 'secondary'
+            }
+          ]}
+        />
+      ) : null}
 
       {shortlist.length ? (
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
