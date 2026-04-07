@@ -14,6 +14,7 @@ import { parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/com
 import { getCategoryLabel } from '@/lib/editorial'
 import { queryLooksIntentLed } from '@/lib/entry-routing'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema, buildSearchResultsPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles, searchArticles, searchProducts } from '@/lib/site-data'
@@ -226,6 +227,17 @@ export default async function SearchPage({
   const effectiveCategory = mode === 'intent' ? intentResult?.inferredCategory || selectedCategory : selectedCategory
   const shouldRouteKeywordToAssistant = mode === 'keyword' && queryLooksIntentLed(query)
   const assistantSwitchHref = `/assistant?intent=${encodeURIComponent(query)}${selectedCategory ? `&category=${encodeURIComponent(selectedCategory)}` : ''}`
+  const currentSearchReturnHref = mode === 'intent'
+    ? buildCurrentSearchPath({
+        mode,
+        intent: intentQuery,
+        category: effectiveCategory,
+        budget: resolvedParams.budget,
+        must: resolvedParams.must,
+        avoid: resolvedParams.avoid,
+        urgency: resolvedParams.urgency
+      })
+    : buildSearchHref(query, selectedScope, selectedCategory)
 
   const filteredProducts =
     mode === 'keyword' && (selectedScope === 'all' || selectedScope === 'products')
@@ -294,7 +306,14 @@ export default async function SearchPage({
               eyebrow: 'Watch',
               title: `Track ${getCategoryLabel(suggestedCategory)}`,
               description: 'If price is the only thing holding you back, turn this search into a price alert so you do not have to start over later.',
-              href: `/newsletter?intent=price-alert&category=${encodeURIComponent(suggestedCategory)}&cadence=priority`,
+              href: buildNewsletterPath({
+                intent: 'price-alert',
+                category: suggestedCategory,
+                cadence: 'priority',
+                returnTo: currentSearchReturnHref,
+                returnLabel: 'Resume this search',
+                returnDescription: 'Return to the same search results with your current query, scope, and next-step context still in place.'
+              }),
               label: 'Start price alert'
             }
           : {

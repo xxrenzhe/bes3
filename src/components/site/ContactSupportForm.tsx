@@ -35,7 +35,15 @@ const INQUIRY_OPTIONS = [
 
 type InquiryIntent = (typeof INQUIRY_OPTIONS)[number]['id']
 
-export function ContactSupportForm() {
+export function ContactSupportForm({
+  returnTo = '/shortlist',
+  returnLabel = 'Resume shortlist',
+  returnDescription = 'Keep saved picks and compare context alive while the team reviews your note.'
+}: {
+  returnTo?: string
+  returnLabel?: string
+  returnDescription?: string
+}) {
   const router = useRouter()
   const [intent, setIntent] = useState<InquiryIntent>('buyer-support')
   const [name, setName] = useState('')
@@ -62,6 +70,9 @@ export function ContactSupportForm() {
 
           if (name.trim()) params.set('name', name.trim().slice(0, 40))
           if (subject.trim()) params.set('subject', subject.trim().slice(0, 80))
+          if (returnTo) params.set('returnTo', returnTo)
+          if (returnLabel) params.set('returnLabel', returnLabel)
+          if (returnDescription) params.set('returnDescription', returnDescription)
 
           router.push(`/thank-you?${params.toString()}`)
         })

@@ -10,6 +10,7 @@ import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import {
   buildDealDecisionSignal,
   getDealDecisionSignalRank,
@@ -260,6 +261,23 @@ export default async function DealsPage({
   )
 
   const leadSignalTone = leadDeal?.signal.id === 'buy-now' ? 'positive' : leadDeal?.signal.id === 'watch' ? 'warning' : 'default'
+  const dealsResumeDescription = 'Return to the live deals view with the same timing filters and price-window context still visible.'
+  const leadAlertHref = leadProduct?.category
+    ? buildNewsletterPath({
+        intent: 'price-alert',
+        category: leadProduct.category,
+        cadence: 'priority',
+        returnTo: '/deals',
+        returnLabel: 'Resume deals',
+        returnDescription: dealsResumeDescription
+      })
+    : buildNewsletterPath({
+        intent: 'deals',
+        cadence: 'priority',
+        returnTo: '/deals',
+        returnLabel: 'Resume deals',
+        returnDescription: dealsResumeDescription
+      })
   const leadDecisionText = !leadDeal
     ? 'Use deals only after product fit is already clear. When timing is still fuzzy, shortlist and alerts beat impulse.'
     : leadDeal.signal.id === 'buy-now'
@@ -346,9 +364,7 @@ export default async function DealsPage({
                 variant: 'secondary'
               },
               {
-                href: leadProduct?.category
-                  ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadProduct.category)}&cadence=priority`
-                  : '/newsletter?intent=deals&cadence=priority',
+                href: leadAlertHref,
                 label: 'Start price alert',
                 variant: 'secondary'
               }
@@ -494,8 +510,21 @@ export default async function DealsPage({
                 const effectiveCurrency = product.bestOffer?.priceCurrency || product.priceCurrency || 'USD'
                 const distanceFromLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
                 const alertHref = product.category
-                  ? `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category)}&cadence=priority`
-                  : '/newsletter?intent=deals&cadence=priority'
+                  ? buildNewsletterPath({
+                      intent: 'price-alert',
+                      category: product.category,
+                      cadence: 'priority',
+                      returnTo: '/deals',
+                      returnLabel: 'Resume deals',
+                      returnDescription: dealsResumeDescription
+                    })
+                  : buildNewsletterPath({
+                      intent: 'deals',
+                      cadence: 'priority',
+                      returnTo: '/deals',
+                      returnLabel: 'Resume deals',
+                      returnDescription: dealsResumeDescription
+                    })
                 const alternatives = product.category
                   ? (categoryAlternatives.get(product.category) || []).filter((item) => item.product.id !== product.id).slice(0, 2)
                   : []

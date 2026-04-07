@@ -9,6 +9,7 @@ import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import {
   buildShortlistBuyingBrief,
   buildShortlistComparisonSummary,
@@ -46,19 +47,29 @@ function getCategoryLabel(item: ShortlistItem | undefined) {
 function buildCategoryAlertHref(
   item: ShortlistItem | undefined,
   intent: 'price-alert' | 'category-brief' | 'deals' = 'price-alert',
-  cadence: 'priority' | 'weekly' = 'priority'
+  cadence: 'priority' | 'weekly' = 'priority',
+  returnTo: string = '/shortlist',
+  returnLabel: string = 'Resume shortlist',
+  returnDescription: string = 'Keep your saved picks, compare state, and price-watch context tied to the same shortlist.'
 ) {
   if (!item?.category) {
-    return `/newsletter?intent=${intent === 'category-brief' ? 'deals' : intent}&cadence=${cadence}`
+    return buildNewsletterPath({
+      intent: intent === 'category-brief' ? 'deals' : intent,
+      cadence,
+      returnTo,
+      returnLabel,
+      returnDescription
+    })
   }
 
-  const params = new URLSearchParams({
+  return buildNewsletterPath({
     intent,
     category: item.category,
-    cadence
+    cadence,
+    returnTo,
+    returnLabel,
+    returnDescription
   })
-
-  return `/newsletter?${params.toString()}`
 }
 
 const DECISION_STAGE_PRIORITY: Record<ReturnType<typeof getShortlistDecisionState>['stage'], number> = {

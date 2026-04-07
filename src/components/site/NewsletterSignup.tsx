@@ -116,7 +116,7 @@ export function NewsletterSignup({
           </div>
           {afterSignupRoutes.length ? (
             <div className="space-y-3">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Resume this task</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Resume this task</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {afterSignupRoutes.map((route) => (
                   <Link

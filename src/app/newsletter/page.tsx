@@ -7,6 +7,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, toTitleCaseWords } from '@/lib/metadata'
+import { resolveResumeContext } from '@/lib/resume-context'
 import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { slugify } from '@/lib/slug'
@@ -17,7 +18,7 @@ const VALID_CADENCE = new Set(['weekly', 'priority'] as const)
 export async function generateMetadata({
   searchParams
 }: {
-  searchParams: Promise<{ intent?: string; category?: string; cadence?: string }>
+  searchParams: Promise<{ intent?: string; category?: string; cadence?: string; returnTo?: string; returnLabel?: string; returnDescription?: string }>
 }): Promise<Metadata> {
   const resolvedParams = await searchParams
   const selectedIntent = VALID_INTENTS.has((resolvedParams.intent || '') as 'deals')
@@ -25,7 +26,7 @@ export async function generateMetadata({
     : 'deals'
   const selectedCategory = slugify(String(resolvedParams.category || ''))
   const selectedCategoryLabel = getCategoryLabel(selectedCategory)
-  const hasPrefill = Boolean(resolvedParams.intent || resolvedParams.category || resolvedParams.cadence)
+  const hasPrefill = Boolean(resolvedParams.intent || resolvedParams.category || resolvedParams.cadence || resolvedParams.returnTo)
   const title = selectedCategory
     ? `Track ${toTitleCaseWords(selectedCategoryLabel)}`
     : selectedIntent === 'price-alert'
@@ -56,7 +57,7 @@ export async function generateMetadata({
 export default async function NewsletterPage({
   searchParams
 }: {
-  searchParams: Promise<{ intent?: string; category?: string; cadence?: string }>
+  searchParams: Promise<{ intent?: string; category?: string; cadence?: string; returnTo?: string; returnLabel?: string; returnDescription?: string }>
 }) {
   const resolvedParams = await searchParams
   const [categories, articles] = await Promise.all([listCategories(), listPublishedArticles()])
@@ -69,6 +70,11 @@ export default async function NewsletterPage({
   const selectedCategory = slugify(String(resolvedParams.category || ''))
   const matchedCategory = categories.find((category) => categoryMatches(category, selectedCategory)) || selectedCategory
   const selectedCategoryLabel = getCategoryLabel(matchedCategory)
+  const resumeContext = resolveResumeContext({
+    returnTo: resolvedParams.returnTo,
+    returnLabel: resolvedParams.returnLabel,
+    returnDescription: resolvedParams.returnDescription
+  })
   const categoryCoverage = selectedCategory ? articles.filter((article) => categoryMatches(article.product?.category, selectedCategory)) : []
   const relatedComparison = categoryCoverage.find((article) => article.type === 'comparison') || null
   const relatedReview = categoryCoverage.find((article) => article.type === 'review') || null
@@ -106,6 +112,15 @@ export default async function NewsletterPage({
     }
   ]
   const followUpRoutes = [
+    resumeContext
+      ? {
+          eyebrow: 'Resume',
+          title: resumeContext.label,
+          description: resumeContext.description,
+          href: resumeContext.href,
+          label: resumeContext.label
+        }
+      : null,
     selectedCategory
       ? {
           eyebrow: 'Return',
@@ -159,7 +174,14 @@ export default async function NewsletterPage({
               href: '/deals',
               label: 'Open deals'
             }
-  ]
+  ].filter((route): route is {
+    eyebrow: string
+    title: string
+    description: string
+    href: string
+    label: string
+  } => Boolean(route))
+    .filter((route, index, list) => list.findIndex((candidate) => candidate.href === route.href) === index)
 
   return (
     <PublicShell>
@@ -213,7 +235,9 @@ export default async function NewsletterPage({
                   : 'Bes3 uses deal alerts to reduce noise, not to create another reason to impulse buy.'
             }
             decisionText={
-              selectedIntent === 'price-alert'
+              resumeContext
+                ? `This alert will preserve the current task and bring you back to ${resumeContext.label.toLowerCase()} when the market changes in a useful way.`
+                : selectedIntent === 'price-alert'
                 ? 'This is the right move when the shortlist or product fit is already mostly settled and timing is the only thing still open.'
                 : selectedIntent === 'category-brief'
                   ? 'This is the right move when you want to stay oriented in the category while the shortlist is still evolving.'
