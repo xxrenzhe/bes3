@@ -76,7 +76,7 @@ export default async function ReviewsIndexPage() {
               },
               {
                 name: 'Validate the next move',
-                text: 'Use the review to decide whether to open the product page, compare alternatives, or stop researching.'
+                text: 'Use the review to decide whether to open the product page, compare alternatives, or move on.'
               }
             ]
           ),
@@ -85,7 +85,7 @@ export default async function ReviewsIndexPage() {
       />
       <div className="mx-auto max-w-7xl space-y-14 px-4 py-14 sm:px-6 lg:px-8">
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">Review Hub</p>
+          <p className="editorial-kicker">Reviews</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse every Bes3 review page.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
             This page gathers Bes3 reviews for buyers who want straight answers, clear pros and cons, and a quick path to the next step.
@@ -101,7 +101,7 @@ export default async function ReviewsIndexPage() {
                 {article.summary || article.product?.description || 'Use this review to validate fit, tradeoffs, and the right next action.'}
               </p>
               <div className="mt-5 flex items-center justify-between gap-4 text-sm">
-                <span className="font-semibold text-foreground">{article.product?.productName || 'Review coverage'}</span>
+                <span className="font-semibold text-foreground">{article.product?.productName || 'Review'}</span>
                 <span className="text-muted-foreground">{formatEditorialDate(article.updatedAt || article.publishedAt || article.createdAt, 'recently')}</span>
               </div>
               <p className="mt-4 text-sm font-semibold text-primary">
