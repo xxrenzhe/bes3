@@ -50,7 +50,7 @@ function buildAlertPreview(intent: IntentId, cadence: CadenceId, categorySlug: s
   }
 
   if (intent === 'category-brief') {
-    return `Bes3 will summarize what changed in ${categoryLabel} ${cadenceLabel}, so you can stay informed without restarting your research.`
+    return `Bes3 will summarize the useful changes in ${categoryLabel} ${cadenceLabel}, so you can stay informed without starting over.`
   }
 
   return `Bes3 will send the most worthwhile live deals for ${categoryLabel} ${cadenceLabel}, without turning your inbox into generic marketing spam.`

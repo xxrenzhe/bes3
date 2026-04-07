@@ -290,7 +290,7 @@ export default async function ComparisonPage({
           : null,
         category
           ? {
-              name: `${categoryLabel} shortlist hub`,
+              name: `${categoryLabel} shortlist page`,
               path: buildCategoryPath(category, 'category-shortlist')
             }
           : null,
@@ -315,7 +315,7 @@ export default async function ComparisonPage({
     {
       question: 'When does a brand page help after a comparison?',
       answer: article.product?.brand
-        ? `Use the ${article.product.brand} page when the brand looks right but you want the rest of its products and editorial coverage before buying.`
+        ? `Use the ${article.product.brand} page when the brand looks right but you want the rest of its products, reviews, and comparisons before buying.`
         : 'Use the category page instead when you still need broader market context.'
     },
     {
@@ -425,7 +425,7 @@ export default async function ComparisonPage({
               note: 'Read the supporting review if one more rationale is still needed.'
             }
           : null,
-        ...(category ? [{ href: buildCategoryPath(category, 'category-shortlist'), label: `${categoryLabel} shortlist hub`, note: 'Reopen the category shortlist only if neither finalist truly fits.' }] : [])
+        ...(category ? [{ href: buildCategoryPath(category, 'category-shortlist'), label: `${categoryLabel} shortlist page`, note: 'Reopen the category shortlist only if neither finalist truly fits.' }] : [])
       ])
     },
     {
@@ -557,7 +557,7 @@ export default async function ComparisonPage({
           <div className="grid gap-6 xl:grid-cols-[1fr_0.95fr] xl:items-start">
             <div>
               <p className="editorial-kicker">After This Comparison</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Finish the choice without restarting research.</h2>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Finish the choice without starting over.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
                 A comparison should help settle the choice, not create a new one. Pick the action that matches what is still unresolved: product fit, price timing, or one last category check.
               </p>

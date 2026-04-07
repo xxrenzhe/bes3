@@ -141,7 +141,7 @@ export default async function ThankYouPage({
       routes: [
         {
           title: 'Read a live review',
-          description: 'Use a real review page to anchor what felt clear or unclear in the current editorial style.',
+          description: 'Use a real review page to anchor what felt clear or unclear in the current writing style.',
           href: leadReview ? getArticlePath(leadReview.type, leadReview.slug) : '/search?scope=review',
           label: leadReview ? 'Open review' : 'Browse reviews'
         },
@@ -174,8 +174,8 @@ export default async function ThankYouPage({
           label: 'Open About'
         },
         {
-          title: 'Browse current category coverage',
-          description: 'Stay in the same category so you can re-check the updated context once the fix lands.',
+          title: 'Browse current category pages',
+          description: 'Stay in the same category so you can re-check the latest pages once the fix lands.',
           href: buildCategoryPath(leadCategory),
           label: leadCategory ? 'Open category page' : 'Open directory'
         },
@@ -197,7 +197,7 @@ export default async function ThankYouPage({
       routes: [
         {
           title: 'See how Bes3 works',
-          description: 'Review the buyer-first model and editorial rules that shape the public site.',
+          description: 'Review the buyer-first model and the public-site rules that shape Bes3.',
           href: '/about',
           label: 'Open About'
         },
