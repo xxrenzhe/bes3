@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 
+import './load-env'
 import { getDatabase } from '../src/lib/db'
 import { buildSeoPagePersistencePayload } from '../src/lib/seo-page-payload'
 

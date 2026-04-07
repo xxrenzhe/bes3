@@ -15,6 +15,7 @@
     "db:init": "tsx scripts/db-init.ts",
     "admin:ensure": "tsx scripts/ensure-admin-account.ts",
     "ops:check-env": "node scripts/check-runtime-env.js",
+    "ops:check-env:local": "node scripts/check-runtime-env.js .env",
     "ops:backup-runtime": "bash ./scripts/backup-runtime.sh",
     "ops:restore-runtime": "bash ./scripts/restore-runtime.sh",
     "ops:deploy-ghcr": "bash ./scripts/deploy-ghcr.sh",

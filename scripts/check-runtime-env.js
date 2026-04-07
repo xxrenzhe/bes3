@@ -47,6 +47,7 @@ function buildConfig() {
   const read = (key, fallback = '') => process.env[key] ?? fileValues[key] ?? fallback
 
   return {
+    requestedEnvFile: explicitEnvFile,
     envFilePath: fs.existsSync(envFilePath) ? envFilePath : '',
     nodeEnv: read('NODE_ENV', 'production'),
     port: read('PORT', '80'),
@@ -95,6 +96,8 @@ function validate() {
 
   if (config.envFilePath) {
     addResult(results, 'info', `Loaded file defaults from ${config.envFilePath}`)
+  } else if (config.requestedEnvFile) {
+    addResult(results, 'info', `Requested env file ${config.requestedEnvFile} was not found, validating current process environment only`)
   } else {
     addResult(results, 'info', 'No .env.production file loaded, validating current process environment only')
   }

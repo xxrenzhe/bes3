@@ -1,5 +1,6 @@
 #!/usr/bin/env tsx
 
+import './load-env'
 import { rerunSyndication } from '../src/lib/seo-ops'
 
 async function main() {
