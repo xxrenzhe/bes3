@@ -3,10 +3,12 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { AssistantSessionTracker } from '@/components/site/AssistantSessionTracker'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
+import { queryLooksExactSearchLed } from '@/lib/entry-routing'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildFaqSchema, buildWebPageSchema } from '@/lib/structured-data'
@@ -63,6 +65,8 @@ export default async function AssistantPage({
   const input = parseIntentInputFromSearchParams(params)
   const categories = await listCategories()
   const result = input.query ? await resolveIntentSearch(input) : null
+  const shouldRouteAssistantToSearch = queryLooksExactSearchLed(input.query)
+  const searchSwitchHref = `/search?q=${encodeURIComponent(input.query)}&scope=products${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}`
 
   const processSteps = [
     {
@@ -154,6 +158,18 @@ export default async function AssistantPage({
             className="border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)]"
           />
         </div>
+
+        {shouldRouteAssistantToSearch ? (
+          <EntryModeCoach
+            eyebrow="Faster Path"
+            title="This request looks like an exact product lookup."
+            description="You already typed something that looks like a product or model phrase. Keyword search is usually faster when the main job is landing on the product, review, or comparison page."
+            primaryHref={searchSwitchHref}
+            primaryLabel="Search this instead"
+            secondaryHref={input.query ? `/assistant?intent=${encodeURIComponent(input.query)}${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}` : '/assistant'}
+            secondaryLabel="Keep using assistant"
+          />
+        ) : null}
 
         <DecisionReasonPanel
           eyebrow="Use it when"
