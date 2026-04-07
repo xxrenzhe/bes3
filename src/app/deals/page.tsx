@@ -6,6 +6,7 @@ import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
+import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { formatEditorialDate, getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
@@ -258,38 +259,16 @@ export default async function DealsPage({
     }
   )
 
-  const dealsRoutes = [
-    {
-      eyebrow: 'Validate',
-      title: leadProduct?.slug ? 'Open the lead product page' : 'Recheck product fit',
-      description: 'Deals should be the last push, not the first filter. Recheck product fit before a discount pushes you toward the wrong item.',
-      href: leadProduct?.slug ? `/products/${leadProduct.slug}` : '/directory',
-      label: leadProduct?.slug ? 'Open product page' : 'Browse categories'
-    },
-    {
-      eyebrow: 'Save',
-      title: 'Keep top picks in shortlist',
-      description: 'Use shortlist to keep the good options together so a price move does not wipe out your comparison work.',
-      href: '/shortlist',
-      label: 'Open shortlist'
-    },
-    {
-      eyebrow: 'Watch',
-      title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Start price alerts',
-      description: 'If the current deal is close but not quite right, set an alert rather than buying under pressure.',
-      href: leadProduct?.category
-        ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadProduct.category)}&cadence=priority`
-        : '/newsletter?intent=deals&cadence=priority',
-      label: 'Start price alert'
-    },
-    {
-      eyebrow: 'Explore',
-      title: 'Go back to categories',
-      description: 'When the discount looks better than the product fit, go back to category pages and keep the decision grounded.',
-      href: '/directory',
-      label: 'Browse categories'
-    }
-  ]
+  const leadSignalTone = leadDeal?.signal.id === 'buy-now' ? 'positive' : leadDeal?.signal.id === 'watch' ? 'warning' : 'default'
+  const leadDecisionText = !leadDeal
+    ? 'Use deals only after product fit is already clear. When timing is still fuzzy, shortlist and alerts beat impulse.'
+    : leadDeal.signal.id === 'buy-now'
+      ? 'The lead deal is sitting in one of the better tracked windows right now. If product fit is already clear, this is where checking the store price makes sense.'
+      : leadDeal.signal.id === 'good-value'
+        ? 'The lead deal is reasonable, but not a must-buy moment by itself. Save or compare if the product still needs one more decision pass.'
+        : leadDeal.signal.id === 'watch'
+          ? 'The discount exists, but the timing is still weak relative to the tracked range. This is a watch situation, not a rush situation.'
+          : 'Bes3 still needs more price history before it can turn this deal into a strong timing recommendation.'
 
   return (
     <PublicShell>
@@ -327,40 +306,54 @@ export default async function DealsPage({
         </section>
 
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-            <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">
-              <div>
-                <p className="editorial-kicker">How To Use Deals</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
-                  Let the price window guide timing, not just emotion.
-                </h2>
-                <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                  The right deal page should answer two questions fast: is the product still a fit, and is the current price actually good relative to the tracked range?
-                </p>
-                <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
-                  <p className="mt-3 text-sm leading-7 text-slate-200">
-                    Buy now only when product fit is already clear and the current offer sits near the best tracked part of the price window. Otherwise save it or start an alert.
-                  </p>
-                </div>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                {dealsRoutes.map((route) => (
-                  <Link
-                    key={route.title}
-                    href={route.href}
-                    className="rounded-[1.75rem] bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-1"
-                  >
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
-                    <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{route.title}</h2>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{route.description}</p>
-                    <p className="mt-5 text-sm font-semibold text-primary">{route.label} →</p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </div>
+          <TimingDecisionPanel
+            eyebrow="Buy Or Wait"
+            title={leadProduct ? `Should you move on ${leadProduct.productName} now?` : 'Should you buy now or keep watching?'}
+            description="The deals page should surface the strongest live timing signal, then route you toward product validation, shortlist, or watch mode without emotional overreaction."
+            signalBadge={leadDeal?.signal.badge || 'Deals workflow'}
+            signalTitle={leadDeal?.signal.title || 'Use the tracked window before acting on a discount.'}
+            signalDescription={leadDeal?.signal.description || 'A live deal only matters after product fit is already clear. Otherwise it is just another distraction.'}
+            decisionText={leadDecisionText}
+            priceHistory={leadDeal?.priceHistory}
+            fallbackPrice={leadProduct?.bestOffer?.priceAmount ?? leadProduct?.priceAmount}
+            fallbackCurrency={leadProduct?.bestOffer?.priceCurrency || leadProduct?.priceCurrency || 'USD'}
+            tone={leadSignalTone}
+            metrics={[
+              {
+                label: 'Deals in view',
+                value: String(products.length),
+                note: 'Current results after filters.'
+              },
+              {
+                label: 'Buy window',
+                value: String(signalCounts['buy-now']),
+                note: 'Deals currently sitting near the best tracked range.'
+              },
+              {
+                label: 'Wait signals',
+                value: String(signalCounts.watch),
+                note: 'Deals that still look expensive relative to the tracked window.'
+              }
+            ]}
+            actions={[
+              {
+                href: leadProduct?.slug ? `/products/${leadProduct.slug}` : '/directory',
+                label: leadProduct?.slug ? 'Open lead product' : 'Browse categories'
+              },
+              {
+                href: '/shortlist',
+                label: 'Open shortlist',
+                variant: 'secondary'
+              },
+              {
+                href: leadProduct?.category
+                  ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadProduct.category)}&cadence=priority`
+                  : '/newsletter?intent=deals&cadence=priority',
+                label: 'Start price alert',
+                variant: 'secondary'
+              }
+            ]}
+          />
         </section>
 
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">

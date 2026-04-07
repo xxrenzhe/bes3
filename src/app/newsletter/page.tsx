@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
@@ -186,22 +187,49 @@ export default async function NewsletterPage({
               </div>
             ))}
           </div>
-          <div className="rounded-[1.75rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel">
-            <p className="editorial-kicker">After You Subscribe</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Waiting should still leave you with a next move.</h2>
-            <p className="mt-3 text-sm leading-8 text-muted-foreground">
-              Bes3 treats alerts as a pause in your shopping process, not as a separate email list. Subscribe, then keep browsing, comparing, or saving in the same category.
-            </p>
-            <div className="mt-5 grid gap-3 sm:grid-cols-3">
-              {followUpRoutes.map((route) => (
-                <div key={route.title} className="rounded-[1.25rem] bg-white/85 p-4 shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)]">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{route.eyebrow}</p>
-                  <p className="mt-2 text-base font-semibold text-foreground">{route.title}</p>
-                  <p className="mt-2 text-sm leading-7 text-muted-foreground">{route.description}</p>
-                </div>
-              ))}
-            </div>
-          </div>
+          <TimingDecisionPanel
+            eyebrow="Wait On Purpose"
+            title="Subscribe only when waiting is the real blocker."
+            description="Alerts should preserve your shopping progress. If fit is already clear, Bes3 helps you wait with context; if fit is still fuzzy, you should go back to shortlist, search, or compare instead."
+            signalBadge={
+              selectedIntent === 'price-alert'
+                ? 'Price watch'
+                : selectedIntent === 'category-brief'
+                  ? 'Category update'
+                  : 'Deal alerts'
+            }
+            signalTitle={
+              selectedIntent === 'price-alert'
+                ? 'Wait for a worthwhile move, not for every tiny dip.'
+                : selectedIntent === 'category-brief'
+                  ? 'Stay current on the category without restarting research.'
+                  : 'Use alerts to catch the few deals worth acting on.'
+            }
+            signalDescription={
+              selectedIntent === 'price-alert'
+                ? `Bes3 will bring you back when ${selectedCategory ? `${selectedCategoryLabel} pricing` : 'pricing'} changes in a way that may justify action.`
+                : selectedIntent === 'category-brief'
+                  ? `Bes3 will keep ${selectedCategory ? selectedCategoryLabel : 'your category research'} warm while the market changes.`
+                  : 'Bes3 uses deal alerts to reduce noise, not to create another reason to impulse buy.'
+            }
+            decisionText={
+              selectedIntent === 'price-alert'
+                ? 'This is the right move when the shortlist or product fit is already mostly settled and timing is the only thing still open.'
+                : selectedIntent === 'category-brief'
+                  ? 'This is the right move when you want to stay oriented in the category while the shortlist is still evolving.'
+                  : 'This is the right move when you already know the product type you want and only need the strongest market signals.'
+            }
+            metrics={alertGuideCards.map((card) => ({
+              label: card.label,
+              value: card.value,
+              note: card.description
+            }))}
+            actions={followUpRoutes.slice(0, 3).map((route, index) => ({
+              href: route.href,
+              label: route.label,
+              variant: index === 0 ? 'primary' : 'secondary'
+            }))}
+          />
         </div>
         <DecisionReasonPanel
           eyebrow="Why alerts exist"

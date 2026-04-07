@@ -13,12 +13,14 @@ import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
+import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
@@ -40,6 +42,12 @@ import { formatPriceSnapshot } from '@/lib/utils'
 
 function getCategoryLabelValue(category: string | null) {
   return category ? category.replace(/-/g, ' ') : ''
+}
+
+function formatDelta(value: number | null | undefined, currency: string) {
+  if (typeof value !== 'number' || !Number.isFinite(value) || value === 0) return 'No recent move'
+  const prefix = value > 0 ? '+' : '-'
+  return `${prefix}${formatPriceSnapshot(Math.abs(value), currency)}`
 }
 
 export async function generateMetadata({
@@ -175,6 +183,17 @@ export default async function ProductPage({
   const shortlistItem = toShortlistItem(product)
   const categoryLabel = product.category ? product.category.replace(/-/g, ' ') : 'this category'
   const brandSlug = brandKnowledge.brandSlug
+  const priceWindowSummary = summarizePriceHistoryWindow(priceHistory, product.priceAmount, product.priceCurrency || 'USD')
+  const priceSignal = buildDealDecisionSignal(priceWindowSummary)
+  const priceSignalTone = priceSignal.id === 'buy-now' ? 'positive' : priceSignal.id === 'watch' ? 'warning' : 'default'
+  const timingDecisionText =
+    priceSignal.id === 'buy-now'
+      ? 'Product fit and price timing are aligned. If the checklist is already clear, this is one of the cleaner moments to move from research into store check.'
+      : priceSignal.id === 'good-value'
+        ? 'This is a workable price, but it is not automatically the best tracked moment. Buy if fit is already settled; otherwise use one last compare or review pass.'
+        : priceSignal.id === 'watch'
+          ? 'The product may still fit, but the current price timing looks weak. Save the progress and wait on purpose instead of letting urgency make the call.'
+          : 'The product can still stay on the shortlist, but the price window is too thin to justify a strong buy-now or wait-now call yet.'
   const path = `/products/${product.slug}`
   const productDescription =
     pickMetadataDescription(reviewArticle?.seoDescription, reviewArticle?.summary, product.description) ||
@@ -484,6 +503,53 @@ export default async function ProductPage({
             </div>
           </div>
         </section>
+
+        <TimingDecisionPanel
+          eyebrow="Buy Or Wait"
+          title={`Should you buy ${product.productName} now or wait?`}
+          description="This shared timing card turns the latest tracked price window into a practical call: move now, compare once more, or hold the category on watch."
+          signalBadge={priceSignal.badge}
+          signalTitle={priceSignal.title}
+          signalDescription={priceSignal.description}
+          decisionText={timingDecisionText}
+          priceHistory={priceHistory}
+          fallbackPrice={product.priceAmount}
+          fallbackCurrency={product.priceCurrency || 'USD'}
+          tone={priceSignalTone}
+          metrics={[
+            {
+              label: 'Current price',
+              value: formatPriceSnapshot(priceWindowSummary.currentPrice, priceWindowSummary.currency || product.priceCurrency || 'USD'),
+              note: 'Use this as the current timing reference, not as the only reason to buy.'
+            },
+            {
+              label: 'Tracked low',
+              value: formatPriceSnapshot(priceWindowSummary.lowestPrice, priceWindowSummary.currency || product.priceCurrency || 'USD'),
+              note: priceWindowSummary.totalPoints > 0 ? 'The best verified point inside the tracked window.' : 'Bes3 still needs more price checks for a stronger low reference.'
+            },
+            {
+              label: 'Last move',
+              value: formatDelta(priceWindowSummary.deltaFromPrevious, priceWindowSummary.currency || product.priceCurrency || 'USD'),
+              note: `Latest price check: ${formatEditorialDate(priceWindowSummary.latestCapturedAt || snapshotDate)}.`
+            }
+          ]}
+          actions={[
+            comparisonArticle
+              ? {
+                  href: getArticlePath(comparisonArticle.type, comparisonArticle.slug),
+                  label: 'Open comparison'
+                }
+              : {
+                  href: buildCategoryPath(product.category),
+                  label: 'Browse category'
+                },
+            {
+              href: `/newsletter?intent=price-alert&category=${encodeURIComponent(product.category || '')}&cadence=priority`,
+              label: 'Start price watch',
+              variant: 'secondary'
+            }
+          ]}
+        />
 
         <DecisionContentPanel
           modules={decisionModules}
