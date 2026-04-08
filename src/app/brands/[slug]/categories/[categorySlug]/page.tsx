@@ -10,6 +10,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildBrandCategoryPath, buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription, toTitleCaseWords } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import {
@@ -156,6 +157,14 @@ export default async function BrandCategoryPage({
     { name: brand.name, path: `/brands/${brand.slug}` },
     { name: toTitleCaseWords(categoryLabel), path }
   ]
+  const brandCategoryWaitPath = buildNewsletterPath({
+    intent: hasDirectCoverage ? 'price-alert' : 'category-brief',
+    category: getCategorySlug(resolvedCategory),
+    cadence: hasDirectCoverage ? 'priority' : 'weekly',
+    returnTo: path,
+    returnLabel: `Resume ${brand.name} ${toTitleCaseWords(categoryLabel)}`,
+    returnDescription: `Return to the same ${brand.name} ${categoryLabel} page with the current brand-and-category context still intact.`
+  })
   const faqEntries = hasDirectCoverage
     ? [
         {
@@ -236,7 +245,7 @@ export default async function BrandCategoryPage({
           eyebrow: 'Watch',
           title: `Track ${categoryLabel}`,
           description: 'If price is the only thing holding you back, keep this category active through alerts instead of forcing a decision today.',
-          href: `/newsletter?intent=price-alert&category=${encodeURIComponent(getCategorySlug(resolvedCategory))}&brand=${encodeURIComponent(brand.name)}&cadence=priority`,
+          href: brandCategoryWaitPath,
           label: 'Start price watch'
         }
       ]
@@ -259,7 +268,7 @@ export default async function BrandCategoryPage({
           eyebrow: 'Track',
           title: `Track ${categoryLabel}`,
           description: 'If this exact page is not ready, keep the broader category active so new options or price movement do not disappear from your radar.',
-          href: `/newsletter?intent=category-brief&category=${encodeURIComponent(getCategorySlug(resolvedCategory))}&brand=${encodeURIComponent(brand.name)}&cadence=weekly`,
+          href: brandCategoryWaitPath,
           label: 'Start category alerts'
         },
         {

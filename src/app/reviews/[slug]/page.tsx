@@ -19,6 +19,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
@@ -185,6 +186,14 @@ export default async function ReviewPage({
     .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/reviews/${article.slug}`
+  const reviewWaitPath = buildNewsletterPath({
+    intent: category ? 'price-alert' : 'deals',
+    category: category || '',
+    cadence: 'priority',
+    returnTo: path,
+    returnLabel: `Resume ${article.title}`,
+    returnDescription: 'Return to the same review with the current fit notes, risks, and next-step context still intact.'
+  })
   const reviewDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     buildFallbackNote(article.product?.productName || article.title)
@@ -349,9 +358,7 @@ export default async function ReviewPage({
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track the market',
       description: 'If the purchase is waiting on a better price, turn this review into a price alert instead of reopening research from scratch later.',
-      href: category
-        ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
-        : '/newsletter?intent=deals&cadence=priority',
+      href: reviewWaitPath,
       label: 'Start price alert'
     }
   ]
