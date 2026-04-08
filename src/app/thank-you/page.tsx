@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { buildCategoryPath } from '@/lib/category'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
@@ -423,6 +424,51 @@ export default async function ThankYouPage({
             ))}
           </div>
         </section>
+
+        <TimingDecisionPanel
+          eyebrow="Do Not Lose The Task"
+          title="The message is sent. Your shopping task should still keep moving."
+          description="A confirmation page should reconnect you to the same shortlist, comparison, or price-timing path while the team reviews your note."
+          signalBadge={resumeContext ? 'Resume current task' : 'Keep shortlist warm'}
+          signalTitle={
+            resumeContext
+              ? `Return to ${resumeContext.label.toLowerCase()} with the same context intact`
+              : 'Reopen the most useful next step instead of broad browsing'
+          }
+          signalDescription={
+            resumeContext
+              ? `Bes3 already knows the route you came from. The cleanest next move is to reopen ${resumeContext.label.toLowerCase()} rather than treat this confirmation as the end of the shopping journey.`
+              : 'If the team reply is not needed for the decision itself, keep moving through shortlist, compare, or price timing instead of restarting from the homepage.'
+          }
+          decisionLabel="Best Bes3 call"
+          decisionText={
+            resumeContext
+              ? `Go back to ${resumeContext.label.toLowerCase()} first. If timing is the only blocker left after that, switch into deals or alerts. If the finalists still need pressure-testing, continue compare from the same task.`
+              : 'Use the strongest concrete next move now: reopen the shortlist, check whether price timing changed, or continue comparing finalists. Do not let the contact step turn into a dead end.'
+          }
+          metrics={[
+            {
+              label: 'Resume first',
+              value: taskRecoveryRoutes[0]?.title || 'Current task',
+              note: taskRecoveryRoutes[0]?.description || 'Return to the same decision path first.'
+            },
+            {
+              label: 'Timing check',
+              value: 'Live deals',
+              note: 'Use today’s strongest price changes only after product fit is mostly settled.'
+            },
+            {
+              label: 'Final choice',
+              value: leadComparison ? 'Lead comparison' : 'Shortlist',
+              note: 'Keep the finalist set tight while you finish the decision.'
+            }
+          ]}
+          actions={taskRecoveryRoutes.map((route, index) => ({
+            href: route.href,
+            label: route.label,
+            variant: index === 0 ? 'primary' : 'secondary'
+          }))}
+        />
 
         <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
           <div className="grid gap-8 xl:grid-cols-[1fr_0.95fr] xl:items-start">

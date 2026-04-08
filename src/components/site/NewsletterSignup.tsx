@@ -84,6 +84,34 @@ export function NewsletterSignup({
   const selectedIntent = INTENT_OPTIONS.find((option) => option.id === intent) || INTENT_OPTIONS[0]
   const alertPreview = buildAlertPreview(intent, cadence, categorySlug)
   const primaryResumeRoute = afterSignupRoutes[0] || null
+  const secondaryRoute = afterSignupRoutes[1] || null
+  const currentTaskTitle = primaryResumeRoute?.title || 'This shopping task'
+  const successGuideCards = [
+    {
+      label: 'Task preserved',
+      value: currentTaskTitle,
+      description: primaryResumeRoute
+        ? `Bes3 should reconnect future alerts to ${primaryResumeRoute.title.toLowerCase()} instead of dropping you into a generic email loop.`
+        : 'This signup should preserve the current shopping context instead of replacing it with generic marketing.'
+    },
+    {
+      label: 'What triggers a return',
+      value: selectedIntent.label,
+      description: alertPreview
+    },
+    {
+      label: 'Best move now',
+      value: primaryResumeRoute ? primaryResumeRoute.label : secondaryRoute?.label || 'Keep the shortlist moving',
+      description: primaryResumeRoute
+        ? `Go back to ${primaryResumeRoute.title.toLowerCase()} if product fit is still the main open question.`
+        : secondaryRoute
+          ? `Use ${secondaryRoute.title.toLowerCase()} if waiting is not the only blocker anymore.`
+          : 'Return to the same shortlist, compare, or category path while the alert watches timing in the background.'
+    }
+  ]
+  const postSignupDecisionText = primaryResumeRoute
+    ? `The alert is saved. Now go back to ${primaryResumeRoute.title.toLowerCase()} and keep the same candidates, comparison path, or category context alive while Bes3 watches the timing for you.`
+    : 'The alert is saved. The next useful move is to reopen the same shortlist, category, or comparison path instead of wandering back into broad browsing.'
 
   useEffect(() => {
     setIntent(initialIntent)
@@ -115,6 +143,19 @@ export function NewsletterSignup({
                 {categorySlug.replace(/-/g, ' ')}
               </span>
             ) : null}
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {successGuideCards.map((card) => (
+              <div key={card.label} className="rounded-[1.25rem] bg-muted/60 p-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">{card.label}</p>
+                <p className="mt-2 text-base font-semibold text-foreground">{card.value}</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{card.description}</p>
+              </div>
+            ))}
+          </div>
+          <div className="rounded-[1.5rem] bg-slate-950 p-5 text-white">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best move now</p>
+            <p className="mt-3 text-sm leading-7 text-slate-200">{postSignupDecisionText}</p>
           </div>
           {afterSignupRoutes.length ? (
             <div className="space-y-3">
