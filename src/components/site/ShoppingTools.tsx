@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Calculator, ListChecks, Wand2 } from 'lucide-react'
 import { buttonVariants } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { cn } from '@/lib/utils'
 
 function clampNumber(value: number, min: number, max: number) {
@@ -28,6 +29,13 @@ export function ShoppingTools() {
   const insideBudget = targetValue > 0 && targetValue <= budgetValue
   const shortlistSize = clampNumber(Number(shortlistCount), 1, 12)
   const readyToBuyNow = shortlistSize <= 3 && mustHavesCovered === 'yes' && priceTiming === 'buy'
+  const alertHref = buildNewsletterPath({
+    intent: 'price-alert',
+    cadence: 'priority',
+    returnTo: '/tools',
+    returnLabel: 'Resume shopping tools',
+    returnDescription: 'Return to the shopping tools page with the same calculator context and decision helpers still available.'
+  })
 
   return (
     <div className="grid gap-6 xl:grid-cols-2">
@@ -132,7 +140,7 @@ export function ShoppingTools() {
               Open shortlist
             </Link>
             <Link
-              href="/newsletter?intent=price-alert&cadence=priority"
+              href={alertHref}
               className={cn(buttonVariants({ variant: 'outline' }), 'rounded-full px-6')}
             >
               Open price alerts

@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input'
 import { trackDecisionEvent } from '@/lib/decision-tracking'
 import { addLocaleToPath, getExitIntentDictionary, stripLocaleFromPath, type SiteLocale } from '@/lib/i18n'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 
 const DISMISS_KEY = 'bes3-exit-intent-dismissed-until'
 const CAPTURED_KEY = 'bes3-exit-intent-captured'
@@ -50,6 +51,17 @@ export function ExitIntentCapture({
   const basePath = stripLocaleFromPath(pathname)
   const categorySlug = deriveCategorySlug(basePath)
   const intent = deriveCaptureIntent(basePath)
+  const alertSettingsPath = addLocaleToPath(
+    buildNewsletterPath({
+      intent,
+      category: categorySlug,
+      cadence: 'priority',
+      returnTo: basePath,
+      returnLabel: 'Resume current page',
+      returnDescription: 'Return to the same page after saving the alert instead of restarting from a generic newsletter screen.'
+    }),
+    locale
+  )
   const [email, setEmail] = useState('')
   const [open, setOpen] = useState(false)
   const [done, setDone] = useState(false)
@@ -168,10 +180,7 @@ export function ExitIntentCapture({
                   Bes3 will watch for the next useful update{categorySlug ? ` in ${categorySlug.replace(/-/g, ' ')}` : ''} and email you when it matters.
                 </div>
                 <Link
-                  href={addLocaleToPath(
-                    `/newsletter?intent=${encodeURIComponent(intent)}${categorySlug ? `&category=${encodeURIComponent(categorySlug)}` : ''}&cadence=priority`,
-                    locale
-                  )}
+                  href={alertSettingsPath}
                   className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-emerald-200 bg-white px-6 text-sm font-semibold text-primary transition-colors hover:border-emerald-300 hover:bg-emerald-50"
                 >
                   Review alert settings
