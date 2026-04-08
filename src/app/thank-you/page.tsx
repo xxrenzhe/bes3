@@ -1,7 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { buildCategoryPath } from '@/lib/category'
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { getArticlePath } from '@/lib/article-path'
@@ -499,11 +499,11 @@ export default async function ThankYouPage({
           </div>
         </section>
 
-        <DecisionReasonPanel
-          eyebrow="Resume your shopping task"
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
           title="Sending a message should not end the buying journey."
-          description="This page should hand you back to the clearest next move while the team reviews your note, so you do not lose context or reopen broad browsing."
-          cards={[
+          description="A strong confirmation page should answer four things fast: what task should resume now, who should keep the task alive, why the page exists, and what to avoid next."
+          items={[
             {
               eyebrow: 'Use now',
               title: taskRecoveryRoutes[0]?.title || 'Pick one concrete next step',
@@ -514,6 +514,11 @@ export default async function ThankYouPage({
               title: 'Return to shortlist, compare, or price timing with context',
               description: 'If you are not buying this minute, the best outcome is to preserve the work already done and reconnect it to the same candidates or category instead of restarting later.',
               tone: 'muted'
+            },
+            {
+              eyebrow: 'Why now',
+              title: 'This page is the task-recovery checkpoint',
+              description: 'The confirmation step exists to hand you back to the clearest next move while the team reviews your note, so the shopping task does not go cold.'
             },
             {
               eyebrow: 'Avoid',

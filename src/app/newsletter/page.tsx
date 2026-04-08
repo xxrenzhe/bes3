@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
 import { getArticlePath } from '@/lib/article-path'
@@ -315,28 +315,33 @@ export default async function NewsletterPage({
             </div>
           </section>
         </div>
-        <DecisionReasonPanel
-          eyebrow="Why alerts exist"
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
           title="A price watch should keep your progress alive, not send you into a separate funnel."
-          description="This page is part of the same shopping task. Use it when timing is the blocker, not when the shortlist itself is still weak."
-          cards={[
+          description="A strong alert page should answer four things fast: who should use alerts, who should step back, why this page matters now, and what Bes3 wants you to do next."
+          items={[
             {
-              eyebrow: 'Use it when',
-              title: 'Product fit is mostly settled',
+              eyebrow: 'Who should use this',
+              title: 'Buyers whose product fit is mostly settled',
               description: 'Alerts work best when you already know the category or finalists worth following.'
             },
             {
-              eyebrow: 'What it should do',
-              title: 'Bring you back with context',
-              description: selectedCategory
-                ? `When ${selectedCategoryLabel} changes in a useful way, Bes3 should bring you back to the same category context, not make you restart.`
-                : 'Bes3 should bring you back to the same shortlist or category context, not just dump a generic deal into your inbox.',
+              eyebrow: 'Who should leave',
+              title: 'Shoppers who still do not know what belongs on the shortlist',
+              description: 'If the category still feels fuzzy, go back to assistant, search, or shortlist first. Alerts should follow a decision, not replace one.',
               tone: 'muted'
             },
             {
-              eyebrow: 'Skip it if',
-              title: 'You still do not know what belongs on the shortlist',
-              description: 'If the category still feels fuzzy, go back to assistant, search, or shortlist first. Alerts should follow a decision, not replace one.',
+              eyebrow: 'Why now',
+              title: 'This page is the wait-with-context checkpoint',
+              description: selectedCategory
+                ? `Use it to preserve your ${selectedCategoryLabel} task so timing changes bring you back to the same category context instead of making you restart.`
+                : 'Use it to preserve the same shortlist or category context so a future signal can reconnect you to the same task.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: 'Save the alert, then resume the same task',
+              description: 'The right move after signup is not wandering into generic browsing. It is returning to the shortlist, category, or comparison route that already had the strongest decision signal.',
               tone: 'strong'
             }
           ]}
