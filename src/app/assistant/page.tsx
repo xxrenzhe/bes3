@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { AssistantSessionTracker } from '@/components/site/AssistantSessionTracker'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
@@ -249,23 +250,67 @@ export default async function AssistantPage({
         {result && result.recommendations.length > 0 ? (
           <IntentRecommendationPanel result={result} source="assistant-page" />
         ) : result ? (
-          <section className="rounded-[2rem] bg-white p-8 shadow-panel">
-            <p className="editorial-kicker">No shortlist yet</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-              Bes3 could not build a confident shortlist from that request yet.
-            </h2>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-              Tighten the category, add one or two must-have specs, or relax a blocker so the assistant has enough evidence to rank real products.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <Link href="/search" className="inline-flex min-h-[44px] items-center justify-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
-                Switch to search
-              </Link>
-              <Link href="/directory" className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border px-5 text-sm font-semibold text-foreground">
-                Browse categories
-              </Link>
-            </div>
-          </section>
+          <div className="space-y-8">
+            <DecisionSummaryPanel
+              eyebrow="Decision Summary"
+              title="This request needs one cleaner signal before Bes3 can trust the shortlist."
+              description="A weak assistant result should still tell you what happened, who should stay in assistant, who should switch routes, and what the smartest recovery move is."
+              items={[
+                {
+                  eyebrow: 'What happened',
+                  title: 'No strong shortlist yet',
+                  description: `Bes3 could not find enough confident matches for "${result.normalizedQuery}" with the current category, blockers, or must-haves.`
+                },
+                {
+                  eyebrow: 'Stay here if',
+                  title: 'The shopping problem is still right',
+                  description: 'Stay in assistant when the use case is still correct and the main issue is that one or two constraints are too tight, too vague, or pointing at the wrong category.',
+                  tone: 'muted'
+                },
+                {
+                  eyebrow: 'Switch if',
+                  title: 'You already know the product phrase or category better now',
+                  description: 'Move to search or category pages if the failed attempt already taught you the right product family, exact keyword, or broader category to use.',
+                },
+                {
+                  eyebrow: 'Next step',
+                  title: 'Tighten, then route on purpose',
+                  description: 'Add one clearer category, one must-have, or relax one blocker first. If that still feels wrong, switch to search or browse categories instead of repeating the same vague request.',
+                  tone: 'strong'
+                }
+              ]}
+            />
+
+            <section className="rounded-[2rem] bg-white p-8 shadow-panel">
+              <p className="editorial-kicker">Recovery Routes</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
+                Recover the task instead of abandoning it.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+                When assistant cannot build a strong shortlist yet, the next move should still be concrete: tighten the request, switch to a keyword path, or reopen the market at the category level.
+              </p>
+              <div className="mt-6 grid gap-4 md:grid-cols-3">
+                <Link href="#assistant-form" className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5 transition-transform hover:-translate-y-0.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Tighten</p>
+                  <p className="mt-3 text-xl font-black tracking-tight text-foreground">Refine this request</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Add one sharper category, must-have, or blocker so Bes3 can rank real candidates with more confidence.</p>
+                  <p className="mt-4 text-sm font-semibold text-primary">Go back to the form →</p>
+                </Link>
+                <Link href="/search?scope=products" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Switch</p>
+                  <p className="mt-3 text-xl font-black tracking-tight text-foreground">Use keyword search</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Switch if you already know the product family or exact phrase better than when you started.</p>
+                  <p className="mt-4 text-sm font-semibold text-primary">Open search →</p>
+                </Link>
+                <Link href="/directory" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Reopen market</p>
+                  <p className="mt-3 text-xl font-black tracking-tight text-foreground">Browse categories</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">Use category pages when the failed request means the market itself still needs to be narrowed first.</p>
+                  <p className="mt-4 text-sm font-semibold text-primary">Open directory →</p>
+                </Link>
+              </div>
+            </section>
+          </div>
         ) : (
           <section className="rounded-[2rem] bg-white p-8 shadow-panel">
             <p className="editorial-kicker">How to use it</p>
