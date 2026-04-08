@@ -4,6 +4,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { PersonaPathwaySection } from '@/components/site/PersonaPathwaySection'
 import { ResumeShoppingTaskPanel } from '@/components/site/ResumeShoppingTaskPanel'
 import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
 import { SectionHeader } from '@/components/site/SectionHeader'
@@ -166,6 +167,41 @@ export default async function StartPage() {
       description: 'Price is the only blocker left. Save the task and let alerts bring you back with context.',
       href: leadAlertHref,
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+    }
+  ]
+  const personaPathways = [
+    {
+      eyebrow: 'Persona A',
+      title: 'Need the market narrowed first',
+      summary: 'You can describe the use case, budget, or deal-breakers, but you still do not trust yourself to choose the right model names alone.',
+      internalQuestion: 'What deserves to be on the shortlist before I spend time reading deeper?',
+      firstMove: 'Use the assistant to convert the situation into a few realistic candidates.',
+      whyThisMove: 'When the bottleneck is direction, compare pages are too early. The assistant should remove the first layer of ambiguity.',
+      href: '/assistant',
+      label: 'Start with assistant',
+      accentClassName: 'bg-amber-100 text-amber-900'
+    },
+    {
+      eyebrow: 'Persona B',
+      title: 'Need the final tradeoff made clear',
+      summary: 'You already have finalists. The real job now is confirming which one fits you better, not adding more tabs.',
+      internalQuestion: 'Which of these two or three options wins for the way I will actually use it?',
+      firstMove: 'Move into shortlist or comparison while the candidate set is still small.',
+      whyThisMove: 'Once discovery is mostly done, the highest-value action is clarifying tradeoffs and reasons to skip.',
+      href: leadComparisonHref,
+      label: leadComparison ? 'Open the comparison path' : 'Open shortlist',
+      accentClassName: 'bg-sky-100 text-sky-900'
+    },
+    {
+      eyebrow: 'Persona C',
+      title: 'Need a better buying moment',
+      summary: 'You mostly know what to buy already. Price or timing is the last blocker, and you do not want to rebuild the task later.',
+      internalQuestion: 'If the price changes next week, will I come back with enough context to act quickly?',
+      firstMove: 'Set an alert tied to the same category or deal path you are already considering.',
+      whyThisMove: 'Bes3 should treat waiting as part of the journey, not as leaving the journey.',
+      href: leadAlertHref,
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts',
+      accentClassName: 'bg-emerald-100 text-emerald-900'
     }
   ]
   const positioningPillars = [
@@ -332,6 +368,13 @@ export default async function StartPage() {
         />
 
         <ResumeShoppingTaskPanel />
+
+        <PersonaPathwaySection
+          eyebrow="Persona Router"
+          title="Choose the buying persona that feels closest to your situation."
+          description="This page is no longer just a list of routes. It now spells out the three buyer states Bes3 is designed around so the next click carries a clearer reason."
+          personas={personaPathways}
+        />
 
         <div id="state-router">
           <ShoppingStateRouter
