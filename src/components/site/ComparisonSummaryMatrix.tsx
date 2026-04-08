@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useMemo, useState } from 'react'
+
 type ComparisonSummaryRow = {
   label: string
   left: string
@@ -24,6 +28,29 @@ export function ComparisonSummaryMatrix({
   rows: ComparisonSummaryRow[]
   scenarios?: ComparisonScenario[]
 }) {
+  const normalizedScenarios = useMemo(
+    () =>
+      scenarios.map((scenario, index) => ({
+        ...scenario,
+        id: `${scenario.label.toLowerCase().replace(/[^a-z0-9]+/g, '-') || 'scenario'}-${index}`
+      })),
+    [scenarios]
+  )
+  const [activeScenarioId, setActiveScenarioId] = useState(normalizedScenarios[0]?.id || '')
+  const activeScenario =
+    normalizedScenarios.find((scenario) => scenario.id === activeScenarioId) || normalizedScenarios[0] || null
+
+  useEffect(() => {
+    if (!normalizedScenarios.length) {
+      setActiveScenarioId('')
+      return
+    }
+
+    if (!normalizedScenarios.some((scenario) => scenario.id === activeScenarioId)) {
+      setActiveScenarioId(normalizedScenarios[0].id)
+    }
+  }, [activeScenarioId, normalizedScenarios])
+
   return (
     <section className="rounded-[2.5rem] bg-white p-8 shadow-panel sm:p-10">
       <div className="mb-6 flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
@@ -64,7 +91,7 @@ export function ComparisonSummaryMatrix({
         </div>
       </div>
 
-      {scenarios.length ? (
+      {normalizedScenarios.length ? (
         <div className="mt-8 rounded-[2rem] bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_45%,#eefaf5_100%)] p-6">
           <div className="max-w-3xl">
             <p className="editorial-kicker">Scenario Lens</p>
@@ -76,30 +103,58 @@ export function ComparisonSummaryMatrix({
             </p>
           </div>
 
-          <div className="mt-6 grid gap-4 xl:grid-cols-4">
-            {scenarios.map((scenario) => {
-              const isPrimaryWinner = scenario.winner === winner
-              const isContender = scenario.winner === leftTitle || scenario.winner === rightTitle
+          <div className="mt-6 flex flex-wrap gap-3">
+            {normalizedScenarios.map((scenario) => {
+              const isActive = scenario.id === activeScenario?.id
 
               return (
-                <article
-                  key={scenario.label}
-                  className={`rounded-[1.5rem] border p-5 ${
-                    isPrimaryWinner
-                      ? 'border-emerald-200 bg-emerald-50/80'
-                      : isContender
-                        ? 'border-slate-200 bg-white'
-                        : 'border-amber-200 bg-amber-50/70'
+                <button
+                  key={scenario.id}
+                  type="button"
+                  onClick={() => setActiveScenarioId(scenario.id)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                    isActive
+                      ? 'border-primary bg-primary text-primary-foreground'
+                      : 'border-border bg-white text-foreground hover:border-primary/30 hover:text-primary'
                   }`}
+                  aria-pressed={isActive}
                 >
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{scenario.label}</p>
-                  <h4 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{scenario.winner}</h4>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{scenario.reason}</p>
-                  <p className="mt-4 text-sm font-semibold leading-6 text-foreground">{scenario.note}</p>
-                </article>
+                  {scenario.label}
+                </button>
               )
             })}
           </div>
+
+          {activeScenario ? (
+            <div className="mt-6 grid gap-4 xl:grid-cols-[0.72fr_0.28fr]">
+              <article className="rounded-[1.75rem] border border-border/60 bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.24)]">
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{activeScenario.label}</p>
+                <h4 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
+                  {activeScenario.winner}
+                </h4>
+                <p className="mt-4 text-sm leading-7 text-muted-foreground">{activeScenario.reason}</p>
+                <div className="mt-5 rounded-[1.25rem] bg-slate-950 px-4 py-4 text-sm font-semibold leading-6 text-white">
+                  {activeScenario.note}
+                </div>
+              </article>
+
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+                <div className="rounded-[1.5rem] border border-border/60 bg-slate-50/80 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Default winner</p>
+                  <p className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{winner}</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    This is the main page recommendation before switching into a more specific buyer lens.
+                  </p>
+                </div>
+                <div className="rounded-[1.5rem] border border-border/60 bg-slate-50/80 p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Why this switch matters</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    The better pick can change when your one non-negotiable priority is cost, raw capability, ownership calm, or price timing.
+                  </p>
+                </div>
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </section>
