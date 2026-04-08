@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
 import { PriceChangeExplanationPanel } from '@/components/site/PriceChangeExplanationPanel'
