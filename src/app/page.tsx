@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Image from 'next/image'
 import Link from 'next/link'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
+import { ResumeShoppingTaskPanel } from '@/components/site/ResumeShoppingTaskPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
 import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
@@ -210,6 +211,12 @@ export default async function HomePage() {
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      <section className="px-4 pb-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <ResumeShoppingTaskPanel />
         </div>
       </section>
 

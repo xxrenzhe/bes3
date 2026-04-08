@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { ShortlistWorkspace } from '@/components/site/ShortlistWorkspace'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -25,11 +26,19 @@ export default async function ShortlistPage({
 }: {
   searchParams: Promise<{ items?: string }>
 }) {
-  const sharedIds = parseShortlistShareValue((await searchParams).items)
+  const resolvedSearchParams = await searchParams
+  const sharedIds = parseShortlistShareValue(resolvedSearchParams.items)
   const sharedItems = (await listPublishedProductsByIds(sharedIds)).map(toShortlistItem)
+  const shortlistPath = resolvedSearchParams.items ? `/shortlist?items=${encodeURIComponent(resolvedSearchParams.items)}` : '/shortlist'
 
   return (
     <PublicShell>
+      <ShoppingTaskMemoryBeacon
+        href={shortlistPath}
+        label={sharedItems.length ? 'Resume shared shortlist' : 'Resume shortlist'}
+        description="Return to the same shortlist so your saved picks, compare state, and wait decisions stay together."
+        source="shortlist"
+      />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <ShortlistWorkspace sharedItems={sharedItems} />
       </div>

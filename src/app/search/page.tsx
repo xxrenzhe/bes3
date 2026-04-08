@@ -9,6 +9,7 @@ import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { buildIntentRefinementPrompts, parseIntentInputFromSearchParams, resolveIntentSearch } from '@/lib/commerce-intent'
@@ -470,6 +471,24 @@ export default async function SearchPage({
 
   return (
     <PublicShell>
+      <ShoppingTaskMemoryBeacon
+        href={currentSearchReturnHref}
+        label={
+          mode === 'intent'
+            ? intentQuery
+              ? `Resume intent search: ${intentQuery}`
+              : 'Resume intent search'
+            : query
+              ? `Resume search: ${query}`
+              : 'Resume search'
+        }
+        description={
+          mode === 'intent'
+            ? 'Return to the same need-led search with your current constraints and next-step routes still in place.'
+            : 'Return to the same keyword search results instead of rebuilding the query from scratch.'
+        }
+        source="search"
+      />
       <StructuredData data={structuredData} />
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
         <section className="mx-auto max-w-4xl text-center">

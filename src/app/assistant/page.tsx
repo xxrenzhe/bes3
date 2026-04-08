@@ -7,6 +7,7 @@ import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { queryLooksExactSearchLed } from '@/lib/entry-routing'
@@ -76,6 +77,14 @@ export default async function AssistantPage({
   })
   const shouldRouteAssistantToSearch = queryLooksExactSearchLed(input.query)
   const searchSwitchHref = `/search?q=${encodeURIComponent(input.query)}&scope=products${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}`
+  const assistantTaskParams = new URLSearchParams()
+  if (input.query) assistantTaskParams.set('intent', input.query)
+  if (input.category) assistantTaskParams.set('category', input.category)
+  if (input.budget != null) assistantTaskParams.set('budget', String(input.budget))
+  if (input.mustHaves.length) assistantTaskParams.set('must', input.mustHaves.join(', '))
+  if (input.avoid.length) assistantTaskParams.set('avoid', input.avoid.join(', '))
+  if (input.urgency) assistantTaskParams.set('urgency', input.urgency)
+  const assistantTaskHref = `/assistant${assistantTaskParams.size ? `?${assistantTaskParams.toString()}` : ''}`
 
   const processSteps = [
     {
@@ -111,6 +120,16 @@ export default async function AssistantPage({
   return (
     <PublicShell>
       <StructuredData data={structuredData} />
+      <ShoppingTaskMemoryBeacon
+        href={assistantTaskHref}
+        label={input.query ? `Resume assistant: ${input.query}` : 'Resume assistant'}
+        description={
+          input.query
+            ? 'Return to the same assistant request with your current need, constraints, and shortlist direction intact.'
+            : 'Return to the assistant instead of restarting from broad browsing.'
+        }
+        source="assistant"
+      />
       {result ? (
         <AssistantSessionTracker
           query={result.normalizedQuery}
