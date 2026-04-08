@@ -2,7 +2,6 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { AssistantSessionTracker } from '@/components/site/AssistantSessionTracker'
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { EntryModeCoach } from '@/components/site/EntryModeCoach'
 import { IntentRefinementPanel } from '@/components/site/IntentRefinementPanel'
@@ -222,26 +221,31 @@ export default async function AssistantPage({
           />
         ) : null}
 
-        <DecisionReasonPanel
-          eyebrow="Use it when"
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
           title="The assistant is for messy decisions, not exact model lookups."
-          description="This page should reduce ambiguity fast. If the problem is still fuzzy, Bes3 should tell you what belongs on the shortlist and why."
-          cards={[
+          description="A strong assistant entry should answer four things fast: who belongs here, who should switch routes, why this page matters now, and what the first useful outcome should be."
+          items={[
             {
-              eyebrow: 'Best if',
-              title: 'You know the situation, not the model',
-              description: 'You can explain the use case, budget, and deal-breakers, but you do not yet have the exact SKU you trust.'
+              eyebrow: 'Who should use this',
+              title: 'Buyers who know the situation, not the model',
+              description: 'Use assistant when you can explain the use case, budget, and deal-breakers, but do not yet have the exact SKU you trust.'
             },
             {
-              eyebrow: 'What Bes3 does',
-              title: 'Turns the request into 2 to 3 serious options',
-              description: 'The assistant weighs fit, proof, timing, and constraints first, then routes you to the clearest next page instead of widening the search.',
+              eyebrow: 'Who should leave',
+              title: 'Shoppers who already know the exact product phrase',
+              description: 'When you already have a specific model or exact keyword, search is faster than asking the assistant to rediscover it.',
               tone: 'muted'
             },
             {
-              eyebrow: 'Skip this if',
-              title: 'You already know the exact product name',
-              description: 'When you already have a specific model or exact keyword, keyword search is faster than asking the assistant to rediscover it.',
+              eyebrow: 'Why now',
+              title: 'This page is the ambiguity-reduction checkpoint',
+              description: 'Use it when the real job is turning a shopping problem into a shortlist before you validate, compare, or wait.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: 'Get to 2 to 3 serious options',
+              description: 'The assistant should weigh fit, proof, timing, and constraints first, then route you into the clearest next page instead of widening the search.',
               tone: 'strong'
             }
           ]}
