@@ -4,6 +4,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { ResumeShoppingTaskPanel } from '@/components/site/ResumeShoppingTaskPanel'
 import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -329,6 +330,8 @@ export default async function StartPage() {
           className="border border-emerald-100 bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)]"
           compact
         />
+
+        <ResumeShoppingTaskPanel />
 
         <div id="state-router">
           <ShoppingStateRouter

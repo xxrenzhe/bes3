@@ -10,6 +10,7 @@ import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -467,6 +468,12 @@ export default async function ComparisonPage({
 
   return (
     <PublicShell>
+      <ShoppingTaskMemoryBeacon
+        href={path}
+        label={`Resume ${article.title}`}
+        description="Return to the same comparison with the current winner, shortlist context, and next-step routes still intact."
+        source="comparison"
+      />
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <StickyMobileCta
         href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-sticky-cta') : null}

@@ -10,6 +10,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -422,6 +423,12 @@ export default async function ProductPage({
 
   return (
     <PublicShell>
+      <ShoppingTaskMemoryBeacon
+        href={path}
+        label={`Resume ${product.productName}`}
+        description="Return to the same product page with the fit check, shortlist context, and price timing still attached to this item."
+        source="product"
+      />
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <StickyMobileCta
         href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-sticky-cta') : null}

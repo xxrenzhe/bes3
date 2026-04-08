@@ -5,6 +5,7 @@ import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
 import { StructuredData } from '@/components/site/StructuredData'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { TimingDecisionPanel } from '@/components/site/TimingDecisionPanel'
@@ -201,6 +202,12 @@ export default async function DealsPage({
   const products = filteredDeals.slice(0, 12)
   const leadDeal = products[0] || null
   const leadProduct = leadDeal?.product || null
+  const currentDealsPath = buildDealsPath({
+    category: selectedCategory,
+    maxPrice,
+    signal: selectedSignal,
+    distance: selectedDistance
+  })
   const latestRefresh = products
     .map((item) => item.product.offerLastCheckedAt || item.product.priceLastCheckedAt || item.product.updatedAt || item.product.publishedAt)
     .find(Boolean) || null
@@ -291,6 +298,12 @@ export default async function DealsPage({
 
   return (
     <PublicShell>
+      <ShoppingTaskMemoryBeacon
+        href={currentDealsPath}
+        label={selectedCategory ? `Resume ${getCategoryLabel(selectedCategory)} deals` : 'Resume deals'}
+        description="Return to the live deals view with the same timing filters and price-window context still visible."
+        source="deals"
+      />
       <StructuredData
         data={[
           buildBreadcrumbSchema('/deals', breadcrumbItems),
