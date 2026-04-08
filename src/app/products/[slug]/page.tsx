@@ -4,6 +4,7 @@ import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { PriceChangeExplanationPanel } from '@/components/site/PriceChangeExplanationPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { ProductImageGallery } from '@/components/site/ProductImageGallery'
 import { PublicShell } from '@/components/layout/PublicShell'
@@ -567,6 +568,12 @@ export default async function ProductPage({
               variant: 'secondary'
             }
           ]}
+        />
+
+        <PriceChangeExplanationPanel
+          summary={priceWindowSummary}
+          signal={priceSignal}
+          fallbackCurrency={product.priceCurrency || 'USD'}
         />
 
         <DecisionContentPanel

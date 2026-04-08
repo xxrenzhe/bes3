@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
+import { PriceChangeExplanationPanel } from '@/components/site/PriceChangeExplanationPanel'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBeacon'
@@ -637,6 +638,12 @@ export default async function DealsPage({
                           {formatDistanceFromTrackedLow(summary, distanceFromLowPercent)}
                         </p>
                       </div>
+
+                      <PriceChangeExplanationPanel
+                        summary={summary}
+                        signal={signal}
+                        fallbackCurrency={effectiveCurrency}
+                      />
 
                       {alternatives.length ? (
                         <div className="rounded-[1.5rem] border border-border/60 p-5">
