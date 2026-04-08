@@ -5,6 +5,7 @@ import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { ResumeShoppingTaskPanel } from '@/components/site/ResumeShoppingTaskPanel'
 import { StructuredData } from '@/components/site/StructuredData'
 import { NewsletterSignup } from '@/components/site/NewsletterSignup'
+import { PersonaPathwaySection } from '@/components/site/PersonaPathwaySection'
 import { ShoppingStateRouter } from '@/components/site/ShoppingStateRouter'
 import { SectionHeader } from '@/components/site/SectionHeader'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
@@ -90,6 +91,41 @@ export default async function HomePage() {
       notIf: 'You still need to understand the category or narrow the shortlist.',
       href: '/deals',
       label: 'See current deals'
+    }
+  ]
+  const personaPathways = [
+    {
+      eyebrow: 'Persona A',
+      title: 'I know the situation, not the model names.',
+      summary: 'This is the buyer who knows the use case, budget, or blocker, but still does not know what belongs on the shortlist.',
+      internalQuestion: 'Am I about to waste time reading reviews for products that do not even fit the job?',
+      firstMove: 'Start with the assistant and turn the situation into a small set of serious options.',
+      whyThisMove: 'Bes3 should remove early uncertainty first. The job is to narrow the field before you compare details.',
+      href: '/assistant',
+      label: 'Open the narrowing path',
+      accentClassName: 'bg-amber-100 text-amber-900'
+    },
+    {
+      eyebrow: 'Persona B',
+      title: 'I already have a few candidates, but I am stuck.',
+      summary: 'This buyer is not missing information. They are missing a clear tradeoff between two or three finalists.',
+      internalQuestion: 'Which difference actually matters for my use case, and which one is just spec noise?',
+      firstMove: 'Open shortlist or a comparison so the finalists can be judged side by side.',
+      whyThisMove: 'Discovery is mostly done. The fastest progress now comes from clarifying tradeoffs instead of searching wider.',
+      href: '/shortlist',
+      label: 'Compare the finalists',
+      accentClassName: 'bg-sky-100 text-sky-900'
+    },
+    {
+      eyebrow: 'Persona C',
+      title: 'I would buy, but the timing is not right yet.',
+      summary: 'This buyer mostly trusts the product choice already. What they need is a better moment to act without losing context.',
+      internalQuestion: 'If I wait a week, will I have to reconstruct this whole decision from scratch?',
+      firstMove: 'Track deals or alerts so price timing changes do not erase the work you already did.',
+      whyThisMove: 'Waiting should stay inside the same shopping task. Bes3 should bring you back with context instead of forcing a restart.',
+      href: '/deals',
+      label: 'Track the timing',
+      accentClassName: 'bg-emerald-100 text-emerald-900'
     }
   ]
   const decisionPrinciples = [
@@ -217,6 +253,17 @@ export default async function HomePage() {
       <section className="px-4 pb-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <ResumeShoppingTaskPanel />
+        </div>
+      </section>
+
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <PersonaPathwaySection
+            eyebrow="Buyer Personas"
+            title="Most shoppers arrive in one of these three decision states."
+            description="PMFrame says personas should reflect buying behavior, not demographics. Bes3 now exposes those three states directly so the first click feels easier."
+            personas={personaPathways}
+          />
         </div>
       </section>
 
