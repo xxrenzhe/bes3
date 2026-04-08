@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { DealsCountdown } from '@/components/site/DealsCountdown'
 import { PriceChangeExplanationPanel } from '@/components/site/PriceChangeExplanationPanel'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
@@ -388,24 +389,29 @@ export default async function DealsPage({
         </section>
 
         <section className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <DecisionReasonPanel
-            eyebrow="Deals Decision Summary"
+          <DecisionSummaryPanel
+            eyebrow="Decision Summary"
             title="A useful deal page should reduce bad urgency, not create it."
-            description="Live deals only help when the product or category already belongs in your decision set. If fit is still fuzzy, the right move is to step back into shortlist, product detail, or category context."
-            cards={[
+            description="A strong deals page should answer four things fast: who should trust deals now, who should step back, why this page matters, and what the safest next move is."
+            items={[
               {
-                eyebrow: 'Use this page if',
-                title: 'Product fit is already mostly clear',
+                eyebrow: 'Who should use this',
+                title: 'Buyers whose product fit is already mostly clear',
                 description: 'Deals work best when you are validating timing on something that already deserves attention, not when you are still discovering what belongs on the shortlist.'
               },
               {
-                eyebrow: 'Leave this page if',
-                title: 'The discount is pulling you toward the wrong product',
+                eyebrow: 'Who should leave',
+                title: 'Shoppers being pulled toward the wrong product by discount alone',
                 description: 'If the offer looks exciting but category fit still is not clear, reopen the shortlist, product page, or category view before treating any price as a signal to act.',
                 tone: 'muted'
               },
               {
-                eyebrow: 'Wait instead if',
+                eyebrow: 'Why now',
+                title: 'This page is the timing checkpoint',
+                description: 'Use deals to judge whether the current price window changes the decision enough to act now, compare once more, or preserve the task for later.'
+              },
+              {
+                eyebrow: 'Next step',
                 title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Preserve the task with an alert',
                 description: 'When price timing is the blocker, switch into a contextual alert so Bes3 can bring you back to the same decision later instead of forcing an impulse now.',
                 tone: 'strong'
