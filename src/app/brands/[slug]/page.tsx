@@ -11,6 +11,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedBrands, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
@@ -150,10 +151,19 @@ export default async function BrandPage({
     { name: 'Brands', path: '/brands' },
     { name: brand.name, path: `/brands/${brand.slug}` }
   ]
+  const brandPath = `/brands/${brand.slug}`
+  const brandWaitPath = buildNewsletterPath({
+    intent: leadCategory ? 'price-alert' : 'deals',
+    category: leadCategory || '',
+    cadence: 'priority',
+    returnTo: brandPath,
+    returnLabel: `Resume ${brand.name}`,
+    returnDescription: `Return to the ${brand.name} page with the same brand context and next-step routes still intact.`
+  })
   const structuredData = [
-    buildBreadcrumbSchema(`/brands/${brand.slug}`, breadcrumbItems),
+    buildBreadcrumbSchema(brandPath, breadcrumbItems),
     buildCollectionPageSchema({
-      path: `/brands/${brand.slug}`,
+      path: brandPath,
       title: `${brand.name} Buying Guide`,
       description:
         pickMetadataDescription(brand.description) ||
@@ -177,7 +187,7 @@ export default async function BrandPage({
       ]
     }),
     buildHowToSchema(
-      `/brands/${brand.slug}`,
+      brandPath,
       `How to use the ${brand.name} brand page`,
       'Use the brand page to start with the strongest product, validate the brand with a review, and go back to category comparisons only if your search broadens.',
       [
@@ -195,7 +205,7 @@ export default async function BrandPage({
         }
       ]
     ),
-    buildFaqSchema(`/brands/${brand.slug}`, faqEntries)
+    buildFaqSchema(brandPath, faqEntries)
   ]
   const brandRoutes = [
     brandProducts[0]
@@ -239,7 +249,7 @@ export default async function BrandPage({
           eyebrow: 'Watch',
           title: `Track ${getCategoryLabel(leadCategory)}`,
           description: 'If price is the only thing holding you back, keep the surrounding category active instead of forcing a brand choice today.',
-          href: `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority`,
+          href: brandWaitPath,
           label: 'Start price alert'
         }
       : null
