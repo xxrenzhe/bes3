@@ -6,6 +6,7 @@ import { ContactSupportForm } from '@/components/site/ContactSupportForm'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildContactPageSchema, buildFaqSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
@@ -27,6 +28,14 @@ export default async function ContactPage() {
   const leadComparison = articles.find((article) => article.type === 'comparison') || null
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
+  const contactAlertHref = buildNewsletterPath({
+    intent: leadCategory ? 'price-alert' : 'deals',
+    category: leadCategory || '',
+    cadence: 'priority',
+    returnTo: '/contact',
+    returnLabel: 'Resume contact support',
+    returnDescription: 'Return to the contact page with the same support-vs-shopping context still intact.'
+  })
 
   const selfServeRoutes = [
     {
@@ -54,7 +63,7 @@ export default async function ContactPage() {
       eyebrow: 'Wait',
       title: `Track ${leadCategoryLabel}`,
       description: 'If timing is the real blocker, alerts help you wait without forcing you to buy or email too early.',
-      href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
+      href: contactAlertHref,
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
   ]

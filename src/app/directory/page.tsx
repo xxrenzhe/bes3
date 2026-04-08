@@ -8,6 +8,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
@@ -63,6 +64,14 @@ export default async function DirectoryPage() {
     { name: 'Home', path: '/' },
     { name: 'Directory', path: '/directory' }
   ]
+  const directoryAlertHref = buildNewsletterPath({
+    intent: leadCategory ? 'category-brief' : 'deals',
+    category: leadCategory || '',
+    cadence: 'weekly',
+    returnTo: '/directory',
+    returnLabel: 'Resume directory',
+    returnDescription: 'Return to the directory with the same browse-first shopping context still intact.'
+  })
   const howToSteps = [
     {
       name: 'Choose the right category',
@@ -114,7 +123,7 @@ export default async function DirectoryPage() {
       eyebrow: 'Watch',
       title: 'Start category updates',
       description: 'If you are still deciding but buying later, save the category as an alert so you can pick back up later without starting over.',
-      href: '/newsletter?intent=category-brief&cadence=weekly',
+      href: directoryAlertHref,
       label: 'Start alerts'
     },
     {
