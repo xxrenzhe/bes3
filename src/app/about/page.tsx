@@ -8,6 +8,7 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildAboutPageSchema, buildBreadcrumbSchema, buildDatasetSchema, buildFaqSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
 import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
@@ -36,6 +37,14 @@ export default async function AboutPage() {
   const leadGuide = articles.find((article) => article.type === 'guide') || null
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
+  const aboutAlertHref = buildNewsletterPath({
+    intent: leadCategory ? 'category-brief' : 'deals',
+    category: leadCategory || '',
+    cadence: 'weekly',
+    returnTo: '/about',
+    returnLabel: 'Resume Bes3 method',
+    returnDescription: 'Return to the About page with the same methodology and trust context still intact.'
+  })
   const latestRefresh = [
     ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
     ...products.map((product) => product.updatedAt || product.publishedAt),
@@ -119,7 +128,7 @@ export default async function AboutPage() {
       eyebrow: 'Wait',
       title: 'Use alerts when price timing matters',
       description: 'Alerts keep the same category in view when price or timing matters more than buying today.',
-      href: leadCategory ? `/newsletter?intent=category-brief&category=${encodeURIComponent(leadCategory)}&cadence=weekly` : '/newsletter',
+      href: aboutAlertHref,
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
     }
   ]

@@ -6,6 +6,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { getArticlePath } from '@/lib/article-path'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { resolveResumeContext } from '@/lib/resume-context'
 import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
@@ -131,6 +132,14 @@ export default async function ThankYouPage({
           label: 'Open shortlist'
         }
   ]
+  const thankYouAlertHref = buildNewsletterPath({
+    intent: leadCategory ? 'price-alert' : 'deals',
+    category: leadCategory || '',
+    cadence: 'priority',
+    returnTo: resumeContext?.href || '/thank-you',
+    returnLabel: resumeContext?.label || 'Resume current task',
+    returnDescription: resumeContext?.description || 'Return to the same shopping task instead of dropping into generic alerts.'
+  })
 
   const intentMeta: Record<
     ContactIntent,
@@ -178,7 +187,7 @@ export default async function ThankYouPage({
         {
           title: `Track ${leadCategoryLabel}`,
           description: 'Best when timing, not product fit, is the last blocker left.',
-          href: leadCategory ? `/newsletter?intent=price-alert&category=${encodeURIComponent(leadCategory)}&cadence=priority` : '/newsletter',
+          href: thankYouAlertHref,
           label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
         }
       ].filter(Boolean) as Array<{
