@@ -192,10 +192,18 @@ export default async function AssistantPage({
             eyebrow="Faster Path"
             title="This request looks like an exact product lookup."
             description="You already typed something that looks like a product or model phrase. Keyword search is usually faster when the main job is landing on the product, review, or comparison page."
+            coachCall="Bes3 reads this request as search-led. The next gain comes from landing on the right page faster, not from asking the assistant to rediscover a model you already know."
             primaryHref={searchSwitchHref}
             primaryLabel="Search this instead"
+            primaryDescription="Switch when you already have the product phrase and want the shortest path to the product page, a review, or a comparison."
             secondaryHref={input.query ? `/assistant?intent=${encodeURIComponent(input.query)}${input.category ? `&category=${encodeURIComponent(input.category)}` : ''}` : '/assistant'}
             secondaryLabel="Keep using assistant"
+            secondaryDescription="Stay only if the model name is just shorthand and you still need Bes3 to interpret constraints, compare alternatives, or turn the request into a shortlist."
+            signals={[
+              'Exact product phrases usually belong in search first.',
+              'Assistant is stronger when the real problem is fit, tradeoffs, or missing shortlist candidates.',
+              'If you already know the likely product name, rediscovery adds friction more often than clarity.'
+            ]}
           />
         ) : null}
 

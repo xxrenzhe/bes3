@@ -591,10 +591,18 @@ export default async function SearchPage({
             eyebrow="Better Entry"
             title="This search reads more like a shopping situation than a product lookup."
             description="You typed a use case, budget, or blocker instead of an exact model name. The assistant will usually narrow this faster than keyword search."
+            coachCall="Bes3 reads this query as intent-led. The biggest gain now comes from turning the situation into two or three serious candidates, not from searching a vague phrase harder."
             primaryHref={assistantSwitchHref}
             primaryLabel="Open assistant instead"
+            primaryDescription="Switch when you want Bes3 to translate the use case, constraints, or budget into a tighter shortlist and a clearer next move."
             secondaryHref={buildSearchHref(query, selectedScope, selectedCategory)}
             secondaryLabel="Stay in keyword search"
+            secondaryDescription="Stay only if the phrase really is the product, model family, or exact wording likely to appear on a product or editorial page."
+            signals={[
+              'Queries about needs, blockers, or budgets usually belong in assistant first.',
+              'Keyword search is strongest when the phrase already exists on the page you want.',
+              'If you keep searching a fuzzy phrase, the result set usually gets noisier before it gets better.'
+            ]}
           />
         ) : null}
 
