@@ -709,17 +709,60 @@ export default async function SearchPage({
             <IntentRecommendationPanel result={intentResult} />
           ) : (
             <section className="space-y-8">
-              <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
-                <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight">No strong shortlist yet.</h2>
-                <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Bes3 could not find enough strong matches for "{intentResult.normalizedQuery}" yet. Broaden the category or remove one blocker first.
+              <DecisionSummaryPanel
+                eyebrow="Decision Summary"
+                title="This intent search needs a route correction before the shortlist will get stronger."
+                description="A weak intent result should still tell you what happened, whether intent mode is still right, when to switch routes, and what recovery move Bes3 recommends next."
+                items={[
+                  {
+                    eyebrow: 'What happened',
+                    title: 'No strong shortlist yet',
+                    description: `Bes3 could not find enough strong matches for "${intentResult.normalizedQuery}" with the current category, blockers, or urgency.`
+                  },
+                  {
+                    eyebrow: 'Stay here if',
+                    title: 'The use case is right but the signal is still weak',
+                    description: 'Stay in intent mode when the shopping problem is still correct and one or two clearer details would probably unlock a shortlist.',
+                    tone: 'muted'
+                  },
+                  {
+                    eyebrow: 'Switch if',
+                    title: 'You now know the category or keyword better',
+                    description: 'Switch to category browsing or keyword search if the failed attempt already revealed the right market or exact phrase more clearly.'
+                  },
+                  {
+                    eyebrow: 'Next step',
+                    title: 'Broaden or tighten on purpose',
+                    description: 'Browse the right category, remove one blocker, or switch to a cleaner keyword route instead of rerunning the same weak intent unchanged.',
+                    tone: 'strong'
+                  }
+                ]}
+              />
+
+              <div className="rounded-[2rem] bg-white p-8 shadow-panel">
+                <p className="editorial-kicker">Recovery Routes</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Pick the next route that can rescue the task.</h2>
+                <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+                  When intent search comes back weak, Bes3 should still give you a clear recovery move instead of a dead end.
                 </p>
-                <div className="mt-8 flex flex-wrap justify-center gap-3">
-                  <Link href="/directory" className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                    Browse categories
+                <div className="mt-6 grid gap-4 md:grid-cols-3">
+                  <Link href="/directory" className="rounded-[1.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-5 transition-transform hover:-translate-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Broaden</p>
+                    <p className="mt-3 text-xl font-black tracking-tight text-foreground">Browse categories</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Use category pages when the market still needs to be narrowed before Bes3 can rank real options.</p>
+                    <p className="mt-4 text-sm font-semibold text-primary">Open directory →</p>
                   </Link>
-                  <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                    Check deals
+                  <Link href="/search?scope=products" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Switch</p>
+                    <p className="mt-3 text-xl font-black tracking-tight text-foreground">Use keyword search</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Switch if you now know the product family, model phrase, or review keyword better than when you started.</p>
+                    <p className="mt-4 text-sm font-semibold text-primary">Open search →</p>
+                  </Link>
+                  <Link href="/deals" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Wait</p>
+                    <p className="mt-3 text-xl font-black tracking-tight text-foreground">Check deals</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Use deals only if timing already matters more than discovery and you want a quick reality check on the market.</p>
+                    <p className="mt-4 text-sm font-semibold text-primary">Open deals →</p>
                   </Link>
                 </div>
               </div>
