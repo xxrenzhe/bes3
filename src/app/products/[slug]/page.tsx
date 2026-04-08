@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
 import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
@@ -616,33 +615,6 @@ export default async function ProductPage({
           title="Quick buying takeaways"
           description="These sections pull the page into the key reasons, tradeoffs, and next steps."
           compact
-        />
-
-        <DecisionReasonPanel
-          eyebrow="Why this page matters"
-          title="This is the product checkpoint before you compare, buy, or wait."
-          description="A product page should answer one practical question: does this item deserve action right now, or does it belong in compare or price watch instead?"
-          cards={[
-            {
-              eyebrow: 'Why consider it',
-              title: product.productName,
-              description: confidenceSignals[0] || 'This product has enough fit and evidence to deserve a serious look.'
-            },
-            {
-              eyebrow: 'Who should wait',
-              title: comparisonArticle ? 'Compare before you commit' : 'Do not force the purchase',
-              description: comparisonArticle
-                ? 'If this looks good but not final, move into the comparison next rather than treating the product page as the last stop.'
-                : 'If price or confidence is still the blocker, save the work and switch to watch mode instead of forcing a decision.',
-              tone: 'muted'
-            },
-            {
-              eyebrow: 'Stop if',
-              title: 'The category fit still is not clear',
-              description: 'If this product page raises more category questions than it answers, step back to the category page instead of opening random adjacent products.',
-              tone: 'strong'
-            }
-          ]}
         />
 
         <SeoHubLinksPanel
