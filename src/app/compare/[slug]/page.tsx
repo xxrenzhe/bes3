@@ -20,6 +20,7 @@ import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
@@ -203,6 +204,14 @@ export default async function ComparisonPage({
     .filter((candidate) => candidate.id !== article.product?.id && categoryMatches(candidate.category, category))
     .slice(0, 3)
   const path = `/compare/${article.slug}`
+  const compareWaitPath = buildNewsletterPath({
+    intent: category ? 'price-alert' : 'deals',
+    category: category || '',
+    cadence: 'priority',
+    returnTo: path,
+    returnLabel: `Resume ${article.title}`,
+    returnDescription: 'Return to the same comparison with the current finalists, winner, and tradeoff framing still intact.'
+  })
   const comparisonDescription =
     pickMetadataDescription(article.seoDescription, article.summary) ||
     'Use this comparison to settle a shortlist, understand the tradeoffs, and choose the better fit with less second-guessing.'
@@ -355,9 +364,7 @@ export default async function ComparisonPage({
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track a better deal',
       description: 'If price is the only unresolved variable, convert this comparison into a price alert so you can pick this back up later.',
-      href: category
-        ? `/newsletter?intent=price-alert&category=${encodeURIComponent(category)}&cadence=priority`
-        : '/newsletter?intent=deals&cadence=priority',
+      href: compareWaitPath,
       label: 'Start price watch'
     },
     {

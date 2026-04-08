@@ -83,6 +83,7 @@ export function NewsletterSignup({
   const [isPending, startTransition] = useTransition()
   const selectedIntent = INTENT_OPTIONS.find((option) => option.id === intent) || INTENT_OPTIONS[0]
   const alertPreview = buildAlertPreview(intent, cadence, categorySlug)
+  const primaryResumeRoute = afterSignupRoutes[0] || null
 
   useEffect(() => {
     setIntent(initialIntent)
@@ -100,6 +101,7 @@ export function NewsletterSignup({
           <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">You&apos;re signed up.</h3>
           <p className="text-sm leading-7 text-muted-foreground">
             Bes3 will use this choice to keep this shopping task alive with more relevant {selectedIntent.label.toLowerCase()}{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
+            {primaryResumeRoute ? ` When the signal is strong enough, it should bring you back to ${primaryResumeRoute.title.toLowerCase()} instead of dropping you into a generic email loop.` : ''}
           </p>
           <div className="flex flex-wrap gap-2">
             <span className="rounded-full bg-muted px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
