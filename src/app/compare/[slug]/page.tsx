@@ -6,6 +6,7 @@ import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatr
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { EditorialFreshnessPanel } from '@/components/site/EditorialFreshnessPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
@@ -666,26 +667,33 @@ export default async function ComparisonPage({
           ]}
         />
 
-        <DecisionReasonPanel
-          eyebrow="Why this page exists"
-          title="This comparison should settle a shortlist, not reopen discovery."
-          description="A useful comparison explains why these finalists belong together, who should use this page, and what the clean next move is after reading it."
-          cards={[
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
+          title="Use this comparison to settle the shortlist, not reopen it."
+          description="A strong comparison should answer four things fast: who this page is for, who should step back, why these finalists belong together, and what the clean next move is after reading."
+          items={[
             {
-              eyebrow: 'Why these finalists',
-              title: 'These options are close enough to compare honestly',
-              description: `This page works because ${contenders.left} and ${contenders.right} solve a similar buying problem well enough to deserve a real tradeoff check.`
+              eyebrow: 'Who should use this',
+              title: 'Buyers with a real finalist set',
+              description: 'Use this page when discovery is mostly done and the real question is which finalist fits better for your priorities.'
             },
             {
-              eyebrow: 'Best if',
-              title: 'You already have a narrow shortlist',
-              description: 'Use this page when discovery is mostly done and the real question is which finalist fits better for your priorities.',
+              eyebrow: 'Who should skip',
+              title: 'Shoppers with no real shortlist yet',
+              description: 'If both options still feel wrong or too early, reopen the shortlist or category page on purpose instead of forcing this comparison harder.',
               tone: 'muted'
             },
             {
-              eyebrow: 'Stop if',
-              title: 'Neither finalist actually fits',
-              description: 'If both options still feel wrong, do not keep reading comparison content. Reopen the shortlist or category page on purpose instead.',
+              eyebrow: 'Why now',
+              title: 'These finalists are close enough to compare honestly',
+              description: `This page works because ${contenders.left} and ${contenders.right} solve a similar buying problem well enough to deserve a real tradeoff check.`
+            },
+            {
+              eyebrow: 'Next step',
+              title: article.product?.slug ? 'Open the winner or watch on purpose' : 'Use the winner or reopen shortlist on purpose',
+              description: article.product?.slug
+                ? 'If the winner feels clear, move into the winning product page next. If timing is still the only blocker, preserve the same decision with a price watch instead of starting over.'
+                : 'Take the winner if the fit is clear. If neither finalist truly works, reopen the shortlist deliberately instead of widening discovery by accident.',
               tone: 'strong'
             }
           ]}
