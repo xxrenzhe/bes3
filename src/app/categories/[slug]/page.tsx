@@ -3,6 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
@@ -374,28 +375,33 @@ export default async function CategoryPage({
           </div>
         </section>
 
-        <DecisionReasonPanel
-          eyebrow="Category Decision Summary"
-          title="This page should narrow the market, then hand you to the next decision."
-          description="A strong category page is not a dumping ground for every result. Its job is to shrink the field, point to the best validation page, and preserve context when timing is the blocker."
-          cards={[
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
+          title="Use this category page to narrow the market, then leave on purpose."
+          description="A strong category page should answer four things fast: who belongs here, who should move on, why the page matters now, and what the clean next move is."
+          items={[
             {
-              eyebrow: 'Read this if',
-              title: 'You know the category, but not the best candidate yet',
+              eyebrow: 'Who should use this',
+              title: 'Buyers who know the category, but not the best candidate yet',
               description: 'Use this page when the market is clear enough to stay inside one category, but you still need Bes3 to narrow it into products actually worth your attention.'
             },
             {
-              eyebrow: 'Leave this page if',
-              title: featuredComparison ? 'Your shortlist is already down to a few serious finalists' : 'One product already looks strong enough to validate directly',
+              eyebrow: 'Who should leave',
+              title: featuredComparison ? 'Shortlists already down to finalists' : 'Shoppers with one clearly strong candidate already',
               description: featuredComparison
                 ? 'Once the shortlist is tight, stop broad browsing and move into the comparison or lead review so the decision becomes concrete.'
                 : 'If one candidate is already standing out, the category page has done its job. Open the lead review or product page instead of browsing sideways.',
               tone: 'muted'
             },
             {
-              eyebrow: 'Wait instead if',
-              title: 'Timing is the blocker, not category understanding',
-              description: 'If you already know this is the right category but price or timing is stopping the purchase, save the context with alerts instead of rebuilding the shortlist later.',
+              eyebrow: 'Why now',
+              title: 'This page is the market-narrowing checkpoint',
+              description: 'Use this page to shrink a crowded category into a handful of serious options before you compare, validate, or wait.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: 'Validate, compare, or wait on purpose',
+              description: 'If timing is the blocker, preserve the category with alerts. If the field is already small enough, move into the strongest review, comparison, or product page instead.',
               tone: 'strong'
             }
           ]}
