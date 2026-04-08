@@ -6,6 +6,7 @@ import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { EditorialFreshnessPanel } from '@/components/site/EditorialFreshnessPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
@@ -529,28 +530,33 @@ export default async function ReviewPage({
           source="review-page-evidence"
         />
 
-        <DecisionReasonPanel
-          eyebrow="Why this review matters"
-          title="A review should tell you whether this product belongs on the shortlist at all."
-          description="The point of this page is not just to add more reading. It should confirm fit, surface the main risk, and tell you whether to compare, buy, or wait."
-          cards={[
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
+          title="Use this review to make the shortlist call clearer."
+          description="A strong review should compress the logic into four answers: who this fits, who should pause, why this page matters now, and what the clean next move should be."
+          items={[
             {
-              eyebrow: 'Why it stayed',
+              eyebrow: 'Who should buy',
               title: article.product?.productName || 'This product',
               description: buildBestFor(article.product, 'review')
             },
             {
-              eyebrow: 'Main risk',
-              title: 'One reason to pause',
+              eyebrow: 'Who should skip',
+              title: 'Do not force this fit',
               description: buildNotFor(article.product, 'review'),
               tone: 'muted'
             },
             {
-              eyebrow: 'Use next',
-              title: relatedComparison ? 'Move to compare when fit is clear' : 'Move to product or price watch next',
+              eyebrow: 'Why now',
+              title: 'This page is the fit checkpoint',
+              description: 'Use the review when you need to decide whether this product deserves to stay on the shortlist at all, before you widen the field again or click through too early.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: relatedComparison ? 'Compare or watch on purpose' : 'Validate or watch on purpose',
               description: relatedComparison
-                ? 'Once the core fit feels right, the next gain comes from a side-by-side comparison, not more review browsing.'
-                : 'If fit already feels clear, the next useful move is validating price or waiting on timing rather than reading sideways.',
+                ? 'If the fit feels real, move into the related comparison next. If timing is the blocker, preserve the same task with a price watch instead of reopening broad research.'
+                : 'If the fit already feels right, use the product page or a price watch next instead of reading sideways into more review pages.',
               tone: 'strong'
             }
           ]}
