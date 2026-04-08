@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { GuideTableOfContents } from '@/components/site/GuideTableOfContents'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -334,27 +335,33 @@ export default async function GuidePage({
           </div>
         </section>
 
-        <DecisionReasonPanel
-          eyebrow="Guide Decision Summary"
-          title="This guide should remove ambiguity, then get out of the way."
-          description="A strong guide is not the final answer. Its job is to clarify the category, surface what matters, and hand you into the next page where a real decision happens."
-          cards={[
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
+          title="Use this guide to remove ambiguity, then move on purpose."
+          description="A strong guide should answer four things fast: who still needs this explanation, who should stop reading, why the guide matters now, and what the next decision page should be."
+          items={[
             {
-              eyebrow: 'Read this if',
-              title: 'You still need category logic',
+              eyebrow: 'Who should use this',
+              title: 'Buyers who still need category logic',
               description: 'Use the guide when you are still figuring out what matters, what to avoid, or how to evaluate products honestly before you start comparing.'
             },
             {
-              eyebrow: 'Leave this page if',
-              title: relatedReview ? 'One product already looks like a serious candidate' : 'The category now feels clear enough to shortlist',
+              eyebrow: 'Who should leave',
+              title: relatedReview ? 'Buyers with one serious product candidate already' : 'Buyers whose category understanding is already clear',
               description: relatedReview
                 ? 'Once one product looks promising, the guide has done its job. Move into the review instead of reading sideways forever.'
-                : 'Once the category rules make sense, stop collecting more explanation and move into a category page or shortlist.'
+                : 'Once the category rules make sense, stop collecting more explanation and move into a category page or shortlist.',
+              tone: 'muted'
             },
             {
-              eyebrow: 'Wait instead if',
-              title: 'Timing matters more than more reading',
-              description: 'If this guide already changed how you think about the category but you are not buying today, save the task with alerts instead of restarting later.',
+              eyebrow: 'Why now',
+              title: 'This guide is the explanation checkpoint',
+              description: 'Use it to understand the category well enough that the next page can become a real shortlist, review, or comparison decision.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: 'Shortlist, validate, or wait on purpose',
+              description: 'If this guide already changed how you think about the category, move into the review, category page, or alerts instead of restarting from generic browsing later.',
               tone: 'strong'
             }
           ]}
