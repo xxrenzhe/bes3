@@ -6,6 +6,7 @@ import { ComparisonSummaryMatrix } from '@/components/site/ComparisonSummaryMatr
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
+import { EditorialFreshnessPanel } from '@/components/site/EditorialFreshnessPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
@@ -608,6 +609,17 @@ export default async function ComparisonPage({
             </div>
           </div>
         </section>
+
+        <EditorialFreshnessPanel
+          kind="comparison"
+          checkedAt={snapshotDate}
+          freshnessLabel={getFreshnessLabel(snapshotDate)}
+          nextStepNote={
+            article.product?.slug
+              ? 'The shortlist is already narrow enough that this comparison should still drive the next move. Use it to open the winner details or switch into a price watch, not to restart discovery.'
+              : 'Use this comparison to hold the shortlist tight. Reopen the shortlist only if neither finalist still fits your real buying priorities.'
+          }
+        />
 
         <ComparisonSummaryMatrix
           leftTitle={contenders.left}

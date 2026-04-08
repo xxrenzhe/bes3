@@ -6,6 +6,7 @@ import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
+import { EditorialFreshnessPanel } from '@/components/site/EditorialFreshnessPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel, compactSeoHubLinks, type SeoHubSection } from '@/components/site/SeoHubLinksPanel'
@@ -506,6 +507,17 @@ export default async function ReviewPage({
             </div>
           </div>
         </section>
+
+        <EditorialFreshnessPanel
+          kind="review"
+          checkedAt={snapshotDate}
+          freshnessLabel={getFreshnessLabel(snapshotDate)}
+          nextStepNote={
+            relatedComparison
+              ? 'This review is fresh enough to settle product fit first. If the recommendation still feels right, move into the linked comparison instead of browsing sideways into more review pages.'
+              : 'Use this review as the fit checkpoint, then verify live product details or switch into a price watch if timing is the only blocker left.'
+          }
+        />
 
         <CommerceEvidencePanel
           product={commerceProduct}
