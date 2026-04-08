@@ -1,4 +1,4 @@
-import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { TrackedDecisionLink } from '@/components/site/TrackedDecisionLink'
 import {
@@ -22,22 +22,15 @@ export function IntentRecommendationPanel({
 
   return (
     <div className="space-y-8">
-      <DecisionReasonPanel
-        eyebrow="Why these picks"
-        title="Bes3 is narrowing for a reason, not just listing options."
-        description="Every intent result should explain why these products made the shortlist, why the next step is what it is, and when you should stop browsing."
-        cards={[
+      <DecisionSummaryPanel
+        eyebrow="Decision Summary"
+        title="Bes3 is narrowing this shortlist for a practical reason."
+        description="A strong assistant result should answer four things fast: who the shortlist fits, who should pause, why these picks matter now, and what the clean next move is."
+        items={[
           {
-            eyebrow: 'Why these made it',
-            title: lead?.product.productName || 'Current shortlist',
-            description: lead?.reasons.join(' ') || 'These picks match the current use case, constraints, and available evidence best.',
-            tone: 'default'
-          },
-          {
-            eyebrow: 'Why this next',
-            title: result.nextAction.label,
-            description: result.nextAction.description,
-            tone: 'muted'
+            eyebrow: 'Who should use this',
+            title: note.title,
+            description: lead?.reasons.join(' ') || 'These picks match the current use case, constraints, and available evidence best.'
           },
           {
             eyebrow: 'Who should skip',
@@ -45,6 +38,19 @@ export function IntentRecommendationPanel({
             description: lead?.concerns[0] || (comparisonReady
               ? 'If you still do not have true finalists, go back and tighten the request instead of forcing a compare.'
               : 'If the use case, budget, or deal-breakers changed, rerun the request instead of forcing the current shortlist.'),
+            tone: 'muted'
+          },
+          {
+            eyebrow: 'Why now',
+            title: 'This is the narrowing checkpoint',
+            description: comparisonReady
+              ? 'You now have enough proof to stop broad browsing and decide whether the shortlist is ready for compare.'
+              : 'You now have enough signal to validate the lead product instead of searching the whole market again.'
+          },
+          {
+            eyebrow: 'Next step',
+            title: result.nextAction.title,
+            description: result.nextAction.description,
             tone: 'strong'
           }
         ]}
