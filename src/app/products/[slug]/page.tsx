@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
 import { DecisionContentPanel } from '@/components/site/DecisionContentPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PriceChangeExplanationPanel } from '@/components/site/PriceChangeExplanationPanel'
 import { CommerceEvidencePanel } from '@/components/site/CommerceEvidencePanel'
@@ -566,6 +567,40 @@ export default async function ProductPage({
               href: newsletterPath,
               label: 'Start price watch',
               variant: 'secondary'
+            }
+          ]}
+        />
+
+        <DecisionSummaryPanel
+          eyebrow="Decision Summary"
+          title="Use this product page to make one practical call."
+          description="A strong product page should compress the buying logic into four answers: who this fits, who should pause, why the page matters now, and what Bes3 thinks the next move should be."
+          items={[
+            {
+              eyebrow: 'Who should buy',
+              title: product.productName,
+              description: buildBestFor(product, 'product')
+            },
+            {
+              eyebrow: 'Who should skip',
+              title: 'Do not force this fit',
+              description: buildNotFor(product, 'product'),
+              tone: 'muted'
+            },
+            {
+              eyebrow: 'Why now',
+              title: 'This page is the product checkpoint',
+              description: comparisonArticle
+                ? 'You are here to decide whether this product deserves to stay in the finalist set before you move into compare or merchant checkout.'
+                : 'You are here to validate fit and timing before you either act now or switch the same product into a cleaner wait path.'
+            },
+            {
+              eyebrow: 'Next step',
+              title: comparisonArticle ? 'Compare or watch on purpose' : 'Buy or watch on purpose',
+              description: comparisonArticle
+                ? 'If the fit looks real, open the comparison next. If timing is the only blocker left, preserve this product with a price watch instead of reopening broad research.'
+                : 'If the fit is already clear, use the timing signal and merchant check. If not, keep the task alive with shortlist, category context, or a price alert.',
+              tone: 'strong'
             }
           ]}
         />
