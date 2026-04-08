@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReasonPanel } from '@/components/site/DecisionReasonPanel'
+import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { IntentRecommendationPanel } from '@/components/site/IntentRecommendationPanel'
 import { IntentSearchPanel } from '@/components/site/IntentSearchPanel'
@@ -409,6 +410,48 @@ export default async function SearchPage({
         label: string
       }>
     : []
+  const searchDecisionSummaryItems = mode === 'keyword' && query
+    ? [
+        {
+          eyebrow: 'Who should use this',
+          title: totalResults
+            ? `${totalResults} result${totalResults === 1 ? '' : 's'} for "${query}"`
+            : `Search for "${query}" needs a route change`,
+          description: totalResults
+            ? filteredProducts.length
+              ? `This result set already has concrete product evidence, so search is doing its job: narrowing the market into product pages, reviews, comparisons, or guides that can move the decision forward.`
+              : `This result set is more editorial than product-led, so use it when the goal is understanding reviews, comparisons, or guides around a known phrase instead of broad discovery.`
+            : 'There is no exact hit yet, so the job now is changing route on purpose instead of retrying the same phrase blindly.'
+        },
+        {
+          eyebrow: 'Who should switch',
+          title: shouldRouteKeywordToAssistant ? 'This query may belong in assistant first' : 'Do not force search past its useful edge',
+          description: shouldRouteKeywordToAssistant
+            ? 'If the phrase mainly describes needs, blockers, or budget, assistant will usually narrow faster than keyword search.'
+            : totalResults
+              ? 'If the current results still do not match what you meant, switch routes before adding more vague keywords and noise.'
+              : 'If the exact model is missing or the phrase is too situational, use assistant or category pages instead of repeating the same search.',
+          tone: 'muted' as const
+        },
+        {
+          eyebrow: 'Why now',
+          title: 'This page is the search checkpoint',
+          description: selectedScope === 'all'
+            ? 'Use this page to decide whether the answer is already in products, reviews, comparisons, or guides before you widen the search again.'
+            : `Use this page to pressure-test the ${selectedScope} scope before you switch to a broader or smarter route.`
+        },
+        {
+          eyebrow: 'Next step',
+          title: resultRoutes[0]?.title || (shouldRouteKeywordToAssistant ? 'Open assistant instead' : 'Broaden on purpose'),
+          description: resultRoutes[0]?.description || (shouldRouteKeywordToAssistant
+            ? 'Switch to assistant when the phrase is really a shopping situation, not a product lookup.'
+            : selectedScope !== 'all'
+              ? 'Search everything or reopen the closest category before you keep retrying the same narrow phrase.'
+              : 'Open the closest category, guide, or shortlist route instead of searching the same dead-end phrase again.'),
+          tone: 'strong' as const
+        }
+      ]
+    : []
   const structuredData = mode === 'intent' && intentResult?.normalizedQuery
     ? buildSearchResultsPageSchema({
         path: buildCurrentSearchPath({
@@ -629,6 +672,15 @@ export default async function SearchPage({
           </div>
         ) : null}
 
+        {mode === 'keyword' && query ? (
+          <DecisionSummaryPanel
+            eyebrow="Decision Summary"
+            title="Use search to decide whether this phrase already has a clean next page."
+            description="A strong search result should answer four things fast: whether search is the right route, who should switch routes, why this result set matters now, and what the smartest next move is."
+            items={searchDecisionSummaryItems}
+          />
+        ) : null}
+
         {weakKeywordResults ? (
           <DecisionReasonPanel
             eyebrow="Why This Search Feels Thin"
@@ -679,8 +731,8 @@ export default async function SearchPage({
           <section className="rounded-[2rem] bg-white p-8 shadow-panel">
             <div className="flex flex-col gap-3 border-b border-border/40 pb-6 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="editorial-kicker">Best Next Move</p>
-                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Choose the most useful next step.</h2>
+                <p className="editorial-kicker">Route Options</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Choose the most useful next page.</h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
                 Search should narrow your options, not create more confusion. Use the next page that answers what is still unclear.
