@@ -256,21 +256,21 @@ export default async function NewsletterPage({
                 ? 'Price watch'
                 : selectedIntent === 'category-brief'
                   ? 'Category update'
-                  : 'Deal updates'
+                  : 'Offer updates'
             }
             signalTitle={
               selectedIntent === 'price-alert'
                 ? 'Wait for a worthwhile move, not for every tiny dip.'
                 : selectedIntent === 'category-brief'
                   ? 'Stay current on the category without restarting research.'
-                  : 'Use deal updates to catch the few signals worth acting on.'
+                  : 'Use offer updates to catch the few signals worth acting on.'
             }
             signalDescription={
               selectedIntent === 'price-alert'
                 ? `Bes3 will bring you back when ${selectedCategory ? `${selectedCategoryLabel} pricing` : 'pricing'} changes in a way that may justify action.`
                 : selectedIntent === 'category-brief'
                   ? `Bes3 will keep ${selectedCategory ? selectedCategoryLabel : 'your category research'} warm while the market changes.`
-                  : 'Bes3 uses deal updates to reduce noise, not to create another reason to impulse buy.'
+                  : 'Bes3 uses offer updates to reduce noise, not to create another reason to impulse buy.'
             }
             decisionText={
               resumeContext

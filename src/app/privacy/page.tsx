@@ -38,7 +38,7 @@ export default function PrivacyPage() {
   ]
 
   const buyerPromises = [
-    'Newsletter signups are used to deliver the price watch, category updates, or deal updates that the subscriber actually selected.',
+    'Newsletter signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
     'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]
@@ -52,7 +52,7 @@ export default function PrivacyPage() {
     },
     {
       title: 'Manage expectations with price watches',
-      description: 'Use newsletter updates only when you want Bes3 to keep tracking the category, deal, or shortlist over time.',
+      description: 'Use newsletter updates only when you want Bes3 to keep tracking the category, offer flow, or shortlist over time.',
       href: '/newsletter',
       label: 'Open Newsletter'
     },

@@ -177,12 +177,12 @@ const EXIT_INTENT_DICTIONARY: Record<SiteLocale, ExitIntentDictionary> = {
   en: {
     kicker: 'Before you go',
     title: 'Not ready to buy yet?',
-    description: "Get Bes3's next real price drop, shortlist-worthy deal, or category update before you have to restart your research.",
+    description: "Get Bes3's next real price drop, shortlist-worthy offer, or category update before you have to restart your research.",
     emailPlaceholder: 'name@example.com',
     primaryCta: 'Send me the next useful update',
     secondaryCta: 'Keep browsing',
     helper: 'One email when it matters. No blast campaigns, no fake urgency.',
-    reassurance: 'Bes3 only sends deal updates, category updates, or price watch notes tied to real buying decisions.',
+    reassurance: 'Bes3 only sends offer updates, category updates, or price watch notes tied to real buying decisions.',
     urgency: 'Best for people comparing a few finalists or waiting for a better price window.'
   },
   es: {
