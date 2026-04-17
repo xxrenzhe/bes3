@@ -37,10 +37,10 @@ export async function generateMetadata({
 
   const description =
     selectedIntent === 'price-alert'
-      ? `Start Bes3 price-watch updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without making you start over.`
+      ? `Start Bes3 price-watch updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better offer window can bring you back without making you start over.`
       : selectedIntent === 'category-brief'
         ? `Subscribe to Bes3 category updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so you can keep up with that category while you wait.`
-        : 'Subscribe to Bes3 updates for price watches, category updates, and deal follow-up tied to real shopping tasks.'
+        : 'Subscribe to Bes3 updates for price watches, category updates, and offer follow-up tied to real shopping tasks.'
 
   return buildPageMetadata({
     title,
@@ -234,7 +234,7 @@ export default async function NewsletterPage({
               {resumeContext
                 ? `Bes3 already knows you came from ${resumeContext.label.toLowerCase()}. The wait flow should preserve that exact route and bring you back there when waiting stops being the right move.`
                 : selectedCategory
-                  ? `This wait flow is anchored to ${selectedCategoryLabel}, so the follow-up path stays tied to the same category instead of drifting into generic deal mail.`
+                  ? `This wait flow is anchored to ${selectedCategoryLabel}, so the follow-up path stays tied to the same category instead of drifting into generic offer mail.`
                   : 'Pages across Bes3 can send you here with the right context selected, so waiting for a better time never becomes a dead end.'}
             </p>
           </div>

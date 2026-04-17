@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
-import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { ProductFinalistsSection } from '@/components/site/ProductFinalistsSection'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
@@ -403,28 +403,18 @@ export default async function BrandCategoryPage({
         />
 
         {(directProducts.length || fallbackProducts.length) ? (
-          <section className="space-y-6">
-            <div>
-              <p className="editorial-kicker">{hasDirectCoverage ? 'Best Matches' : 'Closest Live Options'}</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
-                {hasDirectCoverage ? `Start with the strongest ${brand.name} ${categoryLabel} picks.` : `Use nearby products while this ${brand.name} ${categoryLabel} page grows.`}
-              </h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                {hasDirectCoverage
-                  ? 'These products already match this exact brand-and-category search. Start here when you want the shortest path from this search to a product choice.'
-                  : 'These fallback options keep this page useful even before the exact page is fully populated. They keep either the brand or the category in view instead of sending buyers back to a broad search.'}
-              </p>
-            </div>
-            <div className="grid gap-6 xl:grid-cols-3">
-              {(directProducts.length ? directProducts : fallbackProducts).slice(0, 3).map((product) => (
-                <ProductSpotlightCard
-                  key={product.id}
-                  product={product}
-                  source={hasDirectCoverage ? 'brand-category-hub-shortlist' : 'brand-category-hub-recovery'}
-                />
-              ))}
-            </div>
-          </section>
+          <ProductFinalistsSection
+            products={directProducts.length ? directProducts : fallbackProducts}
+            source={hasDirectCoverage ? 'brand-category-hub-shortlist' : 'brand-category-hub-recovery'}
+            title={hasDirectCoverage ? `Start with the strongest ${brand.name} ${categoryLabel} picks.` : `Use nearby products while this ${brand.name} ${categoryLabel} page grows.`}
+            description={hasDirectCoverage
+              ? `This page now resolves the brand-and-category decision layer to three picks max, then names one lead instead of leaving buyers with a loose grid of ${brand.name} options.`
+              : 'Even in recovery mode, Bes3 keeps the recommendation layer tight so the buyer still gets one practical lead and a couple of nearby alternatives.'}
+            browseHref={hasDirectCoverage ? path : buildCategoryPath(resolvedCategory)}
+            browseLabel={hasDirectCoverage ? `Browse ${brand.name} ${categoryLabel}` : `Browse ${categoryLabel}`}
+            waitHref={brandCategoryWaitPath}
+            waitLabel={hasDirectCoverage ? 'Start price watch' : 'Start category updates'}
+          />
         ) : null}
 
         <section className="grid gap-8 lg:grid-cols-[1fr_1fr]">

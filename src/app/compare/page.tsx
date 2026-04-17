@@ -76,7 +76,7 @@ export default async function CompareIndexPage() {
               },
               {
                 name: 'Move to the winning product',
-                text: 'Once one option becomes clearly stronger, continue on the product page or deal path instead of reading more generic content.'
+                text: 'Once one option becomes clearly stronger, continue on the product page or offer path instead of reading more generic content.'
               }
             ]
           ),

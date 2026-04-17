@@ -363,7 +363,7 @@ export default async function ComparisonPage({
     },
     {
       eyebrow: 'Watch',
-      title: category ? `Track ${categoryLabel}` : 'Track a better deal',
+      title: category ? `Track ${categoryLabel}` : 'Track a better offer window',
       description: 'If price is the only unresolved variable, convert this comparison into a price watch so you can pick this back up later.',
       href: compareWaitPath,
       label: 'Start price watch'
