@@ -94,61 +94,67 @@ function hasActiveSearchState(input: {
   return Boolean(input.query || input.category || input.scope !== 'all')
 }
 
-function buildKeywordSearchReasonCards(input: {
+function buildKeywordRecoverySummaryItems(input: {
   query: string
   totalResults: number
   selectedScope: SearchScope
   selectedCategory: string
   shouldRouteKeywordToAssistant: boolean
 }) {
-  const cards: Array<{
-    eyebrow: string
-    title: string
-    description: string
-    tone?: 'default' | 'muted' | 'strong'
-  }> = []
+  const categoryLabel = input.selectedCategory ? getCategoryLabel(input.selectedCategory) : ''
+  const isNoExactMatch = input.totalResults === 0
+  const isScopedSearch = input.selectedScope !== 'all'
 
-  if (input.shouldRouteKeywordToAssistant) {
-    cards.push({
-      eyebrow: 'Why results are thin',
-      title: 'This query sounds like a situation, not a model lookup',
-      description: 'Keyword search is strongest when you already know the product phrase. If the query mostly describes needs, constraints, or price timing, the assistant will usually narrow it faster.'
-    })
-  } else {
-    cards.push({
-      eyebrow: input.totalResults ? 'Why results are limited' : 'Why there is no exact match',
-      title: 'Bes3 may not have this exact model or phrase covered yet',
-      description: 'Search is good at landing you on known product, review, and comparison pages. When the exact phrase is too narrow, the fastest next move is often a category, review, or guide page instead.',
-      tone: 'muted'
-    })
-  }
-
-  if (input.selectedScope !== 'all') {
-    cards.push({
-      eyebrow: 'Current filter',
-      title: `You are only searching ${input.selectedScope === 'products' ? 'products' : input.selectedScope}`,
-      description: 'The current scope is intentionally narrow. If the answer is not here, search everything before assuming Bes3 has no useful page for this topic.',
-      tone: 'muted'
-    })
-  }
-
-  if (input.selectedCategory) {
-    cards.push({
-      eyebrow: 'Current category',
-      title: `Results are limited to ${getCategoryLabel(input.selectedCategory)}`,
-      description: 'That category filter is useful when you already know the market. If the fit is still uncertain, remove it or reopen the broader category path.',
-      tone: cards.length ? 'strong' : 'muted'
-    })
-  } else if (cards.length < 3) {
-    cards.push({
-      eyebrow: 'Better next move',
-      title: 'Broaden by category before broadening by noise',
-      description: 'When keyword search stops being useful, the clean fallback is a category page or the assistant, not endlessly wider search phrases.',
-      tone: 'strong'
-    })
-  }
-
-  return cards.slice(0, 3)
+  return [
+    {
+      eyebrow: 'What happened',
+      title: isNoExactMatch
+        ? `No exact match for "${input.query}" yet`
+        : `${input.totalResults} result${input.totalResults === 1 ? '' : 's'} is not enough confidence yet`,
+      description: isNoExactMatch
+        ? 'Search did not find a clean exact page for this phrase, so the decision now is how to change route on purpose instead of retrying the same wording.'
+        : 'Bes3 found a thin result set, which usually means the phrase is close but still too narrow, too filtered, or better handled by another route.'
+    },
+    {
+      eyebrow: 'Stay here if',
+      title: isScopedSearch ? `You still want to pressure-test the ${input.selectedScope} view` : 'The phrase is still a real keyword lookup',
+      description: isScopedSearch
+        ? 'Stay in search if you deliberately want to test whether this product, review, comparison, or guide scope has the answer before widening the task.'
+        : 'Stay in search when you still believe the product name, model family, or exact phrase should exist somewhere on Bes3 with one cleaner query change.',
+      tone: 'muted' as const
+    },
+    {
+      eyebrow: 'Switch if',
+      title: input.shouldRouteKeywordToAssistant
+        ? 'This is really a shopping situation'
+        : categoryLabel
+          ? `${categoryLabel} may be too narrow`
+          : 'Search is no longer the best route',
+      description: input.shouldRouteKeywordToAssistant
+        ? 'Move to assistant if the phrase mostly describes needs, blockers, budget, or timing instead of a product name that should already exist on the page.'
+        : categoryLabel
+          ? `Remove the ${categoryLabel} filter or reopen that category path if the market is still uncertain and the current search is boxing you in too early.`
+          : 'Switch when you need category guidance, shortlist narrowing, or a better wait path instead of adding more vague keywords.',
+    },
+    {
+      eyebrow: 'Next step',
+      title: isScopedSearch
+        ? 'Broaden the scope before you broaden the noise'
+        : input.shouldRouteKeywordToAssistant
+          ? 'Open assistant instead'
+          : categoryLabel
+            ? `Browse ${categoryLabel}`
+            : 'Open the closest better route',
+      description: isScopedSearch
+        ? 'Search everything first, then decide whether the assistant, a category page, or a stronger editorial route is the smarter recovery move.'
+        : input.shouldRouteKeywordToAssistant
+          ? 'Let Bes3 turn the situation into a shortlist, then come back to keyword search only after the product family is clear.'
+          : categoryLabel
+            ? `Use the ${categoryLabel} category page or the closest review/comparison route instead of repeating the same dead-end phrase.`
+            : 'Use the recovery routes below to move into categories, assistant, offers, or editorial pages with a clearer task.',
+      tone: 'strong' as const
+    }
+  ]
 }
 
 export async function generateMetadata({
@@ -334,9 +340,9 @@ export default async function SearchPage({
     return label.includes(queryLower) || queryLower.includes(label)
   })
   const fallbackCategories = (matchedCategorySlugs.length ? matchedCategorySlugs : categories).slice(0, 3)
-  const keywordSearchReasonCards =
+  const keywordRecoverySummaryItems =
     mode === 'keyword' && query
-      ? buildKeywordSearchReasonCards({
+      ? buildKeywordRecoverySummaryItems({
           query,
           totalResults,
           selectedScope,
@@ -500,7 +506,7 @@ export default async function SearchPage({
             })),
             { name: 'Assistant', path: '/assistant' },
             { name: 'Directory', path: '/directory' },
-            { name: 'Deals', path: '/deals' }
+            { name: 'Offers', path: '/offers' }
           ]
         }),
         buildWebPageSchema({
@@ -682,11 +688,11 @@ export default async function SearchPage({
         ) : null}
 
         {weakKeywordResults ? (
-          <DecisionReasonPanel
-            eyebrow="Why This Search Feels Thin"
-            title="The query is close, but the current search path is still too narrow."
-            description="Weak results should explain what is missing and what the smarter fallback is, instead of leaving you to guess whether Bes3 is empty or the query is off."
-            cards={keywordSearchReasonCards}
+          <DecisionSummaryPanel
+            eyebrow="Decision Summary"
+            title="This search is close, but not strong enough to trust yet."
+            description="Thin keyword results should still tell you what happened, when search is still worth one more step, when to switch routes, and what Bes3 recommends next."
+            items={keywordRecoverySummaryItems}
           />
         ) : null}
 
@@ -758,11 +764,11 @@ export default async function SearchPage({
                     <p className="mt-3 text-sm leading-7 text-muted-foreground">Switch if you now know the product family, model phrase, or review keyword better than when you started.</p>
                     <p className="mt-4 text-sm font-semibold text-primary">Open search →</p>
                   </Link>
-                  <Link href="/deals" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
+                  <Link href="/offers" className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.35)] transition-transform hover:-translate-y-0.5">
                     <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Wait</p>
-                    <p className="mt-3 text-xl font-black tracking-tight text-foreground">Check deals</p>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Use deals only if timing already matters more than discovery and you want a quick reality check on the market.</p>
-                    <p className="mt-4 text-sm font-semibold text-primary">Open deals →</p>
+                    <p className="mt-3 text-xl font-black tracking-tight text-foreground">Check offers</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">Use offers only if timing already matters more than discovery and you want a quick reality check on the live market.</p>
+                    <p className="mt-4 text-sm font-semibold text-primary">Open offers →</p>
                   </Link>
                 </div>
               </div>
@@ -851,11 +857,11 @@ export default async function SearchPage({
             </section>
           ) : (
             <section className="space-y-8">
-              <DecisionReasonPanel
-                eyebrow="Why No Exact Match"
+              <DecisionSummaryPanel
+                eyebrow="Decision Summary"
                 title="This search needs a route change, not more blind retries."
-                description="When an exact keyword does not land, Bes3 should explain whether the phrase is too narrow, too situational, or filtered too tightly before sending you somewhere else."
-                cards={keywordSearchReasonCards}
+                description="When an exact keyword does not land, Bes3 should explain what failed, who should stay in search, who should switch, and what the smartest recovery move is now."
+                items={keywordRecoverySummaryItems}
               />
 
               <div className="rounded-[2rem] bg-white p-12 text-center shadow-panel">
@@ -877,8 +883,8 @@ export default async function SearchPage({
                   <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
                     Browse categories
                   </Link>
-                  <Link href="/deals" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                    Check deals instead
+                  <Link href="/offers" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Check offers instead
                   </Link>
                 </div>
               </div>
@@ -921,7 +927,7 @@ export default async function SearchPage({
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">
                 <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better deal.
+                  Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better offer window.
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {SEARCH_STARTER_ROUTES.map((route) => (
