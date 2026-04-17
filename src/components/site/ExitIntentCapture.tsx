@@ -28,9 +28,8 @@ function shouldSuppressPrompt(pathname: string) {
 function deriveCaptureIntent(pathname: string) {
   if (pathname.startsWith('/categories/')) return 'category-brief'
   if (pathname.startsWith('/brands/') && pathname.includes('/categories/')) return 'category-brief'
-  // Newsletter storage still uses the legacy "deals" intent id for offer-oriented flows.
-  // Public routing and copy should stay on /offers; /deals remains compatibility only.
-  if (pathname.startsWith('/offers') || pathname.startsWith('/biggest-discounts') || pathname.startsWith('/deals')) return 'deals'
+  // Public routing and copy stay on /offers; /deals remains compatibility only.
+  if (pathname.startsWith('/offers') || pathname.startsWith('/biggest-discounts') || pathname.startsWith('/deals')) return 'offers'
   return 'price-alert'
 }
 

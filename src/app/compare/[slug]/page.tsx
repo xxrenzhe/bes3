@@ -206,7 +206,7 @@ export default async function ComparisonPage({
     .slice(0, 3)
   const path = `/compare/${article.slug}`
   const compareWaitPath = buildNewsletterPath({
-    intent: category ? 'price-alert' : 'deals',
+    intent: category ? 'price-alert' : 'offers',
     category: category || '',
     cadence: 'priority',
     returnTo: path,

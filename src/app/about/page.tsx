@@ -38,7 +38,7 @@ export default async function AboutPage() {
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
   const aboutAlertHref = buildNewsletterPath({
-    intent: leadCategory ? 'category-brief' : 'deals',
+    intent: leadCategory ? 'category-brief' : 'offers',
     category: leadCategory || '',
     cadence: 'weekly',
     returnTo: '/about',

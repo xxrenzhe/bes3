@@ -22,7 +22,7 @@ export function OfferOpportunityCard({
   source?: string
 }) {
   const alertHref = buildNewsletterPath({
-    intent: opportunity.product.category ? 'price-alert' : 'deals',
+    intent: opportunity.product.category ? 'price-alert' : 'offers',
     category: opportunity.product.category || '',
     cadence: 'priority',
     returnTo: buildOffersPath(opportunity.product.category),

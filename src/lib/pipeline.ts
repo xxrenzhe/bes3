@@ -2019,7 +2019,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         SELECT COUNT(*) AS count
         FROM newsletter_subscribers
         WHERE source <> 'site'
-           OR intent <> 'deals'
+           OR (intent <> 'offers' AND intent <> 'deals')
            OR cadence <> 'weekly'
            OR category_slug IS NOT NULL
       `

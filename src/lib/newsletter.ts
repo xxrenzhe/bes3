@@ -1,8 +1,8 @@
 import { getDatabase } from '@/lib/db'
 import { normalizeMerchantSource } from '@/lib/merchant-links'
+import { normalizeNewsletterIntent } from '@/lib/newsletter-intent'
 import { slugify } from '@/lib/slug'
 
-export const VALID_NEWSLETTER_INTENTS = new Set(['deals', 'price-alert', 'category-brief'])
 export const VALID_NEWSLETTER_CADENCES = new Set(['weekly', 'priority'])
 
 export interface NewsletterSubscriptionInput {
@@ -27,7 +27,7 @@ export function normalizeNewsletterSubscriptionInput(input: NewsletterSubscripti
   return {
     email: String(input.email || '').trim().toLowerCase(),
     source: normalizeMerchantSource(input.source || 'site'),
-    intent: VALID_NEWSLETTER_INTENTS.has(String(input.intent || '')) ? String(input.intent) : 'deals',
+    intent: normalizeNewsletterIntent(input.intent),
     cadence: VALID_NEWSLETTER_CADENCES.has(String(input.cadence || '')) ? String(input.cadence) : 'weekly',
     categorySlug: slugify(String(input.categorySlug || '')) || null,
     notes: String(input.notes || '').trim().slice(0, 240) || null

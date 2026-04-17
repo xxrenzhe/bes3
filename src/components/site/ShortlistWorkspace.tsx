@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
+import type { CanonicalNewsletterIntent } from '@/lib/newsletter-intent'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import {
   buildShortlistBuyingBrief,
@@ -47,7 +48,7 @@ function getCategoryLabel(item: ShortlistItem | undefined) {
 
 function buildCategoryAlertHref(
   item: ShortlistItem | undefined,
-  intent: 'price-alert' | 'category-brief' | 'deals' = 'price-alert',
+  intent: CanonicalNewsletterIntent = 'price-alert',
   cadence: 'priority' | 'weekly' = 'priority',
   returnTo: string = '/shortlist',
   returnLabel: string = 'Resume shortlist',
@@ -55,7 +56,7 @@ function buildCategoryAlertHref(
 ) {
   if (!item?.category) {
     return buildNewsletterPath({
-      intent: intent === 'category-brief' ? 'deals' : intent,
+      intent: intent === 'category-brief' ? 'offers' : intent,
       cadence,
       returnTo,
       returnLabel,

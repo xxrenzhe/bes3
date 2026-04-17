@@ -134,7 +134,7 @@ export default async function ThankYouPage({
         }
   ]
   const thankYouAlertHref = buildNewsletterPath({
-    intent: leadCategory ? 'price-alert' : 'deals',
+    intent: leadCategory ? 'price-alert' : 'offers',
     category: leadCategory || '',
     cadence: 'priority',
     returnTo: resumeContext?.href || '/thank-you',

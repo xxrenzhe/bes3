@@ -153,7 +153,7 @@ export default async function BrandPage({
   ]
   const brandPath = `/brands/${brand.slug}`
   const brandWaitPath = buildNewsletterPath({
-    intent: leadCategory ? 'price-alert' : 'deals',
+    intent: leadCategory ? 'price-alert' : 'offers',
     category: leadCategory || '',
     cadence: 'priority',
     returnTo: brandPath,

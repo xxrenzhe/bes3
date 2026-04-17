@@ -29,7 +29,7 @@ export default async function ContactPage() {
   const leadCategory = leadReview?.product?.category || leadComparison?.product?.category || categories[0] || ''
   const leadCategoryLabel = getCategoryLabel(leadCategory)
   const contactAlertHref = buildNewsletterPath({
-    intent: leadCategory ? 'price-alert' : 'deals',
+    intent: leadCategory ? 'price-alert' : 'offers',
     category: leadCategory || '',
     cadence: 'priority',
     returnTo: '/contact',
