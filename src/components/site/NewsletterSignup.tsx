@@ -4,12 +4,13 @@ import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import type { CanonicalNewsletterIntent } from '@/lib/newsletter-intent'
 import { slugify } from '@/lib/slug'
 import { cn } from '@/lib/utils'
 
 const INTENT_OPTIONS = [
   {
-    id: 'deals',
+    id: 'offers',
     label: 'Offer Alerts',
     description: 'Useful price drops and live offers worth checking.'
   },
@@ -59,14 +60,14 @@ function buildAlertPreview(intent: IntentId, cadence: CadenceId, categorySlug: s
 export function NewsletterSignup({
   categoryOptions = [],
   source = 'site',
-  initialIntent = 'deals',
+  initialIntent = 'offers',
   initialCategorySlug = '',
   initialCadence = 'weekly',
   afterSignupRoutes = []
 }: {
   categoryOptions?: string[]
   source?: string
-  initialIntent?: IntentId
+  initialIntent?: CanonicalNewsletterIntent
   initialCategorySlug?: string
   initialCadence?: CadenceId
   afterSignupRoutes?: NewsletterFollowupRoute[]

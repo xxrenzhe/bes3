@@ -7,12 +7,12 @@ import { getArticlePath } from '@/lib/article-path'
 import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, toTitleCaseWords } from '@/lib/metadata'
+import { normalizeNewsletterIntent } from '@/lib/newsletter-intent'
 import { resolveResumeContext } from '@/lib/resume-context'
 import { getRequestLocale } from '@/lib/request-locale'
 import { listCategories, listPublishedArticles } from '@/lib/site-data'
 import { slugify } from '@/lib/slug'
 
-const VALID_INTENTS = new Set(['deals', 'price-alert', 'category-brief'] as const)
 const VALID_CADENCE = new Set(['weekly', 'priority'] as const)
 
 export async function generateMetadata({
@@ -21,9 +21,7 @@ export async function generateMetadata({
   searchParams: Promise<{ intent?: string; category?: string; cadence?: string; returnTo?: string; returnLabel?: string; returnDescription?: string }>
 }): Promise<Metadata> {
   const resolvedParams = await searchParams
-  const selectedIntent = VALID_INTENTS.has((resolvedParams.intent || '') as 'deals')
-    ? (resolvedParams.intent as 'deals' | 'price-alert' | 'category-brief')
-    : 'deals'
+  const selectedIntent = normalizeNewsletterIntent(resolvedParams.intent)
   const selectedCategory = slugify(String(resolvedParams.category || ''))
   const selectedCategoryLabel = getCategoryLabel(selectedCategory)
   const hasPrefill = Boolean(resolvedParams.intent || resolvedParams.category || resolvedParams.cadence || resolvedParams.returnTo)
@@ -33,7 +31,7 @@ export async function generateMetadata({
       ? 'Price Watch'
       : selectedIntent === 'category-brief'
         ? 'Category Updates'
-        : 'Newsletter'
+        : 'Offer Updates'
 
   const description =
     selectedIntent === 'price-alert'
@@ -61,9 +59,7 @@ export default async function NewsletterPage({
 }) {
   const resolvedParams = await searchParams
   const [categories, articles] = await Promise.all([listCategories(), listPublishedArticles()])
-  const selectedIntent = VALID_INTENTS.has((resolvedParams.intent || '') as 'deals')
-    ? (resolvedParams.intent as 'deals' | 'price-alert' | 'category-brief')
-    : 'deals'
+  const selectedIntent = normalizeNewsletterIntent(resolvedParams.intent)
   const selectedCadence = VALID_CADENCE.has((resolvedParams.cadence || '') as 'weekly')
     ? (resolvedParams.cadence as 'weekly' | 'priority')
     : 'weekly'

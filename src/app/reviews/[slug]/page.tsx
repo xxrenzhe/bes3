@@ -188,7 +188,7 @@ export default async function ReviewPage({
     .slice(0, 3)
   const path = `/reviews/${article.slug}`
   const reviewWaitPath = buildNewsletterPath({
-    intent: category ? 'price-alert' : 'deals',
+    intent: category ? 'price-alert' : 'offers',
     category: category || '',
     cadence: 'priority',
     returnTo: path,

@@ -145,7 +145,7 @@ export default async function GuidePage({
     .slice(0, 3)
   const path = `/guides/${article.slug}`
   const guideAlertHref = buildNewsletterPath({
-    intent: category ? 'category-brief' : 'deals',
+    intent: category ? 'category-brief' : 'offers',
     category: category || '',
     cadence: 'weekly',
     returnTo: path,

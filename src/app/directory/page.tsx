@@ -65,7 +65,7 @@ export default async function DirectoryPage() {
     { name: 'Directory', path: '/directory' }
   ]
   const directoryAlertHref = buildNewsletterPath({
-    intent: leadCategory ? 'category-brief' : 'deals',
+    intent: leadCategory ? 'category-brief' : 'offers',
     category: leadCategory || '',
     cadence: 'weekly',
     returnTo: '/directory',

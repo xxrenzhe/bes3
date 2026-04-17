@@ -58,7 +58,7 @@ export default async function StartPage() {
   const leadComparisonHref = leadComparison ? getArticlePath(leadComparison.type, leadComparison.slug) : '/shortlist'
   const leadGuideHref = leadGuide ? getArticlePath(leadGuide.type, leadGuide.slug) : '/directory'
   const leadAlertHref = buildNewsletterPath({
-    intent: leadCategory ? 'category-brief' : 'deals',
+    intent: leadCategory ? 'category-brief' : 'offers',
     category: leadCategory || '',
     cadence: 'weekly',
     returnTo: '/start',
@@ -492,7 +492,7 @@ export default async function StartPage() {
           <NewsletterSignup
             categoryOptions={categories.slice(0, 6)}
             source="start-page-system-signup"
-            initialIntent={leadCategory ? 'category-brief' : 'deals'}
+            initialIntent={leadCategory ? 'category-brief' : 'offers'}
             initialCategorySlug={leadCategory}
             initialCadence="weekly"
             afterSignupRoutes={[

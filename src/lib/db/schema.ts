@@ -398,7 +398,7 @@ const SQLITE_SCHEMA = [
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       email TEXT NOT NULL UNIQUE,
       source TEXT NOT NULL DEFAULT 'site',
-      intent TEXT NOT NULL DEFAULT 'deals',
+      intent TEXT NOT NULL DEFAULT 'offers',
       category_slug TEXT,
       cadence TEXT NOT NULL DEFAULT 'weekly',
       notes TEXT,
@@ -595,11 +595,23 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
 }
 
 async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<void> {
-  await ensureColumn(db, 'newsletter_subscribers', 'intent', "TEXT NOT NULL DEFAULT 'deals'")
+  await ensureColumn(db, 'newsletter_subscribers', 'intent', "TEXT NOT NULL DEFAULT 'offers'")
   await ensureColumn(db, 'newsletter_subscribers', 'category_slug', 'TEXT')
   await ensureColumn(db, 'newsletter_subscribers', 'cadence', "TEXT NOT NULL DEFAULT 'weekly'")
   await ensureColumn(db, 'newsletter_subscribers', 'notes', 'TEXT')
   await ensureColumn(db, 'newsletter_subscribers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+
+  if (db.type === 'postgres') {
+    await db.exec("ALTER TABLE newsletter_subscribers ALTER COLUMN intent SET DEFAULT 'offers'")
+  }
+
+  await db.exec(
+    `
+      UPDATE newsletter_subscribers
+      SET intent = 'offers'
+      WHERE LOWER(TRIM(intent)) = 'deals'
+    `
+  )
 }
 
 async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {

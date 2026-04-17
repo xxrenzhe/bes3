@@ -1,4 +1,5 @@
 import { sanitizeInternalHref } from '@/lib/resume-context'
+import { isSupportedNewsletterIntent, normalizeNewsletterIntent } from '@/lib/newsletter-intent'
 
 export function buildNewsletterPath(input: {
   intent?: string
@@ -11,7 +12,9 @@ export function buildNewsletterPath(input: {
 }) {
   const params = new URLSearchParams()
 
-  if (input.intent) params.set('intent', input.intent)
+  if (input.intent) {
+    params.set('intent', isSupportedNewsletterIntent(input.intent) ? normalizeNewsletterIntent(input.intent) : input.intent)
+  }
   if (input.category) params.set('category', input.category)
   if (input.cadence) params.set('cadence', input.cadence)
 
