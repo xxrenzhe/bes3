@@ -369,6 +369,7 @@ function mapArticleRow(row: any): ArticleRecord {
         updatedAt: row.product_updated_at || null
       }
     : null
+  const publicProduct = product && isPublicProduct(product) ? product : null
 
   return {
     id: row.id,
@@ -385,7 +386,7 @@ function mapArticleRow(row: any): ArticleRecord {
     publishedAt: row.published_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    product
+    product: publicProduct
   }
 }
 

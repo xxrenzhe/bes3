@@ -75,6 +75,7 @@ function normalizeItem(raw: any): ShortlistItem | null {
     specSummary,
     specSnapshot,
     resolvedUrl: typeof raw.resolvedUrl === 'string' ? raw.resolvedUrl : null,
+    sourceAffiliateLink: typeof raw.sourceAffiliateLink === 'string' ? raw.sourceAffiliateLink : null,
     publishedAt: typeof raw.publishedAt === 'string' ? raw.publishedAt : null,
     updatedAt: typeof raw.updatedAt === 'string' ? raw.updatedAt : null
   }

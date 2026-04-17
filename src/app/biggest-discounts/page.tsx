@@ -1,13 +1,15 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { OfferTransparencyFaqSection, buildOfferFaqEntries } from '@/components/site/OfferTransparencyFaqSection'
+import { OfferTransparencyPanel } from '@/components/site/OfferTransparencyPanel'
 import { OfferOpportunityCard } from '@/components/site/OfferOpportunityCard'
 import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferCategories, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -37,6 +39,7 @@ export default async function BiggestDiscountsPage() {
   const leader = items[0] || null
   const freshnessDate = getLatestOfferRefresh(items)
   const showdowns = buildOfferShowdowns(items, 3)
+  const faqEntries = buildOfferFaqEntries({ scope: 'biggest discounts' })
   const structuredData = [
     buildBreadcrumbSchema('/biggest-discounts', [
       { name: 'Home', path: '/' },
@@ -74,7 +77,8 @@ export default async function BiggestDiscountsPage() {
           text: 'When several discounted products live in the same category, move into the category offer page to see the 3-pick showdown.'
         }
       ]
-    )
+    ),
+    buildFaqSchema('/biggest-discounts', faqEntries)
   ]
 
   return (
@@ -175,6 +179,17 @@ export default async function BiggestDiscountsPage() {
             ))}
           </div>
         </section>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyPanel
+            title="Why this leaderboard can trust a big percentage"
+            description="This page is stricter than a generic deals list. Every headline discount requires a reliable reference price, and stale reference checks are removed from the main leaderboard."
+          />
+        </div>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyFaqSection title="Discount leaderboard questions, answered clearly." entries={faqEntries} />
+        </div>
       </div>
     </PublicShell>
   )

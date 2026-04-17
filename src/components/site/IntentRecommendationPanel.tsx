@@ -158,8 +158,8 @@ export function IntentRecommendationPanel({
       <section className="space-y-5">
         <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
           <div>
-            <p className="editorial-kicker">Recommended products</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist, with reasons and risks.</h2>
+            <p className="editorial-kicker">3 Picks Max</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist, with one lead and at most two alternatives.</h2>
           </div>
           <span className="text-sm text-muted-foreground">{result.recommendations.length} recommended pick{result.recommendations.length === 1 ? '' : 's'}</span>
         </div>

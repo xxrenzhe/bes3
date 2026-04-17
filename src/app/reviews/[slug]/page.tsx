@@ -19,7 +19,7 @@ import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -426,7 +426,7 @@ export default async function ReviewPage({
     <PublicShell>
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <StickyMobileCta
-        href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'review-page-sticky-cta') : null}
+        href={article.product && hasMerchantExitTarget(article.product) ? buildMerchantExitPath(article.product.id, 'review-page-sticky-cta') : null}
         productId={article.product?.id || null}
         trackingSource="review-page-sticky-cta"
         label="Check Current Price"
@@ -660,7 +660,7 @@ export default async function ReviewPage({
                       >
                         Open product page
                       </Link>
-                      {product?.resolvedUrl ? (
+                      {product && hasMerchantExitTarget(product) ? (
                         <PrimaryCta
                           href={buildMerchantExitPath(product.id, `review-page-pick-${index + 1}-cta`)}
                           productId={product.id}

@@ -290,6 +290,7 @@ export async function resolveIntentSearch(input: IntentSearchInput): Promise<Int
   const inferredCategory = await inferCategory(normalizedQuery, input.category || null)
   const normalizedBudget = input.budget ?? extractBudgetFromQuery(normalizedQuery)
   const urgency = normalizeUrgency(input.urgency || normalizedQuery)
+  const recommendationLimit = Math.min(3, Math.max(1, input.limit || 3))
   const products = await searchOpenCommerceProducts(normalizedQuery, {
     category: inferredCategory || undefined,
     limit: Math.max(6, input.limit || 8)
@@ -321,7 +322,7 @@ export async function resolveIntentSearch(input: IntentSearchInput): Promise<Int
       }
     })
     .sort((left, right) => right.score - left.score)
-    .slice(0, Math.max(1, input.limit || 4))
+    .slice(0, recommendationLimit)
 
   const shortlistPath = buildShortlistSharePath(recommendations.map((item) => item.product.id))
   const { nextAction, fallbackAction } = buildNextAction({

@@ -2,6 +2,18 @@ import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/
 
 const MAX_SOURCE_LENGTH = 80
 
+export function hasMerchantExitTarget(
+  product:
+    | {
+        resolvedUrl?: string | null
+        sourceAffiliateLink?: string | null
+      }
+    | null
+    | undefined
+) {
+  return Boolean(product && (product.resolvedUrl || product.sourceAffiliateLink))
+}
+
 export function normalizeMerchantSource(source: string | null | undefined) {
   const normalized = String(source || '')
     .trim()

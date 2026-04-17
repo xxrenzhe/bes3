@@ -16,6 +16,7 @@ export interface ShortlistItem {
   specSummary: string[]
   specSnapshot: ShortlistSpecEntry[]
   resolvedUrl: string | null
+  sourceAffiliateLink: string | null
   publishedAt: string | null
   updatedAt: string | null
 }
@@ -198,9 +199,14 @@ export function toShortlistItem(product: ShortlistItemInput): ShortlistItem {
     }),
     specSnapshot,
     resolvedUrl: product.resolvedUrl,
+    sourceAffiliateLink: 'sourceAffiliateLink' in product && typeof product.sourceAffiliateLink === 'string' ? product.sourceAffiliateLink : null,
     publishedAt: product.publishedAt,
     updatedAt: product.updatedAt
   }
+}
+
+function hasShortlistMerchantExitTarget(item: Pick<ShortlistItem, 'resolvedUrl' | 'sourceAffiliateLink'>) {
+  return Boolean(item.resolvedUrl || item.sourceAffiliateLink)
 }
 
 export function getShortlistProductPath(item: Pick<ShortlistItem, 'slug'>) {
@@ -352,7 +358,7 @@ export function getShortlistDecisionState(
     pushUnique(gaps, 'Current price still missing')
   }
 
-  if (item.resolvedUrl) {
+  if (hasShortlistMerchantExitTarget(item)) {
     score += 15
     pushUnique(whySaved, 'Store link ready')
   } else {
@@ -531,7 +537,7 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
     : 'This shortlist spans multiple product types, so Bes3 blends shared buying cues with category-specific checks before calling anything ready for compare.'
 
   const missingPriceCount = items.filter((item) => item.priceAmount === null || item.priceAmount === undefined || !Number.isFinite(item.priceAmount)).length
-  const missingMerchantCount = items.filter((item) => !item.resolvedUrl).length
+  const missingMerchantCount = items.filter((item) => !hasShortlistMerchantExitTarget(item)).length
   const missingSpecCount = states.filter((state) => state.gaps.some((gap) => gap.toLowerCase().includes('spec') || gap.toLowerCase().includes('capacity') || gap.toLowerCase().includes('setup'))).length
   const thinProofCount = items.filter((item) => (item.rating || 0) < 4 && (item.reviewCount || 0) < 200).length
   const staleCheckCount = items.filter((item) => {

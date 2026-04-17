@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { OfferTransparencyFaqSection, buildOfferFaqEntries } from '@/components/site/OfferTransparencyFaqSection'
+import { OfferTransparencyPanel } from '@/components/site/OfferTransparencyPanel'
 import { OfferOpportunityCard } from '@/components/site/OfferOpportunityCard'
 import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -8,7 +10,7 @@ import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildBiggestDiscountsPath, buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferCategories, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -41,6 +43,7 @@ export default async function OffersPage() {
     .sort((left, right) => (right.savingsPercent ?? -1) - (left.savingsPercent ?? -1) || right.opportunityScore - left.opportunityScore)
     .slice(0, 3)
   const freshnessDate = getLatestOfferRefresh(opportunities)
+  const faqEntries = buildOfferFaqEntries({ scope: 'offers' })
   const structuredData = [
     buildBreadcrumbSchema('/offers', [
       { name: 'Home', path: '/' },
@@ -78,7 +81,8 @@ export default async function OffersPage() {
           text: 'If the current offer is credible but still sits high in the tracked range, switch to a price watch instead of forcing the purchase.'
         }
       ]
-    )
+    ),
+    buildFaqSchema('/offers', faqEntries)
   ]
 
   return (
@@ -217,6 +221,14 @@ export default async function OffersPage() {
             </section>
           </div>
         </section>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyPanel description="This hub explains why some offers can show a reference-price discount, why some only show timing language, and how the 3-pick winner is chosen." />
+        </div>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyFaqSection title="Questions people ask before trusting a live offer." entries={faqEntries} />
+        </div>
       </div>
     </PublicShell>
   )

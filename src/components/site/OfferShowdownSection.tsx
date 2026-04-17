@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { getCategoryLabel } from '@/lib/editorial'
+import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildOffersPath, type OfferShowdown } from '@/lib/offers'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -15,6 +15,34 @@ function formatPromotionLabel(showdown: OfferShowdown['contenders'][number]) {
   }
 
   return 'Live affiliate promotion'
+}
+
+function formatReferenceLabel(item: OfferShowdown['contenders'][number]) {
+  if (item.referencePrice == null) return 'No reliable reference'
+  return formatPriceSnapshot(item.referencePrice, item.referenceCurrency || item.currentCurrency)
+}
+
+function formatShippingLabel(item: OfferShowdown['contenders'][number]) {
+  const shippingCost = item.product.bestOffer?.shippingCost
+  if (shippingCost == null) return 'Shipping not listed'
+  if (shippingCost <= 0) return 'Free shipping'
+  return formatPriceSnapshot(shippingCost, item.currentCurrency)
+}
+
+function formatRatingLabel(item: OfferShowdown['contenders'][number]) {
+  if (!item.product.rating) return 'Rating not listed'
+  const reviews = item.product.reviewCount ? ` · ${item.product.reviewCount.toLocaleString()} reviews` : ''
+  return `${item.product.rating.toFixed(1)} / 5${reviews}`
+}
+
+function formatLastCheckedLabel(item: OfferShowdown['contenders'][number]) {
+  return formatEditorialDate(item.product.bestOffer?.lastCheckedAt || item.product.offerLastCheckedAt || item.product.priceLastCheckedAt)
+}
+
+function getShowdownModeLabel(showdown: OfferShowdown) {
+  if (showdown.contenders.length >= 3) return '3-way showdown'
+  if (showdown.contenders.length === 2) return 'Head-to-head'
+  return 'Best available now'
 }
 
 export function OfferShowdownSection({
@@ -42,7 +70,12 @@ export function OfferShowdownSection({
         {showdowns.map((showdown) => (
           <article key={showdown.categorySlug} className="overflow-hidden rounded-[2rem] bg-white shadow-panel">
             <div className="border-b border-border/50 bg-[linear-gradient(135deg,#0f172a_0%,#134e4a_100%)] px-6 py-6 text-white">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">{getCategoryLabel(showdown.category)}</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">{getCategoryLabel(showdown.category)}</p>
+                <span className="rounded-full border border-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85">
+                  {getShowdownModeLabel(showdown)}
+                </span>
+              </div>
               <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{showdown.winner.product.productName}</h3>
               <p className="mt-3 text-sm leading-7 text-slate-200">{showdown.winner.winnerReason}</p>
             </div>
@@ -63,28 +96,35 @@ export function OfferShowdownSection({
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{showdown.winner.nextStepReason}</p>
               </div>
 
-              <div className="overflow-hidden rounded-[1.5rem] border border-border/60">
+              <div className="rounded-[1.5rem] border border-border/60">
                 <div className="overflow-x-auto">
-                  <div className="min-w-[680px]">
-                    <div className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  <div className="min-w-[1220px]">
+                    <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                       <span>Pick</span>
                       <span>Current</span>
+                      <span>Reference</span>
                       <span>Promotion</span>
                       <span>Timing</span>
+                      <span>Merchant</span>
+                      <span>Shipping</span>
+                      <span>Proof</span>
                     </div>
                     <div className="divide-y divide-border/60">
                       {showdown.contenders.map((item, index) => (
-                        <div key={item.product.id} className="grid grid-cols-[1.5fr_1fr_1fr_1fr] gap-3 px-4 py-4 text-sm">
+                        <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
                           <div>
                             <p className="font-semibold text-foreground">
                               {index === 0 ? 'Winner' : `Option ${index + 1}`} · {item.product.productName}
                             </p>
                             <p className="mt-1 text-xs text-muted-foreground">
-                              {item.product.bestOffer?.merchantName || 'Affiliate merchant'} · proof score {Math.round(item.product.dataConfidenceScore * 100)}%
+                              Checked {formatLastCheckedLabel(item)}
                             </p>
                           </div>
                           <div className="font-black text-foreground">
                             {formatPriceSnapshot(item.currentPrice, item.currentCurrency)}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {formatReferenceLabel(item)}
                           </div>
                           <div className="text-muted-foreground">
                             {formatPromotionLabel(item)}
@@ -92,12 +132,47 @@ export function OfferShowdownSection({
                           <div className="text-muted-foreground">
                             {formatTrackedLabel(item.distanceFromTrackedLowPercent)}
                           </div>
+                          <div className="text-muted-foreground">
+                            {item.product.bestOffer?.merchantName || 'Affiliate merchant'}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {formatShippingLabel(item)}
+                          </div>
+                          <div className="text-muted-foreground">
+                            {formatRatingLabel(item)}
+                          </div>
                         </div>
                       ))}
                     </div>
                   </div>
                 </div>
               </div>
+
+              {showdown.contenders.length > 1 ? (
+                <div className="grid gap-4 lg:grid-cols-2">
+                  <div className="rounded-[1.5rem] bg-muted p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it wins</p>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{showdown.winner.winnerReason}</p>
+                  </div>
+                  <div className="rounded-[1.5rem] bg-muted p-5">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Where the other options differ</p>
+                    <div className="mt-3 space-y-2">
+                      {showdown.contenders.slice(1).map((item, index) => (
+                        <p key={item.product.id} className="text-sm leading-7 text-muted-foreground">
+                          {`Option ${index + 2}: ${item.product.productName} is sitting at ${formatTrackedLabel(item.distanceFromTrackedLowPercent).toLowerCase()} and ${formatPromotionLabel(item).toLowerCase()}.`}
+                        </p>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="rounded-[1.5rem] bg-muted p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Fallback mode</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
+                    Only one affiliate-eligible contender is available in this category right now, so Bes3 treats it as the best available now instead of pretending a full showdown exists.
+                  </p>
+                </div>
+              )}
 
               <div className="flex flex-wrap gap-3">
                 <Link href={buildOffersPath(showdown.category)} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
