@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { BrandPolicyPanel } from '@/components/site/BrandPolicyPanel'
-import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { ProductFinalistsSection } from '@/components/site/ProductFinalistsSection'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -356,20 +356,16 @@ export default async function BrandPage({
         />
 
         {brandProducts.length ? (
-          <section className="space-y-6">
-            <div>
-              <p className="editorial-kicker">Top Products</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Start with the strongest {brand.name} picks.</h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These are the cleanest current entry points into {brand.name}: published products that already carry price context, specs, and a way forward into shortlist or store actions.
-              </p>
-            </div>
-            <div className="grid gap-6 xl:grid-cols-3">
-              {brandProducts.slice(0, 3).map((product) => (
-                <ProductSpotlightCard key={product.id} product={product} source="brand-hub-shortlist" />
-              ))}
-            </div>
-          </section>
+          <ProductFinalistsSection
+            products={brandProducts}
+            source="brand-hub-shortlist"
+            title={`Start with the strongest ${brand.name} picks.`}
+            description={`This brand page keeps the final recommendation layer small on purpose: at most three ${brand.name} products in view, one lead, and a clear route into compare or price watch if you are not ready to buy.`}
+            browseHref={brandPath}
+            browseLabel={`Browse ${brand.name}`}
+            waitHref={brandWaitPath}
+            waitLabel={leadCategory ? `Track ${getCategoryLabel(leadCategory)}` : 'Start price watch'}
+          />
         ) : null}
 
         <section className="grid gap-8 lg:grid-cols-[1.05fr_0.95fr]">

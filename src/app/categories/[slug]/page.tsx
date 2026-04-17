@@ -3,7 +3,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
-import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
+import { ProductFinalistsSection } from '@/components/site/ProductFinalistsSection'
 import { RouteRecoveryPanel } from '@/components/site/RouteRecoveryPanel'
 import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -413,20 +413,18 @@ export default async function CategoryPage({
         />
 
         {products.length ? (
-          <section id="category-shortlist" className="space-y-6">
-            <div>
-              <p className="editorial-kicker">Shortlist</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Start with the strongest buying options.</h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These product pages give buyers the fastest path into price context, specs, and store links without losing the category view.
-              </p>
-            </div>
-            <div className="grid gap-6 xl:grid-cols-3">
-              {products.slice(0, 3).map((product) => (
-                <ProductSpotlightCard key={product.id} product={product} source="category-hub-shortlist" />
-              ))}
-            </div>
-          </section>
+          <div id="category-shortlist">
+            <ProductFinalistsSection
+              products={products}
+              source="category-hub-shortlist"
+              title="Start with the strongest buying options."
+              description={`${categoryLabel} pages should not leave buyers with a loose product wall. Bes3 keeps the final category shortlist at three serious options max, then names the clearest lead.`}
+              browseHref={buildCategoryPath(resolvedCategory)}
+              browseLabel={`Browse ${categoryLabel}`}
+              waitHref={categoryAlertHref}
+              waitLabel="Start category updates"
+            />
+          </div>
         ) : null}
 
         {topBrands.length ? (

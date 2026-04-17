@@ -183,7 +183,7 @@ export default async function BiggestDiscountsPage() {
         <div className="mx-auto max-w-7xl">
           <OfferTransparencyPanel
             title="Why this leaderboard can trust a big percentage"
-            description="This page is stricter than a generic deals list. Every headline discount requires a reliable reference price, and stale reference checks are removed from the main leaderboard."
+            description="This page is stricter than a generic offers list. Every headline discount requires a reliable reference price, and stale reference checks are removed from the main leaderboard."
           />
         </div>
 
