@@ -24,15 +24,15 @@ export async function generateMetadata(): Promise<Metadata> {
   const freshnessDate = articles[0]?.updatedAt || articles[0]?.publishedAt || articles[0]?.createdAt || null
 
   return buildPageMetadata({
-    title: 'Tech Reviews, Comparisons, and Deals',
+    title: 'Tech Buying Guide',
     description:
-      'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
+      'Bes3 is a tech buying guide that helps you narrow the field, compare finalists, and keep your place when timing is the blocker.',
     path: '/',
     locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'live deals', 'best tech picks']
+    keywords: ['tech buying guide', 'product shortlist', 'product comparisons', 'price watch', 'best tech picks']
   })
 }
 
@@ -86,7 +86,7 @@ export default async function HomePage() {
     {
       eyebrow: 'State 03',
       title: 'I would buy if the price improved',
-      description: 'Use deals and alerts when product fit is already mostly clear and timing is the only blocker left.',
+      description: 'Use deals and a price watch when product fit is already mostly clear and timing is the only blocker left.',
       bestIf: 'You mostly know what to buy and just want a better moment to act.',
       notIf: 'You still need to understand the category or narrow the shortlist.',
       href: '/deals',
@@ -121,7 +121,7 @@ export default async function HomePage() {
       title: 'I would buy, but the timing is not right yet.',
       summary: 'This buyer mostly trusts the product choice already. What they need is a better moment to act without losing context.',
       internalQuestion: 'If I wait a week, will I have to reconstruct this whole decision from scratch?',
-      firstMove: 'Track deals or alerts so price timing changes do not erase the work you already did.',
+      firstMove: 'Track deals or start a price watch so timing changes do not erase the work you already did.',
       whyThisMove: 'Waiting should stay inside the same shopping task. Bes3 should bring you back with context instead of forcing a restart.',
       href: '/deals',
       label: 'Track the timing',
@@ -131,12 +131,12 @@ export default async function HomePage() {
   const decisionPrinciples = [
     ['Fewer, better picks', 'Bes3 tries to narrow the field to a few strong options instead of overwhelming you with giant lists.'],
     ['Honest comparisons', 'Comparisons focus on products that make sense together, so the tradeoffs stay clear and useful.'],
-    ['Pick up where you left off', 'If you wait for a deal, alerts and shortlist help you come back without starting your research over.']
+    ['Pick up where you left off', 'If you wait for a better moment, price watches and shortlist help you come back without restarting the research.']
   ]
   const structuredData = buildCollectionPageSchema({
     path: '/',
-    title: 'Tech Reviews, Comparisons, and Deals',
-    description: 'Bes3 helps you find the right tech faster with clear reviews, side-by-side comparisons, and live deals worth checking.',
+    title: 'Tech Buying Guide',
+    description: 'Bes3 is a tech buying guide that helps you narrow the field, compare finalists, and keep your place when timing is the blocker.',
     image: featured[0]?.heroImageUrl,
     items: [
       {

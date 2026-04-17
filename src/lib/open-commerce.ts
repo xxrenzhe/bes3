@@ -113,10 +113,10 @@ export function buildCommerceActions(product: CommerceProductRecord, options?: {
 
   actions.push({
     type: 'start_alert',
-    label: 'Start price alert',
+    label: 'Start price watch',
     href: toAbsoluteUrl(getAlertPath(product)),
     method: 'GET',
-    description: 'Open the Bes3 alert flow instead of forcing a buy decision now.'
+    description: 'Open the Bes3 wait flow instead of forcing a buy decision now.'
   })
 
   actions.push({
@@ -249,7 +249,7 @@ export function serializeCommerceProduct(
       nextStepTitle: 'Use the next Bes3 step with intent',
       nextStepDescription: product.slug
         ? `Open ${product.productName} on Bes3 or move into price history, shortlist, or merchant checking based on what is still unresolved.`
-        : 'Use the current recommendation to decide between shortlist, alerts, or merchant checking.'
+        : 'Use the current recommendation to decide between shortlist, a price watch, or merchant checking.'
     }),
     evidence: {
       offerCount: product.offerCount,

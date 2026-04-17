@@ -31,13 +31,13 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Start Here: Find the right product faster',
     description:
-      'Use Bes3 to search by need, read a full review, compare top picks, or set a price alert without starting over.',
+      'Use Bes3 to search by need, validate one product, compare finalists, or start a price watch without losing your place.',
     path: '/start',
     locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: ['product shortlist', 'product comparisons', 'price alerts', 'tech buying guide']
+    keywords: ['product shortlist', 'product comparisons', 'price watch', 'tech buying guide']
   })
 }
 
@@ -107,11 +107,11 @@ export default async function StartPage() {
     {
       eyebrow: 'Step 04',
       title: 'I want to wait for a better price',
-      description: 'Set an alert when price is the only thing holding you back, so you can come back later without starting over.',
+      description: 'Start a price watch when timing is the only thing holding you back, so you can come back later without restarting the task.',
       bestIf: 'Product fit is mostly settled and timing is the last blocker left.',
       notIf: 'You still need help deciding what belongs on the shortlist.',
       href: leadAlertHref,
-      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start price watch'
     }
   ]
   const selfCheckQuestions = [
@@ -135,7 +135,7 @@ export default async function StartPage() {
     },
     {
       question: 'Is price the only thing still blocking the purchase?',
-      yesLabel: 'Start alerts',
+      yesLabel: 'Start price watch',
       yesHref: leadAlertHref,
       yesDescription: 'Best when fit is mostly settled and you just need a better timing signal.',
       noLabel: 'Open a guide',
@@ -164,9 +164,9 @@ export default async function StartPage() {
     },
     {
       title: 'Need better timing',
-      description: 'Price is the only blocker left. Save the task and let alerts bring you back with context.',
+      description: 'Price is the only blocker left. Save the task and let a price watch bring you back with context.',
       href: leadAlertHref,
-      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start price watch'
     }
   ]
   const personaPathways = [
@@ -200,7 +200,7 @@ export default async function StartPage() {
       firstMove: 'Set an alert tied to the same category or deal path you are already considering.',
       whyThisMove: 'Bes3 should treat waiting as part of the journey, not as leaving the journey.',
       href: leadAlertHref,
-      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts',
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start price watch',
       accentClassName: 'bg-emerald-100 text-emerald-900'
     }
   ]
@@ -275,7 +275,7 @@ export default async function StartPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 actually trying to be?',
-      answer: 'Bes3 is a shopping guide. It helps you go from "I need something" to a shortlist, a review, a comparison, or a price alert without losing your place.'
+      answer: 'Bes3 is a shopping decision guide. It helps you go from "I need something" to a shortlist, a review, a comparison, or a price watch without losing your place.'
     },
     {
       question: 'Why does Bes3 prefer a few strong picks instead of giant lists?',
@@ -286,8 +286,8 @@ export default async function StartPage() {
       answer: 'Go to shortlist after you have at least two good candidates or one strong candidate you know you want to preserve across visits.'
     },
     {
-      question: 'Why does Bes3 include alerts as part of the product?',
-      answer: 'Because timing often blocks a purchase even when the product fit is already clear. Alerts help you wait for a better moment without starting over.'
+      question: 'Why does Bes3 include a wait flow as part of the product?',
+      answer: 'Because timing often blocks a purchase even when the product fit is already clear. Price watches and category updates help you wait for a better moment without starting over.'
     }
   ]
   const structuredData = [
@@ -295,7 +295,7 @@ export default async function StartPage() {
     buildCollectionPageSchema({
       path: '/start',
       title: 'Start Here: Find the right product faster',
-      description: 'Use Bes3 to search by need, read a full review, compare top picks, or set a price alert without starting over.',
+      description: 'Use Bes3 to search by need, validate one product, compare finalists, or start a price watch without losing your place.',
       breadcrumbItems,
       dateModified: latestRefresh,
       items: stateRoutes.map((route) => ({
@@ -310,14 +310,14 @@ export default async function StartPage() {
       [
         {
           name: 'Start from what you already know',
-          text: 'Choose search, review, comparison, or alerts based on what is still unclear instead of jumping into random pages.'
+          text: 'Choose search, review, comparison, or a price watch based on what is still unclear instead of jumping into random pages.'
         },
         {
           name: 'Keep the list short',
           text: 'Compare only products that really belong together, and use shortlist to save serious candidates instead of every product you notice.'
         },
         {
-          name: 'Use alerts when timing changes',
+          name: 'Use the wait flow when timing changes',
           text: 'If you are not buying now, save the category or price watch so you can resume later without starting from zero.'
         }
       ]
@@ -380,7 +380,7 @@ export default async function StartPage() {
           <ShoppingStateRouter
             eyebrow="Buying States"
             title="Choose the page that matches what is still unresolved."
-            description="Search if the need is still broad. Read a review if one product looks close. Compare if you already have top picks. Use alerts if price is the only thing holding you back."
+            description="Search if the need is still broad. Read a review if one product looks close. Compare if you already have top picks. Use a price watch if timing is the only thing holding you back."
             routes={stateRoutes}
           />
         </div>
@@ -460,7 +460,7 @@ export default async function StartPage() {
             <SectionHeader
               eyebrow="Method"
               title="How it works in four simple steps."
-              description="This is the simple path behind search, reviews, shortlist, and alerts."
+              description="This is the simple path behind search, reviews, shortlist, and the wait flow."
             />
             <div className="mt-6 space-y-4">
               {methodSteps.map((step) => (

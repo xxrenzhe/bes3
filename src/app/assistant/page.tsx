@@ -28,8 +28,8 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: intentInput.query ? `Assistant: ${intentInput.query}` : 'Assistant',
     description: intentInput.query
-      ? 'Use the Bes3 assistant to turn a shopping need into a shortlist, next move, and fallback path.'
-      : 'Tell Bes3 what you need and get a tighter shortlist, clearer proof, and a better next move.',
+      ? 'Use the Bes3 assistant to turn a shopping need into a shortlist, next move, and wait path.'
+      : 'Tell Bes3 what you need and get a tighter shortlist, clearer proof, and a more useful next move.',
     path: '/assistant',
     locale: getRequestLocale(),
     robots: {
@@ -50,11 +50,11 @@ const FAQ_ENTRIES = [
   },
   {
     question: 'Does the assistant replace reviews and comparisons?',
-    answer: 'No. It routes you into the right next page. Reviews, comparisons, shortlist, and alerts still carry the detailed evidence and follow-through actions.'
+    answer: 'No. It routes you into the right next page. Reviews, comparisons, shortlist, and price watches still carry the detailed evidence and follow-through actions.'
   },
   {
     question: 'What if timing matters more than buying today?',
-    answer: 'The assistant can switch from buy-now logic into compare or price-watch logic, so you can save the shortlist or move into alerts without starting over.'
+    answer: 'The assistant can switch from buy-now logic into compare or price-watch logic, so you can save the shortlist or move into a wait flow without starting over.'
   }
 ]
 
@@ -104,14 +104,14 @@ export default async function AssistantPage({
   const proofRules = [
     'The assistant optimizes for fit first, then timing, then the shortest honest next move.',
     'A shortlist only stays useful when proof gaps are visible instead of hidden behind generic copy.',
-    'If price is the blocker, the right answer is often an alert or saved shortlist, not another random product page.'
+    'If price is the blocker, the right answer is often a price watch or saved shortlist, not another random product page.'
   ]
 
   const structuredData = [
     buildWebPageSchema({
       path: '/assistant',
       title: 'Bes3 Assistant',
-      description: 'Need-based shopping assistant for building a shortlist, comparing finalists, and moving into price alerts with less noise.',
+      description: 'Need-based shopping assistant for building a shortlist, comparing finalists, and moving into a price watch with less noise.',
       type: 'CollectionPage'
     }),
     buildFaqSchema('/assistant', FAQ_ENTRIES)

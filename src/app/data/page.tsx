@@ -26,8 +26,8 @@ export async function generateMetadata(): Promise<Metadata> {
     null
 
   return buildPageMetadata({
-    title: 'Open Buying Data',
-    description: 'Browse Bes3 open buying data, public feed endpoints, coverage manifests, and commerce protocol routes without reverse-engineering the site.',
+    title: 'Open Commerce Protocol',
+    description: 'Browse the Bes3 public decision-support API, buying feed, coverage manifest, and commerce-protocol routes without reverse-engineering the site.',
     path: '/data',
     locale: getRequestLocale(),
     freshnessDate,
@@ -204,8 +204,8 @@ export default async function OpenDataPage() {
           buildBreadcrumbSchema('/data', breadcrumbItems),
           buildCollectionPageSchema({
             path: '/data',
-            title: 'Open Buying Data',
-            description: 'Browse Bes3 open buying data, public feed endpoints, coverage manifests, and commerce protocol routes without reverse-engineering the site.',
+            title: 'Open Commerce Protocol',
+            description: 'Browse the Bes3 public decision-support API, buying feed, coverage manifest, and commerce-protocol routes without reverse-engineering the site.',
             breadcrumbItems,
             dateModified: latestRefresh,
             items: endpoints.map((endpoint) => ({
