@@ -87,13 +87,13 @@ export default async function NewsletterPage({
           ? 'Price watch updates'
           : selectedIntent === 'category-brief'
             ? 'Category update'
-            : 'Deal updates',
+            : 'Offer updates',
       description:
         selectedIntent === 'price-alert'
           ? `Wait for worthwhile price movement${selectedCategory ? ` in ${selectedCategoryLabel}` : ''}, not every tiny dip.`
         : selectedIntent === 'category-brief'
             ? `Stay current on what changed in ${selectedCategory ? selectedCategoryLabel : 'the categories you follow'} without restarting your research.`
-            : 'Get the best live deals Bes3 finds without turning your inbox into noise.'
+            : 'Get the best live offers Bes3 finds without turning your inbox into noise.'
     },
     {
       label: 'Timing',
@@ -108,7 +108,7 @@ export default async function NewsletterPage({
       value: selectedCategory ? selectedCategoryLabel : 'Keep your place',
       description: selectedCategory
         ? `Keep researching inside ${selectedCategoryLabel} so the alert supports the same category you are already considering.`
-        : 'Keep shortlist, search, and deals aligned so you do not lose your place while waiting.'
+        : 'Keep shortlist, search, and offers aligned so you do not lose your place while waiting.'
     }
   ]
   const followUpRoutes = [

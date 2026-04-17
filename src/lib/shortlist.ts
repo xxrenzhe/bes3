@@ -117,7 +117,7 @@ const CATEGORY_DECISION_PROFILES: CategoryDecisionProfile[] = [
   {
     id: 'audio',
     label: 'Audio fit',
-    decisionLens: 'For audio picks, Bes3 prioritizes comfort, battery, noise control, and tuning clues before price-only deals.',
+    decisionLens: 'For audio picks, Bes3 prioritizes comfort, battery, noise control, and tuning clues before price-only offer hype.',
     compareFocus: 'Compare comfort, battery life, and sound or ANC tradeoffs first.',
     categoryMatchers: ['headphone', 'earbud', 'speaker', 'audio'],
     specKeywords: ['battery', 'anc', 'noise', 'driver', 'wireless', 'bluetooth', 'latency', 'weight'],
@@ -504,7 +504,7 @@ export function summarizeShortlistDecisionReadiness(items: ShortlistItem[], comp
       note: 'Save a few products first so Bes3 can tell you which ones are actually ready to compare.',
       decisionLens: GENERIC_DECISION_PROFILE.decisionLens,
       topGap: 'No saved picks yet.',
-      nextAction: 'Add products from search, deals, or category pages to start building a real shortlist.'
+      nextAction: 'Add products from search, offers, or category pages to start building a real shortlist.'
     }
   }
 
