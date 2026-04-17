@@ -332,8 +332,8 @@ export function ShortlistWorkspace({
       ? `Load ${buildProductRollup(decisionDeskCompareItems)} into compare now. The shortlist is already tight enough to stop collecting.`
       : 'One saved product is still a preference, not a decision. Add one more serious option before compare.'
   const primaryWaitDescription = bestWaitEntry?.state.gaps[0]
-    ? `${bestWaitEntry.state.gaps[0]}. If timing is the blocker, preserve this shortlist with an alert instead of reopening research later.`
-    : `Use ${alertAnchorItem?.category ? getCategoryLabel(alertAnchorItem) : 'this shortlist'} alerts when price timing matters more than more browsing.`
+    ? `${bestWaitEntry.state.gaps[0]}. If timing is the blocker, preserve this shortlist with a price watch instead of reopening research later.`
+    : `Use ${alertAnchorItem?.category ? getCategoryLabel(alertAnchorItem) : 'this shortlist'} price watches when price timing matters more than more browsing.`
   const primaryAlertHref = buildCategoryAlertHref(bestWaitEntry?.item || alertAnchorItem, 'price-alert', 'priority')
   const shortlistTimingTitle =
     compareCount >= 2
@@ -359,7 +359,7 @@ export function ShortlistWorkspace({
       : primaryWaitDescription
   const shortlistTimingDecisionText =
     compareCount >= 2
-      ? 'Finish the compare if one winner already feels likely. If the only open question is price timing, keep the same finalists warm with an alert instead of reopening research.'
+      ? 'Finish the compare if one winner already feels likely. If the only open question is price timing, keep the same finalists warm with a price watch instead of reopening research.'
       : shortlist.length >= 2
         ? `Use ${bestCurrentEntry?.item.productName || 'the strongest saved pick'} as the lead checkpoint, then compare or wait based on whether fit or timing is still unresolved.`
         : 'One saved product is not enough to force a purchase. Validate the lead pick or add one more contender before treating timing as the only blocker.'
@@ -397,8 +397,8 @@ export function ShortlistWorkspace({
               },
         {
           eyebrow: 'Wait',
-          title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Start price alerts',
-          description: 'If timing is the issue, switch from active shopping into a price alert instead of losing your place.',
+          title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Start a price watch',
+          description: 'If timing is the issue, switch from active shopping into a price watch instead of losing your place.',
           href: buildCategoryAlertHref(alertAnchorItem, 'price-alert', 'priority'),
           label: 'Start price watch'
         },
@@ -837,10 +837,10 @@ export function ShortlistWorkspace({
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
                   {bestWaitEntry?.state.gaps[0]
                     ? `${bestWaitEntry.state.gaps[0]}. If timing is the only blocker, keep this candidate warm instead of restarting later.`
-                    : `${shortlistDecisionSummary.topGap} If price timing is the issue, preserve this shortlist with an alert instead of reopening discovery.`}
+                    : `${shortlistDecisionSummary.topGap} If price timing is the issue, preserve this shortlist with a price watch instead of reopening discovery.`}
                 </p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Best alert anchor: {bestWaitEntry?.item.category ? getCategoryLabel(bestWaitEntry.item) : 'your current shortlist'}.
+                  Best watch anchor: {bestWaitEntry?.item.category ? getCategoryLabel(bestWaitEntry.item) : 'your current shortlist'}.
                 </p>
                 <Link
                   href={buildCategoryAlertHref(bestWaitEntry?.item || alertAnchorItem, 'price-alert', 'priority')}
@@ -881,7 +881,7 @@ export function ShortlistWorkspace({
               title: alertAnchorItem?.category ? `Track ${getCategoryLabel(alertAnchorItem)}` : 'Switch to a price watch',
               description: alertAnchorItem?.category
                 ? `If timing is the only blocker, keep this ${getCategoryLabel(alertAnchorItem)} task alive with a price watch instead of losing the thread.`
-                : 'If price is the blocker, save the work and switch into alerts instead of starting over later.',
+                : 'If price is the blocker, save the work and switch into a price watch instead of starting over later.',
               tone: 'strong'
             }
           ]}
@@ -1089,9 +1089,9 @@ export function ShortlistWorkspace({
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {compareCount >= 2
-                    ? 'Your shortlist already has picks in compare. Compare now if the choice is close, or switch to a price alert if price is the only thing left.'
+                    ? 'Your shortlist already has picks in compare. Compare now if the choice is close, or switch to a price watch if price is the only thing left.'
                     : shortlist.length >= 2
-                      ? 'This shortlist already has enough picks to compare. If you are still hesitating, validate the lead pick or set alerts instead of adding more noise.'
+                      ? 'This shortlist already has enough picks to compare. If you are still hesitating, validate the lead pick or start a price watch instead of adding more noise.'
                       : 'One saved product is not a real choice yet. Either validate it with the product page or go back to the category and add one more option.'}
                 </p>
               </div>

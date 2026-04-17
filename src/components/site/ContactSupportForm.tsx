@@ -82,7 +82,7 @@ export function ContactSupportForm({
         <p className="editorial-kicker">Contact Bes3</p>
         <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the form when you still need help.</h2>
         <p className="text-sm leading-7 text-muted-foreground">
-          Bes3 is designed to answer most buying questions through search, reviews, shortlist, and alerts. Use this form for corrections, unusual cases, or anything that needs a real person to look at it.
+          Bes3 is designed to answer most buying questions through search, reviews, shortlist, and price watches. Use this form for corrections, unusual cases, or anything that needs a real person to look at it.
         </p>
       </div>
 

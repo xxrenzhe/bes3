@@ -40,7 +40,7 @@ export default async function ProductsIndexPage() {
     },
     {
       question: 'What should a product page help me do?',
-      answer: 'It should confirm fit, surface price and evidence, and point you to the next action like comparison, alerts, or merchant checking.'
+      answer: 'It should confirm fit, surface price and evidence, and point you to the next action like comparison, a price watch, or merchant checking.'
     }
   ]
 

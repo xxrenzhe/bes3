@@ -34,7 +34,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Category Directory',
     description:
-      'Browse Bes3 by category to find good products, read reviews, compare options, and set alerts without starting over.',
+      'Browse Bes3 by category to find good products, read reviews, compare options, and start category updates without starting over.',
     path: '/directory',
     locale: getRequestLocale(),
     image: articles[0]?.heroImageUrl || products[0]?.heroImageUrl,
@@ -83,13 +83,13 @@ export default async function DirectoryPage() {
     },
     {
       name: 'Track the category if you wait',
-      text: 'If you are not buying today, turn the same category into an alert instead of reopening broad research later.'
+      text: 'If you are not buying today, turn the same category into a price watch or category update instead of reopening broad research later.'
     }
   ]
   const structuredData = buildCollectionPageSchema({
     path: '/directory',
     title: 'Category Directory',
-    description: 'Browse Bes3 by category to find good products, read reviews, compare options, and set alerts without starting over.',
+    description: 'Browse Bes3 by category to find good products, read reviews, compare options, and start category updates without starting over.',
     breadcrumbItems,
     dateModified: latestRefresh,
     items: categories.map((category) => ({
@@ -122,9 +122,9 @@ export default async function DirectoryPage() {
     {
       eyebrow: 'Watch',
       title: 'Start category updates',
-      description: 'If you are still deciding but buying later, save the category as an alert so you can pick back up later without starting over.',
+      description: 'If you are still deciding but buying later, save the category as a price watch or category update so you can pick back up later without starting over.',
       href: directoryAlertHref,
-      label: 'Start alerts'
+      label: 'Start category updates'
     },
     {
       eyebrow: 'Deals',
@@ -155,7 +155,7 @@ export default async function DirectoryPage() {
         data={[
           buildBreadcrumbSchema('/directory', breadcrumbItems),
           structuredData,
-          buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category, shortlist good products, and set alerts if you are not ready to buy yet.', howToSteps),
+          buildHowToSchema('/directory', 'How to use the Bes3 directory', 'Use the directory to choose the right category, shortlist good products, and start category updates if you are not ready to buy yet.', howToSteps),
           buildFaqSchema('/directory', faqEntries)
         ]}
       />
@@ -171,7 +171,7 @@ export default async function DirectoryPage() {
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Start in a category page when you already know the market. Switch to search when the need is still specific, and use alerts when price timing matters more than immediate action.
+                  Start in a category page when you already know the market. Switch to search when the need is still specific, and use category updates when price timing matters more than immediate action.
                 </p>
               </div>
             </div>
@@ -206,10 +206,10 @@ export default async function DirectoryPage() {
                 : featuredComparison
                   ? 'Compare the top options'
                   : featuredReview
-                  ? 'Read the lead review'
+                    ? 'Read the lead review'
                   : featuredArticle
                     ? `Open the lead ${getArticleTypeLabel(featuredArticle.type)}`
-                  : 'Use alerts while more pages arrive'
+                  : 'Use category updates while more pages arrive'
             const latestRefresh =
               featuredArticle?.updatedAt ||
               featuredArticle?.publishedAt ||

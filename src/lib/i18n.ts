@@ -182,7 +182,7 @@ const EXIT_INTENT_DICTIONARY: Record<SiteLocale, ExitIntentDictionary> = {
     primaryCta: 'Send me the next useful update',
     secondaryCta: 'Keep browsing',
     helper: 'One email when it matters. No blast campaigns, no fake urgency.',
-    reassurance: 'Bes3 only sends deal alerts, category updates, or price watch notes tied to real buying decisions.',
+    reassurance: 'Bes3 only sends deal updates, category updates, or price watch notes tied to real buying decisions.',
     urgency: 'Best for people comparing a few finalists or waiting for a better price window.'
   },
   es: {
@@ -193,7 +193,7 @@ const EXIT_INTENT_DICTIONARY: Record<SiteLocale, ExitIntentDictionary> = {
     primaryCta: 'Avísame cuando valga la pena',
     secondaryCta: 'Seguir navegando',
     helper: 'Un correo cuando importe. Sin campañas masivas ni urgencia falsa.',
-    reassurance: 'Bes3 solo envía alertas y actualizaciones ligadas a decisiones reales de compra.',
+    reassurance: 'Bes3 solo envía actualizaciones y seguimientos de precio ligados a decisiones reales de compra.',
     urgency: 'Ideal si estás comparando finalistas o esperando un mejor precio.'
   },
   de: {
@@ -215,7 +215,7 @@ const EXIT_INTENT_DICTIONARY: Record<SiteLocale, ExitIntentDictionary> = {
     primaryCta: 'Prévenez-moi quand cela vaut le coup',
     secondaryCta: 'Continuer la visite',
     helper: 'Un e-mail quand cela compte. Pas de campagnes massives, pas de fausse urgence.',
-    reassurance: 'Bes3 n’envoie que des alertes liées à de vraies décisions d’achat.',
+    reassurance: 'Bes3 n’envoie que des mises a jour et suivis de prix lies a de vraies decisions d’achat.',
     urgency: 'Utile si vous comparez déjà quelques finalistes ou attendez un meilleur prix.'
   },
   ja: {

@@ -51,7 +51,7 @@ export default function PrivacyPage() {
       label: 'Open About'
     },
     {
-      title: 'Manage expectations with alerts',
+      title: 'Manage expectations with price watches',
       description: 'Use newsletter updates only when you want Bes3 to keep tracking the category, deal, or shortlist over time.',
       href: '/newsletter',
       label: 'Open Newsletter'
@@ -135,7 +135,7 @@ export default function PrivacyPage() {
             <SectionHeader
               eyebrow="Buyer Meaning"
               title="What privacy means inside Bes3."
-              description="Privacy is part of the product promise. If Bes3 asks readers to trust shortlist, alerts, and affiliate-linked pages, the data model has to stay proportionate to that purpose."
+              description="Privacy is part of the product promise. If Bes3 asks readers to trust shortlist, price watches, and affiliate-linked pages, the data model has to stay proportionate to that purpose."
             />
             <div className="mt-8 space-y-4">
               {buyerPromises.map((item) => (
