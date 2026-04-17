@@ -13,7 +13,7 @@ import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticle
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Site Map',
-    description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and deal pages from one lightweight directory.',
+    description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
     path: '/site-map',
     locale: getRequestLocale(),
     keywords: ['site map', 'directory', 'reviews', 'comparisons', 'buying guides']
@@ -77,7 +77,7 @@ export default async function HtmlSitemapPage() {
     buildWebPageSchema({
       path: '/site-map',
       title: 'Site Map',
-      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and deal pages from one lightweight directory.',
+      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
       type: 'CollectionPage'
     }),
     buildCollectionPageSchema({
@@ -88,7 +88,7 @@ export default async function HtmlSitemapPage() {
         { name: 'Assistant', path: '/assistant' },
         { name: 'Start Here', path: '/start' },
         { name: 'Search', path: '/search' },
-        { name: 'Deals', path: '/deals' },
+        { name: 'Offers', path: '/offers' },
         { name: 'Directory', path: '/directory' },
         { name: 'Brands', path: '/brands' },
         { name: 'Tools', path: '/tools' },
@@ -120,14 +120,14 @@ export default async function HtmlSitemapPage() {
           <p className="editorial-kicker">HTML Sitemap</p>
           <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse the full Bes3 directory.</h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page is a lightweight directory for anyone who wants one fast view of the main categories, brands, products, reviews, comparisons, guides, and shopping tools.
+            This page is a lightweight directory for anyone who wants one fast view of the main categories, brands, products, reviews, comparisons, guides, offers, and shopping tools.
           </p>
           <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {[
               { href: '/assistant', label: 'Assistant' },
               { href: '/start', label: 'Start here' },
               { href: '/search', label: 'Search' },
-              { href: '/deals', label: 'Deals' },
+              { href: '/offers', label: 'Offers' },
               { href: '/directory', label: 'Directory' },
               { href: '/brands', label: 'Brands' },
               { href: '/tools', label: 'Tools' },

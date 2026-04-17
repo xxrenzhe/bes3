@@ -146,7 +146,7 @@ export function buildCommerceDisclaimers(product?: CommerceProductRecord | null)
     },
     {
       type: 'final-verification',
-      message: 'Use the merchant page as the final source of truth for live price, coupon eligibility, shipping, and stock status.'
+      message: 'Use the merchant page as the final source of truth for live price, promotion eligibility, shipping, and stock status.'
     }
   ]
 }

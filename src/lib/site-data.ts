@@ -5,6 +5,7 @@ import { slugify } from '@/lib/slug'
 export interface ProductRecord {
   id: number
   slug: string | null
+  affiliateProductId: number | null
   brand: string | null
   productName: string
   category: string | null
@@ -17,6 +18,7 @@ export interface ProductRecord {
   specs: Record<string, string>
   reviewHighlights: string[]
   resolvedUrl: string | null
+  sourceAffiliateLink: string | null
   priceLastCheckedAt: string | null
   offerLastCheckedAt: string | null
   attributeCompletenessScore: number
@@ -40,6 +42,11 @@ export interface ProductOfferRecord {
   shippingCost: number | null
   couponText: string | null
   couponType: string | null
+  referencePriceAmount: number | null
+  referencePriceCurrency: string | null
+  referencePriceType: string | null
+  referencePriceSource: string | null
+  referencePriceLastCheckedAt: string | null
   conditionLabel: string | null
   sourceType: string
   sourceUrl: string | null
@@ -310,6 +317,7 @@ function mapProductRow(row: any): ProductRecord {
   return {
     id: row.id,
     slug: row.slug,
+    affiliateProductId: row.affiliate_product_id ?? null,
     brand: row.brand,
     productName: row.product_name,
     category: row.category,
@@ -322,6 +330,7 @@ function mapProductRow(row: any): ProductRecord {
     specs: parseJsonObject(row.specs_json),
     reviewHighlights: parseJsonArray(row.review_highlights_json),
     resolvedUrl: row.resolved_url,
+    sourceAffiliateLink: row.source_affiliate_link || null,
     priceLastCheckedAt: row.price_last_checked_at || null,
     offerLastCheckedAt: row.offer_last_checked_at || null,
     attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
@@ -337,6 +346,7 @@ function mapArticleRow(row: any): ArticleRecord {
       ? {
         id: row.product_id,
         slug: row.product_slug,
+        affiliateProductId: row.affiliate_product_id ?? null,
         brand: row.brand,
         productName: row.product_name,
         category: row.category,
@@ -349,6 +359,7 @@ function mapArticleRow(row: any): ArticleRecord {
         specs: parseJsonObject(row.specs_json),
         reviewHighlights: parseJsonArray(row.review_highlights_json),
         resolvedUrl: row.resolved_url,
+        sourceAffiliateLink: row.source_affiliate_link || null,
         priceLastCheckedAt: row.price_last_checked_at || null,
         offerLastCheckedAt: row.offer_last_checked_at || null,
         attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
@@ -431,7 +442,7 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
   const rows = await db.query(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
-        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
@@ -459,7 +470,7 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
   const row = await db.queryOne(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
-        p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
+        p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
         (
@@ -493,7 +504,7 @@ const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromi
   const rows = await db.query<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
         (
@@ -520,7 +531,7 @@ const getProductBySlugCached = async (slug: string): Promise<ProductRecord | nul
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
         (
@@ -553,7 +564,7 @@ export async function getProductById(productId: number): Promise<ProductRecord |
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
-        rating, review_count, specs_json, review_highlights_json, resolved_url,
+        affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
         (
@@ -581,7 +592,7 @@ export async function listProductsByCategory(category: string): Promise<ProductR
 }
 
 export function isPublicProduct(product: ProductRecord) {
-  return Boolean(product.slug)
+  return Boolean(product.slug && product.affiliateProductId && (product.resolvedUrl || product.sourceAffiliateLink))
 }
 
 const listPublishedProductsCached = async (): Promise<ProductRecord[]> => withCachedPromise('listPublishedProducts', async () => {
@@ -650,6 +661,11 @@ function mapOfferRow(row: any): ProductOfferRecord {
     shippingCost: row.shipping_cost,
     couponText: row.coupon_text || null,
     couponType: row.coupon_type || null,
+    referencePriceAmount: row.reference_price_amount,
+    referencePriceCurrency: row.reference_price_currency || null,
+    referencePriceType: row.reference_price_type || null,
+    referencePriceSource: row.reference_price_source || null,
+    referencePriceLastCheckedAt: row.reference_price_last_checked_at || null,
     conditionLabel: row.condition_label || null,
     sourceType: row.source_type || 'scrape',
     sourceUrl: row.source_url || null,
@@ -796,7 +812,7 @@ export async function getOpenCommerceProductById(productId: number): Promise<Com
     listAttributeFactCountsForProductIds([productId])
   ])
 
-  if (!product?.slug) return null
+  if (!product || !isPublicProduct(product)) return null
 
   const offers = offersByProductId.get(productId) || []
 

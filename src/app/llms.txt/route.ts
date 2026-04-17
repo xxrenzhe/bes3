@@ -78,7 +78,7 @@ export async function GET(request: Request) {
     '',
     '- Public JSON is sanitized and intended for discovery, automation, and lightweight integration.',
     '- Human-facing decision pages remain the best route for final fit checks and next-step navigation.',
-    '- Merchant pages remain the final source of truth for live price, stock, coupon, shipping, and return details.'
+    '- Merchant pages remain the final source of truth for live price, stock, promotion, shipping, and return details.'
   ].join('\n')
 
   return createCacheableTextResponse({

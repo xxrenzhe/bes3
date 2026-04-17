@@ -111,10 +111,10 @@ export default async function NotFound() {
               label: 'Search Bes3'
             },
             {
-              title: 'Check live deals',
-              description: 'Best when you were already close to buying and now just need the freshest live deals.',
-              href: '/deals',
-              label: 'Open deals'
+              title: 'Check live offers',
+              description: 'Best when you were already close to buying and now just need the freshest live offers.',
+              href: '/offers',
+              label: 'Open offers'
             }
           ].map((route) => (
             <Link key={route.title} href={route.href} className="rounded-[2rem] bg-white p-7 shadow-panel transition-transform hover:-translate-y-1">

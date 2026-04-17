@@ -50,10 +50,10 @@ export default function TermsPage() {
       label: 'Open About'
     },
     {
-      title: 'Browse live deals',
-      description: 'Use deals only after the product already looks right and price is what matters next.',
-      href: '/deals',
-      label: 'Open Deals'
+      title: 'Browse live offers',
+      description: 'Use offers only after the product already looks right and price is what matters next.',
+      href: '/offers',
+      label: 'Open Offers'
     },
     {
       title: 'Contact Bes3',
@@ -73,7 +73,7 @@ export default function TermsPage() {
     },
     {
       question: 'Where should a reader go after checking the terms?',
-      answer: 'Usually back to About for methodology, Deals when price is the real next step, or Contact for edge cases and corrections.'
+      answer: 'Usually back to About for methodology, Offers when price is the real next step, or Contact for edge cases and corrections.'
     }
   ]
   const structuredData = [

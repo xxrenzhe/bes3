@@ -255,7 +255,12 @@ export function CommerceEvidencePanel({
                     </p>
                   </div>
                   {offer.couponText ? (
-                    <p className="mt-2 text-xs text-muted-foreground">Coupon: {offer.couponText}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Promotion note: {offer.couponText}</p>
+                  ) : null}
+                  {offer.referencePriceAmount != null && offer.referencePriceAmount > (offer.priceAmount ?? 0) ? (
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Reference price: {formatPriceSnapshot(offer.referencePriceAmount, offer.referencePriceCurrency || offer.priceCurrency || product.priceCurrency || 'USD')}
+                    </p>
                   ) : null}
                   {offer.offerUrl ? (
                     <Link

@@ -73,7 +73,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navSearch: 'Search',
     navDirectory: 'Directory',
     navBrands: 'Brands',
-    navDeals: 'Deals',
+    navDeals: 'Offers',
     navAbout: 'About',
     navAlerts: 'Alerts',
     navSignIn: 'Sign In',
@@ -84,7 +84,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'Categories',
     footerSiteMap: 'Site Map',
     footerShortlist: 'Shortlist',
-    footerDescription: 'Bes3 helps you compare products, read honest reviews, and find verified deals without the usual hype.',
+    footerDescription: 'Bes3 helps you compare products, read honest reviews, and find verified offers without the usual hype.',
     localeSwitcherLabel: 'Language'
   },
   es: {
@@ -157,7 +157,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navSearch: '検索',
     navDirectory: '一覧',
     navBrands: 'ブランド',
-    navDeals: 'セール',
+    navDeals: 'オファー',
     navAbout: 'Bes3について',
     navAlerts: '通知',
     navSignIn: 'ログイン',
@@ -168,7 +168,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'カテゴリ',
     footerSiteMap: 'サイトマップ',
     footerShortlist: '候補リスト',
-    footerDescription: 'Bes3 は製品比較、率直なレビュー、検証済みセールをまとめて、無駄な煽りなしで判断を助けます。',
+    footerDescription: 'Bes3 は製品比較、率直なレビュー、検証済みオファーをまとめて、無駄な煽りなしで判断を助けます。',
     localeSwitcherLabel: '言語'
   }
 }

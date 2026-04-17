@@ -20,7 +20,7 @@ export async function PublicShell({
     { href: '/search', label: copy.navSearch },
     { href: '/directory', label: copy.navDirectory },
     { href: '/brands', label: copy.navBrands },
-    { href: '/deals', label: copy.navDeals },
+    { href: '/offers', label: copy.navDeals },
     { href: '/about', label: copy.navAbout },
     { href: '/newsletter', label: copy.navAlerts }
   ]
@@ -122,7 +122,7 @@ export async function PublicShell({
               <Link href={addLocaleToPath('/compare', locale)}>Compare</Link>
               <Link href={addLocaleToPath('/guides', locale)}>Guides</Link>
               <Link href={addLocaleToPath('/brands', locale)}>{copy.navBrands}</Link>
-              <Link href={addLocaleToPath('/deals', locale)}>{copy.navDeals}</Link>
+              <Link href={addLocaleToPath('/offers', locale)}>{copy.navDeals}</Link>
               <Link href={addLocaleToPath('/directory', locale)}>{copy.navDirectory}</Link>
               <Link href={addLocaleToPath('/site-map', locale)}>{copy.footerSiteMap}</Link>
               <Link href={addLocaleToPath('/tools', locale)}>Tools</Link>
