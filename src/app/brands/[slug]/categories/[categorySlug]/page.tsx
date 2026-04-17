@@ -244,7 +244,7 @@ export default async function BrandCategoryPage({
         {
           eyebrow: 'Watch',
           title: `Track ${categoryLabel}`,
-          description: 'If price is the only thing holding you back, keep this category active through alerts instead of forcing a decision today.',
+          description: 'If price is the only thing holding you back, keep this category active through a price watch instead of forcing a decision today.',
           href: brandCategoryWaitPath,
           label: 'Start price watch'
         }
@@ -269,7 +269,7 @@ export default async function BrandCategoryPage({
           title: `Track ${categoryLabel}`,
           description: 'If this exact page is not ready, keep the broader category active so new options or price movement do not disappear from your radar.',
           href: brandCategoryWaitPath,
-          label: 'Start category alerts'
+          label: 'Start category updates'
         },
         {
           eyebrow: 'Search',
@@ -334,7 +334,7 @@ export default async function BrandCategoryPage({
               text: `Use the full ${categoryLabel} page when the category matters more than the brand and you need active alternatives immediately.`
             },
             {
-              name: 'Keep this search alive with alerts',
+              name: 'Keep this search alive with updates',
               text: 'If neither fallback path should trigger a purchase today, track the category so new options or price movement can pull you back in later.'
             }
           ]

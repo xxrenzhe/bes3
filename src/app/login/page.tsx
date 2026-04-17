@@ -68,7 +68,7 @@ export default function LoginPage() {
           <div className="mt-8 rounded-[1.75rem] border border-emerald-200/15 bg-white/5 p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Boundary note</p>
             <p className="mt-3 text-sm leading-7 text-slate-200">
-              If you are a shopper, this is the wrong page. The public Bes3 experience lives in search, shortlist, reviews, comparisons, and alerts. This login is only for the team running the CMS.
+              If you are a shopper, this is the wrong page. The public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This login is only for the team running the CMS.
             </p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">

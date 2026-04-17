@@ -29,7 +29,7 @@ function buildThankYouMeta(intent: ContactIntent) {
     case 'buyer-support':
       return {
         title: 'Buyer Support Request Received',
-        description: 'Bes3 received your support request. While the team reviews it, you can keep shopping with search, shortlist, or price alerts.'
+        description: 'Bes3 received your support request. While the team reviews it, you can keep shopping with search, shortlist, or a price watch.'
       }
     case 'editorial-feedback':
       return {
@@ -139,7 +139,7 @@ export default async function ThankYouPage({
     cadence: 'priority',
     returnTo: resumeContext?.href || '/thank-you',
     returnLabel: resumeContext?.label || 'Resume current task',
-    returnDescription: resumeContext?.description || 'Return to the same shopping task instead of dropping into generic alerts.'
+    returnDescription: resumeContext?.description || 'Return to the same shopping task instead of dropping into generic updates.'
   })
 
   const intentMeta: Record<
@@ -161,9 +161,9 @@ export default async function ThankYouPage({
       eyebrow: 'Buyer Support',
       title: 'Your question is with the Bes3 team.',
       description:
-        'A Bes3 reviewer will look at the issue you flagged. While that happens, the fastest answer is often still on the site: search, save your options, or set a price alert.',
+        'A Bes3 reviewer will look at the issue you flagged. While that happens, the fastest answer is often still on the site: search, save your options, or start a price watch.',
       bestRoute:
-        'Use search, shortlist, or alerts so you do not lose your place while we review your message.',
+        'Use search, shortlist, or category updates so you do not lose your place while we review your message.',
       routes: [
         resumeContext
           ? {
@@ -189,7 +189,7 @@ export default async function ThankYouPage({
           title: `Track ${leadCategoryLabel}`,
           description: 'Best when timing, not product fit, is the last blocker left.',
           href: thankYouAlertHref,
-          label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+          label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start a price watch'
         }
       ].filter(Boolean) as Array<{
         title: string
@@ -443,7 +443,7 @@ export default async function ThankYouPage({
           decisionLabel="Best Bes3 call"
           decisionText={
             resumeContext
-              ? `Go back to ${resumeContext.label.toLowerCase()} first. If timing is the only blocker left after that, switch into deals or alerts. If the finalists still need pressure-testing, continue compare from the same task.`
+              ? `Go back to ${resumeContext.label.toLowerCase()} first. If timing is the only blocker left after that, switch into deals or a price watch. If the finalists still need pressure-testing, continue compare from the same task.`
               : 'Use the strongest concrete next move now: reopen the shortlist, check whether price timing changed, or continue comparing finalists. Do not let the contact step turn into a dead end.'
           }
           metrics={[

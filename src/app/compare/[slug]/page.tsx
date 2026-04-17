@@ -234,7 +234,7 @@ export default async function ComparisonPage({
     },
     {
       name: 'Keep other options open',
-      text: 'If price is the only thing holding you back, switch into a category price alert. If neither option is right, reopen the shortlist instead of branching into unrelated products.'
+      text: 'If price is the only thing holding you back, switch into a category price watch. If neither option is right, reopen the shortlist instead of branching into unrelated products.'
     }
   ]
   const structuredData = [
@@ -322,7 +322,7 @@ export default async function ComparisonPage({
           }))
       ].filter(Boolean) as Array<{ name: string; path: string }>
     ),
-    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the top picks, choose the better fit, and decide whether to buy now, set a price alert, or reopen the shortlist.', howToSteps)
+    buildHowToSchema(path, `How to use the ${article.title} comparison`, 'Use the comparison to confirm the top picks, choose the better fit, and decide whether to buy now, start a price watch, or reopen the shortlist.', howToSteps)
   ]
   const faqEntries = [
     {
@@ -364,7 +364,7 @@ export default async function ComparisonPage({
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track a better deal',
-      description: 'If price is the only unresolved variable, convert this comparison into a price alert so you can pick this back up later.',
+      description: 'If price is the only unresolved variable, convert this comparison into a price watch so you can pick this back up later.',
       href: compareWaitPath,
       label: 'Start price watch'
     },
@@ -659,7 +659,7 @@ export default async function ComparisonPage({
             },
             {
               label: 'Timing-first buyer',
-              winner: category ? `Watch ${categoryLabel}` : 'Set a price alert',
+              winner: category ? `Watch ${categoryLabel}` : 'Start a price watch',
               reason: 'If price timing is the only blocker, neither finalist needs a new research cycle right now. Preserve this choice and wait for a better entry point.',
               note: 'Switch into price watch instead of restarting comparison from zero.'
             }

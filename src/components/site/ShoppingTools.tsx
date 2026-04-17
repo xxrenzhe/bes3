@@ -80,7 +80,7 @@ export function ShoppingTools() {
             <p className="mt-3 text-2xl font-black">{dropPercent >= 12 && insideBudget ? 'Worth waiting' : 'Do not wait just for noise'}</p>
             <p className="mt-2 text-sm text-slate-200">
               {dropPercent >= 12 && insideBudget
-                ? 'This is a meaningful enough price gap to justify an alert.'
+                ? 'This is a meaningful enough price gap to justify a price watch.'
                 : 'If the fit is right, a tiny drop usually should not decide the purchase by itself.'}
             </p>
           </div>
@@ -126,14 +126,14 @@ export function ShoppingTools() {
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Recommendation</p>
           </div>
           <h3 className="mt-4 text-2xl font-black tracking-tight text-slate-950">
-            {readyToBuyNow ? 'You are close enough to buy.' : shortlistSize > 3 ? 'Cut the shortlist before buying.' : 'Use alerts or one last compare pass.'}
+            {readyToBuyNow ? 'You are close enough to buy.' : shortlistSize > 3 ? 'Cut the shortlist before buying.' : 'Use a price watch or one last compare pass.'}
           </h3>
           <p className="mt-4 text-sm leading-7 text-slate-600">
             {readyToBuyNow
               ? 'Your shortlist is tight, the must-haves are covered, and price timing is not the blocker. This is where Bes3 would treat “Check current price” as the right next step.'
               : shortlistSize > 3
                 ? 'You still have too many options for a clean decision. Bes3 would push you back into compare or shortlist cleanup before any checkout click.'
-                : 'The product fit may already be close, but price timing or one missing tradeoff still matters. Use alerts or one last comparison instead of forcing a rushed purchase.'}
+                : 'The product fit may already be close, but price timing or one missing tradeoff still matters. Use a price watch or one last comparison instead of forcing a rushed purchase.'}
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link href="/shortlist" className={cn(buttonVariants(), 'rounded-full px-6')}>
@@ -143,7 +143,7 @@ export function ShoppingTools() {
               href={alertHref}
               className={cn(buttonVariants({ variant: 'outline' }), 'rounded-full px-6')}
             >
-              Open price alerts
+              Open price watch
             </Link>
           </div>
         </div>

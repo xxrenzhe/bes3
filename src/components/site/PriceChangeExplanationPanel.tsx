@@ -70,7 +70,7 @@ function buildActionContext(signal: DealDecisionSignal, summary: PriceHistoryWin
       : 'This may be workable, but the range is still thin enough that one more tracked move could change the call.'
   }
 
-  return 'Use shortlist, compare, or alerts for now. The timing signal is still weaker than the product-fit signal.'
+  return 'Use shortlist, compare, or a price watch for now. The timing signal is still weaker than the product-fit signal.'
 }
 
 export function PriceChangeExplanationPanel({

@@ -62,9 +62,9 @@ export default async function ContactPage() {
     {
       eyebrow: 'Wait',
       title: `Track ${leadCategoryLabel}`,
-      description: 'If timing is the real blocker, alerts help you wait without forcing you to buy or email too early.',
+      description: 'If timing is the real blocker, a price watch helps you wait without forcing you to buy or email too early.',
       href: contactAlertHref,
-      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start a price watch'
     }
   ]
 
@@ -131,7 +131,7 @@ export default async function ContactPage() {
                 Get help when the site is not enough.
               </h1>
               <p className="mt-4 max-w-3xl text-lg leading-8 text-muted-foreground">
-                Contact should be the backup path, not the first one. Bes3 already answers most shopping questions through search, reviews, shortlist, comparisons, and alerts. Use this page when you still feel blocked after those pages.
+                Contact should be the backup path, not the first one. Bes3 already answers most shopping questions through search, reviews, shortlist, comparisons, and price watches. Use this page when you still feel blocked after those pages.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>

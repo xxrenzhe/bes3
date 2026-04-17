@@ -228,8 +228,8 @@ export default async function ProductPage({
         : 'Use the product facts and review evidence here to decide whether the product deserves a place on the shortlist.'
     },
     {
-      name: 'Compare or set a price alert',
-      text: `If the product looks good but not final, move into ${categoryLabel} comparisons or a price alert instead of starting over.`
+      name: 'Compare or start a price watch',
+      text: `If the product looks good but not final, move into ${categoryLabel} comparisons or a price watch instead of starting over.`
     }
   ]
   const structuredData = [
@@ -312,7 +312,7 @@ export default async function ProductPage({
       question: 'What should I do if this product looks good but not final?',
       answer: comparisonArticle
         ? 'Open the related comparison next if you are down to your top picks. If price is the only thing holding you back instead of fit, switch to the category price watch.'
-        : 'Return to the category page or start a price alert so you can keep following this category without forcing the purchase today.'
+        : 'Return to the category page or start a price watch so you can keep following this category without forcing the purchase today.'
     }
   ]
   const nextMoves = [
@@ -506,7 +506,7 @@ export default async function ProductPage({
                 <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-primary">Next Best Move</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">Keep your next step clear.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  This product page should not be a dead end. Use the next step that matches your buying stage: validate, compare, or switch to a price alert.
+                  This product page should not be a dead end. Use the next step that matches your buying stage: validate, compare, or switch to a price watch.
                 </p>
                 <div className="mt-5 grid gap-3">
                   {nextMoves.map((move) => (
@@ -598,7 +598,7 @@ export default async function ProductPage({
               title: comparisonArticle ? 'Compare or watch on purpose' : 'Buy or watch on purpose',
               description: comparisonArticle
                 ? 'If the fit looks real, open the comparison next. If timing is the only blocker left, preserve this product with a price watch instead of reopening broad research.'
-                : 'If the fit is already clear, use the timing signal and merchant check. If not, keep the task alive with shortlist, category context, or a price alert.',
+                : 'If the fit is already clear, use the timing signal and merchant check. If not, keep the task alive with shortlist, category context, or a price watch.',
               tone: 'strong'
             }
           ]}

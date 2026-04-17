@@ -174,7 +174,7 @@ export default async function GuidePage({
     },
     {
       name: 'Keep your place',
-      text: 'If you are not ready to buy yet, turn the category into a weekly update or alert so you can pick back up later without starting over.'
+      text: 'If you are not ready to buy yet, turn the category into a weekly update or price watch so you can pick back up later without starting over.'
     }
   ]
   const structuredData = [
@@ -254,9 +254,9 @@ export default async function GuidePage({
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track market changes',
-      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the category in view with a weekly update or alert.',
+      description: 'If this guide changed what you are looking for but you are not ready to buy yet, keep the category in view with a weekly update or price watch.',
       href: guideAlertHref,
-      label: 'Start category alerts'
+      label: 'Start category updates'
     }
   ]
 
@@ -306,14 +306,14 @@ export default async function GuidePage({
               <p className="editorial-kicker">How To Use This Guide</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Turn category knowledge into a clearer shortlist.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Guides exist to make the category clearer before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or an alert instead of circling the same choices again.
+                Guides exist to make the category clearer before you compare or click through. Once the category rules are clear, move into a review, a shortlist, or a price watch instead of circling the same choices again.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {relatedReview
         ? 'This guide already has enough nearby pages to hand you into a real review next. Use it to narrow what matters, then move on.'
-                    : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or alert rather than another general explainer.'}
+                    : 'Use this guide to frame the choice. The next useful move is a category page, shortlist, or price watch rather than another general explainer.'}
                 </p>
               </div>
             </div>
@@ -360,7 +360,7 @@ export default async function GuidePage({
             {
               eyebrow: 'Next step',
               title: 'Shortlist, validate, or wait on purpose',
-              description: 'If this guide already changed how you think about the category, move into the review, category page, or alerts instead of restarting from generic browsing later.',
+              description: 'If this guide already changed how you think about the category, move into the review, category page, or category updates instead of restarting from generic browsing later.',
               tone: 'strong'
             }
           ]}

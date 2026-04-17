@@ -217,8 +217,8 @@ export default async function ReviewPage({
     {
       name: 'Choose the next step',
       text: relatedComparison
-        ? 'Move into the related comparison if you are down to your top picks, or switch to a price alert if price is the only thing holding you back.'
-        : 'Use the category page or a price alert if you are not ready to compare your top picks yet.'
+        ? 'Move into the related comparison if you are down to your top picks, or switch to a price watch if price is the only thing holding you back.'
+        : 'Use the category page or a price watch if you are not ready to compare your top picks yet.'
     }
   ]
   const structuredData = [
@@ -298,7 +298,7 @@ export default async function ReviewPage({
   const faqEntries = [
     {
       question: 'What should this review help me decide?',
-      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once it feels like a real option, the next step is usually the product page, a comparison, or a price alert.'
+      answer: 'It should tell you whether this product deserves to stay on the shortlist at all. Once it feels like a real option, the next step is usually the product page, a comparison, or a price watch.'
     },
     {
       question: 'When should I open the brand page from a review?',
@@ -358,9 +358,9 @@ export default async function ReviewPage({
     {
       eyebrow: 'Watch',
       title: category ? `Track ${categoryLabel}` : 'Track the market',
-      description: 'If the purchase is waiting on a better price, turn this review into a price alert instead of reopening research from scratch later.',
+      description: 'If the purchase is waiting on a better price, turn this review into a price watch instead of reopening research from scratch later.',
       href: reviewWaitPath,
-      label: 'Start price alert'
+      label: 'Start price watch'
     }
   ]
   const decisionModules = buildArticleDecisionContent(article, 'review', {
@@ -480,7 +480,7 @@ export default async function ReviewPage({
               <p className="editorial-kicker">How To Use This Review</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Use the review, then choose the next move.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into an alert if price is the only thing still holding you back.
+                Bes3 reviews are meant to compress research, not trap buyers on a content page. Validate the recommendation, compare it if needed, and switch into a price watch if price is the only thing still holding you back.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>

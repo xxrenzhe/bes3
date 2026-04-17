@@ -250,7 +250,7 @@ export default async function BrandPage({
           title: `Track ${getCategoryLabel(leadCategory)}`,
           description: 'If price is the only thing holding you back, keep the surrounding category active instead of forcing a brand choice today.',
           href: brandWaitPath,
-          label: 'Start price alert'
+          label: 'Start price watch'
         }
       : null
   ].filter(Boolean) as Array<{

@@ -56,7 +56,7 @@ export async function generateMetadata({
     title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
     description:
       pickMetadataDescription(leadArticle?.seoDescription, leadArticle?.summary, leadProduct?.description) ||
-      `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
+      `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start category updates without starting over.`,
     path: buildCategoryPath(resolvedCategory),
     locale: getRequestLocale(),
     image: leadArticle?.heroImageUrl || leadProduct?.heroImageUrl,
@@ -196,7 +196,7 @@ export default async function CategoryPage({
     },
     {
       name: 'Compare or track the category',
-      text: 'Move into comparisons when the shortlist is tight. If price is the only thing holding you back, switch to category alerts without losing your place.'
+      text: 'Move into comparisons when the shortlist is tight. If price is the only thing holding you back, switch to category updates without losing your place.'
     }
   ]
   const structuredData = [
@@ -206,7 +206,7 @@ export default async function CategoryPage({
       title: `${toTitleCaseWords(categoryLabel)} Buying Guide`,
       description:
         pickMetadataDescription(featuredReview?.seoDescription, featuredReview?.summary, featured?.summary) ||
-        `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start alerts without starting over.`,
+        `Browse ${categoryLabel} on Bes3 to find good products, read reviews, compare top picks, and start category updates without starting over.`,
       image: featured?.heroImageUrl || products[0]?.heroImageUrl,
       breadcrumbItems,
       about: {
@@ -230,7 +230,7 @@ export default async function CategoryPage({
   const faqEntries = [
     {
       question: `What should this ${categoryLabel} page help me do?`,
-      answer: `It should help you shop inside one ${categoryLabel} category: shortlist good products, open the lead review, compare top picks, and switch to alerts if price timing is the only thing holding you back.`
+      answer: `It should help you shop inside one ${categoryLabel} category: shortlist good products, open the lead review, compare top picks, and switch to category updates if price timing is the only thing holding you back.`
     },
     {
       question: 'When should I use a brand page from here?',
@@ -266,9 +266,9 @@ export default async function CategoryPage({
     {
       eyebrow: 'Watch',
       title: 'Track this category',
-      description: 'If the purchase is not happening today, turn this category into a price alert or weekly update instead of losing your place.',
+      description: 'If the purchase is not happening today, turn this category into a price watch or weekly update instead of losing your place.',
       href: categoryAlertHref,
-      label: 'Start category alerts'
+      label: 'Start category updates'
     }
   ]
   const seoHubSections = [
@@ -346,14 +346,14 @@ export default async function CategoryPage({
               <p className="editorial-kicker">How To Use This Category</p>
               <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Move from browsing to a shortlist you can actually use.</h2>
               <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-                {categoryLabel} works best when you use it to shortlist good options, validate one product with a review, compare only the top picks, and switch to alerts if the purchase is still waiting.
+                {categoryLabel} works best when you use it to shortlist good options, validate one product with a review, compare only the top picks, and switch to category updates if the purchase is still waiting.
               </p>
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
                   {products.length >= 2
                     ? 'This category already has enough products to shortlist and compare. Start with the top candidates below, then use a review or comparison page once the field is smaller.'
-                    : 'This category is still early. Start with the strongest available product or review, then use alerts if you want to wait for more options.'}
+                    : 'This category is still early. Start with the strongest available product or review, then use category updates if you want to wait for more options.'}
                 </p>
               </div>
             </div>
@@ -400,7 +400,7 @@ export default async function CategoryPage({
             {
               eyebrow: 'Next step',
               title: 'Validate, compare, or wait on purpose',
-              description: 'If timing is the blocker, preserve the category with alerts. If the field is already small enough, move into the strongest review, comparison, or product page instead.',
+              description: 'If timing is the blocker, preserve the category with updates. If the field is already small enough, move into the strongest review, comparison, or product page instead.',
               tone: 'strong'
             }
           ]}

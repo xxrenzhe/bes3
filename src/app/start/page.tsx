@@ -197,7 +197,7 @@ export default async function StartPage() {
       title: 'Need a better buying moment',
       summary: 'You mostly know what to buy already. Price or timing is the last blocker, and you do not want to rebuild the task later.',
       internalQuestion: 'If the price changes next week, will I come back with enough context to act quickly?',
-      firstMove: 'Set an alert tied to the same category or deal path you are already considering.',
+      firstMove: 'Start a price watch tied to the same category or deal path you are already considering.',
       whyThisMove: 'Bes3 should treat waiting as part of the journey, not as leaving the journey.',
       href: leadAlertHref,
       label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start price watch',

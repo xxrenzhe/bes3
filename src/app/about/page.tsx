@@ -126,10 +126,10 @@ export default async function AboutPage() {
     },
     {
       eyebrow: 'Wait',
-      title: 'Use alerts when price timing matters',
-      description: 'Alerts keep the same category in view when price or timing matters more than buying today.',
+      title: 'Use a price watch when timing matters',
+      description: 'A price watch keeps the same category in view when price or timing matters more than buying today.',
       href: aboutAlertHref,
-      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start alerts'
+      label: leadCategory ? `Track ${leadCategoryLabel}` : 'Start a price watch'
     }
   ]
 
@@ -144,7 +144,7 @@ export default async function AboutPage() {
     'We do not pad the page with 20 nearly identical picks just to look bigger.',
     'We do not treat raw review count as automatic proof without category and fit context.',
     'We do not push compare before the shortlist is narrow enough to support a real choice.',
-    'We do not turn alerts into generic blasts that lose the original shopping context.'
+    'We do not turn price watches into generic blasts that lose the original shopping context.'
   ]
 
   const nextActions = [
@@ -170,7 +170,7 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What does Bes3 actually publish?',
-      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category pages, and alerts for different moments in a real purchase.'
+      answer: 'Bes3 publishes product shortlists, reviews, comparisons, category pages, and wait flows for different moments in a real purchase.'
     },
     {
       question: 'When should you use a review instead of a comparison?',
@@ -238,7 +238,7 @@ export default async function AboutPage() {
               <div className="mt-5 space-y-4">
                 {[
                   'Why Bes3 only keeps a few picks instead of publishing giant “best of” grids.',
-                  'How reviews, comparisons, category pages, and alerts fit together in one simple shopping process.',
+                  'How reviews, comparisons, category pages, and price watches fit together in one simple shopping process.',
                   'What rules stop the public site from turning into a pile of low-trust affiliate links.'
                 ].map((item) => (
                   <div key={item} className="flex items-start gap-3 text-sm leading-7 text-muted-foreground">
@@ -326,12 +326,12 @@ export default async function AboutPage() {
                 <SectionHeader
                   eyebrow="Formats"
                   title="Use the format that matches the buying moment."
-                  description="The public site works best when you choose the page that matches what is still unclear. That is why Bes3 separates discovery, reviews, comparisons, and alerts instead of blending everything into one giant list."
+                  description="The public site works best when you choose the page that matches what is still unclear. That is why Bes3 separates discovery, reviews, comparisons, and wait flows instead of blending everything into one giant list."
                 />
                 <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                   <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                   <p className="mt-3 text-sm leading-7 text-slate-200">
-                    If you only know the need, start with search. If one product already looks promising, open the review first. If the shortlist is tight, compare. If timing is the only blocker, switch into alerts.
+                    If you only know the need, start with search. If one product already looks promising, open the review first. If the shortlist is tight, compare. If timing is the only blocker, switch into a price watch.
                   </p>
                 </div>
               </div>

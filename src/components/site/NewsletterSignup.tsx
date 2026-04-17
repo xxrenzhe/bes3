@@ -91,7 +91,7 @@ export function NewsletterSignup({
       label: 'Task preserved',
       value: currentTaskTitle,
       description: primaryResumeRoute
-        ? `Bes3 should reconnect future alerts to ${primaryResumeRoute.title.toLowerCase()} instead of dropping you into a generic email loop.`
+        ? `Bes3 should reconnect future updates to ${primaryResumeRoute.title.toLowerCase()} instead of dropping you into a generic email loop.`
         : 'This signup should preserve the current shopping context instead of replacing it with generic marketing.'
     },
     {
@@ -106,12 +106,12 @@ export function NewsletterSignup({
         ? `Go back to ${primaryResumeRoute.title.toLowerCase()} if product fit is still the main open question.`
         : secondaryRoute
           ? `Use ${secondaryRoute.title.toLowerCase()} if waiting is not the only blocker anymore.`
-          : 'Return to the same shortlist, compare, or category path while the alert watches timing in the background.'
+          : 'Return to the same shortlist, compare, or category path while the price watch tracks timing in the background.'
     }
   ]
   const postSignupDecisionText = primaryResumeRoute
-    ? `The alert is saved. Now go back to ${primaryResumeRoute.title.toLowerCase()} and keep the same candidates, comparison path, or category context alive while Bes3 watches the timing for you.`
-    : 'The alert is saved. The next useful move is to reopen the same shortlist, category, or comparison path instead of wandering back into broad browsing.'
+    ? `The price watch is saved. Now go back to ${primaryResumeRoute.title.toLowerCase()} and keep the same candidates, comparison path, or category context alive while Bes3 watches the timing for you.`
+    : 'The price watch is saved. The next useful move is to reopen the same shortlist, category, or comparison path instead of wandering back into broad browsing.'
 
   useEffect(() => {
     setIntent(initialIntent)
