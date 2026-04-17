@@ -259,7 +259,7 @@ export function ShortlistWorkspace({
         <p className="editorial-kicker">Shortlist</p>
         <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">No saved picks yet.</h1>
         <p className="mx-auto mt-4 max-w-2xl text-sm leading-7 text-muted-foreground">
-          Save products from search, category pages, deals, or product pages to keep your shortlist stable across visits.
+          Save products from search, category pages, offers, or product pages to keep your shortlist stable across visits.
         </p>
         <div className="mt-8 flex flex-wrap justify-center gap-4">
           <Link href="/search" className="rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground">
@@ -1452,7 +1452,7 @@ export function ShortlistWorkspace({
           <div className="rounded-[2rem] border border-dashed border-border bg-white p-10 text-center shadow-panel">
             <h4 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Your shortlist is still empty.</h4>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Import the shared picks above to start your own shortlist, or add products from search, deals, and category pages.
+              Import the shared picks above to start your own shortlist, or add products from search, offers, and category pages.
             </p>
           </div>
         )}
