@@ -10,8 +10,8 @@ import { cn } from '@/lib/utils'
 const INTENT_OPTIONS = [
   {
     id: 'deals',
-    label: 'Deal Alerts',
-    description: 'Useful price drops and live deals worth checking.'
+    label: 'Offer Alerts',
+    description: 'Useful price drops and live offers worth checking.'
   },
   {
     id: 'price-alert',
@@ -53,7 +53,7 @@ function buildAlertPreview(intent: IntentId, cadence: CadenceId, categorySlug: s
     return `Bes3 will summarize the useful changes in ${categoryLabel} ${cadenceLabel}, so you can stay informed without starting over.`
   }
 
-  return `Bes3 will send the most worthwhile live deals for ${categoryLabel} ${cadenceLabel}, without turning your inbox into generic marketing spam.`
+  return `Bes3 will send the most worthwhile live offers for ${categoryLabel} ${cadenceLabel}, without turning your inbox into generic marketing spam.`
 }
 
 export function NewsletterSignup({

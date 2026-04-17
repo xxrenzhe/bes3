@@ -767,6 +767,21 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
 
   const fallbackImage = affiliateProduct.image_url ? [affiliateProduct.image_url] : []
   const fallbackCategory = String(rawPayload.category || rawPayload.subcategory || '').trim() || null
+  const referencePriceAmount = [rawPayload.original_price, rawPayload.list_price, rawPayload.compare_at_price]
+    .map((value) => {
+      const parsed = Number.parseFloat(String(value ?? '').replace(/[^\d.-]/g, ''))
+      return Number.isFinite(parsed) ? parsed : null
+    })
+    .find((value) => value != null) ?? null
+  const referencePriceCurrency = String(rawPayload.original_price_currency || rawPayload.list_price_currency || rawPayload.currency || affiliateProduct.price_currency || '').trim() || null
+  const referencePriceType =
+    rawPayload.original_price != null
+      ? 'original'
+      : rawPayload.list_price != null
+        ? 'msrp'
+        : rawPayload.compare_at_price != null
+          ? 'compare_at'
+          : null
 
   return {
     ...scraped,
@@ -785,6 +800,21 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
     rating: scraped.rating ?? affiliateProduct.rating ?? null,
     reviewCount: scraped.reviewCount ?? affiliateProduct.review_count ?? null,
     imageUrls: scraped.imageUrls.length ? scraped.imageUrls : fallbackImage,
+    offers: scraped.offers.map((offer) => ({
+      ...offer,
+      referencePriceAmount:
+        offer.referencePriceAmount != null
+          ? offer.referencePriceAmount
+          : referencePriceAmount != null && offer.priceAmount != null && referencePriceAmount > offer.priceAmount
+            ? referencePriceAmount
+            : null,
+      referencePriceCurrency:
+        offer.referencePriceCurrency ||
+        (referencePriceAmount != null ? referencePriceCurrency || offer.priceCurrency || affiliateProduct.price_currency || null : null),
+      referencePriceType: offer.referencePriceType || referencePriceType,
+      referencePriceSource: offer.referencePriceSource || (referencePriceAmount != null ? 'affiliate_payload' : null),
+      referencePriceLastCheckedAt: offer.referencePriceLastCheckedAt || (referencePriceAmount != null ? scraped.offerLastCheckedAt : null)
+    })),
     specs,
     attributeFacts: scraped.attributeFacts.length ? scraped.attributeFacts : Object.entries(specs).map(([label, value]) => ({
       key: label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, ''),
@@ -887,9 +917,10 @@ async function persistProductGraphFromScrape(productId: number, scraped: ReturnT
         `
           INSERT INTO product_offers (
             product_id, merchant_id, offer_url, availability_status, price_amount, price_currency, shipping_cost,
-            coupon_text, coupon_type, condition_label, source_type, source_url, confidence_score, raw_payload_json,
+            coupon_text, coupon_type, reference_price_amount, reference_price_currency, reference_price_type,
+            reference_price_source, reference_price_last_checked_at, condition_label, source_type, source_url, confidence_score, raw_payload_json,
             last_checked_at
-          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         `,
         [
           productId,
@@ -901,6 +932,11 @@ async function persistProductGraphFromScrape(productId: number, scraped: ReturnT
           offer.shippingCost,
           offer.couponText,
           offer.couponType,
+          offer.referencePriceAmount,
+          offer.referencePriceCurrency,
+          offer.referencePriceType,
+          offer.referencePriceSource,
+          offer.referencePriceLastCheckedAt,
           offer.conditionLabel,
           offer.sourceType,
           offer.sourceUrl,

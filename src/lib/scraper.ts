@@ -10,6 +10,11 @@ export interface ScrapedOffer {
   shippingCost: number | null
   couponText: string | null
   couponType: string | null
+  referencePriceAmount: number | null
+  referencePriceCurrency: string | null
+  referencePriceType: 'compare_at' | 'original' | 'msrp' | 'unknown' | null
+  referencePriceSource: string | null
+  referencePriceLastCheckedAt: string | null
   conditionLabel: string | null
   sourceType: 'schema' | 'dom'
   sourceUrl: string
@@ -429,6 +434,10 @@ function scrapeShopifyProduct(finalUrl: string, html: string): ScrapedProduct {
     normalizePrice(String(offers.price || '')) ??
     (typeof tfxProduct.price === 'number' ? Number((tfxProduct.price / 100).toFixed(2)) : null) ??
     normalizePrice($('[class*="price"]').first().text())
+  const referencePriceAmount =
+    typeof tfxProduct.compare_at_price === 'number'
+      ? Number((tfxProduct.compare_at_price / 100).toFixed(2))
+      : null
   const priceCurrency = String(offers.priceCurrency || $('[itemprop="priceCurrency"]').attr('content') || 'USD')
   const availabilityStatus = normalizeAvailabilityStatus(
     String(offers.availability || (tfxProduct.available === false ? 'out of stock' : tfxProduct.available === true ? 'in stock' : ''))
@@ -447,6 +456,11 @@ function scrapeShopifyProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount,
+          referencePriceCurrency: referencePriceAmount != null ? priceCurrency : null,
+          referencePriceType: referencePriceAmount != null ? 'compare_at' : null,
+          referencePriceSource: referencePriceAmount != null ? 'shopify_compare_at_price' : null,
+          referencePriceLastCheckedAt: referencePriceAmount != null ? new Date().toISOString() : null,
           conditionLabel: String(offers.itemCondition || '').trim() || null,
           sourceType: 'schema',
           sourceUrl: finalUrl,
@@ -466,6 +480,11 @@ function scrapeShopifyProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount,
+          referencePriceCurrency: referencePriceAmount != null ? priceCurrency : null,
+          referencePriceType: referencePriceAmount != null ? 'compare_at' : null,
+          referencePriceSource: referencePriceAmount != null ? 'shopify_compare_at_price' : null,
+          referencePriceLastCheckedAt: referencePriceAmount != null ? new Date().toISOString() : null,
           conditionLabel: null,
           sourceType: 'dom',
           sourceUrl: finalUrl,
@@ -574,6 +593,11 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount: null,
+          referencePriceCurrency: null,
+          referencePriceType: null,
+          referencePriceSource: null,
+          referencePriceLastCheckedAt: null,
           conditionLabel: String(offers.itemCondition || '').trim() || null,
           sourceType: 'schema',
           sourceUrl: finalUrl,
@@ -593,6 +617,11 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount: null,
+          referencePriceCurrency: null,
+          referencePriceType: null,
+          referencePriceSource: null,
+          referencePriceLastCheckedAt: null,
           conditionLabel: null,
           sourceType: 'dom',
           sourceUrl: finalUrl,
@@ -737,6 +766,11 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount: null,
+          referencePriceCurrency: null,
+          referencePriceType: null,
+          referencePriceSource: null,
+          referencePriceLastCheckedAt: null,
           conditionLabel: String(offers.itemCondition || '').trim() || null,
           sourceType: 'schema',
           sourceUrl: finalUrl,
@@ -756,6 +790,11 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
           shippingCost: null,
           couponText: null,
           couponType: null,
+          referencePriceAmount: null,
+          referencePriceCurrency: null,
+          referencePriceType: null,
+          referencePriceSource: null,
+          referencePriceLastCheckedAt: null,
           conditionLabel: null,
           sourceType: 'dom',
           sourceUrl: finalUrl,

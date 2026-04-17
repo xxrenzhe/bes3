@@ -112,10 +112,10 @@ export default async function ThankYouPage({
     },
     {
       eyebrow: 'Price move',
-      title: 'Check today’s strongest price changes',
-      description: 'Open the live deals view when the next useful question is whether today changed the timing enough to act.',
-      href: '/deals',
-      label: 'Open deals'
+      title: 'Check today’s strongest price opportunities',
+      description: 'Open the live offers view when the next useful question is whether today changed the timing enough to act.',
+      href: '/offers',
+      label: 'Open offers'
     },
     leadComparison
       ? {
@@ -309,10 +309,10 @@ export default async function ThankYouPage({
           label: leadCategory ? 'Open category page' : 'Open directory'
         },
         {
-          title: 'Browse live deals',
-          description: 'Browse real deals without the usual spam.',
-          href: '/deals',
-          label: 'Open deals'
+          title: 'Browse live offers',
+          description: 'Browse real offers without the usual spam.',
+          href: '/offers',
+          label: 'Open offers'
         }
       ].filter(Boolean) as Array<{
         title: string
@@ -443,7 +443,7 @@ export default async function ThankYouPage({
           decisionLabel="Best Bes3 call"
           decisionText={
             resumeContext
-              ? `Go back to ${resumeContext.label.toLowerCase()} first. If timing is the only blocker left after that, switch into deals or a price watch. If the finalists still need pressure-testing, continue compare from the same task.`
+              ? `Go back to ${resumeContext.label.toLowerCase()} first. If timing is the only blocker left after that, switch into offers or a price watch. If the finalists still need pressure-testing, continue compare from the same task.`
               : 'Use the strongest concrete next move now: reopen the shortlist, check whether price timing changed, or continue comparing finalists. Do not let the contact step turn into a dead end.'
           }
           metrics={[
@@ -454,7 +454,7 @@ export default async function ThankYouPage({
             },
             {
               label: 'Timing check',
-              value: 'Live deals',
+              value: 'Live offers',
               note: 'Use today’s strongest price changes only after product fit is mostly settled.'
             },
             {

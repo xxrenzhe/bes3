@@ -150,6 +150,11 @@ const SQLITE_SCHEMA = [
       shipping_cost REAL,
       coupon_text TEXT,
       coupon_type TEXT,
+      reference_price_amount REAL,
+      reference_price_currency TEXT,
+      reference_price_type TEXT,
+      reference_price_source TEXT,
+      reference_price_last_checked_at TEXT,
       condition_label TEXT,
       source_type TEXT NOT NULL DEFAULT 'scrape',
       source_url TEXT,
@@ -502,6 +507,11 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'product_offers', 'shipping_cost', 'REAL')
   await ensureColumn(db, 'product_offers', 'coupon_text', 'TEXT')
   await ensureColumn(db, 'product_offers', 'coupon_type', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'reference_price_amount', 'REAL')
+  await ensureColumn(db, 'product_offers', 'reference_price_currency', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'reference_price_type', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'reference_price_source', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'reference_price_last_checked_at', 'TEXT')
   await ensureColumn(db, 'product_offers', 'condition_label', 'TEXT')
   await ensureColumn(db, 'product_offers', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
   await ensureColumn(db, 'product_offers', 'source_url', 'TEXT')

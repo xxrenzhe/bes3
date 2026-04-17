@@ -127,11 +127,11 @@ export default async function DirectoryPage() {
       label: 'Start category updates'
     },
     {
-      eyebrow: 'Deals',
+      eyebrow: 'Offers',
       title: 'Check live price opportunities',
-      description: 'Open deals only after the category already looks right, so discounts do not pull you toward the wrong product.',
-      href: '/deals',
-      label: 'Browse deals'
+      description: 'Open offers only after the category already looks right, so promotions do not pull you toward the wrong product.',
+      href: '/offers',
+      label: 'Browse offers'
     }
   ]
   const faqEntries = [

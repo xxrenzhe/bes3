@@ -392,7 +392,7 @@ async function ensureSeedBrandKnowledge(): Promise<void> {
         'Most large-appliance orders should be treated as scheduled delivery items, so buyers should confirm shipping timing before checkout.',
         'Return eligibility can vary by merchant on major appliances and freezer products, so buyers should verify pickup and restocking rules before ordering.',
         'Expect standard limited-appliance warranty coverage and confirm the exact term on the merchant or manufacturer support page before purchase.',
-        'The best discount windows usually cluster around major seasonal sale events and merchant coupon pushes rather than constant everyday pricing.',
+        'The best discount windows usually cluster around major seasonal sale events and merchant promotion pushes rather than constant everyday pricing.',
         'Use merchant delivery details plus the official brand support flow as the final source of truth for installation, warranty, and post-purchase service.',
         0.82
       ]

@@ -168,11 +168,11 @@ export default async function NewsletterPage({
               label: 'Open guide'
             }
           : {
-              eyebrow: 'Deals',
-              title: 'Check live deals',
-              description: 'Check deals only after the category already looks right.',
-              href: '/deals',
-              label: 'Open deals'
+              eyebrow: 'Offers',
+              title: 'Check live offers',
+              description: 'Check offers only after the category already looks right.',
+              href: '/offers',
+              label: 'Open offers'
             }
   ].filter((route): route is {
     eyebrow: string

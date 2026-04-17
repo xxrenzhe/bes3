@@ -60,7 +60,7 @@ export default async function HomePage() {
       eyebrow: 'State 03',
       title: 'I would buy if the price improved',
       description: 'Use this when fit is mostly clear and timing is the only blocker left.',
-      href: '/deals',
+      href: '/offers',
       label: 'Track price timing'
     }
   ]
@@ -86,11 +86,11 @@ export default async function HomePage() {
     {
       eyebrow: 'State 03',
       title: 'I would buy if the price improved',
-      description: 'Use deals and a price watch when product fit is already mostly clear and timing is the only blocker left.',
+      description: 'Use offers and a price watch when product fit is already mostly clear and timing is the only blocker left.',
       bestIf: 'You mostly know what to buy and just want a better moment to act.',
       notIf: 'You still need to understand the category or narrow the shortlist.',
-      href: '/deals',
-      label: 'See current deals'
+      href: '/offers',
+      label: 'See current offers'
     }
   ]
   const personaPathways = [
@@ -121,9 +121,9 @@ export default async function HomePage() {
       title: 'I would buy, but the timing is not right yet.',
       summary: 'This buyer mostly trusts the product choice already. What they need is a better moment to act without losing context.',
       internalQuestion: 'If I wait a week, will I have to reconstruct this whole decision from scratch?',
-      firstMove: 'Track deals or start a price watch so timing changes do not erase the work you already did.',
+      firstMove: 'Track offers or start a price watch so timing changes do not erase the work you already did.',
       whyThisMove: 'Waiting should stay inside the same shopping task. Bes3 should bring you back with context instead of forcing a restart.',
-      href: '/deals',
+      href: '/offers',
       label: 'Track the timing',
       accentClassName: 'bg-emerald-100 text-emerald-900'
     }

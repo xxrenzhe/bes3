@@ -269,7 +269,7 @@ export default async function StartPage() {
   const antiPatterns = [
     'Publishing giant filler lists to simulate authority.',
     'Comparing unrelated categories just to increase page count.',
-    'Letting deals override category fit too early in the journey.',
+    'Letting live offers override category fit too early in the journey.',
     'Forcing buyers to restart from search every time timing changes.'
   ]
   const faqEntries = [

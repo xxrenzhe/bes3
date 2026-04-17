@@ -28,7 +28,7 @@ function shouldSuppressPrompt(pathname: string) {
 function deriveCaptureIntent(pathname: string) {
   if (pathname.startsWith('/categories/')) return 'category-brief'
   if (pathname.startsWith('/brands/') && pathname.includes('/categories/')) return 'category-brief'
-  if (pathname.startsWith('/deals')) return 'deals'
+  if (pathname.startsWith('/offers') || pathname.startsWith('/biggest-discounts') || pathname.startsWith('/deals')) return 'deals'
   return 'price-alert'
 }
 
