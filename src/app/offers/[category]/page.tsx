@@ -11,6 +11,18 @@ import { buildBiggestDiscountsPath, buildOfferShowdowns, buildOffersPath, getLat
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
 
+export async function generateStaticParams() {
+  const opportunities = await listOfferOpportunities()
+  return Array.from(
+    new Set(
+      opportunities
+        .map((item) => buildOffersPath(item.product.category))
+        .filter((path) => path.startsWith('/offers/'))
+        .map((path) => path.replace('/offers/', ''))
+    )
+  ).map((category) => ({ category }))
+}
+
 export async function generateMetadata({
   params
 }: {
@@ -31,7 +43,7 @@ export async function generateMetadata({
     image: lead?.product.heroImageUrl,
     freshnessDate,
     freshnessInTitle: true,
-    keywords: [`${categoryLabel} offers`, `${categoryLabel} deals`, `best ${categoryLabel} price`, `${categoryLabel} price watch`]
+    keywords: [`${categoryLabel} offers`, `${categoryLabel} promotions`, `best ${categoryLabel} price`, `${categoryLabel} price watch`]
   })
 }
 

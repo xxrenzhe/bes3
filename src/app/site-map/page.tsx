@@ -83,7 +83,7 @@ export default async function HtmlSitemapPage() {
     buildCollectionPageSchema({
       path: '/site-map',
       title: 'Site Map',
-      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and deal pages from one lightweight directory.',
+      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
       items: [
         { name: 'Assistant', path: '/assistant' },
         { name: 'Start Here', path: '/start' },

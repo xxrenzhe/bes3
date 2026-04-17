@@ -425,7 +425,7 @@ export default async function HomePage() {
         <div className="mx-auto grid max-w-7xl gap-10 overflow-hidden rounded-[2.5rem] bg-[#14202c] px-8 py-10 text-white lg:grid-cols-[0.95fr_1.05fr] lg:px-12 lg:py-14">
           <div className="space-y-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Weekly Briefing</p>
-            <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-balance text-white">Get useful deal updates.</h2>
+            <h2 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-balance text-white">Get useful offer updates.</h2>
             <p className="max-w-xl text-base leading-8 text-slate-300">
               Get simple email updates on new reviews, worthwhile price drops, and the products worth checking next.
             </p>
