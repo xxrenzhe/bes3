@@ -1,7 +1,7 @@
 import { buildArticleDecisionContent, buildProductDecisionContent } from '@/lib/decision-content'
 import { buildCategoryPath } from '@/lib/category'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
-import { normalizeMerchantSource, buildMerchantExitPath } from '@/lib/merchant-links'
+import { normalizeMerchantSource, buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import type {
   ArticleRecord,
   BrandPolicyRecord,
@@ -101,7 +101,7 @@ export function buildCommerceActions(product: CommerceProductRecord, options?: {
     })
   }
 
-  if (product.resolvedUrl) {
+  if (hasMerchantExitTarget(product)) {
     actions.push({
       type: 'merchant_handoff',
       label: 'Check current price',

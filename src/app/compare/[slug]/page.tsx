@@ -20,7 +20,7 @@ import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildDecisionChecklist, buildNotFor, formatEditorialDate, getCategoryLabel, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -484,7 +484,7 @@ export default async function ComparisonPage({
       />
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <StickyMobileCta
-        href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-sticky-cta') : null}
+        href={article.product && hasMerchantExitTarget(article.product) ? buildMerchantExitPath(article.product.id, 'comparison-page-sticky-cta') : null}
         productId={article.product?.id || null}
         trackingSource="comparison-page-sticky-cta"
         label="Check Current Price"
@@ -565,7 +565,7 @@ export default async function ComparisonPage({
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 {article.product ? <ShortlistActionBar item={toShortlistItem(article.product)} className="mb-5" source="comparison-page" /> : null}
                 <PrimaryCta
-                  href={article.product?.resolvedUrl ? buildMerchantExitPath(article.product.id, 'comparison-page-primary-cta') : null}
+                  href={article.product && hasMerchantExitTarget(article.product) ? buildMerchantExitPath(article.product.id, 'comparison-page-primary-cta') : null}
                   productId={article.product?.id || null}
                   trackingSource="comparison-page-primary-cta"
                   label="Check Current Price"

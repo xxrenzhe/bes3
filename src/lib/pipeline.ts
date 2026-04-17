@@ -2087,7 +2087,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
 
   const productsMissingHero = siteProducts.filter((product) => !product.heroImageUrl).length
   const productsMissingCategory = siteProducts.filter((product) => !product.category).length
-  const productsWithLivePrice = siteProducts.filter((product) => product.priceAmount !== null && product.resolvedUrl).length
+  const productsWithLivePrice = siteProducts.filter((product) => product.priceAmount !== null && (product.resolvedUrl || product.sourceAffiliateLink)).length
   const articlesMissingVisual = publishedArticles.filter((article) => !article.heroImageUrl && !article.product?.heroImageUrl).length
   const offerCounts = new Map(offerCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
   const evidenceCounts = new Map(evidenceCountRows.map((row) => [row.product_id, Number(row.count || 0)]))
@@ -2117,7 +2117,7 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
     const evidencePenalty = evidenceCount === 0 ? 20 : evidenceCount < 3 ? 8 : 0
     const priceHistoryPenalty = priceHistoryCount === 0 ? 16 : priceHistoryCount < 4 ? 7 : 0
     const demandBonus = recentClicks * 8
-    const commercialBonus = product.resolvedUrl ? 8 : 0
+    const commercialBonus = product.resolvedUrl || product.sourceAffiliateLink ? 8 : 0
     const priorityScore =
       confidencePenalty +
       completenessPenalty +

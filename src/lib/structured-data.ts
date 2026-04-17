@@ -618,7 +618,7 @@ function buildProductThing(product: ProductRecord, path: string, description?: s
       product.priceAmount && product.priceAmount > 0
         ? {
             '@type': 'Offer',
-            url: toAbsoluteUrl(product.resolvedUrl || path),
+            url: toAbsoluteUrl(product.resolvedUrl || product.sourceAffiliateLink || path),
             price: Number(product.priceAmount).toFixed(2),
             priceCurrency: product.priceCurrency || 'USD'
           }

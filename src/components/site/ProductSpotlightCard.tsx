@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { toShortlistItem } from '@/lib/shortlist'
 import type { ProductRecord } from '@/lib/site-data'
 import { cn, formatPriceSnapshot } from '@/lib/utils'
@@ -23,7 +23,7 @@ export function ProductSpotlightCard({
 }) {
   const freshnessDate = product.updatedAt || product.publishedAt
   const productHref = product.slug ? `/products/${product.slug}` : supportingHref || null
-  const merchantHref = product.resolvedUrl ? buildMerchantExitPath(product.id, source) : null
+  const merchantHref = hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, source) : null
   const shortlistItem = toShortlistItem(product)
 
   return (

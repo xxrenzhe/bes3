@@ -1408,7 +1408,7 @@ export function ShortlistWorkspace({
                           <Scale className="h-4 w-4" />
                           {compare.some((candidate) => candidate.id === item.id) ? 'In compare' : 'Add to compare'}
                         </button>
-                        {item.resolvedUrl ? (
+                        {(item.resolvedUrl || item.sourceAffiliateLink) ? (
                           <Link
                             href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
                             target="_blank"

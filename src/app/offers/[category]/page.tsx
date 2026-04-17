@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { OfferTransparencyFaqSection, buildOfferFaqEntries } from '@/components/site/OfferTransparencyFaqSection'
+import { OfferTransparencyPanel } from '@/components/site/OfferTransparencyPanel'
 import { OfferOpportunityCard } from '@/components/site/OfferOpportunityCard'
 import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -9,7 +11,7 @@ import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildBiggestDiscountsPath, buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildCollectionPageSchema, buildHowToSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 
 export async function generateStaticParams() {
   const opportunities = await listOfferOpportunities()
@@ -65,6 +67,7 @@ export default async function OfferCategoryPage({
   const freshnessDate = getLatestOfferRefresh(opportunities)
   const freshCount = opportunities.filter((item) => item.isFresh).length
   const verifiedDiscountCount = opportunities.filter((item) => item.savingsPercent != null).length
+  const faqEntries = buildOfferFaqEntries({ scope: `${categoryLabel.toLowerCase()} offers`, categoryLabel })
   const structuredData = [
     buildBreadcrumbSchema(buildOffersPath(categoryName), [
       { name: 'Home', path: '/' },
@@ -104,7 +107,8 @@ export default async function OfferCategoryPage({
           text: 'If the tracked window still looks high, keep the same category on a watch instead of forcing the purchase from a discount headline.'
         }
       ]
-    )
+    ),
+    buildFaqSchema(buildOffersPath(categoryName), faqEntries)
   ]
 
   return (
@@ -179,6 +183,17 @@ export default async function OfferCategoryPage({
             </div>
           ) : null}
         </section>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyPanel
+            title={`How ${categoryLabel} promotions are explained`}
+            description={`This page only shows a percentage discount when ${categoryLabel.toLowerCase()} pricing has a reliable fresh reference. Otherwise Bes3 uses timing language and keeps the final recommendation to at most three picks.`}
+          />
+        </div>
+
+        <div className="mx-auto max-w-7xl">
+          <OfferTransparencyFaqSection title={`${categoryLabel} offer questions, answered clearly.`} entries={faqEntries} />
+        </div>
       </div>
     </PublicShell>
   )

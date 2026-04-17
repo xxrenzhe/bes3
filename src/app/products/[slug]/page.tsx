@@ -21,7 +21,7 @@ import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { normalizeEditorialHtml } from '@/lib/editorial-html'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, formatEditorialDate, getFreshnessLabel, getSnapshotDate } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
@@ -33,7 +33,6 @@ import { buildProductDecisionContent } from '@/lib/decision-content'
 import {
   getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
-  getProductBySlug,
   getProductGalleryImageUrls,
   listProductAttributeFacts,
   listProductOffers,
@@ -59,7 +58,7 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const slug = (await params).slug
-  const product = await getProductBySlug(slug)
+  const product = await getOpenCommerceProductBySlug(slug)
 
   if (!product) {
     return buildPageMetadata({
@@ -100,7 +99,7 @@ export default async function ProductPage({
   params: Promise<{ slug: string }>
 }) {
   const slug = (await params).slug
-  const product = await getProductBySlug(slug)
+  const product = await getOpenCommerceProductBySlug(slug)
 
   if (!product) {
     const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
@@ -156,11 +155,10 @@ export default async function ProductPage({
     )
   }
 
-  const [articles, allProducts, galleryImages, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
+  const [articles, allProducts, galleryImages, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
     getProductGalleryImageUrls(product.id),
-    getOpenCommerceProductBySlug(product.slug || ''),
     listProductOffers(product.id),
     listProductAttributeFacts(product.id),
     listProductPriceHistory(product.id),
@@ -170,6 +168,7 @@ export default async function ProductPage({
       compatibilityLimit: 6
     })
   ])
+  const commerceProduct = product
   const reviewArticle = articles.find((article) => article.productId === product.id && article.type === 'review') || null
   const comparisonArticle = articles.find((article) => article.productId === product.id && article.type === 'comparison') || null
   const guideArticle = articles.find((article) => {
@@ -432,7 +431,7 @@ export default async function ProductPage({
       />
       <StructuredData data={[...structuredData, buildFaqSchema(path, faqEntries)]} />
       <StickyMobileCta
-        href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-sticky-cta') : null}
+        href={hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, 'product-page-sticky-cta') : null}
         productId={product.id}
         trackingSource="product-page-sticky-cta"
         label="Check Current Price"
@@ -495,7 +494,7 @@ export default async function ProductPage({
               <div className="rounded-[2rem] bg-white p-6 shadow-panel">
                 <ShortlistActionBar item={shortlistItem} className="mb-5" source="product-page" />
                 <PrimaryCta
-                  href={product.resolvedUrl ? buildMerchantExitPath(product.id, 'product-page-primary-cta') : null}
+                  href={hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, 'product-page-primary-cta') : null}
                   productId={product.id}
                   trackingSource="product-page-primary-cta"
                   label="Check Current Price"
