@@ -30,17 +30,17 @@ export async function generateMetadata({
   const title = selectedCategory
     ? `Track ${toTitleCaseWords(selectedCategoryLabel)}`
     : selectedIntent === 'price-alert'
-      ? 'Price Alerts'
+      ? 'Price Watch'
       : selectedIntent === 'category-brief'
         ? 'Category Updates'
         : 'Newsletter'
 
   const description =
     selectedIntent === 'price-alert'
-      ? `Set Bes3 price alerts${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without making you start over.`
+      ? `Start Bes3 price-watch updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better deal can bring you back without making you start over.`
       : selectedIntent === 'category-brief'
         ? `Subscribe to Bes3 category updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so you can keep up with that category while you wait.`
-        : 'Subscribe to Bes3 updates for deal alerts, category updates, and shopping advice tied to real products.'
+        : 'Subscribe to Bes3 updates for price watches, category updates, and deal follow-up tied to real shopping tasks.'
 
   return buildPageMetadata({
     title,
@@ -84,10 +84,10 @@ export default async function NewsletterPage({
       label: 'Alert type',
       value:
         selectedIntent === 'price-alert'
-          ? 'Price watch'
+          ? 'Price watch updates'
           : selectedIntent === 'category-brief'
             ? 'Category update'
-            : 'Deal alerts',
+            : 'Deal updates',
       description:
         selectedIntent === 'price-alert'
           ? `Wait for worthwhile price movement${selectedCategory ? ` in ${selectedCategoryLabel}` : ''}, not every tiny dip.`
@@ -195,20 +195,20 @@ export default async function NewsletterPage({
   const heroDescription = resumeContext
     ? `You are not joining a separate email funnel. You are preserving ${resumeContext.label.toLowerCase()} so Bes3 can bring you back when timing changes in a way that matters.`
     : selectedCategory
-      ? `Use alerts to preserve your ${selectedCategoryLabel} research, shortlist, and next step so waiting for a better moment does not erase the work you already did.`
-      : 'Use alerts to preserve your shortlist, category context, and next step so waiting for a better moment does not force you to restart from zero.'
+      ? `Use wait updates to preserve your ${selectedCategoryLabel} research, shortlist, and next step so waiting for a better moment does not erase the work you already did.`
+      : 'Use wait updates to preserve your shortlist, category context, and next step so waiting for a better moment does not force you to restart from zero.'
   const alertExamples = [
     {
       label: 'Worth opening now',
       title: selectedCategory
         ? `${selectedCategoryLabel} pricing moved enough to justify another look`
         : 'A tracked price move is big enough to justify another look',
-      description: 'This kind of alert should tell you the market changed in a way that may change the decision, not just that a tiny discount exists.'
+      description: 'This kind of update should tell you the market changed in a way that may change the decision, not just that a tiny discount exists.'
     },
     {
       label: 'Keep waiting',
       title: 'The price moved, but the timing still is not strong enough',
-      description: 'A useful wait journey should also tell you when not to act yet, so alerts reduce pressure instead of creating it.'
+      description: 'A useful wait journey should also tell you when not to act yet, so updates reduce pressure instead of creating it.'
     },
     {
       label: 'Resume the task',
@@ -232,9 +232,9 @@ export default async function NewsletterPage({
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Current task</p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               {resumeContext
-                ? `Bes3 already knows you came from ${resumeContext.label.toLowerCase()}. The alert should preserve that exact route and bring you back there when waiting stops being the right move.`
+                ? `Bes3 already knows you came from ${resumeContext.label.toLowerCase()}. The wait flow should preserve that exact route and bring you back there when waiting stops being the right move.`
                 : selectedCategory
-                  ? `This alert is anchored to ${selectedCategoryLabel}, so the waiting path stays tied to the same category instead of drifting into generic deal mail.`
+                  ? `This wait flow is anchored to ${selectedCategoryLabel}, so the follow-up path stays tied to the same category instead of drifting into generic deal mail.`
                   : 'Pages across Bes3 can send you here with the right context selected, so waiting for a better time never becomes a dead end.'}
             </p>
           </div>
@@ -250,27 +250,27 @@ export default async function NewsletterPage({
           <TimingDecisionPanel
             eyebrow="Wait On Purpose"
             title="Subscribe only when waiting is the real blocker."
-            description="Alerts should preserve your shopping progress. If fit is already clear, Bes3 helps you wait with context; if fit is still fuzzy, you should go back to shortlist, search, or compare instead."
+            description="Wait updates should preserve your shopping progress. If fit is already clear, Bes3 helps you wait with context; if fit is still fuzzy, you should go back to shortlist, search, or compare instead."
             signalBadge={
               selectedIntent === 'price-alert'
                 ? 'Price watch'
                 : selectedIntent === 'category-brief'
                   ? 'Category update'
-                  : 'Deal alerts'
+                  : 'Deal updates'
             }
             signalTitle={
               selectedIntent === 'price-alert'
                 ? 'Wait for a worthwhile move, not for every tiny dip.'
                 : selectedIntent === 'category-brief'
                   ? 'Stay current on the category without restarting research.'
-                  : 'Use alerts to catch the few deals worth acting on.'
+                  : 'Use deal updates to catch the few signals worth acting on.'
             }
             signalDescription={
               selectedIntent === 'price-alert'
                 ? `Bes3 will bring you back when ${selectedCategory ? `${selectedCategoryLabel} pricing` : 'pricing'} changes in a way that may justify action.`
                 : selectedIntent === 'category-brief'
                   ? `Bes3 will keep ${selectedCategory ? selectedCategoryLabel : 'your category research'} warm while the market changes.`
-                  : 'Bes3 uses deal alerts to reduce noise, not to create another reason to impulse buy.'
+                  : 'Bes3 uses deal updates to reduce noise, not to create another reason to impulse buy.'
             }
             decisionText={
               resumeContext
@@ -295,9 +295,9 @@ export default async function NewsletterPage({
           <section className="rounded-[2rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-6 shadow-panel sm:p-8">
             <div className="flex flex-col gap-3 border-b border-border/40 pb-5 md:flex-row md:items-end md:justify-between">
               <div>
-                <p className="editorial-kicker">Alert Preview</p>
+                <p className="editorial-kicker">Update Preview</p>
                 <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-                  The alert should tell you whether to act, not just that something changed.
+                  The update should tell you whether to act, not just that something changed.
                 </h2>
               </div>
               <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
@@ -317,18 +317,18 @@ export default async function NewsletterPage({
         </div>
         <DecisionSummaryPanel
           eyebrow="Decision Summary"
-          title="A price watch should keep your progress alive, not send you into a separate funnel."
-          description="A strong alert page should answer four things fast: who should use alerts, who should step back, why this page matters now, and what Bes3 wants you to do next."
+          title="A price watch should keep your progress alive, not send you into a separate email loop."
+          description="A strong wait page should answer four things fast: who should use it, who should step back, why this page matters now, and what Bes3 wants you to do next."
           items={[
             {
               eyebrow: 'Who should use this',
               title: 'Buyers whose product fit is mostly settled',
-              description: 'Alerts work best when you already know the category or finalists worth following.'
+              description: 'Price watches work best when you already know the category or finalists worth following.'
             },
             {
               eyebrow: 'Who should leave',
               title: 'Shoppers who still do not know what belongs on the shortlist',
-              description: 'If the category still feels fuzzy, go back to assistant, search, or shortlist first. Alerts should follow a decision, not replace one.',
+              description: 'If the category still feels fuzzy, go back to assistant, search, or shortlist first. Wait updates should follow a decision, not replace one.',
               tone: 'muted'
             },
             {
@@ -340,7 +340,7 @@ export default async function NewsletterPage({
             },
             {
               eyebrow: 'Next step',
-              title: 'Save the alert, then resume the same task',
+              title: 'Save the wait flow, then resume the same task',
               description: 'The right move after signup is not wandering into generic browsing. It is returning to the shortlist, category, or comparison route that already had the strongest decision signal.',
               tone: 'strong'
             }

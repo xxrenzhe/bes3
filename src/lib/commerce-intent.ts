@@ -236,10 +236,10 @@ function buildNextAction(input: {
 
     return {
       nextAction: {
-        title: 'Turn this search into a price watch',
+        title: 'Turn this search into a wait plan',
         description: 'The fit looks close, but price timing still matters more than checkout speed.',
         href,
-        label: 'Start price alert'
+        label: 'Start price watch'
       },
       fallbackAction: {
         title: 'Keep the finalists together',
@@ -474,7 +474,7 @@ export function buildIntentRefinementPrompts(input: {
       id: 'timing',
       label: 'Question 05',
       title: 'Are you trying to buy now, compare soon, or wait for a better price?',
-      description: 'Timing changes the right next step. The same shortlist can point to a product page, compare flow, or price alert depending on urgency.',
+      description: 'Timing changes the right next step. The same shortlist can point to a product page, compare flow, or price watch depending on urgency.',
       example: 'Choose one: buy now, compare soon, or wait for price.'
     })
   }

@@ -116,7 +116,7 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Live Deals',
     description:
-      'Browse live deals with tracked price windows, clearer buy-or-wait signals, shortlist saves, and price alerts so discounts help instead of distracting you.',
+      'Browse live deals with tracked price windows, clearer buy-or-wait signals, shortlist saves, and price-watch handoffs so discounts help instead of distracting you.',
     path: '/deals',
     locale: getRequestLocale(),
     image: leadProduct?.heroImageUrl,
@@ -233,7 +233,7 @@ export default async function DealsPage({
   const structuredData = buildCollectionPageSchema({
     path: '/deals',
     title: 'Live Deals',
-    description: 'Browse live deals with tracked price windows, clearer buy-or-wait signals, shortlist saves, and price alerts so discounts help instead of distracting you.',
+    description: 'Browse live deals with tracked price windows, clearer buy-or-wait signals, shortlist saves, and price-watch handoffs so discounts help instead of distracting you.',
     image: leadProduct?.heroImageUrl,
     breadcrumbItems,
     dateModified: latestRefresh,
@@ -288,7 +288,7 @@ export default async function DealsPage({
         returnDescription: dealsResumeDescription
       })
   const leadDecisionText = !leadDeal
-    ? 'Use deals only after product fit is already clear. When timing is still fuzzy, shortlist and alerts beat impulse.'
+    ? 'Use deals only after product fit is already clear. When timing is still fuzzy, shortlist and a price watch beat impulse.'
     : leadDeal.signal.id === 'buy-now'
       ? 'The lead deal is sitting in one of the better tracked windows right now. If product fit is already clear, this is where checking the store price makes sense.'
       : leadDeal.signal.id === 'good-value'
@@ -324,7 +324,7 @@ export default async function DealsPage({
               <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-200">Verified Deals</p>
               <h1 className="font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">Use deals to decide when to buy.</h1>
               <p className="max-w-2xl text-lg leading-8 text-emerald-50/80">
-                Bes3 surfaces live deals with a tracked price window, a clearer read on whether to buy now or wait, and a direct path into shortlist, alerts, or store checking.
+                Bes3 surfaces live deals with a tracked price window, a clearer read on whether to buy now or wait, and a direct path into shortlist, a price watch, or store checking.
               </p>
             </div>
             <div className="glass-panel rounded-[2rem] px-8 py-6 text-center text-foreground">
@@ -342,7 +342,7 @@ export default async function DealsPage({
           <TimingDecisionPanel
             eyebrow="Buy Or Wait"
             title={leadProduct ? `Should you move on ${leadProduct.productName} now?` : 'Should you buy now or keep watching?'}
-            description="The deals page should surface the strongest live timing signal, then route you toward product validation, shortlist, or watch mode without emotional overreaction."
+            description="The deals page should surface the strongest live timing signal, then route you toward product validation, shortlist, or a price watch without emotional overreaction."
             signalBadge={leadDeal?.signal.badge || 'Deals workflow'}
             signalTitle={leadDeal?.signal.title || 'Use the tracked window before acting on a discount.'}
             signalDescription={leadDeal?.signal.description || 'A live deal only matters after product fit is already clear. Otherwise it is just another distraction.'}
@@ -380,7 +380,7 @@ export default async function DealsPage({
               },
               {
                 href: leadAlertHref,
-                label: 'Start price alert',
+                label: 'Start price watch',
                 variant: 'secondary'
               }
             ]}
@@ -411,8 +411,8 @@ export default async function DealsPage({
               },
               {
                 eyebrow: 'Next step',
-                title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Preserve the task with an alert',
-                description: 'When price timing is the blocker, switch into a contextual alert so Bes3 can bring you back to the same decision later instead of forcing an impulse now.',
+                title: leadProduct?.category ? `Track ${getCategoryLabel(leadProduct.category)}` : 'Preserve the task with a price watch',
+                description: 'When price timing is the blocker, switch into a contextual price watch so Bes3 can bring you back to the same decision later instead of forcing an impulse now.',
                 tone: 'strong'
               }
             ]}
