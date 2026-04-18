@@ -18,6 +18,7 @@ const PUBLIC_PATHS = [
   '/about',
   '/assistant',
   '/brands',
+  '/biggest-discounts',
   '/categories',
   '/compare',
   '/contact',
@@ -27,6 +28,7 @@ const PUBLIC_PATHS = [
   '/feed.json',
   '/guides',
   '/llms.txt',
+  '/offers',
   '/search',
   '/site-map',
   '/directory',
@@ -55,6 +57,8 @@ const PUBLIC_PATHS = [
 ]
 
 const EXACT_PUBLIC_ALIASES: Record<string, string> = {
+  '/about-us': '/about',
+  '/alerts': '/newsletter',
   '/brand': '/brands',
   '/brands-index': '/brands',
   '/category': '/categories',
@@ -63,16 +67,27 @@ const EXACT_PUBLIC_ALIASES: Record<string, string> = {
   '/comparisons': '/compare',
   '/compare-index': '/compare',
   '/deal': '/deals',
+  '/discount': '/offers',
+  '/discounts': '/offers',
+  '/email-alerts': '/newsletter',
   '/guide': '/guides',
   '/guides-index': '/guides',
+  '/newsletter-updates': '/newsletter',
   '/open-data': '/data',
+  '/offer': '/offers',
+  '/offers-index': '/offers',
   '/privacy-policy': '/privacy',
   '/product': '/products',
   '/products-index': '/products',
+  '/biggest-deals': '/biggest-discounts',
+  '/biggest-discount': '/biggest-discounts',
+  '/best-discounts': '/biggest-discounts',
   '/review': '/reviews',
   '/reviews-index': '/reviews',
   '/sitemap': '/site-map',
   '/site-map.xml': '/sitemap.xml',
+  '/start-here': '/start',
+  '/wait-updates': '/newsletter',
   '/trust-center': '/trust'
 }
 
@@ -115,18 +130,55 @@ const PUBLIC_FAMILY_ALIASES: Array<{
   {
     pattern: /^\/brand\/([^/]+)\/category\/([^/]+)$/i,
     build: (brandSlug, categorySlug) => `/brands/${brandSlug}/categories/${categorySlug}`
+  },
+  {
+    pattern: /^\/brand\/([^/]+)\/categories\/([^/]+)$/i,
+    build: (brandSlug, categorySlug) => `/brands/${brandSlug}/categories/${categorySlug}`
+  },
+  {
+    pattern: /^\/deals\/([^/]+)$/i,
+    build: (categorySlug) => `/offers/${categorySlug}`
+  },
+  {
+    pattern: /^\/deals\/category\/([^/]+)$/i,
+    build: (categorySlug) => `/offers/${categorySlug}`
+  },
+  {
+    pattern: /^\/deals\/categories\/([^/]+)$/i,
+    build: (categorySlug) => `/offers/${categorySlug}`
+  },
+  {
+    pattern: /^\/offers\/category\/([^/]+)$/i,
+    build: (categorySlug) => `/offers/${categorySlug}`
+  },
+  {
+    pattern: /^\/offers\/categories\/([^/]+)$/i,
+    build: (categorySlug) => `/offers/${categorySlug}`
   }
 ]
+
+const PUBLIC_ROUTE_FAMILIES = ['/brands/', '/categories/', '/compare/', '/deals/', '/guides/', '/offers/', '/products/', '/reviews/']
+
+function stripCommonPublicPathArtifacts(pathname: string) {
+  return (
+    pathname
+      .replace(/\/index(?:\.(?:html?|php|asp|aspx))?$/i, '')
+      .replace(/\.(?:html?|php|asp|aspx)$/i, '') || '/'
+  )
+}
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true
   return (
     pathname.startsWith('/brands/') ||
+    pathname.startsWith('/biggest-discounts') ||
     pathname.startsWith('/categories/') ||
     pathname.startsWith('/compare/') ||
+    pathname.startsWith('/deals/') ||
     pathname.startsWith('/go/') ||
     pathname.startsWith('/guides/') ||
     pathname.startsWith('/media/') ||
+    pathname.startsWith('/offers/') ||
     pathname.startsWith('/tools/') ||
     pathname.startsWith('/products/') ||
     pathname.startsWith('/reviews/') ||
@@ -136,7 +188,19 @@ function isPublic(pathname: string): boolean {
 }
 
 function resolveCanonicalPublicPath(pathname: string) {
-  const normalized = pathname.replace(/\/+$/, '') || '/'
+  const rawNormalized = pathname.replace(/\/+$/, '') || '/'
+  let normalized = rawNormalized
+
+  const artifactStripped = stripCommonPublicPathArtifacts(normalized)
+  if (
+    artifactStripped !== normalized &&
+    (isPublic(artifactStripped) ||
+      Boolean(EXACT_PUBLIC_ALIASES[artifactStripped]) ||
+      PUBLIC_FAMILY_ALIASES.some(({ pattern }) => pattern.test(artifactStripped)) ||
+      PUBLIC_ROUTE_FAMILIES.some((prefix) => artifactStripped.startsWith(prefix)))
+  ) {
+    normalized = artifactStripped
+  }
 
   if (EXACT_PUBLIC_ALIASES[normalized]) {
     return EXACT_PUBLIC_ALIASES[normalized]
@@ -146,6 +210,10 @@ function resolveCanonicalPublicPath(pathname: string) {
     const match = normalized.match(alias.pattern)
     if (!match) continue
     return alias.build(...match.slice(1))
+  }
+
+  if (normalized !== rawNormalized && isPublic(normalized)) {
+    return normalized
   }
 
   return null
