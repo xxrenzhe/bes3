@@ -132,6 +132,13 @@ export default async function DirectoryPage() {
       description: 'Open offers only after the category already looks right, so promotions do not pull you toward the wrong product.',
       href: '/offers',
       label: 'Browse offers'
+    },
+    {
+      eyebrow: 'Leaderboard',
+      title: 'See the biggest verified discounts',
+      description: 'Use the stricter leaderboard when you want reference-price-verified opportunities first, not the broader live offers list.',
+      href: '/biggest-discounts',
+      label: 'Open biggest discounts'
     }
   ]
   const faqEntries = [
@@ -171,7 +178,7 @@ export default async function DirectoryPage() {
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Best next step</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Start in a category page when you already know the market. Switch to search when the need is still specific, and use category updates when price timing matters more than immediate action.
+                  Start in a category page when you already know the market. Switch to search when the need is still specific, use the offers hub for broad timing checks, and open biggest discounts when you want the strictest verified-discount view first.
                 </p>
               </div>
             </div>
