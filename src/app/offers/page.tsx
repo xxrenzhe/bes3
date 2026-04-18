@@ -8,6 +8,7 @@ import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildBiggestDiscountsPath, buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferCategories, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
@@ -44,6 +45,13 @@ export default async function OffersPage() {
     .slice(0, 3)
   const freshnessDate = getLatestOfferRefresh(opportunities)
   const faqEntries = buildOfferFaqEntries({ scope: 'offers' })
+  const offersWaitHref = buildNewsletterPath({
+    intent: 'offers',
+    cadence: 'priority',
+    returnTo: '/offers',
+    returnLabel: 'Resume offers',
+    returnDescription: 'Return to the offers hub when new affiliate-eligible opportunities are live again.'
+  })
   const structuredData = [
     buildBreadcrumbSchema('/offers', [
       { name: 'Home', path: '/' },
@@ -168,8 +176,16 @@ export default async function OffersPage() {
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">
                 <p className="text-lg font-semibold text-foreground">No public offers are ready yet.</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  The offers hub only lists products that have a public page, an affiliate link path, and a live price signal.
+                  The offers hub only lists products that have a public page, an affiliate link path, and a live price signal. If the market is quiet right now, use a wait flow instead of checking back randomly.
                 </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link href={offersWaitHref} className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Start offer updates
+                  </Link>
+                  <Link href="/directory" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    Browse categories
+                  </Link>
+                </div>
               </div>
             )}
           </div>
