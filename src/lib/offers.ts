@@ -32,6 +32,7 @@ export interface OfferOpportunity {
   freshnessHours: number | null
   isFresh: boolean
   hasVerifiedDiscount: boolean
+  offerConfidenceScore: number | null
   opportunityScore: number
   primaryBadge: string
   winnerReason: string
@@ -180,6 +181,7 @@ function calculateOpportunityScore(input: {
   distanceFromTrackedLowPercent: number | null
   freshnessHours: number | null
   isFresh: boolean
+  offerConfidenceScore: number | null
 }) {
   const signalBase = {
     'buy-now': 82,
@@ -210,6 +212,7 @@ function calculateOpportunityScore(input: {
   const trustScore =
     Math.round(input.product.dataConfidenceScore * 8) +
     Math.round(input.product.attributeCompletenessScore * 6) +
+    Math.round((input.offerConfidenceScore ?? input.product.dataConfidenceScore) * 10) +
     Math.min(input.product.sourceCount, 4)
 
   return Number((signalBase + savingsScore + distanceScore + freshnessScore + trustScore + (input.isFresh ? 4 : -6)).toFixed(2))
@@ -219,6 +222,7 @@ function compareByOpportunity(left: OfferOpportunity, right: OfferOpportunity) {
   if (right.opportunityScore !== left.opportunityScore) return right.opportunityScore - left.opportunityScore
   if ((right.savingsPercent ?? -1) !== (left.savingsPercent ?? -1)) return (right.savingsPercent ?? -1) - (left.savingsPercent ?? -1)
   if ((right.savingsAmount ?? -1) !== (left.savingsAmount ?? -1)) return (right.savingsAmount ?? -1) - (left.savingsAmount ?? -1)
+  if ((right.offerConfidenceScore ?? -1) !== (left.offerConfidenceScore ?? -1)) return (right.offerConfidenceScore ?? -1) - (left.offerConfidenceScore ?? -1)
   const signalDelta = getDealDecisionSignalRank(left.signal.id) - getDealDecisionSignalRank(right.signal.id)
   if (signalDelta !== 0) return signalDelta
   return (left.currentPrice ?? Number.POSITIVE_INFINITY) - (right.currentPrice ?? Number.POSITIVE_INFINITY)
@@ -243,6 +247,7 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
   const rawSavingsAmount = reference.amount != null ? Number((reference.amount - currentPrice).toFixed(2)) : null
   const rawSavingsPercent = reference.amount != null ? Number((((reference.amount - currentPrice) / reference.amount) * 100).toFixed(1)) : null
   const distanceFromTrackedLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
+  const offerConfidenceScore = product.bestOffer?.confidenceScore ?? null
   const offerFreshnessHours = getFreshnessHours([
     product.bestOffer?.lastCheckedAt,
     product.offerLastCheckedAt,
@@ -272,7 +277,8 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
     savingsPercent,
     distanceFromTrackedLowPercent,
     freshnessHours,
-    isFresh
+    isFresh,
+    offerConfidenceScore
   })
 
   return {
@@ -291,6 +297,7 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
     freshnessHours,
     isFresh,
     hasVerifiedDiscount,
+    offerConfidenceScore,
     opportunityScore,
     primaryBadge: buildPrimaryBadge(signal.id, savingsPercent, hasVerifiedDiscount),
     winnerReason: buildWinnerReason({
