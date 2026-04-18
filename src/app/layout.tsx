@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: DEFAULT_SITE_NAME,
       template: `%s | ${DEFAULT_SITE_NAME}`
     },
-    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live offers worth checking.',
+    description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, live offers, and verified discount timing worth checking.',
     applicationName: DEFAULT_SITE_NAME,
     publisher: DEFAULT_SITE_NAME,
     metadataBase: new URL(getSiteUrl()),
@@ -28,7 +28,7 @@ export async function generateMetadata(): Promise<Metadata> {
       canonical: localizedHome,
       languages: Object.fromEntries(Object.entries(alternates))
     },
-    keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'live offers', 'brand directory'],
+    keywords: ['tech buying guide', 'product reviews', 'product comparisons', 'live offers', 'verified discounts', 'best time to buy', 'brand directory'],
     robots: {
       index: true,
       follow: true
@@ -49,12 +49,12 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: DEFAULT_SITE_NAME,
       locale: getOgLocale(locale),
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live offers worth checking.'
+      description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, live offers, and verified discount timing worth checking.'
     },
     twitter: {
       card: 'summary',
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, and live offers worth checking.'
+      description: 'Bes3 helps you find the right tech and home-office products with honest reviews, side-by-side comparisons, live offers, and verified discount timing worth checking.'
     }
   }
 }

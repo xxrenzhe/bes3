@@ -49,6 +49,7 @@ export type ShellDictionary = {
   footerCategories: string
   footerSiteMap: string
   footerShortlist: string
+  footerBiggestDiscounts: string
   footerDescription: string
   localeSwitcherLabel: string
 }
@@ -84,6 +85,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'Categories',
     footerSiteMap: 'Site Map',
     footerShortlist: 'Shortlist',
+    footerBiggestDiscounts: 'Biggest Discounts',
     footerDescription: 'Bes3 helps you compare products, read honest reviews, and find verified offers without the usual hype.',
     localeSwitcherLabel: 'Language'
   },
@@ -105,6 +107,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'Categorías',
     footerSiteMap: 'Mapa del sitio',
     footerShortlist: 'Lista corta',
+    footerBiggestDiscounts: 'Mayores descuentos',
     footerDescription: 'Bes3 te ayuda a comparar productos, leer reseñas honestas y encontrar ofertas verificadas sin el ruido habitual.',
     localeSwitcherLabel: 'Idioma'
   },
@@ -126,6 +129,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'Kategorien',
     footerSiteMap: 'Sitemap',
     footerShortlist: 'Merkliste',
+    footerBiggestDiscounts: 'Groesste Rabatte',
     footerDescription: 'Bes3 hilft dir, Produkte zu vergleichen, ehrliche Tests zu lesen und verifizierte Angebote ohne üblichen Hype zu finden.',
     localeSwitcherLabel: 'Sprache'
   },
@@ -147,6 +151,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'Catégories',
     footerSiteMap: 'Plan du site',
     footerShortlist: 'Sélection',
+    footerBiggestDiscounts: 'Plus fortes remises',
     footerDescription: 'Bes3 vous aide à comparer des produits, lire des avis honnêtes et trouver des offres vérifiées sans le battage habituel.',
     localeSwitcherLabel: 'Langue'
   },
@@ -168,6 +173,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     footerCategories: 'カテゴリ',
     footerSiteMap: 'サイトマップ',
     footerShortlist: '候補リスト',
+    footerBiggestDiscounts: '最大割引',
     footerDescription: 'Bes3 は製品比較、率直なレビュー、検証済みオファーをまとめて、無駄な煽りなしで判断を助けます。',
     localeSwitcherLabel: '言語'
   }

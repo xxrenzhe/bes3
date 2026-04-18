@@ -135,6 +135,7 @@ const CORE_ENTRY_LINKS: ItemListEntry[] = [
   { name: 'Search', path: '/search' },
   { name: 'Directory', path: '/directory' },
   { name: 'Offers', path: '/offers' },
+  { name: 'Biggest Discounts', path: '/biggest-discounts' },
   { name: 'Brands', path: '/brands' },
   { name: 'Categories', path: '/categories' },
   { name: 'Products', path: '/products' },
