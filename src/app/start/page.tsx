@@ -499,7 +499,7 @@ export default async function StartPage() {
               {
                 eyebrow: 'Browse',
                 title: leadCategory ? `Open ${leadCategoryLabel}` : 'Open the directory',
-                description: 'Return to the category page after saving the alert, so the next useful step is still in front of you.',
+                description: 'Return to the category page after saving the wait flow, so the next useful step is still in front of you.',
                 href: buildCategoryPath(leadCategory),
                 label: leadCategory ? 'Open category page' : 'Browse the directory'
               },

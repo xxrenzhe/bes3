@@ -23,7 +23,7 @@ export default function PrivacyPage() {
     {
       label: 'What Bes3 stores',
       title: 'Only site and subscriber data',
-      description: 'Bes3 stores the minimum information needed to run the public site, secure the internal admin area, and deliver newsletter updates people explicitly asked for.'
+      description: 'Bes3 stores the minimum information needed to run the public site, secure the internal admin area, and deliver the wait updates people explicitly asked for.'
     },
     {
       label: 'What Bes3 does not do',
@@ -38,7 +38,7 @@ export default function PrivacyPage() {
   ]
 
   const buyerPromises = [
-    'Newsletter signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
+    'Wait-update signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
     'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]
@@ -51,10 +51,10 @@ export default function PrivacyPage() {
       label: 'Open About'
     },
     {
-      title: 'Manage expectations with price watches',
-      description: 'Use newsletter updates only when you want Bes3 to keep tracking the category, offer flow, or shortlist over time.',
+      title: 'Manage expectations with wait updates',
+      description: 'Use wait updates only when you want Bes3 to keep tracking the category, offer flow, or shortlist over time.',
       href: '/newsletter',
-      label: 'Open Newsletter'
+      label: 'Open Wait Updates'
     },
     {
       title: 'Contact the team',
@@ -66,7 +66,7 @@ export default function PrivacyPage() {
   const faqEntries = [
     {
       question: 'What data does Bes3 keep?',
-      answer: 'Bes3 keeps the minimum site, subscriber, and admin data required to run the public site, secure the admin area, and deliver the updates a subscriber explicitly requested.'
+      answer: 'Bes3 keeps the minimum site, subscriber, and admin data required to run the public site, secure the admin area, and deliver the wait updates a subscriber explicitly requested.'
     },
     {
       question: 'Does Bes3 use privacy terms to justify generic tracking?',
@@ -74,7 +74,7 @@ export default function PrivacyPage() {
     },
     {
       question: 'Where should a reader go after checking privacy details?',
-      answer: 'Usually back to the page that fits the question: About for methodology, Newsletter for selected updates, or Contact for a human answer.'
+      answer: 'Usually back to the page that fits the question: About for methodology, Wait Updates for selected follow-up, or Contact for a human answer.'
     }
   ]
   const structuredData = [
@@ -113,7 +113,7 @@ export default function PrivacyPage() {
               <div className="mt-6 rounded-[1.75rem] bg-slate-950 p-5 text-white">
                 <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Plain-language summary</p>
                 <p className="mt-3 text-sm leading-7 text-slate-200">
-                  Bes3 stores only the site and subscriber information required to run the site, protect the internal system, and deliver the updates people intentionally requested.
+                  Bes3 stores only the site and subscriber information required to run the site, protect the internal system, and deliver the wait updates people intentionally requested.
                 </p>
               </div>
             </div>
@@ -174,13 +174,13 @@ export default function PrivacyPage() {
             <p>Last Updated: April 4, 2026</p>
             <h2>Privacy Policy</h2>
             <p>
-              Bes3 stores only the site and subscriber information required to run the site, deliver newsletter updates, and maintain platform security.
+              Bes3 stores only the site and subscriber information required to run the site, deliver wait updates, and maintain platform security.
             </p>
             <h3>Data we store</h3>
             <ul>
               <li>Administrator accounts and sign-in records used to secure the internal CMS.</li>
               <li>Affiliate product records, article metadata, and site settings required to publish Bes3 pages.</li>
-              <li>Newsletter signups submitted through the site, including the preference information needed to deliver the selected updates.</li>
+              <li>Wait-update signups submitted through the site, including the preference information needed to deliver the selected updates.</li>
             </ul>
             <h3>How we use it</h3>
             <p>

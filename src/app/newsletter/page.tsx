@@ -27,18 +27,18 @@ export async function generateMetadata({
   const hasPrefill = Boolean(resolvedParams.intent || resolvedParams.category || resolvedParams.cadence || resolvedParams.returnTo)
   const title = selectedCategory
     ? `Track ${toTitleCaseWords(selectedCategoryLabel)}`
-    : selectedIntent === 'price-alert'
-      ? 'Price Watch'
+      : selectedIntent === 'price-alert'
+        ? 'Price Watch'
       : selectedIntent === 'category-brief'
         ? 'Category Updates'
-        : 'Offer Updates'
+        : 'Wait Updates'
 
   const description =
     selectedIntent === 'price-alert'
       ? `Start Bes3 price-watch updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so a better offer window can bring you back without making you start over.`
       : selectedIntent === 'category-brief'
         ? `Subscribe to Bes3 category updates${selectedCategory ? ` for ${selectedCategoryLabel}` : ''} so you can keep up with that category while you wait.`
-        : 'Subscribe to Bes3 updates for price watches, category updates, and offer follow-up tied to real shopping tasks.'
+        : 'Use Bes3 wait updates for price watches, category updates, and offer follow-up tied to real shopping tasks.'
 
   return buildPageMetadata({
     title,
@@ -77,7 +77,7 @@ export default async function NewsletterPage({
   const relatedGuide = categoryCoverage.find((article) => article.type === 'guide') || null
   const alertGuideCards = [
     {
-      label: 'Alert type',
+      label: 'Update type',
       value:
         selectedIntent === 'price-alert'
           ? 'Price watch updates'
@@ -103,7 +103,7 @@ export default async function NewsletterPage({
       label: 'While you wait',
       value: selectedCategory ? selectedCategoryLabel : 'Keep your place',
       description: selectedCategory
-        ? `Keep researching inside ${selectedCategoryLabel} so the alert supports the same category you are already considering.`
+        ? `Keep researching inside ${selectedCategoryLabel} so the wait flow supports the same category you are already considering.`
         : 'Keep shortlist, search, and offers aligned so you do not lose your place while waiting.'
     }
   ]
@@ -270,7 +270,7 @@ export default async function NewsletterPage({
             }
             decisionText={
               resumeContext
-                ? `This alert will preserve the current task and bring you back to ${resumeContext.label.toLowerCase()} when the market changes in a useful way.`
+                ? `This wait setup will preserve the current task and bring you back to ${resumeContext.label.toLowerCase()} when the market changes in a useful way.`
                 : selectedIntent === 'price-alert'
                 ? 'This is the right move when the shortlist or product fit is already mostly settled and timing is the only thing still open.'
                 : selectedIntent === 'category-brief'

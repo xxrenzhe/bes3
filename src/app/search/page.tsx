@@ -390,7 +390,7 @@ export default async function SearchPage({
           ? {
               eyebrow: 'Watch',
               title: `Track ${getCategoryLabel(suggestedCategory)}`,
-              description: 'If price is the only thing holding you back, turn this search into a price alert so you do not have to start over later.',
+              description: 'If price is the only thing holding you back, turn this search into a price watch so you do not have to start over later.',
               href: buildNewsletterPath({
                 intent: 'price-alert',
                 category: suggestedCategory,
@@ -399,7 +399,7 @@ export default async function SearchPage({
                 returnLabel: 'Resume this search',
                 returnDescription: 'Return to the same search results with your current query, scope, and next-step context still in place.'
               }),
-              label: 'Start price alert'
+              label: 'Start price watch'
             }
           : {
               eyebrow: 'Explore',
@@ -927,7 +927,7 @@ export default async function SearchPage({
               <div className="rounded-[2rem] bg-white p-8 shadow-panel">
                 <h2 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Start with what you need.</h2>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  Good search should match where you are: discover products, check one option, compare top picks, or start a price alert when you are waiting for a better offer window.
+                  Good search should match where you are: discover products, check one option, compare top picks, or start a price watch when you are waiting for a better offer window.
                 </p>
                 <div className="mt-6 grid gap-4 sm:grid-cols-2">
                   {SEARCH_STARTER_ROUTES.map((route) => (

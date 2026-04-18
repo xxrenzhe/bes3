@@ -59,7 +59,7 @@ export function ExitIntentCapture({
       cadence: 'priority',
       returnTo: basePath,
       returnLabel: 'Resume current page',
-      returnDescription: 'Return to the same page after saving the alert instead of restarting from a generic newsletter screen.'
+      returnDescription: 'Return to the same page after saving the wait update instead of restarting from a generic update screen.'
     }),
     locale
   )
@@ -184,7 +184,7 @@ export function ExitIntentCapture({
                   href={alertSettingsPath}
                   className="inline-flex min-h-[52px] items-center justify-center rounded-full border border-emerald-200 bg-white px-6 text-sm font-semibold text-primary transition-colors hover:border-emerald-300 hover:bg-emerald-50"
                 >
-                  Review alert settings
+                  Review wait settings
                 </Link>
               </div>
             ) : (

@@ -251,7 +251,7 @@ export default async function HtmlSitemapPage() {
                 { href: '/about', label: 'About' },
                 { href: '/trust', label: 'Trust Center' },
                 { href: '/contact', label: 'Contact' },
-                { href: '/newsletter', label: 'Newsletter' },
+                { href: '/newsletter', label: 'Wait Updates' },
                 { href: '/privacy', label: 'Privacy' },
                 { href: '/terms', label: 'Terms' },
                 { href: '/shortlist', label: 'Shortlist' },
