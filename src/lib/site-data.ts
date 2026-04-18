@@ -614,6 +614,15 @@ export async function listPublishedProductsByIds(ids: number[]): Promise<Product
   return ids.map((id) => byId.get(id)).filter(Boolean) as ProductRecord[]
 }
 
+export async function listOpenCommerceProductsByIds(ids: number[]): Promise<CommerceProductRecord[]> {
+  if (!ids.length) return []
+
+  const products = await listOpenCommerceProducts()
+  const byId = new Map(products.map((product) => [product.id, product]))
+
+  return ids.map((id) => byId.get(id)).filter(Boolean) as CommerceProductRecord[]
+}
+
 function buildInClause(values: number[]) {
   return values.map(() => '?').join(', ')
 }
