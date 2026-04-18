@@ -1,11 +1,44 @@
 import { DecisionSummaryPanel } from '@/components/site/DecisionSummaryPanel'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { TrackedDecisionLink } from '@/components/site/TrackedDecisionLink'
+import { formatEditorialDate } from '@/lib/editorial'
 import {
   buildIntentContextChips,
   buildIntentRecommendationNote,
   type IntentSearchResult
 } from '@/lib/commerce-intent'
+import { formatPriceSnapshot } from '@/lib/utils'
+
+function formatTrackedLabel(distanceFromTrackedLowPercent: number | null) {
+  if (distanceFromTrackedLowPercent == null) return 'Tracked floor still developing'
+  if (distanceFromTrackedLowPercent <= 0.25) return 'At tracked low'
+  return `${distanceFromTrackedLowPercent.toFixed(distanceFromTrackedLowPercent < 10 ? 1 : 0)}% above low`
+}
+
+function formatPromotionLabel(item: IntentSearchResult['recommendations'][number]) {
+  if (item.hasVerifiedDiscount && item.savingsAmount != null && item.savingsPercent != null) {
+    return `${Math.round(item.savingsPercent)}% off · save ${formatPriceSnapshot(item.savingsAmount, item.currentCurrency)}`
+  }
+
+  return 'Timing-led recommendation'
+}
+
+function formatShippingLabel(item: IntentSearchResult['recommendations'][number]) {
+  if (item.shippingCost == null) return 'Shipping not listed'
+  if (item.shippingCost <= 0) return 'Free shipping'
+  return formatPriceSnapshot(item.shippingCost, item.currentCurrency)
+}
+
+function formatReferenceLabel(item: IntentSearchResult['recommendations'][number]) {
+  if (item.referencePrice == null) return 'No reliable reference'
+  return formatPriceSnapshot(item.referencePrice, item.referenceCurrency || item.currentCurrency)
+}
+
+function formatProofLabel(item: IntentSearchResult['recommendations'][number]) {
+  if (!item.product.rating) return 'Proof still thin'
+  const reviews = item.product.reviewCount ? ` · ${item.product.reviewCount.toLocaleString()} reviews` : ''
+  return `${item.product.rating.toFixed(1)} / 5${reviews}`
+}
 
 export function IntentRecommendationPanel({
   result,
@@ -163,100 +196,134 @@ export function IntentRecommendationPanel({
           </div>
           <span className="text-sm text-muted-foreground">{result.recommendations.length} recommended pick{result.recommendations.length === 1 ? '' : 's'}</span>
         </div>
-        <div className="grid gap-6 xl:grid-cols-2">
-          {result.recommendations.map((item, index) => {
-            const itemHref = item.product.slug ? `/products/${item.product.slug}` : result.shortlistPath
-            const itemNextAction: {
-              href: string
-              label: string
-              eventType: 'alert_subscribe_from_assistant' | 'assistant_recommendation_accept'
-            } = index === 0
-              ? {
-                  href: result.nextAction.href,
-                  label: result.nextAction.label,
-                  eventType: result.nextAction.href.includes('/newsletter') ? 'alert_subscribe_from_assistant' : 'assistant_recommendation_accept'
-                }
-              : comparisonReady && index < 2
-                ? {
-                    href: result.comparePath,
-                    label: 'Open shortlist finalists',
-                    eventType: 'assistant_recommendation_accept' as const
-                  }
-                : {
-                    href: itemHref,
-                    label: 'Open product page',
-                    eventType: 'assistant_recommendation_accept' as const
-                  }
+        <article className="overflow-hidden rounded-[2rem] bg-white shadow-panel">
+          <div className="border-b border-border/50 bg-[linear-gradient(135deg,#0f172a_0%,#134e4a_100%)] px-6 py-6 text-white">
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Winner now</p>
+              <span className="rounded-full border border-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85">
+                {result.recommendations.length >= 3 ? '3-way shortlist' : result.recommendations.length === 2 ? 'Head-to-head' : 'Best available now'}
+              </span>
+            </div>
+            <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{lead?.product.productName}</h3>
+            <p className="mt-3 max-w-4xl text-sm leading-7 text-slate-200">{lead?.reasons.join(' ')}</p>
+          </div>
 
-            return (
-            <div key={item.product.id} className="space-y-4">
-              <ProductSpotlightCard product={item.product} source="intent-search-results" />
-              <div className="rounded-[1.5rem] bg-white p-5 shadow-panel">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
-                      {index === 0 ? 'Lead recommendation' : 'Shortlist recommendation'}
-                    </p>
-                    <h3 className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">
-                      {item.product.productName}
-                    </h3>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    {index === 0 ? (
-                      <span className="rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-800">
-                        Best match now
-                      </span>
-                    ) : null}
-                    <span className="rounded-full bg-muted px-3 py-1 text-xs font-semibold text-muted-foreground">
-                      Match {item.score}
-                    </span>
-                  </div>
-                </div>
-                <div className="mt-5 grid gap-4 md:grid-cols-3">
-                  <div className="rounded-[1.25rem] bg-muted/70 p-4 md:col-span-2">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Why it made the shortlist</p>
-                    <div className="mt-3 space-y-2">
-                      {item.reasons.map((reason) => (
-                        <p key={reason} className="text-sm leading-7 text-muted-foreground">
-                          {reason}
-                        </p>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="rounded-[1.25rem] border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-800">Biggest risk</p>
-                    <p className="mt-3 text-sm leading-7 text-amber-900">
-                      {item.concerns[0] || 'No major blocker is visible yet, but validate the product page before treating it as final.'}
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Next move</p>
-                  <p className="mt-3 text-sm leading-7 text-foreground">
-                    {index === 0
-                      ? result.nextAction.description
-                      : comparisonReady && index < 2
-                        ? 'This pick is strong enough to keep in the finalist set. Use compare next if you are down to the last serious options.'
-                        : 'Open the product page next if you need one more fit check before saving, comparing, or waiting.'}
-                  </p>
+          <div className="space-y-4 p-6">
+            <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
+              <div className="rounded-[1.5rem] bg-muted p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it wins</p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{lead?.reasons.join(' ')}</p>
+              </div>
+              <div className="rounded-[1.5rem] bg-muted p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">If not buying today</p>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.nextAction.description}</p>
+                <div className="mt-4 flex flex-wrap gap-3">
                   <TrackedDecisionLink
-                    href={itemNextAction.href}
-                    className="mt-4 inline-flex text-sm font-semibold text-primary"
-                    eventType={itemNextAction.eventType}
+                    href={result.nextAction.href}
+                    className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-white"
+                    eventType={result.nextAction.href.includes('/newsletter') ? 'alert_subscribe_from_assistant' : 'assistant_recommendation_accept'}
                     source={source}
-                    productId={item.product.id}
+                    productId={leadProductId}
                     metadata={{
-                      href: itemNextAction.href,
-                      label: itemNextAction.label
+                      href: result.nextAction.href,
+                      label: result.nextAction.label
                     }}
                   >
-                    {itemNextAction.label} →
+                    {result.nextAction.label}
+                  </TrackedDecisionLink>
+                  <TrackedDecisionLink
+                    href={result.fallbackAction.href}
+                    className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-white"
+                    eventType="assistant_recommendation_reject"
+                    source={source}
+                    productId={leadProductId}
+                    metadata={{
+                      href: result.fallbackAction.href,
+                      label: result.fallbackAction.label
+                    }}
+                  >
+                    {result.fallbackAction.label}
                   </TrackedDecisionLink>
                 </div>
               </div>
             </div>
-          )})}
-        </div>
+
+            <div className="rounded-[1.5rem] border border-border/60">
+              <div className="overflow-x-auto">
+                <div className="min-w-[1220px]">
+                  <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                    <span>Pick</span>
+                    <span>Current</span>
+                    <span>Reference</span>
+                    <span>Promotion</span>
+                    <span>Timing</span>
+                    <span>Merchant</span>
+                    <span>Shipping</span>
+                    <span>Buyer proof</span>
+                    <span>Last checked</span>
+                  </div>
+                  <div className="divide-y divide-border/60">
+                    {result.recommendations.map((item, index) => (
+                      <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
+                        <div>
+                          <p className="font-semibold text-foreground">
+                            {index === 0 ? 'Winner' : `Option ${index + 1}`} · {item.product.productName}
+                          </p>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {item.concerns[0] || 'No major blocker is visible yet, but validate the product page before treating it as final.'}
+                          </p>
+                        </div>
+                        <div className="font-black text-foreground">
+                          {formatPriceSnapshot(item.currentPrice, item.currentCurrency)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatReferenceLabel(item)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatPromotionLabel(item)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatTrackedLabel(item.distanceFromTrackedLowPercent)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {item.merchantName || 'Affiliate merchant'}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatShippingLabel(item)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatProofLabel(item)}
+                        </div>
+                        <div className="text-muted-foreground">
+                          {formatEditorialDate(item.checkedAt)} · {item.freshnessLabel.toLowerCase()}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {result.recommendations.length > 1 ? (
+              <div className="rounded-[1.5rem] bg-muted p-5">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Where the other options differ</p>
+                <div className="mt-3 space-y-2">
+                  {result.recommendations.slice(1).map((item, index) => (
+                    <p key={item.product.id} className="text-sm leading-7 text-muted-foreground">
+                      {`Option ${index + 2}: ${item.product.productName} stays viable, but it is currently ${formatTrackedLabel(item.distanceFromTrackedLowPercent).toLowerCase()} and ${formatPromotionLabel(item).toLowerCase()}. ${item.concerns[0] || 'Validate the product page before treating it as final.'}`}
+                    </p>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            <div className="grid gap-6 xl:grid-cols-3">
+              {result.recommendations.map((item) => (
+                <ProductSpotlightCard key={item.product.id} product={item.product} source="intent-search-results" />
+              ))}
+            </div>
+          </div>
+        </article>
       </section>
     </div>
   )
