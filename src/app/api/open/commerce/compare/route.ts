@@ -27,10 +27,7 @@ function normalizeProductIds(value: unknown) {
   ).slice(0, 3)
 }
 
-export async function POST(request: Request) {
-  const body = await request.json().catch(() => ({}))
-  const productIds = normalizeProductIds(body.productIds)
-
+async function buildComparisonResponse(productIds: number[], visitorId?: string | null) {
   if (productIds.length < 2) {
     return NextResponse.json({ error: 'At least two valid product ids are required' }, { status: 400 })
   }
@@ -69,7 +66,7 @@ export async function POST(request: Request) {
             brandPolicy: brandKnowledge.brandPolicy,
             compatibilityFacts: brandKnowledge.compatibilityFacts,
             source: 'open-commerce-compare',
-            visitorId: typeof body.visitorId === 'string' ? body.visitorId : null
+            visitorId: typeof visitorId === 'string' ? visitorId : null
           })
         }
       })
@@ -129,4 +126,31 @@ export async function POST(request: Request) {
     actions: winner.result.actions,
     disclaimers: buildCommerceDisclaimers(winner.product)
   })
+}
+
+function parseProductIdsFromSearchParams(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const rawProductIds = searchParams.get('productIds') || searchParams.get('ids') || ''
+  const productIds = rawProductIds
+    .split(',')
+    .map((item) => Number.parseInt(item.trim(), 10))
+    .filter((item) => Number.isInteger(item) && item > 0)
+
+  return normalizeProductIds(productIds)
+}
+
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  return buildComparisonResponse(
+    parseProductIdsFromSearchParams(request),
+    searchParams.get('visitorId')
+  )
+}
+
+export async function POST(request: Request) {
+  const body = await request.json().catch(() => ({}))
+  return buildComparisonResponse(
+    normalizeProductIds(body.productIds),
+    typeof body.visitorId === 'string' ? body.visitorId : null
+  )
 }

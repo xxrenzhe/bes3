@@ -58,6 +58,8 @@ export async function GET(request: Request) {
       html: [
         '/',
         '/directory',
+        '/offers',
+        '/biggest-discounts',
         '/categories',
         '/brands',
         '/products',
@@ -124,7 +126,7 @@ export async function GET(request: Request) {
       {
         path: '/api/open/commerce/compare?productIds=1,2',
         type: 'compare',
-        description: 'Return a machine-readable comparison object for shortlisted products.'
+        description: 'Return a machine-readable comparison object for shortlisted products. Supports GET query params or POST JSON with productIds.'
       },
       {
         path: '/api/open/commerce/products/1',
