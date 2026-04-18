@@ -255,7 +255,7 @@ export function CommerceEvidencePanel({
                     </p>
                   </div>
                   {offer.couponText ? (
-                    <p className="mt-2 text-xs text-muted-foreground">Promotion note: {offer.couponText}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">Promotion details: {offer.couponText}</p>
                   ) : null}
                   {offer.referencePriceAmount != null && offer.referencePriceAmount > (offer.priceAmount ?? 0) ? (
                     <p className="mt-2 text-xs text-muted-foreground">
@@ -277,7 +277,7 @@ export function CommerceEvidencePanel({
                             merchantName: offer.merchantName || null,
                             availabilityStatus: offer.availabilityStatus || null,
                             priceAmount: offer.priceAmount ?? null,
-                            couponText: offer.couponText || null
+                            promotionSummary: offer.couponText || null
                           }
                         })
                       }}

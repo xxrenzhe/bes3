@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct } from '@/lib/open-commerce'
+import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct, serializePublicProductSnapshot } from '@/lib/open-commerce'
 import { searchOpenCommerceProducts } from '@/lib/site-data'
 
 function parseNumericParam(value: string | null): number | undefined {
@@ -31,7 +31,7 @@ export async function GET(request: NextRequest) {
     minPrice: minPrice ?? null,
     maxPrice: maxPrice ?? null,
     total: products.length,
-    products,
+    products: products.map((product) => serializePublicProductSnapshot(product)),
     results: products.map((product) =>
       serializeCommerceProduct(product, {
         source: 'open-commerce-search'

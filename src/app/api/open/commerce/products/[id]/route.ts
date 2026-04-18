@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct } from '@/lib/open-commerce'
+import { COMMERCE_PROTOCOL_VERSION, serializeCommerceProduct, serializePublicProductSnapshot } from '@/lib/open-commerce'
 import {
   getBrandSlug,
   getBrandPolicyBySlug,
@@ -34,7 +34,7 @@ export async function GET(
   return NextResponse.json({
     protocolVersion: COMMERCE_PROTOCOL_VERSION,
     generatedAt: new Date().toISOString(),
-    product,
+    product: serializePublicProductSnapshot(product),
     attributeFacts,
     brandPolicy,
     compatibilityFacts,
