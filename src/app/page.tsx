@@ -147,6 +147,14 @@ export default async function HomePage() {
         name: 'Start Here',
         path: '/start'
       },
+      {
+        name: 'Offers',
+        path: '/offers'
+      },
+      {
+        name: 'Biggest Discounts',
+        path: '/biggest-discounts'
+      },
       ...featured.map((article) => ({
         name: article.title,
         path: getArticlePath(article.type, article.slug)
@@ -212,6 +220,12 @@ export default async function HomePage() {
               >
                 I already know the product name
               </Link>
+              <Link
+                href="/biggest-discounts"
+                className="rounded-full border border-border/80 bg-white/70 px-8 py-4 text-base font-semibold text-foreground transition-colors hover:bg-white"
+              >
+                See biggest discounts
+              </Link>
             </div>
           </div>
           <div className="relative">
@@ -275,6 +289,17 @@ export default async function HomePage() {
             description="Most shoppers are in one of three states: they need help narrowing, they already have finalists, or they are waiting for a better price. Pick the state that matches your situation."
             routes={shoppingStateRoutes}
           />
+          <div className="rounded-[1.75rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.2)]">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Timing-led shortcut</p>
+            <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <p className="max-w-3xl text-sm leading-7 text-muted-foreground">
+                If the product fit is already mostly clear and you want the strictest reference-price-verified leaderboard first, go straight to the biggest discounts page instead of starting with the broader offers hub.
+              </p>
+              <Link href="/biggest-discounts" className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition-transform hover:translate-x-1">
+                Open biggest discounts <span aria-hidden="true">→</span>
+              </Link>
+            </div>
+          </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {decisionPrinciples.map(([title, description]) => (
               <div key={title} className="rounded-[1.5rem] bg-white p-5 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.2)]">
