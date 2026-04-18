@@ -6,7 +6,9 @@ import { OfferTransparencyPanel } from '@/components/site/OfferTransparencyPanel
 import { OfferOpportunityCard } from '@/components/site/OfferOpportunityCard'
 import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
+import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferCategories, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
@@ -40,6 +42,14 @@ export default async function BiggestDiscountsPage() {
   const freshnessDate = getLatestOfferRefresh(items)
   const showdowns = buildOfferShowdowns(items, 3)
   const faqEntries = buildOfferFaqEntries({ scope: 'biggest discounts' })
+  const offersWaitHref = buildNewsletterPath({
+    intent: 'offers',
+    cadence: 'priority',
+    returnTo: '/biggest-discounts',
+    returnLabel: 'Resume biggest discounts',
+    returnDescription: 'Return to the leaderboard when Bes3 finds new verified discounts that pass the reference-price checks.'
+  })
+  const categoryLinks = listOfferCategories(allDiscounts).slice(0, 8)
   const structuredData = [
     buildBreadcrumbSchema('/biggest-discounts', [
       { name: 'Home', path: '/' },
@@ -153,6 +163,35 @@ export default async function BiggestDiscountsPage() {
           </section>
         ) : null}
 
+        {!leader ? (
+          <section className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 shadow-panel">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Verified discounts only</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
+              No verified discount is qualified for the leaderboard right now.
+            </h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+              Bes3 does not publish a headline discount here unless the reference price is reliable and fresh. When that proof is missing, the safer move is to follow the broader offers hub or save updates until a real verified discount appears.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              <Link href={offersWaitHref} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                Start offer updates
+              </Link>
+              <Link href="/offers" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                Back to all offers
+              </Link>
+            </div>
+            {categoryLinks.length ? (
+              <div className="mt-6 flex flex-wrap gap-3">
+                {categoryLinks.map((item) => (
+                  <Link key={item.slug} href={buildOffersPath(item.category)} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                    {getCategoryLabel(item.category)}
+                  </Link>
+                ))}
+              </div>
+            ) : null}
+          </section>
+        ) : null}
+
         {showdowns.length ? (
           <div className="mx-auto max-w-7xl">
             <OfferShowdownSection
@@ -163,22 +202,24 @@ export default async function BiggestDiscountsPage() {
           </div>
         ) : null}
 
-        <section className="mx-auto max-w-7xl space-y-8">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="editorial-kicker">Leaderboard</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Largest verified promotions checked recently.</h2>
+        {items.length ? (
+          <section className="mx-auto max-w-7xl space-y-8">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div>
+                <p className="editorial-kicker">Leaderboard</p>
+                <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Largest verified promotions checked recently.</h2>
+              </div>
+              <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                Ranking is driven by verified discount depth first, then timing quality, freshness, and live-offer confidence. Commission is not part of the public score.
+              </p>
             </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              Ranking is driven by verified discount depth first, then timing quality and freshness. Commission is not part of the public score.
-            </p>
-          </div>
-          <div className="grid gap-8 xl:grid-cols-2">
-            {items.map((opportunity) => (
-              <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="biggest-discounts-card" />
-            ))}
-          </div>
-        </section>
+            <div className="grid gap-8 xl:grid-cols-2">
+              {items.map((opportunity) => (
+                <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="biggest-discounts-card" />
+              ))}
+            </div>
+          </section>
+        ) : null}
 
         <div className="mx-auto max-w-7xl">
           <OfferTransparencyPanel
