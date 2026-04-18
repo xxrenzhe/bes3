@@ -22,6 +22,7 @@ import {
   listBrandCompatibilityFacts,
   listBrands,
   listCategories,
+  listOpenCommerceProducts,
   listPublishedArticles,
   listPublishedProducts
 } from '@/lib/site-data'
@@ -118,14 +119,16 @@ export default async function BrandPage({
     )
   }
 
-  const [allArticles, allProducts, brandPolicy, compatibilityFacts] = await Promise.all([
+  const [allArticles, allProducts, allCommerceProducts, brandPolicy, compatibilityFacts] = await Promise.all([
     listPublishedArticles(),
     listPublishedProducts(),
+    listOpenCommerceProducts(),
     getBrandPolicyBySlug(slug),
     listBrandCompatibilityFacts(slug, { limit: 6 })
   ])
 
   const brandProducts = allProducts.filter((product) => getBrandSlug(product.brand) === slug)
+  const brandCommerceProducts = allCommerceProducts.filter((product) => getBrandSlug(product.brand) === slug)
   const brandArticles = allArticles.filter((article) => getBrandSlug(article.product?.brand) === slug)
   const leadReview = brandArticles.find((article) => article.type === 'review') || brandArticles[0] || null
   const leadComparison = brandArticles.find((article) => article.type === 'comparison') || null
@@ -355,9 +358,9 @@ export default async function BrandPage({
           sections={seoHubSections}
         />
 
-        {brandProducts.length ? (
+        {brandCommerceProducts.length ? (
           <ProductFinalistsSection
-            products={brandProducts}
+            products={brandCommerceProducts}
             source="brand-hub-shortlist"
             title={`Start with the strongest ${brand.name} picks.`}
             description={`This brand page keeps the final recommendation layer small on purpose: at most three ${brand.name} products in view, one lead, and a clear route into compare or price watch if you are not ready to buy.`}

@@ -39,7 +39,7 @@ export default async function OffersPage() {
   const showdowns = buildOfferShowdowns(heroItems, 4)
   const categoryLinks = listOfferCategories(heroItems).slice(0, 8)
   const discountPreview = [...heroItems]
-    .filter((item) => item.savingsPercent != null)
+    .filter((item) => item.hasVerifiedDiscount)
     .sort((left, right) => (right.savingsPercent ?? -1) - (left.savingsPercent ?? -1) || right.opportunityScore - left.opportunityScore)
     .slice(0, 3)
   const freshnessDate = getLatestOfferRefresh(opportunities)
@@ -209,7 +209,7 @@ export default async function OffersPage() {
                     <p className="mt-2 text-sm leading-7 text-muted-foreground">{item.winnerReason}</p>
                     <div className="mt-4 flex flex-wrap items-center gap-3 text-sm">
                       <span className="font-black text-foreground">{formatPriceSnapshot(item.currentPrice, item.currentCurrency)}</span>
-                      {item.referencePrice != null && item.savingsPercent != null ? (
+                      {item.hasVerifiedDiscount && item.referencePrice != null && item.savingsPercent != null ? (
                         <span className="text-muted-foreground">
                           vs {formatPriceSnapshot(item.referencePrice, item.referenceCurrency || item.currentCurrency)} · {Math.round(item.savingsPercent)}% off
                         </span>

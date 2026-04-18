@@ -73,7 +73,7 @@ export function OfferOpportunityCard({
                 : 'No reliable reference'}
             </p>
             <p className="mt-2 text-xs text-muted-foreground">
-              {opportunity.savingsAmount != null && opportunity.savingsPercent != null
+              {opportunity.hasVerifiedDiscount && opportunity.savingsAmount != null && opportunity.savingsPercent != null
                 ? `Save ${formatPriceSnapshot(opportunity.savingsAmount, opportunity.currentCurrency)} · ${Math.round(opportunity.savingsPercent)}% below reference`
                 : 'We only show a discount badge when a verifiable reference price exists.'}
             </p>
