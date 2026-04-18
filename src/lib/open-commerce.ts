@@ -2,6 +2,7 @@ import { buildArticleDecisionContent, buildProductDecisionContent } from '@/lib/
 import { buildCategoryPath } from '@/lib/category'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
 import { normalizeMerchantSource, buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { sanitizePromotionSummary } from '@/lib/promotion'
 import type {
   ArticleRecord,
   BrandPolicyRecord,
@@ -208,7 +209,7 @@ export function serializePublicOffer(offer: ProductOfferRecord | null): PublicCo
 
   return {
     ...rest,
-    promotionSummary: couponText || null
+    promotionSummary: sanitizePromotionSummary(couponText)
   }
 }
 

@@ -6,6 +6,7 @@ import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
+import { sanitizePromotionSummary } from '@/lib/promotion'
 import type {
   CommerceProductRecord,
   ProductAttributeFactRecord,
@@ -240,6 +241,7 @@ export function CommerceEvidencePanel({
           <div className="mt-4 space-y-3">
             {visibleOffers.length ? visibleOffers.map((offer) => {
               const offerHref = resolvedOfferHrefs[offer.id] || buildMerchantExitPath(product.id, `${source}-offer`, undefined, offer.id)
+              const promotionSummary = sanitizePromotionSummary(offer.couponText)
 
               return (
                 <div key={offer.id} className="rounded-[1.25rem] bg-muted px-4 py-4">
@@ -254,8 +256,8 @@ export function CommerceEvidencePanel({
                       {formatPriceSnapshot(offer.priceAmount, offer.priceCurrency || product.priceCurrency || 'USD')}
                     </p>
                   </div>
-                  {offer.couponText ? (
-                    <p className="mt-2 text-xs text-muted-foreground">Promotion details: {offer.couponText}</p>
+                  {promotionSummary ? (
+                    <p className="mt-2 text-xs text-muted-foreground">Promotion details: {promotionSummary}</p>
                   ) : null}
                   {offer.referencePriceAmount != null && offer.referencePriceAmount > (offer.priceAmount ?? 0) ? (
                     <p className="mt-2 text-xs text-muted-foreground">
@@ -277,7 +279,7 @@ export function CommerceEvidencePanel({
                             merchantName: offer.merchantName || null,
                             availabilityStatus: offer.availabilityStatus || null,
                             priceAmount: offer.priceAmount ?? null,
-                            promotionSummary: offer.couponText || null
+                            promotionSummary
                           }
                         })
                       }}
