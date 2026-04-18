@@ -31,6 +31,14 @@ export interface CommerceDisclaimer {
   message: string
 }
 
+export interface PublicCommerceOffer extends Omit<ProductOfferRecord, 'couponText' | 'couponType'> {
+  promotionSummary: string | null
+}
+
+export interface PublicCommerceProductSnapshot extends Omit<CommerceProductRecord, 'bestOffer'> {
+  bestOffer: PublicCommerceOffer | null
+}
+
 export function summarizePriceHistory(priceHistory: ProductPriceHistoryRecord[], fallbackCurrency?: string | null) {
   if (!priceHistory.length) return null
 
@@ -189,6 +197,36 @@ function dedupeAlternativeOffers(bestOffer: ProductOfferRecord | null, offers: P
     .slice(0, MAX_ALTERNATIVE_OFFERS)
 }
 
+export function serializePublicOffer(offer: ProductOfferRecord | null): PublicCommerceOffer | null {
+  if (!offer) return null
+
+  const {
+    couponText,
+    couponType: _couponType,
+    ...rest
+  } = offer
+
+  return {
+    ...rest,
+    promotionSummary: couponText || null
+  }
+}
+
+export function serializePublicOffers(offers: ProductOfferRecord[]): PublicCommerceOffer[] {
+  return offers
+    .map((offer) => serializePublicOffer(offer))
+    .filter((offer): offer is PublicCommerceOffer => Boolean(offer))
+}
+
+export function serializePublicProductSnapshot(product: CommerceProductRecord): PublicCommerceProductSnapshot {
+  const { bestOffer, ...rest } = product
+
+  return {
+    ...rest,
+    bestOffer: serializePublicOffer(bestOffer)
+  }
+}
+
 export function serializeCommerceProduct(
   product: CommerceProductRecord,
   options?: {
@@ -210,6 +248,8 @@ export function serializeCommerceProduct(
   const fitSummary = buildBestFor(product, 'product')
   const notForSummary = buildNotFor(product, 'product')
   const priceHistorySummary = summarizePriceHistory(priceHistory, bestOffer?.priceCurrency || product.priceCurrency)
+  const serializedBestOffer = serializePublicOffer(bestOffer)
+  const serializedAlternativeOffers = serializePublicOffers(alternativeOffers)
 
   return {
     entity: {
@@ -241,8 +281,8 @@ export function serializeCommerceProduct(
       confidenceSignals: buildConfidenceSignals(product),
       freshness: product.freshness
     },
-    bestOffer,
-    alternativeOffers,
+    bestOffer: serializedBestOffer,
+    alternativeOffers: serializedAlternativeOffers,
     fitSummary,
     notForSummary,
     contentModules: buildProductDecisionContent(product, 'product', {
@@ -264,7 +304,7 @@ export function serializeCommerceProduct(
       priceHistorySummary,
       priceHistory: priceHistory.slice(0, MAX_PRICE_HISTORY_POINTS),
       facts: attributeFacts.slice(0, MAX_EVIDENCE_FACTS),
-      offers: offers.slice(0, MAX_ALTERNATIVE_OFFERS + 1)
+      offers: serializePublicOffers(offers.slice(0, MAX_ALTERNATIVE_OFFERS + 1))
     },
     actions: buildCommerceActions(product, {
       source: options?.source,
