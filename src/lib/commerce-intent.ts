@@ -217,6 +217,24 @@ function scoreProduct(input: {
   return score
 }
 
+function resolveRecommendationCategory(
+  rankedProducts: CommerceProductRecord[],
+  inferredCategory: string | null
+) {
+  if (inferredCategory) return inferredCategory
+
+  const categoryScores = new Map<string, number>()
+
+  rankedProducts.slice(0, 8).forEach((product, index) => {
+    if (!product.category) return
+    const rankWeight = Math.max(1, 8 - index)
+    categoryScores.set(product.category, (categoryScores.get(product.category) || 0) + rankWeight)
+  })
+
+  const winner = Array.from(categoryScores.entries()).sort((left, right) => right[1] - left[1] || left[0].localeCompare(right[0]))[0]
+  return winner?.[0] || rankedProducts.find((product) => product.category)?.category || null
+}
+
 function buildNextAction(input: {
   recommendations: IntentRecommendation[]
   urgency: IntentUrgency
@@ -296,7 +314,7 @@ export async function resolveIntentSearch(input: IntentSearchInput): Promise<Int
     limit: Math.max(6, input.limit || 8)
   })
 
-  const recommendations = products
+  const rankedRecommendations = products
     .map((product) => {
       const score = scoreProduct({
         product,
@@ -322,19 +340,35 @@ export async function resolveIntentSearch(input: IntentSearchInput): Promise<Int
       }
     })
     .sort((left, right) => right.score - left.score)
+  const resolvedCategory = resolveRecommendationCategory(
+    rankedRecommendations.map((item) => item.product),
+    inferredCategory
+  )
+  const recommendations = rankedRecommendations
+    .filter((item) => !resolvedCategory || categoryMatches(item.product.category, resolvedCategory))
+    .map((item) => ({
+      ...item,
+      ...buildReasonsAndConcerns({
+        product: item.product,
+        mustHaves,
+        avoid,
+        budget: normalizedBudget,
+        inferredCategory: resolvedCategory
+      })
+    }))
     .slice(0, recommendationLimit)
 
   const shortlistPath = buildShortlistSharePath(recommendations.map((item) => item.product.id))
   const { nextAction, fallbackAction } = buildNextAction({
     recommendations,
     urgency,
-    inferredCategory,
+    inferredCategory: resolvedCategory,
     shortlistPath
   })
 
   return {
     normalizedQuery,
-    inferredCategory,
+    inferredCategory: resolvedCategory,
     normalizedBudget,
     mustHaves,
     avoid,

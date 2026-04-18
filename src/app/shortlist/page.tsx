@@ -4,7 +4,7 @@ import { ShoppingTaskMemoryBeacon } from '@/components/site/ShoppingTaskMemoryBe
 import { ShortlistWorkspace } from '@/components/site/ShortlistWorkspace'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { listPublishedProductsByIds } from '@/lib/site-data'
+import { listOpenCommerceProductsByIds } from '@/lib/site-data'
 import { parseShortlistShareValue, toShortlistItem } from '@/lib/shortlist'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -28,7 +28,7 @@ export default async function ShortlistPage({
 }) {
   const resolvedSearchParams = await searchParams
   const sharedIds = parseShortlistShareValue(resolvedSearchParams.items)
-  const sharedItems = (await listPublishedProductsByIds(sharedIds)).map(toShortlistItem)
+  const sharedItems = (await listOpenCommerceProductsByIds(sharedIds)).map(toShortlistItem)
   const shortlistPath = resolvedSearchParams.items ? `/shortlist?items=${encodeURIComponent(resolvedSearchParams.items)}` : '/shortlist'
 
   return (
