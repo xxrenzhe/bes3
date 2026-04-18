@@ -7,11 +7,14 @@ import { OfferTransparencyPanel } from '@/components/site/OfferTransparencyPanel
 import { OfferOpportunityCard } from '@/components/site/OfferOpportunityCard'
 import { OfferShowdownSection } from '@/components/site/OfferShowdownSection'
 import { StructuredData } from '@/components/site/StructuredData'
+import { buildCategoryPath, categoryMatches } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildBiggestDiscountsPath, buildOfferShowdowns, buildOffersPath, getLatestOfferRefresh, listOfferOpportunities } from '@/lib/offers'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
+import { listCategories } from '@/lib/site-data'
 
 export async function generateStaticParams() {
   const opportunities = await listOfferOpportunities()
@@ -55,11 +58,17 @@ export default async function OfferCategoryPage({
   params: Promise<{ category: string }>
 }) {
   const resolvedParams = await params
-  const opportunities = await listOfferOpportunities({ category: resolvedParams.category })
+  const [opportunities, categories] = await Promise.all([
+    listOfferOpportunities({ category: resolvedParams.category }),
+    listCategories()
+  ])
+  const matchedCategory = categories.find((category) => categoryMatches(category, resolvedParams.category)) || null
 
-  if (!opportunities.length) notFound()
+  if (!opportunities.length && !matchedCategory) {
+    notFound()
+  }
 
-  const categoryName = opportunities[0]?.product.category || resolvedParams.category
+  const categoryName = opportunities[0]?.product.category || matchedCategory || resolvedParams.category
   const categoryLabel = getCategoryLabel(categoryName)
   const finalists = opportunities.slice(0, 3)
   const remainder = opportunities.slice(3, 9)
@@ -68,6 +77,15 @@ export default async function OfferCategoryPage({
   const freshCount = opportunities.filter((item) => item.isFresh).length
   const verifiedDiscountCount = opportunities.filter((item) => item.hasVerifiedDiscount).length
   const faqEntries = buildOfferFaqEntries({ scope: `${categoryLabel.toLowerCase()} offers`, categoryLabel })
+  const categoryGuideHref = buildCategoryPath(categoryName)
+  const categoryWaitHref = buildNewsletterPath({
+    intent: 'category-brief',
+    category: categoryName,
+    cadence: 'weekly',
+    returnTo: buildOffersPath(categoryName),
+    returnLabel: `Resume ${categoryLabel} offers`,
+    returnDescription: `Return to the ${categoryLabel.toLowerCase()} offers page when fresh affiliate opportunities are available again.`
+  })
   const structuredData = [
     buildBreadcrumbSchema(buildOffersPath(categoryName), [
       { name: 'Home', path: '/' },
@@ -150,7 +168,43 @@ export default async function OfferCategoryPage({
           </div>
         </section>
 
-        {showdown.length ? (
+        {!opportunities.length ? (
+          <>
+            <section className="mx-auto max-w-7xl rounded-[2rem] bg-white p-8 shadow-panel">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Best available now</p>
+              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">
+                No live {categoryLabel.toLowerCase()} offers are qualified right now.
+              </h2>
+              <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+                Bes3 does not fake a showdown when this category has no fresh affiliate-eligible opportunities. Use the category guide to keep researching, or save this category so a better timing window can bring you back.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Link href={categoryWaitHref} className="rounded-full bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                  Start category updates
+                </Link>
+                <Link href={categoryGuideHref} className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                  Open category guide
+                </Link>
+                <Link href="/offers" className="rounded-full border border-border px-5 py-3 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
+                  Back to all offers
+                </Link>
+              </div>
+            </section>
+
+            <div className="mx-auto max-w-7xl">
+              <OfferTransparencyPanel
+                title={`How ${categoryLabel} promotions are explained`}
+                description={`This page only shows a percentage discount when ${categoryLabel.toLowerCase()} pricing has a reliable fresh reference. When no live affiliate-eligible offers qualify, Bes3 falls back to category updates instead of pretending there is a winner.`}
+              />
+            </div>
+
+            <div className="mx-auto max-w-7xl">
+              <OfferTransparencyFaqSection title={`${categoryLabel} offer questions, answered clearly.`} entries={faqEntries} />
+            </div>
+          </>
+        ) : null}
+
+        {opportunities.length && showdown.length ? (
           <div className="mx-auto max-w-7xl">
             <OfferShowdownSection
               showdowns={showdown}
@@ -160,40 +214,44 @@ export default async function OfferCategoryPage({
           </div>
         ) : null}
 
-        <section className="mx-auto max-w-7xl space-y-8">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-            <div>
-              <p className="editorial-kicker">All Live Opportunities</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Everything still worth watching in {categoryLabel.toLowerCase()}.</h2>
-            </div>
-            <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-              The winner above reduces the final decision. The cards below keep the rest of the live market visible without expanding into an overwhelming endless list.
-            </p>
-          </div>
-          <div className="grid gap-8 xl:grid-cols-2">
-            {finalists.map((opportunity) => (
-              <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="offers-category-card" />
-            ))}
-          </div>
-          {remainder.length ? (
-            <div className="grid gap-8 xl:grid-cols-2">
-              {remainder.map((opportunity) => (
-                <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="offers-category-remainder" />
-              ))}
-            </div>
-          ) : null}
-        </section>
+        {opportunities.length ? (
+          <>
+            <section className="mx-auto max-w-7xl space-y-8">
+              <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                  <p className="editorial-kicker">All Live Opportunities</p>
+                  <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight text-foreground">Everything still worth watching in {categoryLabel.toLowerCase()}.</h2>
+                </div>
+                <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
+                  The winner above reduces the final decision. The cards below keep the rest of the live market visible without expanding into an overwhelming endless list.
+                </p>
+              </div>
+              <div className="grid gap-8 xl:grid-cols-2">
+                {finalists.map((opportunity) => (
+                  <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="offers-category-card" />
+                ))}
+              </div>
+              {remainder.length ? (
+                <div className="grid gap-8 xl:grid-cols-2">
+                  {remainder.map((opportunity) => (
+                    <OfferOpportunityCard key={opportunity.product.id} opportunity={opportunity} source="offers-category-remainder" />
+                  ))}
+                </div>
+              ) : null}
+            </section>
 
-        <div className="mx-auto max-w-7xl">
-          <OfferTransparencyPanel
-            title={`How ${categoryLabel} promotions are explained`}
-            description={`This page only shows a percentage discount when ${categoryLabel.toLowerCase()} pricing has a reliable fresh reference. Otherwise Bes3 uses timing language and keeps the final recommendation to at most three picks.`}
-          />
-        </div>
+            <div className="mx-auto max-w-7xl">
+              <OfferTransparencyPanel
+                title={`How ${categoryLabel} promotions are explained`}
+                description={`This page only shows a percentage discount when ${categoryLabel.toLowerCase()} pricing has a reliable fresh reference. Otherwise Bes3 uses timing language and keeps the final recommendation to at most three picks.`}
+              />
+            </div>
 
-        <div className="mx-auto max-w-7xl">
-          <OfferTransparencyFaqSection title={`${categoryLabel} offer questions, answered clearly.`} entries={faqEntries} />
-        </div>
+            <div className="mx-auto max-w-7xl">
+              <OfferTransparencyFaqSection title={`${categoryLabel} offer questions, answered clearly.`} entries={faqEntries} />
+            </div>
+          </>
+        ) : null}
       </div>
     </PublicShell>
   )

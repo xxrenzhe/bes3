@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
+import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildOffersPath, type OfferShowdown } from '@/lib/offers'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -39,6 +40,31 @@ function formatRatingLabel(item: OfferShowdown['contenders'][number]) {
 
 function formatLastCheckedLabel(item: OfferShowdown['contenders'][number]) {
   return formatEditorialDate(item.product.bestOffer?.lastCheckedAt || item.product.offerLastCheckedAt || item.product.priceLastCheckedAt)
+}
+
+function buildWaitHref(showdown: OfferShowdown) {
+  const categoryLabel = getCategoryLabel(showdown.category)
+
+  return buildNewsletterPath({
+    intent: 'price-alert',
+    category: showdown.category,
+    cadence: 'priority',
+    returnTo: buildOffersPath(showdown.category),
+    returnLabel: `Resume ${categoryLabel} offers`,
+    returnDescription: `Return to the ${categoryLabel.toLowerCase()} offers page when a stronger buying window appears.`
+  })
+}
+
+function buildWaitReason(showdown: OfferShowdown) {
+  if (!showdown.winner.isFresh) {
+    return 'The winner is still useful, but the freshness window has drifted. Save the category and come back after the next live offer check instead of forcing the purchase now.'
+  }
+
+  if (showdown.winner.signal.id === 'watch') {
+    return showdown.winner.nextStepReason
+  }
+
+  return 'If fit is clear but timing still feels early, keep this category on a price watch instead of reopening the shortlist or browsing sideways into weaker options.'
 }
 
 function getShowdownModeLabel(showdown: OfferShowdown) {
@@ -100,8 +126,8 @@ export function OfferShowdownSection({
 
               <div className="rounded-[1.5rem] border border-border/60">
                 <div className="overflow-x-auto">
-                  <div className="min-w-[1220px]">
-                    <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                  <div className="min-w-[1340px]">
+                    <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                       <span>Pick</span>
                       <span>Current</span>
                       <span>Reference</span>
@@ -109,18 +135,17 @@ export function OfferShowdownSection({
                       <span>Timing</span>
                       <span>Merchant</span>
                       <span>Shipping</span>
-                      <span>Proof</span>
+                      <span>Buyer proof</span>
+                      <span>Last checked</span>
                     </div>
                     <div className="divide-y divide-border/60">
                       {showdown.contenders.map((item, index) => (
-                        <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
+                        <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
                           <div>
                             <p className="font-semibold text-foreground">
                               {index === 0 ? 'Winner' : `Option ${index + 1}`} · {item.product.productName}
                             </p>
-                            <p className="mt-1 text-xs text-muted-foreground">
-                              Checked {formatLastCheckedLabel(item)}
-                            </p>
+                            <p className="mt-1 text-xs text-muted-foreground">{item.nextStepReason}</p>
                           </div>
                           <div className="font-black text-foreground">
                             {formatPriceSnapshot(item.currentPrice, item.currentCurrency)}
@@ -143,6 +168,9 @@ export function OfferShowdownSection({
                           <div className="text-muted-foreground">
                             {formatRatingLabel(item)}
                           </div>
+                          <div className="text-muted-foreground">
+                            {formatLastCheckedLabel(item)}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -150,21 +178,34 @@ export function OfferShowdownSection({
                 </div>
               </div>
 
-              {showdown.contenders.length > 1 ? (
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <div className="rounded-[1.5rem] bg-muted p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it wins</p>
-                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{showdown.winner.winnerReason}</p>
+              <div className="grid gap-4 lg:grid-cols-2">
+                <div className="rounded-[1.5rem] bg-muted p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it wins</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{showdown.winner.winnerReason}</p>
+                </div>
+                <div className="rounded-[1.5rem] bg-muted p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">If not buying today</p>
+                  <p className="mt-3 text-sm leading-7 text-muted-foreground">{buildWaitReason(showdown)}</p>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Link href={buildWaitHref(showdown)} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-white">
+                      {`Track ${getCategoryLabel(showdown.category)}`}
+                    </Link>
+                    <Link href={buildOffersPath(showdown.category)} className="rounded-full border border-border px-4 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-white">
+                      {`View ${getCategoryLabel(showdown.category)} page`}
+                    </Link>
                   </div>
-                  <div className="rounded-[1.5rem] bg-muted p-5">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Where the other options differ</p>
-                    <div className="mt-3 space-y-2">
-                      {showdown.contenders.slice(1).map((item, index) => (
-                        <p key={item.product.id} className="text-sm leading-7 text-muted-foreground">
-                          {`Option ${index + 2}: ${item.product.productName} is sitting at ${formatTrackedLabel(item.distanceFromTrackedLowPercent).toLowerCase()} and ${formatPromotionLabel(item).toLowerCase()}.`}
-                        </p>
-                      ))}
-                    </div>
+                </div>
+              </div>
+
+              {showdown.contenders.length > 1 ? (
+                <div className="rounded-[1.5rem] bg-muted p-5">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Where the other options differ</p>
+                  <div className="mt-3 space-y-2">
+                    {showdown.contenders.slice(1).map((item, index) => (
+                      <p key={item.product.id} className="text-sm leading-7 text-muted-foreground">
+                        {`Option ${index + 2}: ${item.product.productName} is sitting at ${formatTrackedLabel(item.distanceFromTrackedLowPercent).toLowerCase()} and ${formatPromotionLabel(item).toLowerCase()}. ${item.nextStepReason}`}
+                      </p>
+                    ))}
                   </div>
                 </div>
               ) : (
