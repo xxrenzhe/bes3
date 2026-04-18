@@ -21,6 +21,7 @@ export async function PublicShell({
     { href: '/directory', label: copy.navDirectory },
     { href: '/brands', label: copy.navBrands },
     { href: '/offers', label: copy.navDeals },
+    { href: '/biggest-discounts', label: copy.navBiggestDiscounts },
     { href: '/about', label: copy.navAbout },
     { href: '/newsletter', label: copy.navAlerts }
   ]

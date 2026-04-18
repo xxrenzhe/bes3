@@ -39,6 +39,7 @@ export type ShellDictionary = {
   navDirectory: string
   navBrands: string
   navDeals: string
+  navBiggestDiscounts: string
   navAbout: string
   navAlerts: string
   navSignIn: string
@@ -75,6 +76,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navDirectory: 'Directory',
     navBrands: 'Brands',
     navDeals: 'Offers',
+    navBiggestDiscounts: 'Top Discounts',
     navAbout: 'About',
     navAlerts: 'Wait Updates',
     navSignIn: 'Sign In',
@@ -97,6 +99,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navDirectory: 'Directorio',
     navBrands: 'Marcas',
     navDeals: 'Ofertas',
+    navBiggestDiscounts: 'Top descuentos',
     navAbout: 'Acerca de',
     navAlerts: 'Actualizaciones',
     navSignIn: 'Entrar',
@@ -119,6 +122,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navDirectory: 'Verzeichnis',
     navBrands: 'Marken',
     navDeals: 'Angebote',
+    navBiggestDiscounts: 'Top Rabatte',
     navAbout: 'Über uns',
     navAlerts: 'Warte-Updates',
     navSignIn: 'Anmelden',
@@ -141,6 +145,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navDirectory: 'Annuaire',
     navBrands: 'Marques',
     navDeals: 'Offres',
+    navBiggestDiscounts: 'Top remises',
     navAbout: 'À propos',
     navAlerts: 'Suivi attente',
     navSignIn: 'Connexion',
@@ -163,6 +168,7 @@ const SHELL_DICTIONARY: Record<SiteLocale, ShellDictionary> = {
     navDirectory: '一覧',
     navBrands: 'ブランド',
     navDeals: 'オファー',
+    navBiggestDiscounts: '注目割引',
     navAbout: 'Bes3について',
     navAlerts: '待機アップデート',
     navSignIn: 'ログイン',
