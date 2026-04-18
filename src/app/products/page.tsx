@@ -6,11 +6,11 @@ import { buildCategoryPath } from '@/lib/category'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { listPublishedProducts } from '@/lib/site-data'
+import { listOpenCommerceProducts } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const products = await listPublishedProducts()
+  const products = await listOpenCommerceProducts()
   const freshnessDate = products[0]?.updatedAt || products[0]?.publishedAt || null
 
   return buildPageMetadata({
@@ -26,7 +26,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function ProductsIndexPage() {
-  const products = await listPublishedProducts()
+  const products = await listOpenCommerceProducts()
   const latestRefresh = products[0]?.updatedAt || products[0]?.publishedAt || null
   const breadcrumbItems = [
     { name: 'Home', path: '/' },

@@ -7,14 +7,14 @@ import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildDataCatalogSchema, buildDataFeedSchema, buildDatasetSchema, buildFaqSchema, buildHowToSchema, buildTrustSignalsSchema, buildWebApiSchema } from '@/lib/structured-data'
-import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   const [brands, categories, articles, products] = await Promise.all([
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const freshnessDate =
     articles[0]?.updatedAt ||
@@ -42,7 +42,7 @@ export default async function OpenDataPage() {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const latestRefresh =

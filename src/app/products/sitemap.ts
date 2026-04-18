@@ -1,9 +1,9 @@
 import type { MetadataRoute } from 'next'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
-import { listPublishedProducts } from '@/lib/site-data'
+import { listOpenCommerceProducts } from '@/lib/site-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await listPublishedProducts()
+  const products = await listOpenCommerceProducts()
 
   return products.flatMap((product) => {
     if (!product.slug) return []

@@ -11,7 +11,7 @@ import { buildPageMetadata } from '@/lib/metadata'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildAboutPageSchema, buildBreadcrumbSchema, buildDatasetSchema, buildFaqSchema, buildTrustSignalsSchema } from '@/lib/structured-data'
-import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -30,7 +30,7 @@ export default async function AboutPage() {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const leadReview = articles.find((article) => article.type === 'review') || null
   const leadComparison = articles.find((article) => article.type === 'comparison') || null

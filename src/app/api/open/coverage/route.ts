@@ -2,7 +2,7 @@ import { buildBrandCategoryPath } from '@/lib/category'
 import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
 import { COMMERCE_PROTOCOL_VERSION } from '@/lib/open-commerce'
 import { SUPPORTED_LOCALES } from '@/lib/i18n'
-import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function GET(request: Request) {
   const [brandCategoryHubs, brands, categories, articles, products] = await Promise.all([
@@ -10,7 +10,7 @@ export async function GET(request: Request) {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const latestRefresh = getLatestTimestamp([

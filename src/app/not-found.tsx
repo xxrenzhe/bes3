@@ -6,7 +6,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { getCategoryLabel } from '@/lib/editorial'
 import { deslugify, findSuggestedArticles, findSuggestedBrands, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestBasePath } from '@/lib/request-locale'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 function buildRecoveryQuery(pathname: string) {
   const cleanPath = String(pathname || '/')
@@ -38,7 +38,7 @@ export default async function NotFound() {
     listPublishedArticles(),
     listBrands(),
     listCategories(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const featuredArticles = articles.slice(0, 3)

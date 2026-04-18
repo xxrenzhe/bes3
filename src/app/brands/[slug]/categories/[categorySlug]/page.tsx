@@ -21,8 +21,7 @@ import {
   listBrandCompatibilityFacts,
   listCategories,
   listOpenCommerceProducts,
-  listPublishedArticles,
-  listPublishedProducts
+  listPublishedArticles
 } from '@/lib/site-data'
 
 interface RouteCard {
@@ -100,12 +99,11 @@ export default async function BrandCategoryPage({
 }) {
   const { slug, categorySlug } = await params
   const path = buildBrandCategoryPath(slug, categorySlug)
-  const [brand, categories, hubs, allArticles, allProducts, allCommerceProducts, brandPolicy] = await Promise.all([
+  const [brand, categories, hubs, allArticles, allCommerceProducts, brandPolicy] = await Promise.all([
     getBrandBySlug(slug),
     listCategories(),
     listBrandCategoryHubs(),
     listPublishedArticles(),
-    listPublishedProducts(),
     listOpenCommerceProducts(),
     getBrandPolicyBySlug(slug)
   ])
@@ -118,19 +116,16 @@ export default async function BrandCategoryPage({
   const resolvedCategory = hub?.category || matchedCategory || categorySlug
   const categoryLabel = getCategoryLabel(resolvedCategory)
   const compatibilityFacts = await listBrandCompatibilityFacts(slug, { category: resolvedCategory, limit: 6 })
-  const directProducts = allProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
-  const directCommerceProducts = allCommerceProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
+  const directProducts = allCommerceProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
+  const directCommerceProducts = directProducts
   const directArticles = allArticles.filter((article) => categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) === slug)
   const sameBrandLanes = hubs.filter((entry) => entry.brandSlug === slug && getCategorySlug(entry.category) !== getCategorySlug(resolvedCategory)).slice(0, 4)
   const sameCategoryLanes = hubs.filter((entry) => categoryMatches(entry.category, resolvedCategory) && entry.brandSlug !== slug).slice(0, 4)
   const fallbackProducts = [
-    ...allProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) !== slug),
-    ...allProducts.filter((product) => !categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
-  ].slice(0, 3)
-  const fallbackCommerceProducts = [
     ...allCommerceProducts.filter((product) => categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) !== slug),
     ...allCommerceProducts.filter((product) => !categoryMatches(product.category, resolvedCategory) && getBrandSlug(product.brand) === slug)
   ].slice(0, 3)
+  const fallbackCommerceProducts = fallbackProducts
   const fallbackArticles = [
     ...allArticles.filter((article) => categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) !== slug),
     ...allArticles.filter((article) => !categoryMatches(article.product?.category, resolvedCategory) && getBrandSlug(article.product?.brand) === slug)

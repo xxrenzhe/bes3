@@ -16,10 +16,10 @@ import { buildPageMetadata } from '@/lib/metadata'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, products] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const freshnessDate =
     articles[0]?.updatedAt ||
     articles[0]?.publishedAt ||
@@ -46,7 +46,7 @@ export default async function StartPage() {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const leadReview = articles.find((article) => article.type === 'review') || articles[0] || null
   const leadComparison = articles.find((article) => article.type === 'comparison') || articles[1] || null

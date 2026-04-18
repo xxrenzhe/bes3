@@ -1,5 +1,5 @@
 import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 import { getSiteUrl } from '@/lib/site-url'
 
 export async function GET(request: Request) {
@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const reviewCount = articles.filter((article) => article.type === 'review').length

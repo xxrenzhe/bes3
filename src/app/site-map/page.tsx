@@ -8,7 +8,7 @@ import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/li
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildDatasetSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
@@ -26,7 +26,7 @@ export default async function HtmlSitemapPage() {
     listCategories(),
     listBrands(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const latestRefresh = [
     ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),

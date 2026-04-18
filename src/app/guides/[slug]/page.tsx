@@ -16,7 +16,7 @@ import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggeste
 import { getRequestLocale } from '@/lib/request-locale'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { buildArticleSchema, buildBreadcrumbSchema, buildFaqSchema, buildHowToSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { getArticleBySlug, getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getArticleBySlug, getBrandSlug, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -70,7 +70,7 @@ export default async function GuidePage({
   const article = await getArticleBySlug(slug)
 
   if (!article || article.type !== 'guide') {
-    const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+    const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
     const categories = Array.from(
       new Set([
         ...allProducts.map((product) => product.category).filter(Boolean),
@@ -123,7 +123,7 @@ export default async function GuidePage({
     )
   }
 
-  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const category = article.product?.category || null
   const categoryLabel = getCategoryLabel(category)
   const brandSlug = getBrandSlug(article.product?.brand)

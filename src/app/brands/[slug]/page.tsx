@@ -23,8 +23,7 @@ import {
   listBrands,
   listCategories,
   listOpenCommerceProducts,
-  listPublishedArticles,
-  listPublishedProducts
+  listPublishedArticles
 } from '@/lib/site-data'
 
 export async function generateMetadata({
@@ -72,7 +71,7 @@ export default async function BrandPage({
   const brand = await getBrandBySlug(slug)
 
   if (!brand) {
-    const [brands, categories, products] = await Promise.all([listBrands(), listCategories(), listPublishedProducts()])
+    const [brands, categories, products] = await Promise.all([listBrands(), listCategories(), listOpenCommerceProducts()])
     const queryLabel = deslugify(slug) || slug
 
     return (
@@ -119,16 +118,15 @@ export default async function BrandPage({
     )
   }
 
-  const [allArticles, allProducts, allCommerceProducts, brandPolicy, compatibilityFacts] = await Promise.all([
+  const [allArticles, allCommerceProducts, brandPolicy, compatibilityFacts] = await Promise.all([
     listPublishedArticles(),
-    listPublishedProducts(),
     listOpenCommerceProducts(),
     getBrandPolicyBySlug(slug),
     listBrandCompatibilityFacts(slug, { limit: 6 })
   ])
 
-  const brandProducts = allProducts.filter((product) => getBrandSlug(product.brand) === slug)
-  const brandCommerceProducts = allCommerceProducts.filter((product) => getBrandSlug(product.brand) === slug)
+  const brandProducts = allCommerceProducts.filter((product) => getBrandSlug(product.brand) === slug)
+  const brandCommerceProducts = brandProducts
   const brandArticles = allArticles.filter((article) => getBrandSlug(article.product?.brand) === slug)
   const leadReview = brandArticles.find((article) => article.type === 'review') || brandArticles[0] || null
   const leadComparison = brandArticles.find((article) => article.type === 'comparison') || null

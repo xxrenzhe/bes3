@@ -1,13 +1,13 @@
 import type { MetadataRoute } from 'next'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
 import { getCategorySlug } from '@/lib/category'
-import { listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, brands, products] = await Promise.all([
     listPublishedArticles(),
     listBrands(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const offerCategories = Array.from(
     new Set(products.map((product) => getCategorySlug(product.category)).filter(Boolean))

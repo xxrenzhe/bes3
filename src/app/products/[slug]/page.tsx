@@ -34,11 +34,11 @@ import {
   getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
   getProductGalleryImageUrls,
+  listOpenCommerceProducts,
   listProductAttributeFacts,
   listProductOffers,
   listProductPriceHistory,
-  listPublishedArticles,
-  listPublishedProducts
+  listPublishedArticles
 } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -102,7 +102,7 @@ export default async function ProductPage({
   const product = await getOpenCommerceProductBySlug(slug)
 
   if (!product) {
-    const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+    const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
     const categories = Array.from(
       new Set([
         ...products.map((candidate) => candidate.category).filter(Boolean),
@@ -157,7 +157,7 @@ export default async function ProductPage({
 
   const [articles, allProducts, galleryImages, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
-    listPublishedProducts(),
+    listOpenCommerceProducts(),
     getProductGalleryImageUrls(product.id),
     listProductOffers(product.id),
     listProductAttributeFacts(product.id),

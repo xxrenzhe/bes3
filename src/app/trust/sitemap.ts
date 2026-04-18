@@ -1,14 +1,14 @@
 import type { MetadataRoute } from 'next'
 import { getSiteUrl } from '@/lib/site-url'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
-import { listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl()
   const [articles, brands, products] = await Promise.all([
     listPublishedArticles(),
     listBrands(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const lastModified = maxDate([

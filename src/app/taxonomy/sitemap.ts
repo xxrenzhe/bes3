@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
 import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
-import { listBrandCategoryHubs, listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [articles, brands, brandCategoryHubs, categories, products] = await Promise.all([
@@ -9,7 +9,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     listBrands(),
     listBrandCategoryHubs(),
     listCategories(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   return [
