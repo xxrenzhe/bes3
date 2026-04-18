@@ -16,7 +16,7 @@ import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getBrandSlug, listOpenCommerceProducts, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -24,12 +24,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const slug = (await params).slug
-  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [allArticles, allProducts, allCommerceProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts(), listOpenCommerceProducts()])
   const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
   const products = allProducts.filter((product) => categoryMatches(product.category, slug))
   const resolvedCategory = products[0]?.category || articles[0]?.product?.category || slug
   const leadArticle = articles.find((article) => article.type === 'review') || articles[0] || null
-  const leadProduct = products[0] || null
+  const leadProduct = allCommerceProducts.find((product) => categoryMatches(product.category, slug)) || products[0] || null
   const categoryLabel = getCategoryLabel(resolvedCategory)
   const freshnessDate =
     leadArticle?.updatedAt ||
@@ -73,9 +73,14 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>
 }) {
   const slug = (await params).slug
-  const [allArticles, allProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [allArticles, allProducts, allCommerceProducts] = await Promise.all([
+    listPublishedArticles(),
+    listPublishedProducts(),
+    listOpenCommerceProducts()
+  ])
   const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
   const products = allProducts.filter((product) => categoryMatches(product.category, slug))
+  const commerceProducts = allCommerceProducts.filter((product) => categoryMatches(product.category, slug))
   const [featured, ...rest] = articles
   const featuredReview = articles.find((article) => article.type === 'review') || featured || null
   const featuredComparison = articles.find((article) => article.type === 'comparison') || null
@@ -412,10 +417,10 @@ export default async function CategoryPage({
           sections={seoHubSections}
         />
 
-        {products.length ? (
+        {commerceProducts.length ? (
           <div id="category-shortlist">
             <ProductFinalistsSection
-              products={products}
+              products={commerceProducts}
               source="category-hub-shortlist"
               title="Start with the strongest buying options."
               description={`${categoryLabel} pages should not leave buyers with a loose product wall. Bes3 keeps the final category shortlist at three serious options max, then names the clearest lead.`}

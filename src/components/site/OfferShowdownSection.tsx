@@ -10,11 +10,13 @@ function formatTrackedLabel(distanceFromTrackedLowPercent: number | null) {
 }
 
 function formatPromotionLabel(showdown: OfferShowdown['contenders'][number]) {
-  if (showdown.savingsAmount != null && showdown.savingsPercent != null) {
+  if (showdown.hasVerifiedDiscount && showdown.savingsAmount != null && showdown.savingsPercent != null) {
     return `${Math.round(showdown.savingsPercent)}% off · save ${formatPriceSnapshot(showdown.savingsAmount, showdown.currentCurrency)}`
   }
 
-  return 'Live affiliate promotion'
+  if (showdown.signal.id === 'buy-now') return 'Near tracked low'
+  if (showdown.signal.id === 'watch') return 'Watch timing'
+  return 'Live offer'
 }
 
 function formatReferenceLabel(item: OfferShowdown['contenders'][number]) {

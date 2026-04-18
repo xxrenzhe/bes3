@@ -14,7 +14,7 @@ import { formatPriceSnapshot } from '@/lib/utils'
 
 export async function generateMetadata(): Promise<Metadata> {
   const allDiscounts = await listOfferOpportunities({ sort: 'discount' })
-  const verifiedDiscounts = allDiscounts.filter((item) => item.referencePrice != null && item.savingsPercent != null)
+  const verifiedDiscounts = allDiscounts.filter((item) => item.hasVerifiedDiscount)
   const freshnessDate = getLatestOfferRefresh(verifiedDiscounts)
   const lead = verifiedDiscounts[0] || null
 
@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function BiggestDiscountsPage() {
   const allDiscounts = await listOfferOpportunities({ sort: 'discount' })
-  const verifiedDiscounts = allDiscounts.filter((item) => item.referencePrice != null && item.savingsPercent != null)
+  const verifiedDiscounts = allDiscounts.filter((item) => item.hasVerifiedDiscount)
   const activeDiscounts = verifiedDiscounts.filter((item) => item.isFresh)
   const items = (activeDiscounts.length ? activeDiscounts : verifiedDiscounts).slice(0, 12)
   const leader = items[0] || null

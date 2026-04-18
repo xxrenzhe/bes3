@@ -1,13 +1,25 @@
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import type { ProductRecord } from '@/lib/site-data'
+import { OFFERS_FRESHNESS_WINDOW_HOURS } from '@/lib/offers'
+import { summarizePriceHistoryWindow } from '@/lib/price-insights'
+import { listProductPriceHistory, type CommerceProductRecord } from '@/lib/site-data'
 
 export interface ProductFinalist {
-  product: ProductRecord
+  product: CommerceProductRecord
   score: number
   checkedAt: string | null
   freshnessLabel: string
   reason: string
   caution: string
+  currentPrice: number | null
+  currentCurrency: string
+  referencePrice: number | null
+  referenceCurrency: string | null
+  savingsAmount: number | null
+  savingsPercent: number | null
+  distanceFromTrackedLowPercent: number | null
+  merchantName: string | null
+  shippingCost: number | null
+  hasVerifiedDiscount: boolean
 }
 
 function toTimestamp(value: string | null | undefined) {
@@ -16,11 +28,11 @@ function toTimestamp(value: string | null | undefined) {
   return Number.isFinite(parsed) ? parsed : Number.NEGATIVE_INFINITY
 }
 
-function getCheckedAt(product: ProductRecord) {
-  return product.updatedAt || product.publishedAt || null
+function getCheckedAt(product: CommerceProductRecord) {
+  return product.bestOffer?.lastCheckedAt || product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt || product.publishedAt || null
 }
 
-function getProofScore(product: ProductRecord) {
+function getProofScore(product: CommerceProductRecord) {
   const rating = product.rating || 0
   const reviewCount = product.reviewCount || 0
 
@@ -31,7 +43,7 @@ function getProofScore(product: ProductRecord) {
   return 0
 }
 
-function getFreshnessScore(product: ProductRecord) {
+function getFreshnessScore(product: CommerceProductRecord) {
   const checkedAt = getCheckedAt(product)
   const ageMs = Date.now() - toTimestamp(checkedAt)
   if (!Number.isFinite(ageMs) || ageMs < 0) return 0
@@ -43,17 +55,22 @@ function getFreshnessScore(product: ProductRecord) {
   return 0
 }
 
-function getValueScore(product: ProductRecord) {
-  if (typeof product.priceAmount !== 'number' || !Number.isFinite(product.priceAmount) || product.priceAmount <= 0) {
+function getValueScore(product: CommerceProductRecord) {
+  const effectivePrice = product.bestOffer?.priceAmount ?? product.priceAmount
+
+  if (typeof effectivePrice !== 'number' || !Number.isFinite(effectivePrice) || effectivePrice <= 0) {
     return 0
   }
-  if (product.priceAmount <= 150) return 12
-  if (product.priceAmount <= 400) return 8
-  if (product.priceAmount <= 900) return 4
+  if (effectivePrice <= 150) return 12
+  if (effectivePrice <= 400) return 8
+  if (effectivePrice <= 900) return 4
   return 2
 }
 
-function buildReason(product: ProductRecord) {
+function buildReason(product: CommerceProductRecord, finalist: {
+  savingsPercent: number | null
+  distanceFromTrackedLowPercent: number | null
+}) {
   const reasons: string[] = []
 
   if ((product.rating || 0) >= 4.4 && (product.reviewCount || 0) >= 1000) {
@@ -66,8 +83,14 @@ function buildReason(product: ProductRecord) {
     reasons.push('It is the clearest all-around fit based on the product signals Bes3 has right now.')
   }
 
-  if (typeof product.priceAmount === 'number' && Number.isFinite(product.priceAmount)) {
+  if (finalist.savingsPercent != null) {
+    reasons.push(`It is showing a verified ${Math.round(finalist.savingsPercent)}% reference-price discount inside the freshness window.`)
+  } else if (typeof (product.bestOffer?.priceAmount ?? product.priceAmount) === 'number') {
     reasons.push('The current listed price is already visible, so the next step can stay concrete.')
+  }
+
+  if (finalist.distanceFromTrackedLowPercent != null && finalist.distanceFromTrackedLowPercent <= 5) {
+    reasons.push('The tracked price position is still close enough to the recent low to keep timing credible.')
   }
 
   reasons.push(`${getFreshnessLabel(getCheckedAt(product))}, so the page can act as a current recommendation instead of an archive.`)
@@ -75,7 +98,10 @@ function buildReason(product: ProductRecord) {
   return reasons.join(' ')
 }
 
-function buildCaution(product: ProductRecord) {
+function buildCaution(product: CommerceProductRecord, finalist: {
+  savingsPercent: number | null
+  distanceFromTrackedLowPercent: number | null
+}) {
   if ((product.reviewCount || 0) < 200) {
     return 'Buyer proof is still thinner here, so validate the product page before treating it as final.'
   }
@@ -85,37 +111,102 @@ function buildCaution(product: ProductRecord) {
   if ((product.dataConfidenceScore || 0) < 0.7) {
     return 'This product can stay in view, but the supporting evidence is less complete than the winner.'
   }
+  if (finalist.distanceFromTrackedLowPercent != null && finalist.distanceFromTrackedLowPercent > 10) {
+    return 'The product fit can stay viable, but the tracked timing sits high enough that waiting may still improve the outcome.'
+  }
+  if (finalist.savingsPercent == null && product.bestOffer?.referencePriceAmount) {
+    return 'A reference exists, but it is no longer fresh enough to support a public discount claim, so treat timing language as the safer signal.'
+  }
 
   return `Last checked ${formatEditorialDate(getCheckedAt(product))}, so keep it as an alternative unless its specific tradeoff matches your priorities better.`
 }
 
-function scoreProduct(product: ProductRecord) {
+function scoreProduct(product: CommerceProductRecord) {
   const confidenceScore = Math.round((product.dataConfidenceScore || 0) * 28)
   const completenessScore = Math.round((product.attributeCompletenessScore || 0) * 18)
   const proofScore = getProofScore(product)
   const freshnessScore = getFreshnessScore(product)
   const valueScore = getValueScore(product)
-  const sourceScore = Math.min(product.sourceCount || 0, 6)
+  const sourceScore = Math.min(product.sourceCount || 0, 6) + Math.min(product.offerCount || 0, 4)
 
   return confidenceScore + completenessScore + proofScore + freshnessScore + valueScore + sourceScore
 }
 
-export function buildProductFinalists(products: ProductRecord[], limit: number = 3): ProductFinalist[] {
-  return [...products]
+function getReferenceAgeHours(value: string | null | undefined) {
+  if (!value) return null
+  const parsed = Date.parse(value)
+  if (!Number.isFinite(parsed)) return null
+  return Math.max(0, (Date.now() - parsed) / 3_600_000)
+}
+
+function getDistanceFromTrackedLowPercent(currentPrice: number | null, lowestPrice: number | null) {
+  if (currentPrice == null || lowestPrice == null || !Number.isFinite(currentPrice) || !Number.isFinite(lowestPrice) || lowestPrice <= 0) {
+    return null
+  }
+
+  return ((currentPrice - lowestPrice) / lowestPrice) * 100
+}
+
+export async function buildProductFinalists(products: CommerceProductRecord[], limit: number = 3): Promise<ProductFinalist[]> {
+  const shortlist = [...products]
     .sort((left, right) => {
       const scoreDelta = scoreProduct(right) - scoreProduct(left)
       if (scoreDelta !== 0) return scoreDelta
       const freshnessDelta = toTimestamp(getCheckedAt(right)) - toTimestamp(getCheckedAt(left))
       if (freshnessDelta !== 0) return freshnessDelta
-      return (left.priceAmount ?? Number.POSITIVE_INFINITY) - (right.priceAmount ?? Number.POSITIVE_INFINITY)
+      return (left.bestOffer?.priceAmount ?? left.priceAmount ?? Number.POSITIVE_INFINITY) - (right.bestOffer?.priceAmount ?? right.priceAmount ?? Number.POSITIVE_INFINITY)
     })
     .slice(0, Math.max(1, limit))
-    .map((product) => ({
-      product,
-      score: scoreProduct(product),
-      checkedAt: getCheckedAt(product),
-      freshnessLabel: getFreshnessLabel(getCheckedAt(product)),
-      reason: buildReason(product),
-      caution: buildCaution(product)
-    }))
+
+  return Promise.all(
+    shortlist.map(async (product) => {
+      const currentPrice = product.bestOffer?.priceAmount ?? product.priceAmount
+      const currentCurrency = product.bestOffer?.priceCurrency || product.priceCurrency || 'USD'
+      const priceHistory = await listProductPriceHistory(product.id, 12)
+      const summary = summarizePriceHistoryWindow(priceHistory, currentPrice, currentCurrency)
+      const distanceFromTrackedLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
+      const referencePriceAmount = product.bestOffer?.referencePriceAmount ?? null
+      const checkedAgeHours = getReferenceAgeHours(getCheckedAt(product))
+      const referenceAgeHours = getReferenceAgeHours(product.bestOffer?.referencePriceLastCheckedAt || product.bestOffer?.lastCheckedAt)
+      const hasVerifiedDiscount =
+        referencePriceAmount != null &&
+        currentPrice != null &&
+        referencePriceAmount > currentPrice &&
+        Boolean(product.bestOffer?.referencePriceType) &&
+        Boolean(product.bestOffer?.referencePriceSource) &&
+        checkedAgeHours != null &&
+        checkedAgeHours <= OFFERS_FRESHNESS_WINDOW_HOURS &&
+        referenceAgeHours != null &&
+        referenceAgeHours <= OFFERS_FRESHNESS_WINDOW_HOURS
+      const savingsAmount = hasVerifiedDiscount ? Number((referencePriceAmount - currentPrice).toFixed(2)) : null
+      const savingsPercent =
+        hasVerifiedDiscount && currentPrice != null
+          ? Number((((referencePriceAmount - currentPrice) / referencePriceAmount) * 100).toFixed(1))
+          : null
+
+      const finalist = {
+        product,
+        score: scoreProduct(product),
+        checkedAt: getCheckedAt(product),
+        freshnessLabel: getFreshnessLabel(getCheckedAt(product)),
+        currentPrice,
+        currentCurrency,
+        referencePrice: hasVerifiedDiscount ? referencePriceAmount : null,
+        referenceCurrency: hasVerifiedDiscount ? product.bestOffer?.referencePriceCurrency || currentCurrency : null,
+        savingsAmount,
+        savingsPercent,
+        distanceFromTrackedLowPercent,
+        merchantName: product.bestOffer?.merchantName || null,
+        shippingCost: product.bestOffer?.shippingCost ?? null,
+        hasVerifiedDiscount,
+        reason: '',
+        caution: ''
+      }
+
+      finalist.reason = buildReason(product, finalist)
+      finalist.caution = buildCaution(product, finalist)
+
+      return finalist
+    })
+  )
 }

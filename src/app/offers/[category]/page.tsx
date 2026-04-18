@@ -66,7 +66,7 @@ export default async function OfferCategoryPage({
   const showdown = buildOfferShowdowns(opportunities, 1)
   const freshnessDate = getLatestOfferRefresh(opportunities)
   const freshCount = opportunities.filter((item) => item.isFresh).length
-  const verifiedDiscountCount = opportunities.filter((item) => item.savingsPercent != null).length
+  const verifiedDiscountCount = opportunities.filter((item) => item.hasVerifiedDiscount).length
   const faqEntries = buildOfferFaqEntries({ scope: `${categoryLabel.toLowerCase()} offers`, categoryLabel })
   const structuredData = [
     buildBreadcrumbSchema(buildOffersPath(categoryName), [

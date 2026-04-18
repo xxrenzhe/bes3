@@ -31,6 +31,7 @@ export interface OfferOpportunity {
   distanceFromTrackedLowPercent: number | null
   freshnessHours: number | null
   isFresh: boolean
+  hasVerifiedDiscount: boolean
   opportunityScore: number
   primaryBadge: string
   winnerReason: string
@@ -79,6 +80,7 @@ function getReferencePrice(product: CommerceProductRecord, currentPrice: number 
       amount: null,
       currency: null,
       type: null,
+      source: null,
       lastCheckedAt: null
     }
   }
@@ -94,6 +96,7 @@ function getReferencePrice(product: CommerceProductRecord, currentPrice: number 
     amount,
     currency: amount != null ? bestOffer.referencePriceCurrency || bestOffer.priceCurrency || product.priceCurrency || 'USD' : null,
     type: amount != null ? bestOffer.referencePriceType || 'unknown' : null,
+    source: amount != null ? bestOffer.referencePriceSource || null : null,
     lastCheckedAt: amount != null ? bestOffer.referencePriceLastCheckedAt || bestOffer.lastCheckedAt || null : null
   }
 }
@@ -120,8 +123,8 @@ function formatDistanceNarrative(signal: DealDecisionSignal['id'], distanceFromT
   return `The current price is ${distanceFromTrackedLowPercent.toFixed(1)}% above the tracked low, so waiting may still improve the outcome.`
 }
 
-function buildPrimaryBadge(signal: DealDecisionSignal['id'], savingsPercent: number | null) {
-  if (savingsPercent != null && savingsPercent >= 5) {
+function buildPrimaryBadge(signal: DealDecisionSignal['id'], savingsPercent: number | null, hasVerifiedDiscount: boolean) {
+  if (hasVerifiedDiscount && savingsPercent != null && savingsPercent >= 5) {
     return `-${Math.round(savingsPercent)}% OFF`
   }
 
@@ -237,8 +240,8 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
   const summary = summarizePriceHistoryWindow(priceHistory, currentPrice, currentCurrency)
   const signal = buildDealDecisionSignal(summary)
   const reference = getReferencePrice(product, currentPrice)
-  const savingsAmount = reference.amount != null ? Number((reference.amount - currentPrice).toFixed(2)) : null
-  const savingsPercent = reference.amount != null ? Number((((reference.amount - currentPrice) / reference.amount) * 100).toFixed(1)) : null
+  const rawSavingsAmount = reference.amount != null ? Number((reference.amount - currentPrice).toFixed(2)) : null
+  const rawSavingsPercent = reference.amount != null ? Number((((reference.amount - currentPrice) / reference.amount) * 100).toFixed(1)) : null
   const distanceFromTrackedLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
   const offerFreshnessHours = getFreshnessHours([
     product.bestOffer?.lastCheckedAt,
@@ -256,6 +259,13 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
     offerFreshnessHours != null &&
     offerFreshnessHours <= OFFERS_FRESHNESS_WINDOW_HOURS &&
     (referenceFreshnessHours == null || referenceFreshnessHours <= OFFERS_FRESHNESS_WINDOW_HOURS)
+  const hasVerifiedDiscount =
+    Boolean(isFresh && reference.amount != null && reference.type && reference.source && rawSavingsAmount != null && rawSavingsPercent != null)
+  const savingsAmount = hasVerifiedDiscount ? rawSavingsAmount : null
+  const savingsPercent = hasVerifiedDiscount ? rawSavingsPercent : null
+  const referencePrice = hasVerifiedDiscount ? reference.amount : null
+  const referenceCurrency = hasVerifiedDiscount ? reference.currency : null
+  const referencePriceType = hasVerifiedDiscount ? reference.type : null
   const opportunityScore = calculateOpportunityScore({
     product,
     signal,
@@ -272,16 +282,17 @@ async function buildOfferOpportunity(product: CommerceProductRecord): Promise<Of
     signal,
     currentPrice,
     currentCurrency,
-    referencePrice: reference.amount,
-    referenceCurrency: reference.currency,
-    referencePriceType: reference.type,
+    referencePrice,
+    referenceCurrency,
+    referencePriceType,
     savingsAmount,
     savingsPercent,
     distanceFromTrackedLowPercent,
     freshnessHours,
     isFresh,
+    hasVerifiedDiscount,
     opportunityScore,
-    primaryBadge: buildPrimaryBadge(signal.id, savingsPercent),
+    primaryBadge: buildPrimaryBadge(signal.id, savingsPercent, hasVerifiedDiscount),
     winnerReason: buildWinnerReason({
       product,
       signal,

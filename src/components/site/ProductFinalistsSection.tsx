@@ -2,7 +2,7 @@ import Link from 'next/link'
 import { ProductSpotlightCard } from '@/components/site/ProductSpotlightCard'
 import { formatEditorialDate } from '@/lib/editorial'
 import { buildProductFinalists, type ProductFinalist } from '@/lib/product-finalists'
-import type { ProductRecord } from '@/lib/site-data'
+import type { CommerceProductRecord } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getModeLabel(finalists: ProductFinalist[]) {
@@ -11,7 +11,38 @@ function getModeLabel(finalists: ProductFinalist[]) {
   return 'Best available now'
 }
 
-export function ProductFinalistsSection({
+function formatTrackedLabel(finalist: ProductFinalist) {
+  if (finalist.distanceFromTrackedLowPercent == null) return 'Tracked floor still developing'
+  if (finalist.distanceFromTrackedLowPercent <= 0.25) return 'At tracked low'
+  return `${finalist.distanceFromTrackedLowPercent.toFixed(finalist.distanceFromTrackedLowPercent < 10 ? 1 : 0)}% above low`
+}
+
+function formatPromotionLabel(finalist: ProductFinalist) {
+  if (finalist.hasVerifiedDiscount && finalist.savingsAmount != null && finalist.savingsPercent != null) {
+    return `${Math.round(finalist.savingsPercent)}% off · save ${formatPriceSnapshot(finalist.savingsAmount, finalist.currentCurrency)}`
+  }
+
+  return 'Timing-led recommendation'
+}
+
+function formatShippingLabel(finalist: ProductFinalist) {
+  if (finalist.shippingCost == null) return 'Shipping not listed'
+  if (finalist.shippingCost <= 0) return 'Free shipping'
+  return formatPriceSnapshot(finalist.shippingCost, finalist.currentCurrency)
+}
+
+function formatReferenceLabel(finalist: ProductFinalist) {
+  if (finalist.referencePrice == null) return 'No reliable reference'
+  return formatPriceSnapshot(finalist.referencePrice, finalist.referenceCurrency || finalist.currentCurrency)
+}
+
+function formatProofLabel(finalist: ProductFinalist) {
+  if (!finalist.product.rating) return 'Proof still thin'
+  const reviews = finalist.product.reviewCount ? ` · ${finalist.product.reviewCount.toLocaleString()} reviews` : ''
+  return `${finalist.product.rating.toFixed(1)} / 5${reviews}`
+}
+
+export async function ProductFinalistsSection({
   products,
   title,
   description,
@@ -21,7 +52,7 @@ export function ProductFinalistsSection({
   waitHref,
   waitLabel
 }: {
-  products: ProductRecord[]
+  products: CommerceProductRecord[]
   title: string
   description: string
   source: string
@@ -30,7 +61,7 @@ export function ProductFinalistsSection({
   waitHref: string
   waitLabel: string
 }) {
-  const finalists = buildProductFinalists(products)
+  const finalists = await buildProductFinalists(products)
 
   if (!finalists.length) return null
 
@@ -82,17 +113,21 @@ export function ProductFinalistsSection({
 
           <div className="rounded-[1.5rem] border border-border/60">
             <div className="overflow-x-auto">
-              <div className="min-w-[880px]">
-                <div className="grid grid-cols-[1.7fr_1fr_1.1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+              <div className="min-w-[1220px]">
+                <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
                   <span>Pick</span>
                   <span>Current</span>
+                  <span>Reference</span>
+                  <span>Promotion</span>
+                  <span>Timing</span>
+                  <span>Merchant</span>
+                  <span>Shipping</span>
                   <span>Buyer proof</span>
-                  <span>Evidence</span>
                   <span>Last checked</span>
                 </div>
                 <div className="divide-y divide-border/60">
                   {finalists.map((item, index) => (
-                    <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1.1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
+                    <div key={item.product.id} className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 px-4 py-4 text-sm">
                       <div>
                         <p className="font-semibold text-foreground">
                           {index === 0 ? 'Winner' : `Option ${index + 1}`} · {item.product.productName}
@@ -100,15 +135,25 @@ export function ProductFinalistsSection({
                         <p className="mt-1 text-xs text-muted-foreground">{item.caution}</p>
                       </div>
                       <div className="font-black text-foreground">
-                        {formatPriceSnapshot(item.product.priceAmount, item.product.priceCurrency || 'USD')}
+                        {formatPriceSnapshot(item.currentPrice, item.currentCurrency)}
                       </div>
                       <div className="text-muted-foreground">
-                        {item.product.rating
-                          ? `${item.product.rating.toFixed(1)} / 5${item.product.reviewCount ? ` · ${item.product.reviewCount.toLocaleString()} reviews` : ''}`
-                          : 'Proof still thin'}
+                        {formatReferenceLabel(item)}
                       </div>
                       <div className="text-muted-foreground">
-                        {`${Math.round((item.product.dataConfidenceScore || 0) * 100)}% confidence · ${Math.round((item.product.attributeCompletenessScore || 0) * 100)}% specs`}
+                        {formatPromotionLabel(item)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatTrackedLabel(item)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {item.merchantName || 'Affiliate merchant'}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatShippingLabel(item)}
+                      </div>
+                      <div className="text-muted-foreground">
+                        {formatProofLabel(item)}
                       </div>
                       <div className="text-muted-foreground">
                         {formatEditorialDate(item.checkedAt)} · {item.freshnessLabel.toLowerCase()}
@@ -126,7 +171,7 @@ export function ProductFinalistsSection({
               <div className="mt-3 space-y-2">
                 {finalists.slice(1).map((item, index) => (
                   <p key={item.product.id} className="text-sm leading-7 text-muted-foreground">
-                    {`Option ${index + 2}: ${item.product.productName} stays viable, but ${item.caution.charAt(0).toLowerCase()}${item.caution.slice(1)}`}
+                    {`Option ${index + 2}: ${item.product.productName} stays viable, but it is currently ${formatTrackedLabel(item).toLowerCase()} and ${formatPromotionLabel(item).toLowerCase()}. ${item.caution}`}
                   </p>
                 ))}
               </div>
