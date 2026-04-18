@@ -11,7 +11,7 @@ import { cn } from '@/lib/utils'
 const INTENT_OPTIONS = [
   {
     id: 'offers',
-    label: 'Offer Alerts',
+    label: 'Offer Updates',
     description: 'Useful price drops and live offers worth checking.'
   },
   {
@@ -83,7 +83,7 @@ export function NewsletterSignup({
   const [done, setDone] = useState(false)
   const [isPending, startTransition] = useTransition()
   const selectedIntent = INTENT_OPTIONS.find((option) => option.id === intent) || INTENT_OPTIONS[0]
-  const alertPreview = buildAlertPreview(intent, cadence, categorySlug)
+  const updatePreview = buildAlertPreview(intent, cadence, categorySlug)
   const primaryResumeRoute = afterSignupRoutes[0] || null
   const secondaryRoute = afterSignupRoutes[1] || null
   const currentTaskTitle = primaryResumeRoute?.title || 'This shopping task'
@@ -98,7 +98,7 @@ export function NewsletterSignup({
     {
       label: 'What triggers a return',
       value: selectedIntent.label,
-      description: alertPreview
+      description: updatePreview
     },
     {
       label: 'Best move now',
@@ -126,7 +126,7 @@ export function NewsletterSignup({
       <div className="absolute right-0 top-0 h-40 w-40 rounded-full bg-emerald-100/60 blur-3xl" />
       {done ? (
         <div className="relative space-y-5">
-          <p className="editorial-kicker">Email saved</p>
+          <p className="editorial-kicker">Wait saved</p>
           <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">You&apos;re signed up.</h3>
           <p className="text-sm leading-7 text-muted-foreground">
             Bes3 will use this choice to keep this shopping task alive with more relevant {selectedIntent.label.toLowerCase()}{categorySlug ? ` for ${categorySlug.replace(/-/g, ' ')}` : ''}.
@@ -160,7 +160,7 @@ export function NewsletterSignup({
           </div>
           {afterSignupRoutes.length ? (
             <div className="space-y-3">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Resume this task</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-primary">Resume this task</p>
               <div className="grid gap-3 sm:grid-cols-2">
                 {afterSignupRoutes.map((route) => (
                   <Link
@@ -201,7 +201,7 @@ export function NewsletterSignup({
           }}
         >
           <div className="space-y-2">
-            <p className="editorial-kicker">Email Updates</p>
+            <p className="editorial-kicker">Wait Updates</p>
             <h3 className="font-[var(--font-display)] text-3xl font-black tracking-tight">Save this shopping task for later.</h3>
             <p className="text-sm leading-7 text-muted-foreground">{selectedIntent.description} The goal is to help you pick back up later without restarting from zero.</p>
           </div>
@@ -269,7 +269,7 @@ export function NewsletterSignup({
 
           <div className="rounded-[1.25rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] p-4">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">What you will get</p>
-            <p className="mt-3 text-sm leading-7 text-muted-foreground">{alertPreview}</p>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">{updatePreview}</p>
           </div>
 
           <Button type="submit" disabled={!email.includes('@') || isPending} className="min-h-[56px] rounded-full px-6">
