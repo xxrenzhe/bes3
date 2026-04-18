@@ -133,7 +133,7 @@ export default async function OpenDataPage() {
       title: 'Comparison payload',
       href: compareSampleIds.length >= 2 ? `/api/open/commerce/compare?productIds=${compareSampleIds.join(',')}` : '/api/open/commerce/compare?productIds=1,2',
       label: compareSampleIds.length >= 2 ? `/api/open/commerce/compare?productIds=${compareSampleIds.join(',')}` : '/api/open/commerce/compare?productIds=1,2',
-      description: 'Return a machine-readable comparison object for multiple shortlisted products.'
+      description: 'Return a machine-readable comparison object for multiple shortlisted products. Use GET with productIds query params or POST the same ids as JSON.'
     },
     {
       eyebrow: 'Brands',
@@ -294,7 +294,7 @@ export default async function OpenDataPage() {
             {
               path: compareSampleIds.length >= 2 ? `/api/open/commerce/compare?productIds=${compareSampleIds.join(',')}` : '/api/open/commerce/compare?productIds=1,2',
               name: 'Bes3 comparison API',
-              description: 'Fetch a machine-readable comparison object for multiple shortlisted products.'
+              description: 'Fetch a machine-readable comparison object for multiple shortlisted products through GET query params or POST JSON.'
             },
             {
               path: `/api/open/commerce/brands/${brands[0]?.slug || 'midea'}`,
@@ -406,6 +406,8 @@ export default async function OpenDataPage() {
               <Link href="/tools" className="block transition-colors hover:text-primary">Open utility tools</Link>
               <Link href="/site-map" className="block transition-colors hover:text-primary">Open HTML sitemap</Link>
               <Link href="/directory" className="block transition-colors hover:text-primary">Open category directory</Link>
+              <Link href="/offers" className="block transition-colors hover:text-primary">Open offers hub</Link>
+              <Link href="/biggest-discounts" className="block transition-colors hover:text-primary">Open biggest discounts</Link>
               <Link href="/llms.txt" className="block transition-colors hover:text-primary">Open llms.txt</Link>
               <Link href="/media-sitemap.xml" className="block transition-colors hover:text-primary">Open image sitemap</Link>
             </div>
