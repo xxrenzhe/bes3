@@ -16,7 +16,7 @@ import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { deslugify, findSuggestedArticles, findSuggestedCategories, findSuggestedProducts } from '@/lib/route-recovery'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { getBrandSlug, listOpenCommerceProducts, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getBrandSlug, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata({
   params
@@ -24,12 +24,12 @@ export async function generateMetadata({
   params: Promise<{ slug: string }>
 }): Promise<Metadata> {
   const slug = (await params).slug
-  const [allArticles, allProducts, allCommerceProducts] = await Promise.all([listPublishedArticles(), listPublishedProducts(), listOpenCommerceProducts()])
+  const [allArticles, allCommerceProducts] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
-  const products = allProducts.filter((product) => categoryMatches(product.category, slug))
+  const products = allCommerceProducts.filter((product) => categoryMatches(product.category, slug))
   const resolvedCategory = products[0]?.category || articles[0]?.product?.category || slug
   const leadArticle = articles.find((article) => article.type === 'review') || articles[0] || null
-  const leadProduct = allCommerceProducts.find((product) => categoryMatches(product.category, slug)) || products[0] || null
+  const leadProduct = products[0] || null
   const categoryLabel = getCategoryLabel(resolvedCategory)
   const freshnessDate =
     leadArticle?.updatedAt ||
@@ -73,14 +73,10 @@ export default async function CategoryPage({
   params: Promise<{ slug: string }>
 }) {
   const slug = (await params).slug
-  const [allArticles, allProducts, allCommerceProducts] = await Promise.all([
-    listPublishedArticles(),
-    listPublishedProducts(),
-    listOpenCommerceProducts()
-  ])
+  const [allArticles, allCommerceProducts] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const articles = allArticles.filter((article) => categoryMatches(article.product?.category, slug))
-  const products = allProducts.filter((product) => categoryMatches(product.category, slug))
-  const commerceProducts = allCommerceProducts.filter((product) => categoryMatches(product.category, slug))
+  const products = allCommerceProducts.filter((product) => categoryMatches(product.category, slug))
+  const commerceProducts = products
   const [featured, ...rest] = articles
   const featuredReview = articles.find((article) => article.type === 'review') || featured || null
   const featuredComparison = articles.find((article) => article.type === 'comparison') || null
@@ -98,7 +94,7 @@ export default async function CategoryPage({
   if (!hasCoverage) {
     const categories = Array.from(
       new Set([
-        ...allProducts.map((product) => product.category).filter(Boolean),
+        ...allCommerceProducts.map((product) => product.category).filter(Boolean),
         ...allArticles.map((article) => article.product?.category).filter(Boolean)
       ] as string[])
     ).sort((left, right) => left.localeCompare(right))
@@ -125,7 +121,7 @@ export default async function CategoryPage({
             {
               eyebrow: 'Nearby products',
               title: 'Likely product matches',
-              links: findSuggestedProducts(allProducts, slug, 6)
+              links: findSuggestedProducts(allCommerceProducts, slug, 6)
                 .filter((product) => product.slug)
                 .map((product) => ({
                   href: `/products/${product.slug}`,

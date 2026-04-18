@@ -1,5 +1,5 @@
 import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
-import { listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 import { getSiteUrl } from '@/lib/site-url'
 
 function escapeXml(value: string) {
@@ -16,7 +16,7 @@ export async function GET(request: Request) {
   const [articles, brands, products] = await Promise.all([
     listPublishedArticles(),
     listBrands(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
 
   const lastModified = getLatestTimestamp([

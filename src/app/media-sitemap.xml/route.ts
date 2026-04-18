@@ -5,7 +5,7 @@ import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cach
 import { SUPPORTED_LOCALES, addLocaleToPath } from '@/lib/i18n'
 import { maxDate } from '@/lib/sitemap-utils'
 import { getSiteUrl } from '@/lib/site-url'
-import { listBrandCategoryHubs, listBrands, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrandCategoryHubs, listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 type ImageSitemapEntry = {
   loc: string
@@ -49,7 +49,7 @@ function buildLocalizedImageEntries(
 export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
   const [products, articles, brands, brandCategoryHubs] = await Promise.all([
-    listPublishedProducts(),
+    listOpenCommerceProducts(),
     listPublishedArticles(),
     listBrands(),
     listBrandCategoryHubs()

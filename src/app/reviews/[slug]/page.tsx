@@ -31,11 +31,11 @@ import {
   getArticleBySlug,
   getBrandKnowledgeByProduct,
   getOpenCommerceProductBySlug,
+  listOpenCommerceProducts,
   listProductAttributeFacts,
   listProductOffers,
   listProductPriceHistory,
   listPublishedArticles,
-  listPublishedProducts
 } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -95,7 +95,7 @@ export default async function ReviewPage({
   const article = await getArticleBySlug(slug)
 
   if (!article || article.type !== 'review') {
-    const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+    const [articles, products] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
     const queryLabel = deslugify(slug) || slug
 
     return (
@@ -149,7 +149,7 @@ export default async function ReviewPage({
   const category = article.product?.category || null
   const [articles, allProducts, commerceProduct, offers, attributeFacts, priceHistory, brandKnowledge] = await Promise.all([
     listPublishedArticles(),
-    listPublishedProducts(),
+    listOpenCommerceProducts(),
     article.product?.slug ? getOpenCommerceProductBySlug(article.product.slug) : Promise.resolve(null),
     article.product?.id ? listProductOffers(article.product.id) : Promise.resolve([]),
     article.product?.id ? listProductAttributeFacts(article.product.id) : Promise.resolve([]),

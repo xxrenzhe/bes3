@@ -902,7 +902,7 @@ export async function searchArticles(query: string): Promise<ArticleRecord[]> {
 
 export async function searchProducts(query: string): Promise<ProductRecord[]> {
   const lowered = query.trim().toLowerCase()
-  const products = await listPublishedProducts()
+  const products = await listOpenCommerceProducts()
   if (!lowered) return products
 
   return products.filter((product) => {
@@ -914,7 +914,7 @@ export async function searchProducts(query: string): Promise<ProductRecord[]> {
 }
 
 const listCategoriesCached = async (): Promise<string[]> => withCachedPromise('listCategories', async () => {
-  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
   return Array.from(
     new Set([
       ...products.map((product) => normalizeCategoryName(product.category)).filter(Boolean),
@@ -928,7 +928,7 @@ export async function listCategories(): Promise<string[]> {
 }
 
 const listBrandsCached = async (): Promise<BrandRecord[]> => withCachedPromise('listBrands', async () => {
-  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
   const brands = new Map<
     string,
     {
@@ -1132,7 +1132,7 @@ export async function getBrandKnowledgeByProduct(input: {
 }
 
 const listBrandCategoryHubsCached = async (): Promise<BrandCategoryRecord[]> => withCachedPromise('listBrandCategoryHubs', async () => {
-  const [products, articles] = await Promise.all([listPublishedProducts(), listPublishedArticles()])
+  const [products, articles] = await Promise.all([listOpenCommerceProducts(), listPublishedArticles()])
   const hubs = new Map<
     string,
     {

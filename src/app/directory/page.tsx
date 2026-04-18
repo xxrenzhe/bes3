@@ -12,7 +12,7 @@ import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
 import { toShortlistItem } from '@/lib/shortlist'
-import { listBrands, listCategories, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 function getArticleTypeLabel(type: string) {
@@ -22,7 +22,7 @@ function getArticleTypeLabel(type: string) {
 }
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, products] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const freshnessDate =
     articles[0]?.updatedAt ||
     articles[0]?.publishedAt ||
@@ -49,7 +49,7 @@ export default async function DirectoryPage() {
     listBrands(),
     listCategories(),
     listPublishedArticles(),
-    listPublishedProducts()
+    listOpenCommerceProducts()
   ])
   const leadCategory = categories[0] || ''
   const leadBrand = brands[0] || null

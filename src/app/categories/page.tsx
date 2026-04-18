@@ -8,10 +8,10 @@ import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildHowToSchema } from '@/lib/structured-data'
-import { getBrandSlug, listPublishedArticles, listPublishedProducts } from '@/lib/site-data'
+import { getBrandSlug, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, products] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const freshnessDate =
     articles[0]?.updatedAt ||
     articles[0]?.publishedAt ||
@@ -33,7 +33,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function CategoriesIndexPage() {
-  const [articles, products] = await Promise.all([listPublishedArticles(), listPublishedProducts()])
+  const [articles, products] = await Promise.all([listPublishedArticles(), listOpenCommerceProducts()])
   const categories = Array.from(new Set([
     ...products.map((product) => product.category).filter(Boolean),
     ...articles.map((article) => article.product?.category).filter(Boolean)
