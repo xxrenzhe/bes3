@@ -1,8 +1,12 @@
+import { getFreshnessLabel } from '@/lib/editorial'
+import { OFFERS_FRESHNESS_WINDOW_HOURS } from '@/lib/offers'
+import { summarizePriceHistoryWindow } from '@/lib/price-insights'
 import { categoryMatches } from '@/lib/category'
 import { buildShortlistSharePath } from '@/lib/shortlist'
 import {
   getBrandSlug,
   listCategories,
+  listProductPriceHistory,
   searchOpenCommerceProducts,
   type CommerceProductRecord
 } from '@/lib/site-data'
@@ -24,6 +28,18 @@ export interface IntentRecommendation {
   score: number
   reasons: string[]
   concerns: string[]
+  currentPrice: number | null
+  currentCurrency: string
+  referencePrice: number | null
+  referenceCurrency: string | null
+  savingsAmount: number | null
+  savingsPercent: number | null
+  distanceFromTrackedLowPercent: number | null
+  merchantName: string | null
+  shippingCost: number | null
+  checkedAt: string | null
+  freshnessLabel: string
+  hasVerifiedDiscount: boolean
 }
 
 export interface IntentSearchResult {
@@ -118,6 +134,25 @@ function buildSearchCorpus(product: CommerceProductRecord) {
   ]
     .join(' ')
     .toLowerCase()
+}
+
+function getCheckedAt(product: CommerceProductRecord) {
+  return product.bestOffer?.lastCheckedAt || product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt || product.publishedAt || null
+}
+
+function getAgeHours(value: string | null | undefined) {
+  if (!value) return null
+  const parsed = Date.parse(value)
+  if (!Number.isFinite(parsed)) return null
+  return Math.max(0, (Date.now() - parsed) / 3_600_000)
+}
+
+function getDistanceFromTrackedLowPercent(currentPrice: number | null, lowestPrice: number | null) {
+  if (currentPrice == null || lowestPrice == null || !Number.isFinite(currentPrice) || !Number.isFinite(lowestPrice) || lowestPrice <= 0) {
+    return null
+  }
+
+  return ((currentPrice - lowestPrice) / lowestPrice) * 100
 }
 
 function buildReasonsAndConcerns(input: {
@@ -235,6 +270,66 @@ function resolveRecommendationCategory(
   return winner?.[0] || rankedProducts.find((product) => product.category)?.category || null
 }
 
+async function enrichRecommendation(input: {
+  product: CommerceProductRecord
+  score: number
+  mustHaves: string[]
+  avoid: string[]
+  budget: number | null
+  inferredCategory: string | null
+}): Promise<IntentRecommendation> {
+  const currentPrice = input.product.bestOffer?.priceAmount ?? input.product.priceAmount
+  const currentCurrency = input.product.bestOffer?.priceCurrency || input.product.priceCurrency || 'USD'
+  const checkedAt = getCheckedAt(input.product)
+  const checkedAgeHours = getAgeHours(checkedAt)
+  const referencePriceAmount = input.product.bestOffer?.referencePriceAmount ?? null
+  const referenceAgeHours = getAgeHours(input.product.bestOffer?.referencePriceLastCheckedAt || input.product.bestOffer?.lastCheckedAt)
+  const hasVerifiedDiscount =
+    referencePriceAmount != null &&
+    currentPrice != null &&
+    referencePriceAmount > currentPrice &&
+    Boolean(input.product.bestOffer?.referencePriceType) &&
+    Boolean(input.product.bestOffer?.referencePriceSource) &&
+    checkedAgeHours != null &&
+    checkedAgeHours <= OFFERS_FRESHNESS_WINDOW_HOURS &&
+    referenceAgeHours != null &&
+    referenceAgeHours <= OFFERS_FRESHNESS_WINDOW_HOURS
+  const savingsAmount = hasVerifiedDiscount ? Number((referencePriceAmount - currentPrice).toFixed(2)) : null
+  const savingsPercent =
+    hasVerifiedDiscount && currentPrice != null
+      ? Number((((referencePriceAmount - currentPrice) / referencePriceAmount) * 100).toFixed(1))
+      : null
+  const priceHistory = await listProductPriceHistory(input.product.id, 12)
+  const summary = summarizePriceHistoryWindow(priceHistory, currentPrice, currentCurrency)
+  const distanceFromTrackedLowPercent = getDistanceFromTrackedLowPercent(summary.currentPrice, summary.lowestPrice)
+  const explanation = buildReasonsAndConcerns({
+    product: input.product,
+    mustHaves: input.mustHaves,
+    avoid: input.avoid,
+    budget: input.budget,
+    inferredCategory: input.inferredCategory
+  })
+
+  return {
+    product: input.product,
+    score: input.score,
+    reasons: explanation.reasons,
+    concerns: explanation.concerns,
+    currentPrice,
+    currentCurrency,
+    referencePrice: hasVerifiedDiscount ? referencePriceAmount : null,
+    referenceCurrency: hasVerifiedDiscount ? input.product.bestOffer?.referencePriceCurrency || currentCurrency : null,
+    savingsAmount,
+    savingsPercent,
+    distanceFromTrackedLowPercent,
+    merchantName: input.product.bestOffer?.merchantName || null,
+    shippingCost: input.product.bestOffer?.shippingCost ?? null,
+    checkedAt,
+    freshnessLabel: getFreshnessLabel(checkedAt),
+    hasVerifiedDiscount
+  }
+}
+
 function buildNextAction(input: {
   recommendations: IntentRecommendation[]
   urgency: IntentUrgency
@@ -344,19 +439,19 @@ export async function resolveIntentSearch(input: IntentSearchInput): Promise<Int
     rankedRecommendations.map((item) => item.product),
     inferredCategory
   )
-  const recommendations = rankedRecommendations
+  const recommendations = await Promise.all(
+    rankedRecommendations
     .filter((item) => !resolvedCategory || categoryMatches(item.product.category, resolvedCategory))
-    .map((item) => ({
-      ...item,
-      ...buildReasonsAndConcerns({
+    .slice(0, recommendationLimit)
+      .map((item) => enrichRecommendation({
         product: item.product,
+        score: item.score,
         mustHaves,
         avoid,
         budget: normalizedBudget,
         inferredCategory: resolvedCategory
-      })
-    }))
-    .slice(0, recommendationLimit)
+      }))
+  )
 
   const shortlistPath = buildShortlistSharePath(recommendations.map((item) => item.product.id))
   const { nextAction, fallbackAction } = buildNextAction({
