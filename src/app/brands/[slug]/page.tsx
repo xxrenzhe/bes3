@@ -8,7 +8,7 @@ import { SeoHubLinksPanel } from '@/components/site/SeoHubLinksPanel'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
-import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
+import { buildBrandCategoryPath, buildCategoryPath, categoryMatches, getCategorySlug } from '@/lib/category'
 import { formatEditorialDate, getCategoryLabel } from '@/lib/editorial'
 import { buildPageMetadata, pickMetadataDescription } from '@/lib/metadata'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
@@ -25,6 +25,50 @@ import {
   listOpenCommerceProducts,
   listPublishedArticles
 } from '@/lib/site-data'
+
+function resolveLeadBrandCategory(
+  products: Awaited<ReturnType<typeof listOpenCommerceProducts>>,
+  fallbackCategories: string[]
+) {
+  const buckets = new Map<string, { label: string; count: number; firstIndex: number }>()
+  const fallbackOrder = new Map(
+    fallbackCategories
+      .map((category, index) => [getCategorySlug(category), index] as const)
+      .filter(([slug]) => Boolean(slug))
+  )
+
+  products.forEach((product, index) => {
+    const slug = getCategorySlug(product.category)
+    if (!slug) return
+
+    const existing = buckets.get(slug)
+    if (existing) {
+      existing.count += 1
+      return
+    }
+
+    buckets.set(slug, {
+      label: product.category || slug,
+      count: 1,
+      firstIndex: index
+    })
+  })
+
+  const winner = Array.from(buckets.entries())
+    .sort((left, right) => {
+      const countDelta = right[1].count - left[1].count
+      if (countDelta !== 0) return countDelta
+
+      const fallbackDelta =
+        (fallbackOrder.get(left[0]) ?? Number.MAX_SAFE_INTEGER) -
+        (fallbackOrder.get(right[0]) ?? Number.MAX_SAFE_INTEGER)
+      if (fallbackDelta !== 0) return fallbackDelta
+
+      return left[1].firstIndex - right[1].firstIndex
+    })[0]
+
+  return winner?.[1].label || fallbackCategories[0] || ''
+}
 
 export async function generateMetadata({
   params
@@ -126,11 +170,14 @@ export default async function BrandPage({
   ])
 
   const brandProducts = allCommerceProducts.filter((product) => getBrandSlug(product.brand) === slug)
-  const brandCommerceProducts = brandProducts
+  const leadCategory = resolveLeadBrandCategory(brandProducts, brand.categories)
+  const brandCommerceProducts = leadCategory
+    ? brandProducts.filter((product) => categoryMatches(product.category, leadCategory))
+    : brandProducts
+  const leadBrandProduct = brandCommerceProducts[0] || brandProducts[0] || null
   const brandArticles = allArticles.filter((article) => getBrandSlug(article.product?.brand) === slug)
   const leadReview = brandArticles.find((article) => article.type === 'review') || brandArticles[0] || null
   const leadComparison = brandArticles.find((article) => article.type === 'comparison') || null
-  const leadCategory = brand.categories[0] || ''
   const faqEntries = [
     {
       question: `What does the ${brand.name} page include?`,
@@ -153,6 +200,7 @@ export default async function BrandPage({
     { name: brand.name, path: `/brands/${brand.slug}` }
   ]
   const brandPath = `/brands/${brand.slug}`
+  const leadCategoryPath = leadCategory ? buildBrandCategoryPath(brand.slug, leadCategory) : brandPath
   const brandWaitPath = buildNewsletterPath({
     intent: leadCategory ? 'price-alert' : 'offers',
     category: leadCategory || '',
@@ -209,12 +257,12 @@ export default async function BrandPage({
     buildFaqSchema(brandPath, faqEntries)
   ]
   const brandRoutes = [
-    brandProducts[0]
+    leadBrandProduct
       ? {
           eyebrow: 'Start',
           title: `Open the lead ${brand.name} product`,
           description: 'Begin with the strongest current product page if you already trust the brand and want the cleanest next step into specs, pricing, and shortlist actions.',
-          href: brandProducts[0].slug ? `/products/${brandProducts[0].slug}` : `/brands/${brand.slug}`,
+          href: leadBrandProduct.slug ? `/products/${leadBrandProduct.slug}` : leadCategoryPath,
           label: 'Open product details'
         }
       : null,
@@ -240,7 +288,6 @@ export default async function BrandPage({
             eyebrow: 'Explore',
             title: `Open ${brand.name} in ${getCategoryLabel(leadCategory)}`,
             description: 'Use the brand-and-category view when both filters already matter and you want the shortest path into matching products and next steps.',
-            
             href: buildBrandCategoryPath(brand.slug, leadCategory),
             label: 'Open this view'
           }
@@ -360,10 +407,12 @@ export default async function BrandPage({
           <ProductFinalistsSection
             products={brandCommerceProducts}
             source="brand-hub-shortlist"
-            title={`Start with the strongest ${brand.name} picks.`}
-            description={`This brand page keeps the final recommendation layer small on purpose: at most three ${brand.name} products in view, one lead, and a clear route into compare or price watch if you are not ready to buy.`}
-            browseHref={brandPath}
-            browseLabel={`Browse ${brand.name}`}
+            title={leadCategory ? `Start with the strongest ${brand.name} ${getCategoryLabel(leadCategory)} picks.` : `Start with the strongest ${brand.name} picks.`}
+            description={leadCategory
+              ? `This brand page resolves the final recommendation layer inside ${getCategoryLabel(leadCategory)} first: at most three same-category ${brand.name} picks, one lead, and a clear route into compare or price watch.`
+              : `This brand page keeps the final recommendation layer small on purpose: at most three ${brand.name} products in view, one lead, and a clear route into compare or price watch if you are not ready to buy.`}
+            browseHref={leadCategoryPath}
+            browseLabel={leadCategory ? `Browse ${brand.name} ${getCategoryLabel(leadCategory)}` : `Browse ${brand.name}`}
             waitHref={brandWaitPath}
             waitLabel={leadCategory ? `Track ${getCategoryLabel(leadCategory)}` : 'Start price watch'}
           />
