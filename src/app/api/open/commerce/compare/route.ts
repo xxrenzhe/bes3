@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { categoryMatches } from '@/lib/category'
 import {
   COMMERCE_PROTOCOL_VERSION,
   buildComparisonReason,
@@ -23,7 +24,7 @@ function normalizeProductIds(value: unknown) {
         .map((item) => Number.parseInt(String(item), 10))
         .filter((item) => Number.isInteger(item) && item > 0)
     )
-  ).slice(0, 4)
+  ).slice(0, 3)
 }
 
 export async function POST(request: Request) {
@@ -87,6 +88,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Not enough products were found to compare' }, { status: 404 })
   }
 
+  const leadCategory = compared[0]?.product.category || null
+  const mixedCategories = compared.some((entry) => !categoryMatches(entry.product.category, leadCategory))
+
+  if (mixedCategories) {
+    return NextResponse.json({
+      error: 'Compared products must stay in the same category',
+      category: leadCategory
+    }, { status: 400 })
+  }
+
   const ranked = [...compared].sort((left, right) => compareCommerceProducts(left.product, right.product))
   const winner = ranked[0]
   const runnerUp = ranked[1] || null
@@ -96,6 +107,7 @@ export async function POST(request: Request) {
     generatedAt: new Date().toISOString(),
     requestedProductIds: productIds,
     comparedProductIds: ranked.map((entry) => entry.product.id),
+    category: leadCategory,
     recommendedProductId: winner.product.id,
     comparisonReason: buildComparisonReason(winner.product, runnerUp?.product || null),
     winner: winner.result,
