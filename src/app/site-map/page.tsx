@@ -55,6 +55,7 @@ export default async function HtmlSitemapPage() {
   )
   const hubPages = [
     { href: '/categories', label: 'Categories' },
+    { href: '/biggest-discounts', label: 'Biggest Discounts' },
     { href: '/products', label: 'Products' },
     { href: '/reviews', label: 'Reviews' },
     { href: '/compare', label: 'Compare' },
@@ -89,6 +90,7 @@ export default async function HtmlSitemapPage() {
         { name: 'Start Here', path: '/start' },
         { name: 'Search', path: '/search' },
         { name: 'Offers', path: '/offers' },
+        { name: 'Biggest Discounts', path: '/biggest-discounts' },
         { name: 'Directory', path: '/directory' },
         { name: 'Brands', path: '/brands' },
         { name: 'Tools', path: '/tools' },
