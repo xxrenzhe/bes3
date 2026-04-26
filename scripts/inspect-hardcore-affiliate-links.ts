@@ -1,6 +1,7 @@
 import './load-env'
 import { bootstrapApplication } from '@/lib/bootstrap'
 import { getDatabase } from '@/lib/db'
+import { classifyLinkHealth } from '@/lib/entity-resolution'
 import { updateAffiliateLinkHealth } from '@/lib/hardcore-ops'
 
 interface AffiliateLinkRow {
@@ -61,8 +62,15 @@ async function main() {
 
   for (const link of links) {
     const signals = await fetchHealthSignals(link.affiliate_url)
+    const dryRunHealth = classifyLinkHealth({
+      httpStatus: signals.httpStatus,
+      responseSnippet: signals.responseSnippet
+    })
     const health = dryRun
-      ? { status: signals.httpStatus && signals.httpStatus >= 200 && signals.httpStatus < 400 ? 'active' : 'unknown', httpStatus: signals.httpStatus, reason: 'Dry run did not mutate affiliate link status.' }
+      ? {
+          ...dryRunHealth,
+          reason: `Dry run classified affiliate link health without mutating status: ${dryRunHealth.reason}`
+        }
       : await updateAffiliateLinkHealth({
           linkId: link.id,
           httpStatus: signals.httpStatus,

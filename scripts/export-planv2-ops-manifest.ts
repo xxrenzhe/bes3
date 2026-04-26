@@ -125,6 +125,12 @@ function buildClosureChecks() {
       jsonbIndexPolicy: 'PostgreSQL JSONB columns are covered by GIN indexes where they support dynamic product, taxonomy, schema, payload, or event metadata queries.',
       evidenceValidation: 'AI/Shorts imports must keep canonical tag, product, timestamp/context, quote, confidence, and quality flags attached before surfacing rankings.'
     },
+    riskControls: {
+      transcriptCollection: 'yt-dlp command generation uses --skip-download, subtitle-only outputs, jitter, user-agent spoofing, and optional proxy support.',
+      entityResolution: 'Video/product matching prefers extracted ASINs and only accepts brand/model fallback when confidence is at least 0.9.',
+      affiliateHealth: 'Affiliate inspection dry-run and mutation paths use the same link-health classifier for broken and out-of-stock states.',
+      complianceSurface: 'Public pages include top affiliate disclosure, per-action affiliate labels, creator timestamp attribution, privacy policy, and one-click Reject all cookie control.'
+    },
     operations: {
       noGitPushThisRun: true,
       beadsLifecycle: 'Epic plus child tasks are created, claimed, and closed locally. Remote sync is left to the operator when pushes are allowed.'
@@ -193,9 +199,10 @@ async function main() {
       importKeywordPlanner: 'npm run hardcore:import-keyword-planner -- --file=./keyword-planner.csv --category=yard-pool-automation --promote-pending',
       importShortsEvidence: 'npm run hardcore:import-shorts-evidence -- --file=./shorts-evidence.json',
       evolveTaxonomy: 'npm run hardcore:evolve-taxonomy -- --mark-processing',
-      downloadTranscriptCommand: 'npm run hardcore:youtube-transcript-command -- --url=https://www.youtube.com/watch?v=...',
+      downloadTranscriptCommand: "npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=...'",
       resolveEntities: 'npm run hardcore:resolve-video-entities -- --resolve-redirects',
-      inspectAffiliateLinks: 'npm run hardcore:inspect-affiliate-links',
+      previewAffiliateLinks: 'npm run hardcore:inspect-affiliate-links -- --dry-run --limit=25',
+      inspectAffiliateLinks: 'npm run hardcore:inspect-affiliate-links -- --limit=50',
       previewPriceValue: 'npm run hardcore:refresh-price-value -- --dry-run --limit=25',
       refreshPriceValue: 'npm run hardcore:refresh-price-value -- --limit=250',
       queuePriceAlerts: 'npm run hardcore:evaluate-price-alerts -- --queue-notifications --mark-notified',
