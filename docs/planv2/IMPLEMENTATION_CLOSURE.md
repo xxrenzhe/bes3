@@ -42,6 +42,22 @@ npm run hardcore:refresh-price-value -- --dry-run --limit=25
 npm run hardcore:evaluate-price-alerts
 ```
 
+## Final Local Validation
+
+Completed on 2026-04-27:
+
+| Command | Result |
+| --- | --- |
+| `npm run type-check` | Passed. |
+| `npm run hardcore:export-planv2-ops -- --limit=25` | Passed; generated 168 pSEO paths and reported zero unresolved entity videos, zero taxonomy rescan jobs, and zero queued price notifications. |
+| `npm run hardcore:resolve-video-entities -- --dry-run --limit=5` | Passed; scanned 2 demo videos and matched 2 with confidence above 0.98. |
+| `npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=dQw4w9WgXcQ'` | Passed; generated a subtitle-only `yt-dlp` command with `--skip-download`, subtitle flags, jitter, and user-agent controls. |
+| `npm run hardcore:inspect-affiliate-links -- --dry-run --limit=5` | Passed; dry-run used the production classifier and found 2 broken demo links. |
+| `npm run hardcore:inspect-affiliate-links -- --limit=5` | Passed; updated the 2 broken demo affiliate links from `active` to `broken` locally. |
+| `npm run hardcore:evolve-taxonomy -- --dry-run --limit=5` | Passed; no pending promotions or rescan jobs in local seed data. |
+| `npm run hardcore:refresh-price-value -- --dry-run --limit=25` | Passed; previewed 5 products without writing snapshots. |
+| `npm run hardcore:evaluate-price-alerts -- --limit=25` | Passed; no active local alerts triggered. |
+
 Operational commands that require external credentials, network services, or a live deployment remain documented in `scripts/export-planv2-ops-manifest.ts` and should be run from the deployment environment:
 
 ```bash
