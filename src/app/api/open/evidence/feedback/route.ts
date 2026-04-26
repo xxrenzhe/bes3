@@ -9,13 +9,16 @@ export async function POST(request: Request) {
   const videoId = Number(body.videoId)
   const feedbackType = String(body.feedbackType || 'inaccurate').trim()
 
-  if (!Number.isFinite(analysisReportId) && !Number.isFinite(videoId)) {
+  const resolvedAnalysisReportId = Number.isFinite(analysisReportId) && analysisReportId > 0 ? analysisReportId : null
+  const resolvedVideoId = Number.isFinite(videoId) && videoId > 0 ? videoId : null
+
+  if (!resolvedAnalysisReportId && !resolvedVideoId) {
     return NextResponse.json({ error: 'analysisReportId_or_videoId_required' }, { status: 400 })
   }
 
   const feedback = await recordEvidenceFeedback({
-    analysisReportId: Number.isFinite(analysisReportId) ? analysisReportId : null,
-    videoId: Number.isFinite(videoId) ? videoId : null,
+    analysisReportId: resolvedAnalysisReportId,
+    videoId: resolvedVideoId,
     feedbackType
   })
 

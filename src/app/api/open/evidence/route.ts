@@ -33,7 +33,7 @@ export async function GET() {
       painpoints: category.painpoints,
       routes: {
         category: `/categories/${category.slug}`,
-        value: `/deals/best-${category.slug}-under-500`,
+        value: `/deals/best-value-${category.slug}-under-500`,
         scenarios: tags
           .filter((tag) => tag.categorySlug === category.slug)
           .slice(0, 6)

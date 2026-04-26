@@ -39,6 +39,8 @@ export default function PrivacyPage() {
 
   const buyerPromises = [
     'Wait-update signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
+    'Affiliate attribution can pass through PartnerBoost or YeahPromos when a reader clicks a merchant handoff link, but Bes3 does not sell personal profiles.',
+    'Nonessential tracking is treated as opt-in. The cookie banner provides a one-click Reject all control for public readers.',
     'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]
@@ -185,6 +187,10 @@ export default function PrivacyPage() {
             <h3>How we use it</h3>
             <p>
               We use the information above to run Bes3, keep publishing working, and deliver the content and email updates you requested.
+            </p>
+            <h3>Affiliate attribution and cookies</h3>
+            <p>
+              Bes3 may route merchant handoff clicks through PartnerBoost or YeahPromos so brands can attribute sales. Public readers can reject nonessential tracking from the cookie banner. Essential storage is limited to site preferences and operational security.
             </p>
             <h3>What we do not claim</h3>
             <p>

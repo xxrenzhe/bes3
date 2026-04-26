@@ -1,5 +1,6 @@
 import Link from 'next/link'
 import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
+import { CookieConsentBanner } from '@/components/site/CookieConsentBanner'
 import { ExitIntentCapture } from '@/components/site/ExitIntentCapture'
 import { LocaleSwitcher } from '@/components/site/LocaleSwitcher'
 import { addLocaleToPath } from '@/lib/i18n'
@@ -67,6 +68,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       </header>
       <main id="main-content">{children}</main>
       <ExitIntentCapture locale={locale} pathname={displayPath} />
+      <CookieConsentBanner />
       <footer className="border-t border-border bg-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>

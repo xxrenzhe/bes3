@@ -38,7 +38,7 @@ export default async function HtmlSitemapPage() {
       }))
   )
   const valuePages = HARDCORE_CATEGORIES.map((category) => ({
-    href: `/deals/best-${category.slug}-under-500`,
+    href: `/deals/best-value-${category.slug}-under-500`,
     label: `Best ${category.name} under $500`
   }))
   const multiConstraintPages = HARDCORE_CATEGORIES.flatMap((category) => {
