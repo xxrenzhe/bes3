@@ -69,6 +69,10 @@ function buildConfig() {
     dtcToken: read('PARTNERBOOST_DTC_TOKEN'),
     geminiApiKey: read('GEMINI_API_KEY'),
     geminiModel: read('GEMINI_MODEL', GEMINI_ACTIVE_MODEL),
+    browserProxyUrlsJson: read('BROWSER_PROXY_URLS_JSON', '[]'),
+    googleIndexingEnabled: read('GOOGLE_INDEXING_ENABLED', 'false'),
+    googleServiceAccountJson: read('GOOGLE_SERVICE_ACCOUNT_JSON'),
+    priceAlertWebhookUrl: read('PRICE_ALERT_WEBHOOK_URL'),
     pipelineWorkerEnabled: read('PIPELINE_WORKER_ENABLED', 'true'),
     pipelineWorkerPollMs: read('PIPELINE_WORKER_POLL_MS', '2500'),
     pipelineWorkerConcurrency: read('PIPELINE_WORKER_CONCURRENCY', '1'),
@@ -82,6 +86,19 @@ function isLocalUrl(value) {
 
 function addResult(collection, level, message) {
   collection.push({ level, message })
+}
+
+function parseJsonArray(value) {
+  try {
+    const parsed = JSON.parse(value || '[]')
+    return Array.isArray(parsed) ? parsed : null
+  } catch {
+    return null
+  }
+}
+
+function isHttpUrl(value) {
+  return /^https?:\/\//i.test(String(value || ''))
 }
 
 function isPositiveInteger(value) {
@@ -175,6 +192,44 @@ function validate() {
 
   if (!['true', 'false'].includes(String(config.s3ForcePathStyle))) {
     warnings.push('S3_FORCE_PATH_STYLE should be "true" or "false"')
+  }
+
+  const proxyPool = parseJsonArray(config.browserProxyUrlsJson)
+  if (!proxyPool) {
+    errors.push('BROWSER_PROXY_URLS_JSON must be a JSON array when provided')
+  } else if (proxyPool.length === 0) {
+    warnings.push('BROWSER_PROXY_URLS_JSON is empty; planv2 YouTube/merchant anti-ban workflows will run without proxy rotation')
+  } else {
+    addResult(results, 'info', `Planv2 proxy pool: ${proxyPool.length} endpoint(s) configured`)
+  }
+
+  if (!['true', 'false'].includes(String(config.googleIndexingEnabled))) {
+    errors.push('GOOGLE_INDEXING_ENABLED should be "true" or "false"')
+  } else if (config.googleIndexingEnabled === 'true') {
+    if (!config.googleServiceAccountJson) {
+      errors.push('GOOGLE_SERVICE_ACCOUNT_JSON is required when GOOGLE_INDEXING_ENABLED=true')
+    } else {
+      try {
+        const serviceAccount = JSON.parse(config.googleServiceAccountJson)
+        if (!serviceAccount.client_email || !serviceAccount.private_key) {
+          errors.push('GOOGLE_SERVICE_ACCOUNT_JSON must include client_email and private_key')
+        } else {
+          addResult(results, 'info', `Google Indexing API service account: ${serviceAccount.client_email}`)
+        }
+      } catch {
+        errors.push('GOOGLE_SERVICE_ACCOUNT_JSON must be valid JSON')
+      }
+    }
+  } else {
+    warnings.push('GOOGLE_INDEXING_ENABLED=false; planv2 pSEO push will export paths but not call Indexing API')
+  }
+
+  if (!config.priceAlertWebhookUrl) {
+    warnings.push('PRICE_ALERT_WEBHOOK_URL is not set; price alert notifications will remain export-only')
+  } else if (!isHttpUrl(config.priceAlertWebhookUrl)) {
+    errors.push('PRICE_ALERT_WEBHOOK_URL must be an http(s) URL')
+  } else {
+    addResult(results, 'info', 'Price alert webhook configured')
   }
 
   if (!['true', 'false'].includes(String(config.pipelineWorkerEnabled))) {
