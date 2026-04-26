@@ -1,4 +1,5 @@
 import { revalidatePath } from 'next/cache'
+import os from 'node:os'
 import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { generateComparisonCopy, generateKeywordIdeas, generateReviewCopy, generateSeoPayload } from '@/lib/ai'
 import { updateAdminArticle } from '@/lib/admin-articles'
@@ -32,6 +33,12 @@ export interface PipelineRunListItem {
   started_at: string | null
   finished_at: string | null
   attempt_count: number
+  priority: number
+  scheduled_at: string | null
+  locked_by: string | null
+  lock_expires_at: string | null
+  last_heartbeat_at: string | null
+  cancel_requested_at: string | null
   created_at: string
   updated_at: string
   product_name: string | null
@@ -48,6 +55,35 @@ export interface PipelineRunDetailItem extends PipelineRunListItem {
     started_at: string | null
     finished_at: string | null
   }>
+}
+
+export interface PipelineOperationsSnapshot {
+  runtime: ReturnType<typeof getPipelineWorkerRuntimeConfig>
+  workers: Array<{
+    worker_id: string
+    worker_type: string
+    hostname: string | null
+    pid: number | null
+    status: string
+    current_run_id: number | null
+    last_seen_at: string
+    started_at: string
+    metadata_json: string | null
+  }>
+  queues: Array<{
+    task_type: PipelineRunType
+    enabled: number
+    priority: number
+    max_concurrency: number
+    timeout_seconds: number
+    max_attempts: number
+    backoff_policy_json: string | null
+    queued: number
+    running: number
+    failed: number
+  }>
+  staleRunningCount: number
+  expiredLockCount: number
 }
 
 export interface AdminDashboardSummary {
@@ -241,6 +277,19 @@ const PIPELINE_WORKER_RECOVERY_MESSAGE = 'Recovered after worker restart'
 const PIPELINE_CANCELLED_MESSAGE = 'Cancelled by admin'
 const PIPELINE_CANCEL_REQUESTED_MESSAGE = 'Cancellation requested by admin'
 const MAX_PIPELINE_WORKER_CONCURRENCY = 4
+const PIPELINE_LOCK_GRACE_SECONDS = 90
+const PIPELINE_WORKER_STALE_SECONDS = 120
+const DEFAULT_PIPELINE_QUEUE_CONFIG: Array<{
+  taskType: PipelineRunType
+  enabled: number
+  priority: number
+  maxConcurrency: number
+  timeoutSeconds: number
+  maxAttempts: number
+}> = [
+  { taskType: 'fullPipeline', enabled: 1, priority: 100, maxConcurrency: 1, timeoutSeconds: 3600, maxAttempts: 3 },
+  { taskType: 'workspaceAction', enabled: 1, priority: 50, maxConcurrency: 2, timeoutSeconds: 1800, maxAttempts: 3 }
+]
 
 type PipelineWorkerState = {
   started: boolean
@@ -264,7 +313,7 @@ export function getPipelineWorkerState(): PipelineWorkerState {
       started: false,
       scheduled: false,
       isTicking: false,
-      workerId: `bes3-worker-${process.pid}`,
+      workerId: process.env.PIPELINE_WORKER_ID || `${os.hostname()}-${process.pid}`,
       activeRuns: 0,
       nextRunToken: 0,
       configCache: { enabled: null, pollMs: null, concurrency: null },
@@ -338,6 +387,99 @@ function parsePositiveInt(value: string | undefined, fallback: number, max?: num
   return parsed
 }
 
+function toDatabaseTimestamp(date = new Date()): string {
+  return date.toISOString().slice(0, 19).replace('T', ' ')
+}
+
+function secondsFromNow(seconds: number): string {
+  return toDatabaseTimestamp(new Date(Date.now() + seconds * 1000))
+}
+
+function secondsAgo(seconds: number): string {
+  return toDatabaseTimestamp(new Date(Date.now() - seconds * 1000))
+}
+
+async function ensureDefaultPipelineQueueConfig(): Promise<void> {
+  const db = await getDatabase()
+  for (const item of DEFAULT_PIPELINE_QUEUE_CONFIG) {
+    await db.exec(
+      `
+        INSERT INTO pipeline_queue_config (
+          task_type, enabled, priority, max_concurrency, timeout_seconds, max_attempts, backoff_policy_json
+        )
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ON CONFLICT(task_type) DO NOTHING
+      `,
+      [
+        item.taskType,
+        item.enabled,
+        item.priority,
+        item.maxConcurrency,
+        item.timeoutSeconds,
+        item.maxAttempts,
+        JSON.stringify({ type: 'exponential', baseSeconds: 30, maxSeconds: 900 })
+      ]
+    )
+  }
+}
+
+async function heartbeatPipelineWorker(input: {
+  workerId: string
+  status: 'starting' | 'idle' | 'running' | 'disabled' | 'stopping' | 'stopped' | 'error'
+  currentRunId?: number | null
+  metadata?: Record<string, unknown>
+}): Promise<void> {
+  const db = await getDatabase()
+  await db.exec(
+    `
+      INSERT INTO worker_heartbeats (
+        worker_id, worker_type, hostname, pid, status, current_run_id, last_seen_at, started_at, metadata_json
+      )
+      VALUES (?, 'pipeline', ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, ?)
+      ON CONFLICT(worker_id) DO UPDATE SET
+        hostname = excluded.hostname,
+        pid = excluded.pid,
+        status = excluded.status,
+        current_run_id = excluded.current_run_id,
+        last_seen_at = CURRENT_TIMESTAMP,
+        metadata_json = excluded.metadata_json
+    `,
+    [
+      input.workerId,
+      os.hostname(),
+      process.pid,
+      input.status,
+      input.currentRunId || null,
+      input.metadata ? JSON.stringify(input.metadata) : null
+    ]
+  )
+}
+
+async function refreshActiveWorkerLocks(parentWorkerId: string): Promise<void> {
+  const db = await getDatabase()
+  await db.exec(
+    `
+      UPDATE content_pipeline_runs
+      SET lock_expires_at = ?,
+          last_heartbeat_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE status = 'running'
+        AND finished_at IS NULL
+        AND worker_id LIKE ?
+    `,
+    [secondsFromNow(PIPELINE_LOCK_GRACE_SECONDS), `${parentWorkerId}-%`]
+  )
+}
+
+export async function markPipelineWorkerStopped(workerId = getPipelineWorkerState().workerId): Promise<void> {
+  await heartbeatPipelineWorker({
+    workerId,
+    status: 'stopped',
+    currentRunId: null,
+    metadata: { activeRuns: getPipelineWorkerState().activeRuns }
+  })
+}
+
 async function createRun(input: {
   sourceLink: string
   affiliateProductId?: number | null
@@ -346,6 +488,7 @@ async function createRun(input: {
   requestedAction?: ProductWorkspaceAction | null
 }) {
   const db = await getDatabase()
+  await ensureDefaultPipelineQueueConfig()
   const existing = await db.queryOne<{ id: number }>(
     `
       SELECT id
@@ -368,11 +511,19 @@ async function createRun(input: {
   const result = await db.exec(
     `
       INSERT INTO content_pipeline_runs (
-        product_id, affiliate_product_id, source_link, run_type, requested_action, status, current_stage, worker_id, locked_at, started_at, finished_at, attempt_count
+        product_id, affiliate_product_id, source_link, run_type, requested_action, status, current_stage, worker_id, locked_at, started_at, finished_at, attempt_count,
+        priority, scheduled_at, locked_by, lock_expires_at, last_heartbeat_at, cancel_requested_at, payload_json
       )
-      VALUES (?, ?, ?, ?, ?, 'queued', NULL, NULL, NULL, NULL, NULL, 0)
+      VALUES (?, ?, ?, ?, ?, 'queued', NULL, NULL, NULL, NULL, NULL, 0, ?, NULL, NULL, NULL, NULL, NULL, NULL)
     `,
-    [input.productId || null, input.affiliateProductId || null, input.sourceLink, input.runType, input.requestedAction || null]
+    [
+      input.productId || null,
+      input.affiliateProductId || null,
+      input.sourceLink,
+      input.runType,
+      input.requestedAction || null,
+      input.runType === 'workspaceAction' ? 50 : 100
+    ]
   )
   return Number(result.lastInsertRowid)
 }
@@ -397,10 +548,25 @@ async function markRun(
           current_stage = ?,
           error_message = ?,
           worker_id = CASE WHEN ? = 1 THEN ? ELSE worker_id END,
+          locked_by = CASE WHEN ? = 1 THEN ? ELSE locked_by END,
           locked_at = CASE
             WHEN ? = 1 THEN CURRENT_TIMESTAMP
             WHEN ? = 1 THEN NULL
             ELSE locked_at
+          END,
+          lock_expires_at = CASE
+            WHEN ? = 1 THEN ?
+            WHEN ? = 1 THEN NULL
+            ELSE lock_expires_at
+          END,
+          last_heartbeat_at = CASE
+            WHEN ? = 1 THEN CURRENT_TIMESTAMP
+            WHEN ? = 1 THEN NULL
+            ELSE last_heartbeat_at
+          END,
+          cancel_requested_at = CASE
+            WHEN ? = 1 THEN NULL
+            ELSE cancel_requested_at
           END,
           started_at = CASE
             WHEN ? = 1 THEN COALESCE(started_at, CURRENT_TIMESTAMP)
@@ -420,7 +586,15 @@ async function markRun(
       errorMessage || null,
       hasWorkerId ? 1 : 0,
       metadata?.workerId ?? null,
+      hasWorkerId ? 1 : 0,
+      metadata?.workerId ?? null,
       metadata?.started ? 1 : 0,
+      metadata?.finished ? 1 : 0,
+      metadata?.started ? 1 : 0,
+      metadata?.started ? secondsFromNow(PIPELINE_LOCK_GRACE_SECONDS) : null,
+      metadata?.finished ? 1 : 0,
+      status === 'running' ? 1 : 0,
+      metadata?.finished ? 1 : 0,
       metadata?.finished ? 1 : 0,
       metadata?.started ? 1 : 0,
       metadata?.finished ? 1 : 0,
@@ -499,13 +673,23 @@ async function finalizeLastRunningJob(runId: number, status: string, message: st
 
 export async function recoverInterruptedRuns(): Promise<void> {
   const db = await getDatabase()
+  const staleBefore = secondsAgo(PIPELINE_WORKER_STALE_SECONDS)
+  const expiredBefore = toDatabaseTimestamp()
   const interruptedRuns = await db.query<{ id: number }>(
     `
       SELECT id
       FROM content_pipeline_runs
-      WHERE status = 'running' AND finished_at IS NULL
+      WHERE status = 'running'
+        AND finished_at IS NULL
+        AND (
+          lock_expires_at IS NULL
+          OR lock_expires_at <= ?
+          OR last_heartbeat_at IS NULL
+          OR last_heartbeat_at <= ?
+        )
       ORDER BY id ASC
-    `
+    `,
+    [expiredBefore, staleBefore]
   )
 
   for (const run of interruptedRuns) {
@@ -516,7 +700,11 @@ export async function recoverInterruptedRuns(): Promise<void> {
             current_stage = NULL,
             error_message = ?,
             worker_id = NULL,
+            locked_by = NULL,
             locked_at = NULL,
+            lock_expires_at = NULL,
+            last_heartbeat_at = NULL,
+            cancel_requested_at = NULL,
             started_at = NULL,
             finished_at = NULL,
             updated_at = CURRENT_TIMESTAMP
@@ -539,16 +727,24 @@ export async function recoverInterruptedRuns(): Promise<void> {
 
 async function claimNextRun(workerId: string): Promise<QueuedRunRecord | null> {
   const db = await getDatabase()
+  await ensureDefaultPipelineQueueConfig()
+  const now = toDatabaseTimestamp()
+  const lockExpiresAt = secondsFromNow(PIPELINE_LOCK_GRACE_SECONDS)
   for (let index = 0; index < 5; index += 1) {
     const candidate = await db.queryOne<QueuedRunRecord>(
       `
         SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link, status
              , finished_at
-        FROM content_pipeline_runs
-        WHERE status = 'queued'
-        ORDER BY created_at ASC, id ASC
+        FROM content_pipeline_runs r
+        LEFT JOIN pipeline_queue_config q ON q.task_type = r.run_type
+        WHERE r.status = 'queued'
+          AND (r.scheduled_at IS NULL OR r.scheduled_at <= ?)
+          AND COALESCE(q.enabled, 1) = 1
+          AND r.attempt_count < COALESCE(q.max_attempts, 3)
+        ORDER BY COALESCE(r.priority, q.priority, 100) ASC, r.created_at ASC, r.id ASC
         LIMIT 1
-      `
+      `,
+      [now]
     )
 
     if (!candidate) return null
@@ -558,18 +754,22 @@ async function claimNextRun(workerId: string): Promise<QueuedRunRecord | null> {
         UPDATE content_pipeline_runs
         SET status = 'running',
             worker_id = ?,
+            locked_by = ?,
             locked_at = CURRENT_TIMESTAMP,
+            lock_expires_at = ?,
+            last_heartbeat_at = CURRENT_TIMESTAMP,
             started_at = COALESCE(started_at, CURRENT_TIMESTAMP),
             finished_at = NULL,
             attempt_count = attempt_count + 1,
             updated_at = CURRENT_TIMESTAMP
-        WHERE id = ? AND status = 'queued'
+        WHERE id = ? AND status = 'queued' AND (scheduled_at IS NULL OR scheduled_at <= ?)
       `,
-      [workerId, candidate.id]
+      [workerId, workerId, lockExpiresAt, candidate.id, now]
     )
 
     if (claimResult.changes > 0) {
       candidate.status = 'running'
+      await heartbeatPipelineWorker({ workerId, status: 'running', currentRunId: candidate.id })
       return candidate
     }
   }
@@ -594,10 +794,13 @@ async function runPipelineWorkerTick() {
 
   try {
     if (!isPipelineWorkerEnabled()) {
+      await heartbeatPipelineWorker({ workerId: state.workerId, status: 'disabled', currentRunId: null })
       return
     }
 
     const concurrency = getPipelineWorkerConcurrency()
+    await refreshActiveWorkerLocks(state.workerId)
+    await recoverInterruptedRuns()
 
     while (state.activeRuns < concurrency) {
       state.nextRunToken += 1
@@ -622,14 +825,32 @@ async function runPipelineWorkerTick() {
           console.error('[bes3-pipeline-worker] run failed', error)
         } finally {
           state.activeRuns = Math.max(0, state.activeRuns - 1)
+          await heartbeatPipelineWorker({
+            workerId: slotWorkerId,
+            status: 'idle',
+            currentRunId: null,
+            metadata: { parentWorkerId: state.workerId }
+          })
           schedulePipelineWorkerTick(0)
         }
       })()
     }
 
+    await heartbeatPipelineWorker({
+      workerId: state.workerId,
+      status: state.activeRuns > 0 ? 'running' : 'idle',
+      currentRunId: null,
+      metadata: { activeRuns: state.activeRuns, concurrency }
+    })
     schedulePipelineWorkerTick(getPipelineWorkerPollMs())
   } catch (error) {
     console.error('[bes3-pipeline-worker] tick failed', error)
+    await heartbeatPipelineWorker({
+      workerId: state.workerId,
+      status: 'error',
+      currentRunId: null,
+      metadata: { error: error instanceof Error ? error.message : String(error) }
+    })
     schedulePipelineWorkerTick(getPipelineWorkerPollMs())
   } finally {
     state.isTicking = false
@@ -640,11 +861,14 @@ export async function startPipelineWorker(): Promise<void> {
   const state = getPipelineWorkerState()
   if (state.started) return
   await loadPipelineConfig()
+  await ensureDefaultPipelineQueueConfig()
   state.started = true
   if (!isPipelineWorkerEnabled()) {
+    await heartbeatPipelineWorker({ workerId: state.workerId, status: 'disabled', currentRunId: null })
     console.log('[bes3-worker] Disabled, not starting tick loop')
     return
   }
+  await heartbeatPipelineWorker({ workerId: state.workerId, status: 'starting', currentRunId: null })
   await recoverInterruptedRuns()
   schedulePipelineWorkerTick(250)
   console.log('[bes3-worker] Tick loop started')
@@ -1472,7 +1696,11 @@ export async function cancelPipelineRun(runId: number): Promise<void> {
             current_stage = NULL,
             error_message = ?,
             worker_id = NULL,
+            locked_by = NULL,
             locked_at = NULL,
+            lock_expires_at = NULL,
+            last_heartbeat_at = NULL,
+            cancel_requested_at = CURRENT_TIMESTAMP,
             finished_at = CURRENT_TIMESTAMP,
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -1497,6 +1725,7 @@ export async function cancelPipelineRun(runId: number): Promise<void> {
       UPDATE content_pipeline_runs
       SET status = 'cancelled',
           error_message = ?,
+          cancel_requested_at = CURRENT_TIMESTAMP,
           updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
@@ -1674,7 +1903,9 @@ export async function listPipelineRuns(): Promise<PipelineRunListItem[]> {
   return db.query<PipelineRunListItem>(
     `
       SELECT r.id, r.product_id, r.affiliate_product_id, r.run_type, r.requested_action, r.status, r.current_stage,
-        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count, r.created_at, r.updated_at,
+        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count,
+        r.priority, r.scheduled_at, r.locked_by, r.lock_expires_at, r.last_heartbeat_at, r.cancel_requested_at,
+        r.created_at, r.updated_at,
         COALESCE(p.product_name, ap.product_name) AS product_name, p.slug
       FROM content_pipeline_runs r
       LEFT JOIN products p ON p.id = r.product_id
@@ -1689,7 +1920,9 @@ export async function getPipelineRun(runId: number): Promise<PipelineRunDetailIt
   const run = await db.queryOne<PipelineRunListItem>(
     `
       SELECT r.id, r.product_id, r.affiliate_product_id, r.run_type, r.requested_action, r.status, r.current_stage,
-        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count, r.created_at, r.updated_at,
+        r.error_message, r.source_link, r.worker_id, r.started_at, r.finished_at, r.attempt_count,
+        r.priority, r.scheduled_at, r.locked_by, r.lock_expires_at, r.last_heartbeat_at, r.cancel_requested_at,
+        r.created_at, r.updated_at,
         COALESCE(p.product_name, ap.product_name) AS product_name, p.slug
       FROM content_pipeline_runs r
       LEFT JOIN products p ON p.id = r.product_id
@@ -1712,6 +1945,71 @@ export async function getPipelineRun(runId: number): Promise<PipelineRunDetailIt
     [runId]
   )
   return { ...run, jobs }
+}
+
+export async function listPipelineOperations(): Promise<PipelineOperationsSnapshot> {
+  const db = await getDatabase()
+  await ensureDefaultPipelineQueueConfig()
+  const staleBefore = secondsAgo(PIPELINE_WORKER_STALE_SECONDS)
+  const expiredBefore = toDatabaseTimestamp()
+
+  const [workers, queues, staleRunning, expiredLocks] = await Promise.all([
+    db.query<PipelineOperationsSnapshot['workers'][number]>(
+      `
+        SELECT worker_id, worker_type, hostname, pid, status, current_run_id, last_seen_at, started_at, metadata_json
+        FROM worker_heartbeats
+        WHERE worker_type = 'pipeline'
+        ORDER BY last_seen_at DESC, worker_id ASC
+      `
+    ),
+    db.query<PipelineOperationsSnapshot['queues'][number]>(
+      `
+        SELECT q.task_type, q.enabled, q.priority, q.max_concurrency, q.timeout_seconds, q.max_attempts,
+          q.backoff_policy_json,
+          COALESCE(SUM(CASE WHEN r.status = 'queued' THEN 1 ELSE 0 END), 0) AS queued,
+          COALESCE(SUM(CASE WHEN r.status = 'running' THEN 1 ELSE 0 END), 0) AS running,
+          COALESCE(SUM(CASE WHEN r.status = 'failed' THEN 1 ELSE 0 END), 0) AS failed
+        FROM pipeline_queue_config q
+        LEFT JOIN content_pipeline_runs r ON r.run_type = q.task_type
+        GROUP BY q.task_type, q.enabled, q.priority, q.max_concurrency, q.timeout_seconds, q.max_attempts, q.backoff_policy_json
+        ORDER BY q.priority ASC, q.task_type ASC
+      `
+    ),
+    db.queryOne<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM content_pipeline_runs
+        WHERE status = 'running'
+          AND finished_at IS NULL
+          AND (last_heartbeat_at IS NULL OR last_heartbeat_at <= ?)
+      `,
+      [staleBefore]
+    ),
+    db.queryOne<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM content_pipeline_runs
+        WHERE status = 'running'
+          AND finished_at IS NULL
+          AND lock_expires_at IS NOT NULL
+          AND lock_expires_at <= ?
+      `,
+      [expiredBefore]
+    )
+  ])
+
+  return {
+    runtime: getPipelineWorkerRuntimeConfig(),
+    workers,
+    queues: queues.map((queue) => ({
+      ...queue,
+      queued: Number(queue.queued),
+      running: Number(queue.running),
+      failed: Number(queue.failed)
+    })),
+    staleRunningCount: Number(staleRunning?.count || 0),
+    expiredLockCount: Number(expiredLocks?.count || 0)
+  }
 }
 
 export async function runPipelineForAffiliateProduct(affiliateProductId: number): Promise<number> {

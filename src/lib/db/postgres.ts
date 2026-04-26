@@ -31,9 +31,9 @@ export class PostgresAdapter implements DatabaseAdapter {
   async exec(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid?: number }> {
     const isInsert = /^\s*INSERT\b/i.test(sql) && !/\bRETURNING\b/i.test(sql)
     const statement = isInsert ? `${convertPlaceholders(sql)} RETURNING id` : convertPlaceholders(sql)
-    const result = (await this.client.unsafe(statement, params as any[])) as unknown as Array<{ id?: number | string }>
+    const result = (await this.client.unsafe(statement, params as any[])) as unknown as Array<{ id?: number | string }> & { count?: number }
     return {
-      changes: Array.isArray(result) ? result.length : 0,
+      changes: typeof result.count === 'number' ? result.count : Array.isArray(result) ? result.length : 0,
       lastInsertRowid: isInsert && Array.isArray(result) && result[0]?.id != null ? Number(result[0].id) : undefined
     }
   }

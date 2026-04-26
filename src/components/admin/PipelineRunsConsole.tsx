@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { ExternalLink, RefreshCw, RotateCcw, TerminalSquare, XCircle } from 'lucide-react'
+import { Activity, ExternalLink, RefreshCw, RotateCcw, ServerCog, TerminalSquare, XCircle } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { buttonVariants, Button } from '@/components/ui/button'
@@ -22,6 +22,12 @@ type PipelineRun = {
   started_at: string | null
   finished_at: string | null
   attempt_count: number
+  priority: number
+  scheduled_at: string | null
+  locked_by: string | null
+  lock_expires_at: string | null
+  last_heartbeat_at: string | null
+  cancel_requested_at: string | null
   created_at: string
   updated_at: string
   product_name: string | null
@@ -42,6 +48,38 @@ type PipelineRunDetail = PipelineRun & {
   jobs: PipelineRunJob[]
 }
 
+type PipelineOperations = {
+  runtime: {
+    enabled: boolean
+    pollMs: number
+    concurrency: number
+  }
+  workers: Array<{
+    worker_id: string
+    worker_type: string
+    hostname: string | null
+    pid: number | null
+    status: string
+    current_run_id: number | null
+    last_seen_at: string
+    started_at: string
+    metadata_json: string | null
+  }>
+  queues: Array<{
+    task_type: string
+    enabled: number
+    priority: number
+    max_concurrency: number
+    timeout_seconds: number
+    max_attempts: number
+    queued: number
+    running: number
+    failed: number
+  }>
+  staleRunningCount: number
+  expiredLockCount: number
+}
+
 function formatDate(value: string | null) {
   if (!value) return 'N/A'
   return new Date(value).toLocaleString()
@@ -49,6 +87,7 @@ function formatDate(value: string | null) {
 
 export function PipelineRunsConsole() {
   const [runs, setRuns] = useState<PipelineRun[]>([])
+  const [operations, setOperations] = useState<PipelineOperations | null>(null)
   const [selectedRunId, setSelectedRunId] = useState<number | null>(null)
   const [selectedRun, setSelectedRun] = useState<PipelineRunDetail | null>(null)
   const [isPending, startTransition] = useTransition()
@@ -63,9 +102,15 @@ export function PipelineRunsConsole() {
   }
 
   const loadRuns = async (preferredRunId?: number | null) => {
-    const response = await fetch('/api/admin/pipeline-runs')
-    const body = (await response.json()) as PipelineRun[]
+    const [runsResponse, opsResponse] = await Promise.all([
+      fetch('/api/admin/pipeline-runs'),
+      fetch('/api/admin/pipeline-ops')
+    ])
+    const body = (await runsResponse.json()) as PipelineRun[]
     setRuns(body)
+    if (opsResponse.ok) {
+      setOperations((await opsResponse.json()) as PipelineOperations)
+    }
     const nextRunId =
       preferredRunId && body.some((item) => item.id === preferredRunId)
         ? preferredRunId
@@ -80,9 +125,15 @@ export function PipelineRunsConsole() {
 
   useEffect(() => {
     void (async () => {
-      const response = await fetch('/api/admin/pipeline-runs')
-      const body = (await response.json()) as PipelineRun[]
-      setRuns(body)
+      await loadRuns()
+    })()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(() => {
+    if (!selectedRunId || selectedRun) return
+    void (async () => {
+      const body = runs
       if (body[0]?.id) {
         setSelectedRunId(body[0].id)
         const detailResponse = await fetch(`/api/admin/pipeline-runs/${body[0].id}`)
@@ -91,7 +142,7 @@ export function PipelineRunsConsole() {
         }
       }
     })()
-  }, [])
+  }, [runs, selectedRun, selectedRunId])
 
   const hasActiveRuns = runs.some((run) => run.status === 'queued' || run.status === 'running')
   const canCancel = selectedRun ? ['queued', 'running'].includes(selectedRun.status) : false
@@ -142,6 +193,87 @@ export function PipelineRunsConsole() {
           <RefreshCw className="mr-2 h-4 w-4" />
           Refresh Runs
         </Button>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-4">
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Worker</p>
+            <ServerCog className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.enabled ? 'Enabled' : 'Disabled'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{operations?.workers.length || 0} heartbeat rows</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Concurrency</p>
+            <Activity className="h-4 w-4 text-primary" />
+          </div>
+          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">poll {operations?.runtime.pollMs ?? '-'}ms</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stale Runs</p>
+          <p className="mt-3 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
+          <p className="mt-1 text-sm text-muted-foreground">heartbeat timeout</p>
+        </div>
+        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Expired Locks</p>
+          <p className="mt-3 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
+          <p className="mt-1 text-sm text-muted-foreground">recoverable on next tick</p>
+        </div>
+      </div>
+
+      <div className="grid gap-6 xl:grid-cols-2">
+        <div className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+          <p className="font-semibold">Queue policy</p>
+          <div className="mt-4 overflow-x-auto">
+            <table className="min-w-full text-left text-sm">
+              <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
+                <tr>
+                  <th className="pb-3 pr-3">Type</th>
+                  <th className="pb-3 pr-3">State</th>
+                  <th className="pb-3 pr-3">Queued</th>
+                  <th className="pb-3 pr-3">Running</th>
+                  <th className="pb-3 pr-3">Attempts</th>
+                </tr>
+              </thead>
+              <tbody>
+                {(operations?.queues || []).map((queue) => (
+                  <tr key={queue.task_type} className="border-b border-border/70">
+                    <td className="py-3 pr-3 font-medium">{queue.task_type}</td>
+                    <td className="py-3 pr-3"><StatusBadge value={queue.enabled ? 'enabled' : 'disabled'} /></td>
+                    <td className="py-3 pr-3 text-muted-foreground">{queue.queued}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">{queue.running}</td>
+                    <td className="py-3 pr-3 text-muted-foreground">{queue.max_attempts}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+          <p className="font-semibold">Worker heartbeats</p>
+          <div className="mt-4 space-y-3">
+            {(operations?.workers || []).slice(0, 5).map((worker) => (
+              <div key={worker.worker_id} className="rounded-2xl border border-border p-4">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <p className="font-medium">{worker.worker_id}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{worker.hostname || 'unknown host'} · pid {worker.pid || 'N/A'}</p>
+                  </div>
+                  <StatusBadge value={worker.status} />
+                </div>
+                <p className="mt-2 text-xs text-muted-foreground">Last seen {formatDate(worker.last_seen_at)}</p>
+              </div>
+            ))}
+            {operations && operations.workers.length === 0 ? (
+              <div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+                No worker heartbeat has been recorded yet.
+              </div>
+            ) : null}
+          </div>
+        </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
@@ -274,7 +406,15 @@ export function PipelineRunsConsole() {
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Worker</span>
-                    <span className="text-right font-medium">{selectedRun.worker_id || 'N/A'}</span>
+                    <span className="text-right font-medium">{selectedRun.locked_by || selectedRun.worker_id || 'N/A'}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Lock Expires</span>
+                    <span className="text-right font-medium">{formatDate(selectedRun.lock_expires_at)}</span>
+                  </div>
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-muted-foreground">Heartbeat</span>
+                    <span className="text-right font-medium">{formatDate(selectedRun.last_heartbeat_at)}</span>
                   </div>
                   <div className="flex items-start justify-between gap-4">
                     <span className="text-muted-foreground">Affiliate Product</span>
