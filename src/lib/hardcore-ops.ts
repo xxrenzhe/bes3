@@ -28,6 +28,21 @@ export interface PriceAlertInput {
   targetValueScore?: number | null
 }
 
+export interface PriceAlertTrigger {
+  id: number
+  product_id: number
+  email: string
+  target_price: number | null
+  target_value_score: number | null
+  product_name: string
+  slug: string | null
+  current_price: number | null
+  price_currency: string | null
+  value_score: number | null
+  entry_status: string | null
+  notification_id?: number | null
+}
+
 export interface TaxonomyIntentSourceInput {
   categorySlug: string
   sourceType: 'amazon_autosuggest' | 'google_keyword_planner' | 'reddit' | 'manual' | string
@@ -697,21 +712,57 @@ export async function upsertPriceAlert(input: PriceAlertInput) {
   return { id: Number(result.lastInsertRowid || 0), status: 'created' as const }
 }
 
-export async function evaluatePriceAlerts(limit = 250, markNotified = false) {
+function buildPriceAlertDedupeKey(row: PriceAlertTrigger) {
+  return [
+    row.id,
+    row.current_price == null ? 'price-pending' : row.current_price.toFixed(2),
+    row.value_score == null ? 'value-pending' : row.value_score.toFixed(4),
+    row.entry_status || 'unknown'
+  ].join(':')
+}
+
+async function queuePriceAlertNotification(row: PriceAlertTrigger) {
   const db = await getDatabase()
-  const rows = await db.query<{
-    id: number
-    product_id: number
-    email: string
-    target_price: number | null
-    target_value_score: number | null
-    product_name: string
-    slug: string | null
-    current_price: number | null
-    price_currency: string | null
-    value_score: number | null
-    entry_status: string | null
-  }>(
+  const dedupeKey = buildPriceAlertDedupeKey(row)
+  const existing = await db.queryOne<{ id: number }>(
+    'SELECT id FROM price_alert_notifications WHERE dedupe_key = ? LIMIT 1',
+    [dedupeKey]
+  )
+  if (existing?.id) return existing.id
+
+  const payload = {
+    type: 'price_drop_alert',
+    productId: row.product_id,
+    productName: row.product_name,
+    productSlug: row.slug,
+    email: row.email,
+    currentPrice: row.current_price,
+    currency: row.price_currency || 'USD',
+    valueScore: row.value_score,
+    entryStatus: row.entry_status,
+    targetPrice: row.target_price,
+    targetValueScore: row.target_value_score
+  }
+  const result = await db.exec(
+    `
+      INSERT INTO price_alert_notifications (
+        price_alert_id,
+        product_id,
+        email,
+        channel,
+        status,
+        dedupe_key,
+        payload_json
+      ) VALUES (?, ?, ?, 'email', 'queued', ?, ?)
+    `,
+    [row.id, row.product_id, row.email, dedupeKey, JSON.stringify(payload)]
+  )
+  return Number(result.lastInsertRowid || 0)
+}
+
+export async function evaluatePriceAlerts(limit = 250, markNotified = false, queueNotifications = false): Promise<PriceAlertTrigger[]> {
+  const db = await getDatabase()
+  const rows = await db.query<PriceAlertTrigger>(
     `
       SELECT
         pa.id,
@@ -752,6 +803,12 @@ export async function evaluatePriceAlerts(limit = 250, markNotified = false) {
     const bestWindow = row.entry_status === 'best-deal' || row.entry_status === 'great-value'
     return priceHit || valueHit || bestWindow
   })
+
+  if (queueNotifications) {
+    for (const row of triggered) {
+      row.notification_id = await queuePriceAlertNotification(row)
+    }
+  }
 
   if (markNotified && triggered.length) {
     const placeholders = triggered.map(() => '?').join(', ')
