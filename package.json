@@ -29,6 +29,7 @@
     "hardcore:evaluate-price-alerts": "tsx scripts/evaluate-price-alerts.ts",
     "hardcore:dispatch-price-alerts": "tsx scripts/dispatch-price-alert-notifications.ts",
     "hardcore:export-planv2-ops": "tsx scripts/export-planv2-ops-manifest.ts",
+    "hardcore:check-planv2-seo": "tsx scripts/check-planv2-seo-surface.ts",
     "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
     "hardcore:import-keyword-planner": "tsx scripts/import-keyword-planner-intents.ts",
     "hardcore:import-shorts-evidence": "tsx scripts/import-shorts-evidence.ts",

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
+import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getMultiConstraintLandingPage, getScenarioLandingPage } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
@@ -208,6 +209,15 @@ export default async function ScenarioLandingPage({
       </section>
       <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the evidence threshold.`} />
       <EvidenceStream products={products} />
+      <section className="px-4 pb-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SeoFaqSection
+            title="Scenario FAQ"
+            entries={faqEntries}
+            description="Each answer repeats the same evidence threshold and source-checking rules used by the JSON-LD payload."
+          />
+        </div>
+      </section>
     </PublicShell>
   )
 }
