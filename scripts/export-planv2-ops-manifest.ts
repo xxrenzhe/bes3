@@ -133,7 +133,8 @@ function buildClosureChecks() {
     },
     operations: {
       noGitPushThisRun: true,
-      beadsLifecycle: 'Epic plus child tasks are created, claimed, and closed locally. Remote sync is left to the operator when pushes are allowed.'
+      beadsLifecycle: 'Epic plus child tasks are created, claimed, and closed locally. Remote sync is left to the operator when pushes are allowed.',
+      seoSurfaceCheck: 'npm run hardcore:check-planv2-seo'
     }
   }
 }
@@ -209,6 +210,7 @@ async function main() {
       dispatchPriceAlerts: 'npm run hardcore:dispatch-price-alerts -- --mark-sent',
       exportRedditKit: 'npm run hardcore:export-reddit-kit',
       captureRedditKitScreenshots: 'npm run hardcore:capture-reddit-kit-screenshots -- --base-url=https://bes3.example --output-dir=storage/reddit-kit',
+      checkSeoSurface: 'npm run hardcore:check-planv2-seo',
       pushPseo: 'npm run hardcore:push-pseo'
     }
   }))

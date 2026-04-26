@@ -83,9 +83,16 @@ export async function GET(request: Request) {
         '/.well-known/security.txt',
         '/api/open/buying-feed',
         '/api/open/coverage',
+        '/api/open/evidence',
         '/opensearch.xml',
         '/media-sitemap.xml'
       ]
+    },
+    planv2Readiness: {
+      publicLoginEntryExposed: false,
+      requiredScenarioBlocks: ['BLUF', 'comparison-table', 'evidence-stream', 'visible-faq', 'FAQPage JSON-LD'],
+      complianceBlocks: ['affiliate-disclosure', 'affiliate-link-labels', 'creator-attribution', 'cookie-consent'],
+      verificationCommand: 'npm run hardcore:check-planv2-seo'
     },
     endpoints: [
       {
