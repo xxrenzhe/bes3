@@ -15,6 +15,10 @@ function hasFlag(name: string) {
   return process.argv.includes(`--${name}`)
 }
 
+function isPushEligible(status: string) {
+  return status !== 'low_priority' && status !== 'paused'
+}
+
 async function main() {
   await bootstrapApplication()
   const tags = await listHardcoreTags()
@@ -27,15 +31,16 @@ async function main() {
     paths.add(`/deals/best-value-${category.slug}-under-500`)
 
     const categoryTags = tags
-      .filter((tag) => tag.categorySlug === category.slug)
+      .filter((tag) => tag.categorySlug === category.slug && isPushEligible(tag.status))
       .sort((left, right) => Number(right.isCorePainpoint) - Number(left.isCorePainpoint) || right.searchVolume - left.searchVolume)
 
     for (const tag of categoryTags.slice(0, 12)) {
       paths.add(`/${category.slug}/best-${category.slug}-for-${tag.slug}`)
     }
 
-    for (const [firstIndex, first] of categoryTags.filter((tag) => tag.isCorePainpoint).slice(0, 4).entries()) {
-      for (const second of categoryTags.filter((tag) => tag.isCorePainpoint).slice(firstIndex + 1, 4)) {
+    const corePushTags = categoryTags.filter((tag) => tag.isCorePainpoint).slice(0, 4)
+    for (const [firstIndex, first] of corePushTags.entries()) {
+      for (const second of corePushTags.slice(firstIndex + 1, 4)) {
         paths.add(`/${category.slug}/best-${first.slug}-${second.slug}-${category.slug}`)
       }
     }
