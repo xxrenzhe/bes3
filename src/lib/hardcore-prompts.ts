@@ -46,6 +46,13 @@ export type VideoEvidenceOutput = z.infer<typeof videoEvidenceSchema>
 export type ShortsEvidenceOutput = z.infer<typeof shortsEvidenceSchema>
 export type ProductEntityExtractionOutput = z.infer<typeof productEntityExtractionSchema>
 
+export interface RetryablePromptResult<T> {
+  ok: boolean
+  data: T | null
+  retryPrompt: string | null
+  errors: string[]
+}
+
 function stringifyTagList(tags: HardcoreTag[]) {
   return tags.map((tag) => tag.name).join(', ')
 }
@@ -207,6 +214,61 @@ export function validateVideoEvidenceOutput(output: unknown, allowedTags: Hardco
         const context = item.context_snippet?.replace(/\s+/g, ' ').toLowerCase() || ''
         return normalizedTranscript.includes(quote) || Boolean(context && normalizedTranscript.includes(context))
       })
+  }
+}
+
+function parseUnknownJson(value: unknown) {
+  if (typeof value !== 'string') return value
+  const trimmed = value.trim()
+  if (!trimmed) return value
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    return value
+  }
+}
+
+function formatRetryPrompt(errors: string[], allowedTags?: HardcoreTag[]) {
+  return [
+    'Your previous response failed Bes3 hard validation.',
+    '',
+    'Fix the response and return STRICT JSON only. Do not add markdown.',
+    allowedTags?.length ? `Allowed canonical tags: ${allowedTags.map((tag) => tag.name).join(', ')}` : '',
+    '',
+    'Validation errors:',
+    ...errors.map((error) => `- ${error}`)
+  ].filter(Boolean).join('\n')
+}
+
+export function parseVideoEvidenceWithRetry(output: unknown, allowedTags: HardcoreTag[], transcript?: string): RetryablePromptResult<VideoEvidenceOutput> {
+  const errors: string[] = []
+  try {
+    const parsed = validateVideoEvidenceOutput(parseUnknownJson(output), allowedTags, transcript)
+    if (parsed.scenario_performance.length === 0 && parsed.unexpected_brilliant_usecases.length === 0 && !parsed.is_advertorial) {
+      errors.push('No validated scenario_performance rows or unexpected use cases were returned.')
+    }
+    if (errors.length) {
+      return { ok: false, data: null, retryPrompt: formatRetryPrompt(errors, allowedTags), errors }
+    }
+    return { ok: true, data: parsed, retryPrompt: null, errors: [] }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    errors.push(message)
+    return { ok: false, data: null, retryPrompt: formatRetryPrompt(errors, allowedTags), errors }
+  }
+}
+
+export function parseTaxonomyRefinementWithRetry(output: unknown): RetryablePromptResult<TaxonomyRefinementOutput> {
+  const errors: string[] = []
+  try {
+    const parsed = taxonomyRefinementSchema.parse(parseUnknownJson(output))
+    if (!parsed.length) errors.push('At least one canonical_tag is required.')
+    if (errors.length) return { ok: false, data: null, retryPrompt: formatRetryPrompt(errors), errors }
+    return { ok: true, data: parsed, retryPrompt: null, errors: [] }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    errors.push(message)
+    return { ok: false, data: null, retryPrompt: formatRetryPrompt(errors), errors }
   }
 }
 
