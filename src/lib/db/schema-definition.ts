@@ -1,0 +1,181 @@
+import type { DatabaseAdapter, DatabaseType } from '@/lib/types'
+
+export type ColumnDef = {
+  name: string
+  type: string
+  notNull: boolean
+  defaultValue: string | null
+  primaryKey: boolean
+}
+
+export type IndexDef = {
+  name: string
+  sql: string
+  unique: boolean
+}
+
+export type TableDef = {
+  name: string
+  columns: ColumnDef[]
+  indexes: IndexDef[]
+  createSql: string
+}
+
+export type SchemaDefinition = {
+  databaseType: DatabaseType
+  generatedAt: string
+  tables: TableDef[]
+}
+
+export async function introspectSchemaDefinition(db: DatabaseAdapter): Promise<SchemaDefinition> {
+  if (db.type !== 'sqlite') {
+    throw new Error('schema_definition_introspection_requires_sqlite')
+  }
+
+  const tables = await db.query<{ name: string; sql: string }>(
+    `
+      SELECT name, sql
+      FROM sqlite_master
+      WHERE type = 'table'
+        AND name NOT LIKE 'sqlite_%'
+      ORDER BY rowid ASC
+    `
+  )
+
+  const definitions: TableDef[] = []
+  for (const table of tables) {
+    const columns = await db.query<{
+      name: string
+      type: string
+      notnull: number
+      dflt_value: string | null
+      pk: number
+    }>(`PRAGMA table_info(${table.name})`)
+    const indexes = await db.query<{ name: string; sql: string | null }>(
+      `
+        SELECT name, sql
+        FROM sqlite_master
+        WHERE type = 'index'
+          AND tbl_name = ?
+          AND sql IS NOT NULL
+        ORDER BY name ASC
+      `,
+      [table.name]
+    )
+
+    definitions.push({
+      name: table.name,
+      createSql: table.sql,
+      columns: columns.map((column) => ({
+        name: column.name,
+        type: column.type,
+        notNull: Boolean(column.notnull),
+        defaultValue: column.dflt_value,
+        primaryKey: Boolean(column.pk)
+      })),
+      indexes: indexes
+        .filter((index) => index.sql)
+        .map((index) => ({
+          name: index.name,
+          sql: String(index.sql),
+          unique: /^CREATE UNIQUE INDEX/i.test(String(index.sql))
+        }))
+    })
+  }
+
+  return {
+    databaseType: db.type,
+    generatedAt: new Date().toISOString(),
+    tables: definitions
+  }
+}
+
+export function renderSqliteBaseline(definition: SchemaDefinition): string {
+  const statements: string[] = [
+    'PRAGMA foreign_keys = ON;',
+    ...definition.tables.map((table) => `${table.createSql.replace(/^CREATE TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS ')};`),
+    ...definition.tables.flatMap((table) => table.indexes.map((index) => `${index.sql.replace(/^CREATE UNIQUE INDEX\s+/i, 'CREATE UNIQUE INDEX IF NOT EXISTS ').replace(/^CREATE INDEX\s+/i, 'CREATE INDEX IF NOT EXISTS ')};`))
+  ]
+  return `${statements.join('\n\n')}\n`
+}
+
+const JSON_COLUMNS = new Set([
+  'meta_config_json',
+  'keywords_json',
+  'quality_flags_json',
+  'source_payload_json',
+  'specs_json',
+  'review_highlights_json',
+  'raw_payload',
+  'entity_match_json',
+  'open_graph_json',
+  'schema_json',
+  'payload_json',
+  'metadata_json',
+  'before_json',
+  'after_json',
+  'error_json',
+  'result_json',
+  'details_json',
+  'filters_json',
+  'input_json',
+  'expected_output_json',
+  'backoff_policy_json'
+])
+
+function toPostgresSql(sql: string): string {
+  let converted = sql
+    .replace(/INTEGER PRIMARY KEY AUTOINCREMENT/g, 'BIGSERIAL PRIMARY KEY')
+    .replace(/\bREAL\b/g, 'DOUBLE PRECISION')
+    .replace(/\b([a-zA-Z0-9_]+_id)\s+INTEGER\b/g, '$1 BIGINT')
+    .replace(/\b(id)\s+INTEGER\b/g, '$1 BIGINT')
+    .replace(/\blocked_until\s+TEXT\b/g, 'locked_until TIMESTAMPTZ')
+    .replace(/\blast_failed_login\s+TEXT\b/g, 'last_failed_login TIMESTAMPTZ')
+    .replace(/\b([a-zA-Z0-9_]+_at)\s+TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP\b/g, '$1 TIMESTAMPTZ NOT NULL DEFAULT NOW()')
+    .replace(/\b([a-zA-Z0-9_]+_at)\s+TEXT\b/g, '$1 TIMESTAMPTZ')
+    .replace(/DEFAULT CURRENT_TIMESTAMP/g, 'DEFAULT NOW()')
+
+  for (const column of JSON_COLUMNS) {
+    converted = converted.replace(new RegExp(`\\b${column}\\s+TEXT\\b`, 'g'), `${column} JSONB`)
+  }
+
+  return converted
+}
+
+export function renderPostgresBaseline(definition: SchemaDefinition): string {
+  const statements = [
+    ...definition.tables.map((table) => `${toPostgresSql(table.createSql).replace(/^CREATE TABLE\s+/i, 'CREATE TABLE IF NOT EXISTS ')};`),
+    ...definition.tables.flatMap((table) => table.indexes.map((index) => `${toPostgresSql(index.sql).replace(/^CREATE UNIQUE INDEX\s+/i, 'CREATE UNIQUE INDEX IF NOT EXISTS ').replace(/^CREATE INDEX\s+/i, 'CREATE INDEX IF NOT EXISTS ')};`))
+  ]
+  return `${statements.join('\n\n')}\n`
+}
+
+export function renderMarkdownDictionary(definition: SchemaDefinition): string {
+  const lines = [
+    '# Bes3 Database Dictionary',
+    '',
+    `Generated at: ${definition.generatedAt}`,
+    '',
+    '| Table | Columns | Indexes |',
+    '| --- | ---: | ---: |'
+  ]
+
+  for (const table of definition.tables) {
+    lines.push(`| \`${table.name}\` | ${table.columns.length} | ${table.indexes.length} |`)
+  }
+
+  for (const table of definition.tables) {
+    lines.push('', `## ${table.name}`, '', '| Column | Type | Required | Default | PK |', '| --- | --- | --- | --- | --- |')
+    for (const column of table.columns) {
+      lines.push(`| \`${column.name}\` | \`${column.type || 'ANY'}\` | ${column.notNull ? 'yes' : 'no'} | \`${column.defaultValue ?? ''}\` | ${column.primaryKey ? 'yes' : 'no'} |`)
+    }
+    if (table.indexes.length) {
+      lines.push('', 'Indexes:', '')
+      for (const index of table.indexes) {
+        lines.push(`- \`${index.name}\`${index.unique ? ' unique' : ''}`)
+      }
+    }
+  }
+
+  return `${lines.join('\n')}\n`
+}
