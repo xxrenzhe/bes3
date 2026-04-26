@@ -43,6 +43,13 @@ function jaccard(left: Set<string>, right: Set<string>) {
   return union ? intersection / union : 0
 }
 
+function isLikelyAsin(value: string) {
+  const normalized = value.toUpperCase()
+  if (!/^[A-Z0-9]{10}$/.test(normalized)) return false
+  if (/^\d{10}$/.test(normalized)) return true
+  return /^B[A-Z0-9]{9}$/.test(normalized) && /\d/.test(normalized)
+}
+
 export function extractAmazonUrls(text: string): string[] {
   return Array.from(
     new Set([
@@ -56,7 +63,7 @@ export function extractAsins(text: string): string[] {
   const asins = new Set<string>()
   for (const match of text.matchAll(ASIN_RE)) {
     const asin = (match[1] || match[2] || '').toUpperCase()
-    if (asin) asins.add(asin)
+    if (isLikelyAsin(asin)) asins.add(asin)
   }
   return Array.from(asins)
 }
