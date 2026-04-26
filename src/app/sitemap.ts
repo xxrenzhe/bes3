@@ -29,7 +29,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       buildLocalizedSitemapRoute(`/categories/${category.slug}`, { changeFrequency: 'weekly', priority: 0.88 })
     ),
     ...HARDCORE_CATEGORIES.flatMap((category) =>
-      buildLocalizedSitemapRoute(`/deals/best-${category.slug}-under-500`, { changeFrequency: 'daily', priority: 0.82 })
+      buildLocalizedSitemapRoute(`/deals/best-value-${category.slug}-under-500`, { changeFrequency: 'daily', priority: 0.82 })
     ),
     ...scenarioRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.8 })),
     ...multiConstraintRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.76 }))

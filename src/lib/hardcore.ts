@@ -39,6 +39,10 @@ export interface EvidenceReport {
   bloggerRank: number
   authorityTier: string
   videoTitle: string
+  negativeFeedbackCount: number
+  usefulFeedbackCount: number
+  videoNegativeFeedbackCount: number
+  feedbackPenalty: number
 }
 
 export interface ConsensusSummary {
@@ -48,7 +52,8 @@ export interface ConsensusSummary {
   evidenceCount: number
   sourceCount: number
   controversy: boolean
-  badge: 'Hardcore Choice' | 'Do Not Buy' | 'Highly Controversial' | 'Researching' | null
+  frozenForReview: boolean
+  badge: 'Hardcore Choice' | 'Do Not Buy' | 'Highly Controversial' | 'Frozen for Review' | 'Researching' | null
   bestQuote: EvidenceReport | null
   worstQuote: EvidenceReport | null
 }
@@ -131,6 +136,9 @@ interface EvidenceRow {
   blogger_rank: number | null
   authority_tier: string | null
   video_title: string | null
+  negative_feedback_count: number | null
+  useful_feedback_count: number | null
+  video_negative_feedback_count: number | null
 }
 
 const RATING_SCORE: Record<HardcoreRating, number> = {
@@ -204,6 +212,12 @@ function mapTagRow(row: TagRow): HardcoreTag {
 function mapEvidenceRow(row: EvidenceRow): EvidenceReport | null {
   const rating = normalizeRating(row.rating)
   if (!rating) return null
+  const negativeFeedbackCount = Number(row.negative_feedback_count || 0)
+  const usefulFeedbackCount = Number(row.useful_feedback_count || 0)
+  const videoNegativeFeedbackCount = Number(row.video_negative_feedback_count || 0)
+  const feedbackPenalty = Math.min(0.8, negativeFeedbackCount * 0.15 + videoNegativeFeedbackCount * 0.08)
+  const usefulBoost = Math.min(0.2, usefulFeedbackCount * 0.03)
+  const evidenceConfidence = Math.max(0.1, Number(row.evidence_confidence || 1) + usefulBoost - feedbackPenalty)
 
   return {
     id: row.id,
@@ -216,7 +230,7 @@ function mapEvidenceRow(row: EvidenceRow): EvidenceReport | null {
     evidenceQuote: row.evidence_quote,
     timestampSeconds: row.timestamp_seconds,
     contextSnippet: row.context_snippet,
-    evidenceConfidence: Number(row.evidence_confidence || 1),
+    evidenceConfidence,
     evidenceType: row.evidence_type || 'standard-review',
     isAdvertorial: Boolean(row.is_advertorial),
     channelName: row.channel_name || 'Unknown reviewer',
@@ -224,7 +238,11 @@ function mapEvidenceRow(row: EvidenceRow): EvidenceReport | null {
     youtubeId: row.youtube_id,
     bloggerRank: Number(row.blogger_rank || 1),
     authorityTier: row.authority_tier || 'general',
-    videoTitle: row.video_title || 'Review evidence'
+    videoTitle: row.video_title || 'Review evidence',
+    negativeFeedbackCount,
+    usefulFeedbackCount,
+    videoNegativeFeedbackCount,
+    feedbackPenalty
   }
 }
 
@@ -237,6 +255,7 @@ export function summarizeConsensus(evidence: EvidenceReport[]): ConsensusSummary
       evidenceCount: 0,
       sourceCount: 0,
       controversy: false,
+      frozenForReview: false,
       badge: 'Researching',
       bestQuote: null,
       worstQuote: null
@@ -264,13 +283,23 @@ export function summarizeConsensus(evidence: EvidenceReport[]): ConsensusSummary
   const standardDeviation = Math.sqrt(variance)
   const controversy = standardDeviation > 1.2 && evidence.length >= 3
   const expertSources = evidence.filter((report) => report.bloggerRank >= 1.5 && !report.isAdvertorial).length
+  const tier4HighPraise = evidence.filter((report) => report.bloggerRank <= 0.75 && report.ratingScore >= 4 && !report.isAdvertorial).length
+  const frozenForReview = evidence.length >= 4 && tier4HighPraise / evidence.length >= 0.6 && expertSources === 0
   const confidence: ConfidenceLevel =
-    evidence.length >= 3 && expertSources >= 2 && !controversy ? 'High' : evidence.length >= 2 ? 'Medium' : 'Low'
+    frozenForReview
+      ? 'Low'
+      : evidence.length >= 3 && expertSources >= 2 && !controversy
+        ? 'High'
+        : evidence.length >= 2
+          ? 'Medium'
+          : 'Low'
   const bestQuote = [...evidence].sort((left, right) => right.ratingScore - left.ratingScore || right.bloggerRank - left.bloggerRank)[0] || null
   const worstQuote = [...evidence].sort((left, right) => left.ratingScore - right.ratingScore || right.bloggerRank - left.bloggerRank)[0] || null
   const badge = controversy
     ? 'Highly Controversial'
-    : score5 != null && score5 > 4.5 && confidence === 'High'
+    : frozenForReview
+      ? 'Frozen for Review'
+      : score5 != null && score5 > 4.5 && confidence === 'High'
       ? 'Hardcore Choice'
       : score5 != null && score5 < 2.5 && evidence.length >= 2
         ? 'Do Not Buy'
@@ -283,6 +312,7 @@ export function summarizeConsensus(evidence: EvidenceReport[]): ConsensusSummary
     evidenceCount: evidence.length,
     sourceCount: channels.size,
     controversy,
+    frozenForReview,
     badge,
     bestQuote,
     worstQuote
@@ -432,7 +462,25 @@ async function listEvidenceForProducts(productIds: number[]): Promise<Map<number
         rv.youtube_id,
         rv.blogger_rank,
         rv.authority_tier,
-        rv.title AS video_title
+        rv.title AS video_title,
+        (
+          SELECT COUNT(*)
+          FROM creator_feedback_events cfe
+          WHERE cfe.analysis_report_id = ar.id
+            AND cfe.feedback_type IN ('inaccurate', 'wrong-product', 'bad-quote')
+        ) AS negative_feedback_count,
+        (
+          SELECT COUNT(*)
+          FROM creator_feedback_events cfe
+          WHERE cfe.analysis_report_id = ar.id
+            AND cfe.feedback_type = 'useful'
+        ) AS useful_feedback_count,
+        (
+          SELECT COUNT(*)
+          FROM creator_feedback_events cfe
+          WHERE cfe.video_id = ar.video_id
+            AND cfe.feedback_type IN ('inaccurate', 'wrong-product', 'bad-quote')
+        ) AS video_negative_feedback_count
       FROM analysis_reports ar
       LEFT JOIN taxonomy_tags tt ON tt.id = ar.tag_id
       LEFT JOIN review_videos rv ON rv.id = ar.video_id

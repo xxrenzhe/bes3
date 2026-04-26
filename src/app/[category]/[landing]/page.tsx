@@ -30,6 +30,7 @@ export async function generateMetadata({
         description: `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using teardown evidence and price-value signals.`,
         path: `/${multiPage.category.slug}/${resolved.landing}`,
         locale: getRequestLocale(),
+        robots: multiPage.status === 'researching' ? { index: false, follow: true } : undefined,
         keywords: [`best ${multiPage.category.name} for ${tagLabel}`, 'multi constraint product evidence', 'Reddit consensus']
       })
     }
@@ -47,6 +48,7 @@ export async function generateMetadata({
     description: `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
     path: `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`,
     locale: getRequestLocale(),
+    robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
     keywords: [`best ${page.category.name} for ${page.tag.name}`, `${page.tag.name} ${page.category.name}`, 'Reddit consensus']
   })
 }

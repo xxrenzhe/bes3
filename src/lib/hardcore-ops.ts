@@ -501,6 +501,28 @@ export async function recordEvidenceFeedback(input: EvidenceFeedbackInput) {
     )
   }
 
+  if (videoId && weightDelta < 0) {
+    const aggregate = await db.queryOne<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM creator_feedback_events
+        WHERE video_id = ? AND feedback_type IN ('inaccurate', 'wrong-product', 'bad-quote')
+      `,
+      [videoId]
+    )
+    if ((aggregate?.count || 0) >= 3) {
+      await db.exec(
+        `
+          UPDATE analysis_reports
+          SET evidence_confidence = CASE WHEN evidence_confidence - 0.1 < 0.1 THEN 0.1 ELSE evidence_confidence - 0.1 END,
+              quality_flags_json = ?
+          WHERE video_id = ?
+        `,
+        [JSON.stringify({ video_feedback_penalty: true, last_feedback: feedbackType }), videoId]
+      )
+    }
+  }
+
   return { id: Number(result.lastInsertRowid || 0), feedbackType, weightDelta }
 }
 

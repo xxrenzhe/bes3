@@ -26,6 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: `Hardcore teardown evidence, canonical pain points, and price-value timing for ${page.category.name}.`,
     path: `/categories/${page.category.slug}`,
     locale: getRequestLocale(),
+    robots: page.products.filter((product) => product.consensus.evidenceCount > 0).length < 3 ? { index: false, follow: true } : undefined,
     keywords: [page.category.name, 'teardown evidence', 'Reddit consensus', ...page.category.painpoints]
   })
 }

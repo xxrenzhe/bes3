@@ -38,6 +38,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     description: `${product.name} scored from teardown evidence, scenario tags, affiliate link health, and price-value timing.`,
     path: `/products/${product.slug}`,
     locale: getRequestLocale(),
+    robots: product.consensus.evidenceCount === 0 ? { index: false, follow: true } : undefined,
     image: product.imageUrl,
     category: product.categoryName,
     keywords: [product.name, product.categoryName, 'teardown evidence', 'consensus score']
@@ -81,9 +82,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 ? {
                     '@type': 'AggregateRating',
                     ratingValue: product.consensus.score5?.toFixed(1),
-                    reviewCount: String(product.consensus.evidenceCount),
+                    reviewCount: product.consensus.evidenceCount,
                     bestRating: '5',
                     worstRating: '1'
+                  }
+                : undefined,
+            offers:
+              product.price.currentPrice != null
+                ? {
+                    '@type': 'Offer',
+                    url: toAbsoluteUrl(product.affiliateUrl ? `/go/${product.id}` : path),
+                    price: product.price.currentPrice.toFixed(2),
+                    priceCurrency: product.price.currency,
+                    availability:
+                      product.affiliateStatus === 'out_of_stock'
+                        ? 'https://schema.org/OutOfStock'
+                        : product.affiliateStatus === 'broken'
+                          ? 'https://schema.org/Discontinued'
+                          : 'https://schema.org/InStock'
                   }
                 : undefined
           },
