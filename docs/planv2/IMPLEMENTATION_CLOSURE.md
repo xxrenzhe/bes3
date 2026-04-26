@@ -36,7 +36,7 @@ npm run type-check
 npm run hardcore:export-planv2-ops -- --limit=25
 npm run hardcore:resolve-video-entities -- --dry-run --limit=5
 npm run hardcore:evolve-taxonomy -- --dry-run --limit=5
-npm run hardcore:refresh-price-value
+npm run hardcore:refresh-price-value -- --dry-run --limit=25
 npm run hardcore:evaluate-price-alerts
 ```
 

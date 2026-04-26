@@ -43,6 +43,16 @@ export interface PriceAlertTrigger {
   notification_id?: number | null
 }
 
+interface PriceValueRefreshRow {
+  id: number
+  price_amount: number | null
+  price_currency: string | null
+  current_price: number | null
+  hist_low_price: number | null
+  avg_90d_price: number | null
+  consensus_score: number | null
+}
+
 export interface TaxonomyIntentSourceInput {
   categorySlug: string
   sourceType: 'amazon_autosuggest' | 'google_keyword_planner' | 'reddit' | 'manual' | string
@@ -619,17 +629,9 @@ export async function recordPriceValueSnapshot(input: PriceSnapshotInput) {
   return summary
 }
 
-export async function refreshPriceValueSnapshotsForProducts(limit = 250) {
+async function listPriceValueRefreshRows(limit = 250) {
   const db = await getDatabase()
-  const rows = await db.query<{
-    id: number
-    price_amount: number | null
-    price_currency: string | null
-    current_price: number | null
-    hist_low_price: number | null
-    avg_90d_price: number | null
-    consensus_score: number | null
-  }>(
+  return db.query<PriceValueRefreshRow>(
     `
       SELECT
         p.id,
@@ -659,7 +661,27 @@ export async function refreshPriceValueSnapshotsForProducts(limit = 250) {
     `,
     [limit]
   )
+}
 
+function summarizePriceValueRefreshRow(row: PriceValueRefreshRow) {
+  const currentPrice = row.current_price ?? row.price_amount
+  const summary = summarizePriceValue({
+    currentPrice,
+    histLowPrice: row.hist_low_price,
+    avg90dPrice: row.avg_90d_price,
+    currency: row.price_currency,
+    consensusScore5: row.consensus_score
+  })
+  return { productId: row.id, entryStatus: summary.entryStatus, valueScore: summary.valueScore }
+}
+
+export async function previewPriceValueSnapshotsForProducts(limit = 250) {
+  const rows = await listPriceValueRefreshRows(limit)
+  return rows.map(summarizePriceValueRefreshRow)
+}
+
+export async function refreshPriceValueSnapshotsForProducts(limit = 250) {
+  const rows = await listPriceValueRefreshRows(limit)
   const results = []
   for (const row of rows) {
     const currentPrice = row.current_price ?? row.price_amount
