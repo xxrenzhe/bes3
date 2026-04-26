@@ -15,7 +15,7 @@ export async function GET(request: Request) {
     '<channel>',
     `<title>${escapeXml('Bes3 Editorial Feed')}</title>`,
     `<link>${escapeXml(siteUrl)}</link>`,
-    `<description>${escapeXml('Latest Bes3 reviews, comparisons, and guides for buyers who want structured updates.')}</description>`,
+    `<description>${escapeXml('Latest Bes3 evidence updates and legacy editorial compatibility entries.')}</description>`,
     `<language>${escapeXml('en-US')}</language>`,
     `<lastBuildDate>${escapeXml(new Date(latestBuildDate).toUTCString())}</lastBuildDate>`,
     `<atom:link href="${escapeXml(`${siteUrl}/feed.xml`)}" rel="self" type="application/rss+xml" />`,

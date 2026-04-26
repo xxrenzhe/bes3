@@ -97,6 +97,10 @@ const SQLITE_SCHEMA = [
       description TEXT,
       price_amount REAL,
       price_currency TEXT,
+      current_price REAL,
+      hist_low_price REAL,
+      avg_90d_price REAL,
+      price_status TEXT,
       rating REAL,
       review_count INTEGER,
       specs_json TEXT,
@@ -106,6 +110,187 @@ const SQLITE_SCHEMA = [
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (affiliate_product_id) REFERENCES affiliate_products(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS hardcore_categories (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      slug TEXT NOT NULL UNIQUE,
+      icon_url TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      meta_config_json TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS affiliate_links (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      platform TEXT NOT NULL,
+      affiliate_url TEXT NOT NULL,
+      original_url TEXT,
+      country_code TEXT,
+      commission_rate REAL,
+      status TEXT NOT NULL DEFAULT 'active',
+      last_verified TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      UNIQUE(product_id, platform, country_code)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS taxonomy_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_id INTEGER,
+      category_slug TEXT NOT NULL,
+      canonical_name TEXT NOT NULL,
+      slug TEXT NOT NULL,
+      keywords_json TEXT,
+      search_volume INTEGER NOT NULL DEFAULT 0,
+      is_core_painpoint INTEGER NOT NULL DEFAULT 0,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (category_id) REFERENCES hardcore_categories(id) ON DELETE SET NULL,
+      UNIQUE(category_slug, slug)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS review_videos (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      youtube_id TEXT NOT NULL UNIQUE,
+      channel_name TEXT NOT NULL,
+      channel_url TEXT,
+      blogger_rank REAL NOT NULL DEFAULT 1,
+      authority_tier TEXT NOT NULL DEFAULT 'general',
+      title TEXT NOT NULL,
+      video_type TEXT NOT NULL DEFAULT 'long-form',
+      transcript TEXT,
+      description TEXT,
+      processed_status TEXT NOT NULL DEFAULT 'pending',
+      published_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS analysis_reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      video_id INTEGER NOT NULL,
+      tag_id INTEGER NOT NULL,
+      rating TEXT NOT NULL,
+      evidence_quote TEXT NOT NULL,
+      timestamp_seconds INTEGER,
+      context_snippet TEXT,
+      evidence_confidence REAL NOT NULL DEFAULT 1,
+      evidence_type TEXT NOT NULL DEFAULT 'standard-review',
+      is_advertorial INTEGER NOT NULL DEFAULT 0,
+      quality_flags_json TEXT,
+      unexpected_usecase TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      FOREIGN KEY (video_id) REFERENCES review_videos(id) ON DELETE CASCADE,
+      FOREIGN KEY (tag_id) REFERENCES taxonomy_tags(id) ON DELETE CASCADE
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS site_search_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      query_text TEXT NOT NULL UNIQUE,
+      hit_count INTEGER NOT NULL DEFAULT 1,
+      matched_tag_id INTEGER,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (matched_tag_id) REFERENCES taxonomy_tags(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS taxonomy_intent_sources (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_slug TEXT NOT NULL,
+      source_type TEXT NOT NULL,
+      raw_query TEXT NOT NULL,
+      normalized_query TEXT NOT NULL,
+      search_volume INTEGER NOT NULL DEFAULT 0,
+      competition TEXT,
+      status TEXT NOT NULL DEFAULT 'new',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(category_slug, source_type, normalized_query)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS pending_tags (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_slug TEXT NOT NULL,
+      canonical_name TEXT NOT NULL,
+      slug TEXT NOT NULL,
+      trigger_query TEXT NOT NULL,
+      hit_count INTEGER NOT NULL DEFAULT 1,
+      source TEXT NOT NULL DEFAULT 'site_search',
+      status TEXT NOT NULL DEFAULT 'pending',
+      priority_score REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(category_slug, slug)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS taxonomy_rescan_queue (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category_slug TEXT NOT NULL,
+      tag_slug TEXT NOT NULL,
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'queued',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS creator_feedback_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      analysis_report_id INTEGER,
+      video_id INTEGER,
+      feedback_type TEXT NOT NULL,
+      weight_delta REAL NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (analysis_report_id) REFERENCES analysis_reports(id) ON DELETE SET NULL,
+      FOREIGN KEY (video_id) REFERENCES review_videos(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS price_value_snapshots (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      current_price REAL,
+      hist_low_price REAL,
+      avg_90d_price REAL,
+      consensus_score REAL,
+      value_score REAL,
+      entry_status TEXT NOT NULL DEFAULT 'unknown',
+      source TEXT NOT NULL DEFAULT 'affiliate',
+      captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS price_alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      product_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      target_price REAL,
+      target_value_score REAL,
+      status TEXT NOT NULL DEFAULT 'active',
+      last_notified_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
+      UNIQUE(product_id, email)
     )
   `,
   `
@@ -497,6 +682,14 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'products', 'attribute_completeness_score', 'REAL NOT NULL DEFAULT 0')
   await ensureColumn(db, 'products', 'data_confidence_score', 'REAL NOT NULL DEFAULT 0')
   await ensureColumn(db, 'products', 'source_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'products', 'current_price', 'REAL')
+  await ensureColumn(db, 'products', 'hist_low_price', 'REAL')
+  await ensureColumn(db, 'products', 'avg_90d_price', 'REAL')
+  await ensureColumn(db, 'products', 'price_status', 'TEXT')
+  await ensureColumn(db, 'products', 'asin', 'TEXT')
+  await ensureColumn(db, 'review_videos', 'entity_match_json', 'TEXT')
+  await ensureColumn(db, 'analysis_reports', 'context_snippet', 'TEXT')
+  await ensureColumn(db, 'analysis_reports', 'quality_flags_json', 'TEXT')
 
   await ensureColumn(db, 'merchants', 'website_url', 'TEXT')
   await ensureColumn(db, 'merchants', 'country_code', 'TEXT')
@@ -581,6 +774,61 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
     db,
     'idx_product_attribute_facts_product_key',
     'CREATE INDEX idx_product_attribute_facts_product_key ON product_attribute_facts (product_id, attribute_key, last_checked_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_products_hardcore_category_price',
+    'CREATE INDEX idx_products_hardcore_category_price ON products (category, current_price, avg_90d_price)'
+  )
+  await ensureIndex(
+    db,
+    'idx_affiliate_links_product_status',
+    'CREATE INDEX idx_affiliate_links_product_status ON affiliate_links (product_id, status, last_verified)'
+  )
+  await ensureIndex(
+    db,
+    'idx_taxonomy_tags_category_core',
+    'CREATE INDEX idx_taxonomy_tags_category_core ON taxonomy_tags (category_slug, is_core_painpoint, search_volume)'
+  )
+  await ensureIndex(
+    db,
+    'idx_analysis_reports_product_tag',
+    'CREATE INDEX idx_analysis_reports_product_tag ON analysis_reports (product_id, tag_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_analysis_reports_tag_rating',
+    'CREATE INDEX idx_analysis_reports_tag_rating ON analysis_reports (tag_id, rating, is_advertorial)'
+  )
+  await ensureIndex(
+    db,
+    'idx_pending_tags_status_priority',
+    'CREATE INDEX idx_pending_tags_status_priority ON pending_tags (status, priority_score, updated_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_taxonomy_intent_sources_category_status',
+    'CREATE INDEX idx_taxonomy_intent_sources_category_status ON taxonomy_intent_sources (category_slug, status, search_volume)'
+  )
+  await ensureIndex(
+    db,
+    'idx_taxonomy_rescan_queue_status',
+    'CREATE INDEX idx_taxonomy_rescan_queue_status ON taxonomy_rescan_queue (status, category_slug, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_creator_feedback_events_video',
+    'CREATE INDEX idx_creator_feedback_events_video ON creator_feedback_events (video_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_price_value_snapshots_product_captured',
+    'CREATE INDEX idx_price_value_snapshots_product_captured ON price_value_snapshots (product_id, captured_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_price_alerts_product_status',
+    'CREATE INDEX idx_price_alerts_product_status ON price_alerts (product_id, status, updated_at)'
   )
   await ensureIndex(
     db,

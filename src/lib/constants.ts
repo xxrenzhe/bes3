@@ -8,9 +8,12 @@ export const PIPELINE_STAGES: PipelineStage[] = [
   'scrapeProductFacts',
   'persistMediaAssets',
   'normalizeProduct',
-  'mineKeywords',
-  'generateReviewArticle',
-  'generateComparisonArticle',
+  'mineHardcoreIntents',
+  'resolveVideoEntities',
+  'extractVideoEvidence',
+  'scoreConsensus',
+  'refreshPriceValue',
+  'generateScenarioPages',
   'generateSeoPayload',
   'publishPages',
   'revalidateAndSitemap',
@@ -27,4 +30,4 @@ export const SETTINGS_CATEGORIES = [
 ] as const
 
 export const DEFAULT_SITE_NAME = 'Bes3'
-export const DEFAULT_SITE_TAGLINE = 'Clear tech reviews, comparisons, and offers.'
+export const DEFAULT_SITE_TAGLINE = 'Real specs from hardware teardowns, not SEO spam.'

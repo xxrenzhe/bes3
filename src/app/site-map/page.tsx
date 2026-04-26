@@ -1,282 +1,146 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
-import { SeoTrustSignalsPanel } from '@/components/site/SeoTrustSignalsPanel'
 import { StructuredData } from '@/components/site/StructuredData'
-import { getArticlePath } from '@/lib/article-path'
-import { buildBrandCategoryPath, buildCategoryPath, categoryMatches } from '@/lib/category'
+import { HARDCORE_CATEGORIES, listHardcoreProducts, listHardcoreTags } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildDatasetSchema, buildWebPageSchema } from '@/lib/structured-data'
-import { listBrandCategoryHubs, listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
+import { buildCollectionPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Site Map',
-    description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
+    description: 'Browse the Bes3 v2 evidence engine: hardcore categories, evidence matrix, value pages, and scenario landing pages.',
     path: '/site-map',
     locale: getRequestLocale(),
-    keywords: ['site map', 'directory', 'reviews', 'comparisons', 'buying guides']
+    keywords: ['site map', 'evidence matrix', 'scenario pages', 'hardcore categories']
   })
 }
 
 export default async function HtmlSitemapPage() {
-  const [brandCategoryHubs, categories, brands, articles, products] = await Promise.all([
-    listBrandCategoryHubs(),
-    listCategories(),
-    listBrands(),
-    listPublishedArticles(),
-    listOpenCommerceProducts()
-  ])
-  const latestRefresh = [
-    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
-    ...products.map((product) => product.updatedAt || product.publishedAt),
-    ...brands.map((brand) => brand.latestUpdate),
-    ...brandCategoryHubs.map((hub) => hub.latestUpdate)
-  ].find(Boolean) || null
-
-  const articleByCategory = new Map(
-    categories.map((category) => [
-      category,
-      articles.filter((article) => categoryMatches(article.product?.category, category)).slice(0, 6)
-    ])
-  )
-  const productByCategory = new Map(
-    categories.map((category) => [
-      category,
-      products.filter((product) => categoryMatches(product.category, category)).slice(0, 6)
-    ])
-  )
-  const brandCategoryHubsByCategory = new Map(
-    categories.map((category) => [
-      category,
-      brandCategoryHubs.filter((hub) => categoryMatches(hub.category, category))
-    ])
-  )
-  const hubPages = [
-    { href: '/categories', label: 'Categories' },
-    { href: '/biggest-discounts', label: 'Biggest Discounts' },
-    { href: '/products', label: 'Products' },
-    { href: '/reviews', label: 'Reviews' },
-    { href: '/compare', label: 'Compare' },
-    { href: '/guides', label: 'Guides' },
+  const [products, tags] = await Promise.all([listHardcoreProducts(), listHardcoreTags()])
+  const mainPages = [
+    { href: '/', label: 'Home' },
+    { href: '/categories', label: 'Hardcore Roster' },
+    { href: '/products', label: 'Evidence Matrix' },
+    { href: '/deals', label: 'Best Value Lab' },
     { href: '/data', label: 'Open Data' },
-    { href: '/trust', label: 'Trust Center' }
+    { href: '/trust', label: 'Trust Center' },
+    { href: '/about', label: 'About' }
   ]
-  const machinePages = [
-    { href: '/llms.txt', label: 'llms.txt' },
-    { href: '/.well-known/security.txt', label: 'security.txt' },
-    { href: '/api/open/coverage', label: 'Coverage Manifest API' },
-    { href: '/api/open/buying-feed', label: 'Buying Feed API' },
-    { href: '/feed.xml', label: 'RSS Feed' },
-    { href: '/feed.json', label: 'JSON Feed' },
-    { href: '/opensearch.xml', label: 'OpenSearch XML' },
-    { href: '/media-sitemap.xml', label: 'Image Sitemap' }
-  ]
-
-  const structuredData = [
-    buildWebPageSchema({
-      path: '/site-map',
-      title: 'Site Map',
-      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
-      type: 'CollectionPage'
-    }),
-    buildCollectionPageSchema({
-      path: '/site-map',
-      title: 'Site Map',
-      description: 'Browse Bes3 categories, brands, reviews, guides, comparisons, tools, and offer pages from one lightweight directory.',
-      items: [
-        { name: 'Assistant', path: '/assistant' },
-        { name: 'Start Here', path: '/start' },
-        { name: 'Search', path: '/search' },
-        { name: 'Offers', path: '/offers' },
-        { name: 'Biggest Discounts', path: '/biggest-discounts' },
-        { name: 'Directory', path: '/directory' },
-        { name: 'Brands', path: '/brands' },
-        { name: 'Tools', path: '/tools' },
-        ...hubPages.map((page) => ({ name: page.label, path: page.href })),
-        ...machinePages.map((page) => ({ name: page.label, path: page.href })),
-        ...categories.map((category) => ({ name: category.replace(/-/g, ' '), path: buildCategoryPath(category) })),
-        ...brands.slice(0, 12).map((brand) => ({ name: brand.name, path: `/brands/${brand.slug}` })),
-        ...brandCategoryHubs.slice(0, 48).map((hub) => ({
-          name: `${hub.brandName} ${hub.category}`,
-          path: buildBrandCategoryPath(hub.brandSlug, hub.category)
-        }))
-      ]
-    }),
-    buildDatasetSchema({
-      path: '/site-map',
-      name: 'Bes3 public URL graph',
-      description: 'Machine-readable directory of Bes3 categories, brands, brand-category hubs, product pages, and editorial pages.',
-      dateModified: latestRefresh,
-      keywords: ['html sitemap', 'xml sitemap', 'brand-category hubs', 'public URL graph'],
-      variableMeasured: ['categories', 'brands', 'brand-category hubs', 'products', 'reviews', 'comparisons', 'guides']
-    })
-  ]
+  const scenarioPages = HARDCORE_CATEGORIES.flatMap((category) =>
+    tags
+      .filter((tag) => tag.categorySlug === category.slug)
+      .slice(0, 4)
+      .map((tag) => ({
+        href: `/${category.slug}/best-${category.slug}-for-${tag.slug}`,
+        label: `Best ${category.name} for ${tag.name}`
+      }))
+  )
+  const valuePages = HARDCORE_CATEGORIES.map((category) => ({
+    href: `/deals/best-${category.slug}-under-500`,
+    label: `Best ${category.name} under $500`
+  }))
+  const multiConstraintPages = HARDCORE_CATEGORIES.flatMap((category) => {
+    const categoryTags = tags.filter((tag) => tag.categorySlug === category.slug && tag.isCorePainpoint).slice(0, 3)
+    return categoryTags.flatMap((first, firstIndex) =>
+      categoryTags.slice(firstIndex + 1).map((second) => ({
+        href: `/${category.slug}/best-${first.slug}-${second.slug}-${category.slug}`,
+        label: `Best ${category.name} for ${first.name} and ${second.name}`
+      }))
+    )
+  })
 
   return (
     <PublicShell>
-      <StructuredData data={structuredData} />
-      <div className="mx-auto max-w-7xl space-y-12 px-4 py-14 sm:px-6 lg:px-8">
-        <section className="rounded-[2.5rem] bg-[linear-gradient(135deg,#fff8ef_0%,#f8fbff_48%,#eefaf5_100%)] p-8 shadow-panel sm:p-10">
-          <p className="editorial-kicker">HTML Sitemap</p>
-          <h1 className="mt-3 font-[var(--font-display)] text-5xl font-black tracking-tight text-foreground sm:text-6xl">Browse the full Bes3 directory.</h1>
-          <p className="mt-4 max-w-3xl text-sm leading-8 text-muted-foreground">
-            This page is a lightweight directory for anyone who wants one fast view of the main categories, brands, products, reviews, comparisons, guides, offers, and shopping tools.
+      <StructuredData
+        data={[
+          buildWebPageSchema({
+            path: '/site-map',
+            title: 'Site Map',
+            description: 'Browse the Bes3 v2 evidence engine.',
+            type: 'CollectionPage'
+          }),
+          buildCollectionPageSchema({
+            path: '/site-map',
+            title: 'Site Map',
+            description: 'Hardcore category, product, value, and scenario route directory.',
+            items: [
+              ...mainPages.map((page) => ({ name: page.label, path: page.href })),
+              ...HARDCORE_CATEGORIES.map((category) => ({ name: category.name, path: `/categories/${category.slug}` })),
+              ...valuePages.map((page) => ({ name: page.label, path: page.href })),
+              ...products.map((product) => ({ name: product.name, path: `/products/${product.slug}` })),
+              ...scenarioPages.map((page) => ({ name: page.label, path: page.href })),
+              ...multiConstraintPages.map((page) => ({ name: page.label, path: page.href }))
+            ]
+          })
+        ]}
+      />
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">HTML Sitemap</p>
+          <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
+            Bes3 v2 route graph.
+          </h1>
+          <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+            The public graph now centers on the hardcore roster, product evidence reports, value windows, and scenario-driven pSEO pages.
           </p>
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              { href: '/assistant', label: 'Assistant' },
-              { href: '/start', label: 'Start here' },
-              { href: '/search', label: 'Search' },
-              { href: '/offers', label: 'Offers' },
-              { href: '/directory', label: 'Directory' },
-              { href: '/brands', label: 'Brands' },
-              { href: '/tools', label: 'Tools' },
-              ...hubPages
-            ].map((item) => (
-              <Link key={item.href} href={item.href} className="rounded-[1.25rem] bg-white px-5 py-4 text-sm font-semibold text-foreground shadow-[0_20px_45px_-35px_rgba(15,23,42,0.45)] transition-transform hover:-translate-y-0.5">
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-3">
-          {categories.map((category) => (
-            <div key={category} className="rounded-[2rem] bg-white p-6 shadow-panel">
-              <Link href={buildCategoryPath(category)} className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
-                {category.replace(/-/g, ' ')}
-              </Link>
-              <div className="mt-4 space-y-2 text-sm text-muted-foreground">
-                {productByCategory.get(category)?.map((product) => (
-                  <Link key={`product-${product.id}`} href={`/products/${product.slug}`} className="block transition-colors hover:text-primary">
-                    {product.productName}
-                  </Link>
-                ))}
-                {articleByCategory.get(category)?.map((article) => (
-                  <Link key={`article-${article.id}`} href={getArticlePath(article.type, article.slug)} className="block transition-colors hover:text-primary">
-                    {article.title}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ))}
-        </section>
-
-        <SeoTrustSignalsPanel
-          title="Why this page is useful beyond simple navigation"
-          description="Bes3 uses this page to keep major shopping paths easy to spot, whether you want a category, a brand, or a specific product page."
-          stats={[
-            { label: 'Categories', value: String(categories.length), note: 'Start here when you know the product type but not the exact pick.' },
-            { label: 'Brands', value: String(brands.length), note: 'Use brand pages when you already trust one brand and want nearby options.' },
-            { label: 'Brand + category pages', value: String(brandCategoryHubs.length), note: 'These pages narrow one brand inside one product type.' },
-            { label: 'Public pages', value: String(products.length + articles.length), note: 'Product pages, reviews, comparisons, and guides already live on the site.' }
-          ]}
-          points={[
-            'Category, brand, and product paths stay visible here so you do not have to guess where to start.',
-            'Brand + category pages are listed directly when you want a narrower shortcut instead of extra clicking.',
-            'Machine-readable routes still live here for transparency, but the main focus stays on shopper-friendly paths.',
-            'The page stays lightweight so it loads fast and makes the site structure easy to scan.',
-            'You can use this page as a backup route whenever search feels broader than you want.'
-          ]}
-        />
-
-        <section className="rounded-[2rem] bg-white p-6 shadow-panel">
-          <div className="flex flex-wrap items-end justify-between gap-4">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brand + Category Pages</p>
-              <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">Brand + category pages listed in one place.</h2>
-              <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-                These exact brand and category combinations help when you already know both the brand and the product type. Listing them here saves extra clicks.
-              </p>
-            </div>
-            <div className="rounded-[1.25rem] bg-muted px-5 py-4 text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">{brandCategoryHubs.length}</span> brand-category pages
-            </div>
-          </div>
-          <div className="mt-8 grid gap-6 lg:grid-cols-3">
-            {categories.map((category) => {
-              const hubs = brandCategoryHubsByCategory.get(category) || []
-              if (!hubs.length) return null
-
-              return (
-                <div key={`hub-${category}`} className="rounded-[1.5rem] bg-muted/40 p-5">
-                  <Link href={buildCategoryPath(category)} className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">
-                    {category.replace(/-/g, ' ')}
-                  </Link>
-                  <div className="mt-4 space-y-3 text-sm text-muted-foreground">
-                    {hubs.map((hub) => (
-                      <Link
-                        key={`${hub.brandSlug}-${hub.category}`}
-                        href={buildBrandCategoryPath(hub.brandSlug, hub.category)}
-                        className="block rounded-2xl bg-white px-4 py-3 transition-colors hover:text-primary"
-                      >
-                        <p className="font-semibold text-foreground">{hub.brandName}</p>
-                        <p className="mt-1 text-xs text-muted-foreground">
-                          {hub.productCount} products · {hub.articleCount} reviews and guides
-                        </p>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </section>
-
-        <section className="grid gap-6 lg:grid-cols-3">
-          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Browse pages</p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
-              {hubPages.map((page) => (
-                <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
+        </div>
+      </section>
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-3">
+          <div className="rounded-md border border-border bg-white p-6">
+            <h2 className="font-[var(--font-display)] text-3xl font-black">Core Pages</h2>
+            <div className="mt-5 space-y-3 text-sm">
+              {mainPages.map((page) => (
+                <Link key={page.href} href={page.href} className="block text-muted-foreground hover:text-primary">
                   {page.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Brands</p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
-              {brands.map((brand) => (
-                <Link key={brand.slug} href={`/brands/${brand.slug}`} className="block transition-colors hover:text-primary">
-                  {brand.name}
+          <div className="rounded-md border border-border bg-white p-6">
+            <h2 className="font-[var(--font-display)] text-3xl font-black">Categories</h2>
+            <div className="mt-5 space-y-3 text-sm">
+              {HARDCORE_CATEGORIES.map((category) => (
+                <Link key={category.slug} href={`/categories/${category.slug}`} className="block text-muted-foreground hover:text-primary">
+                  {category.name}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Core pages</p>
-            <div className="mt-4 grid gap-2 sm:grid-cols-2 text-sm text-muted-foreground">
-              {[
-                { href: '/about', label: 'About' },
-                { href: '/trust', label: 'Trust Center' },
-                { href: '/contact', label: 'Contact' },
-                { href: '/newsletter', label: 'Wait Updates' },
-                { href: '/privacy', label: 'Privacy' },
-                { href: '/terms', label: 'Terms' },
-                { href: '/shortlist', label: 'Shortlist' },
-                { href: '/data', label: 'Open Data' }
-              ].map((page) => (
-                <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
+          <div className="rounded-md border border-border bg-white p-6">
+            <h2 className="font-[var(--font-display)] text-3xl font-black">Scenario Pages</h2>
+            <div className="mt-5 space-y-3 text-sm">
+              {scenarioPages.slice(0, 36).map((page) => (
+                <Link key={page.href} href={page.href} className="block text-muted-foreground hover:text-primary">
                   {page.label}
                 </Link>
               ))}
             </div>
           </div>
-          <div className="rounded-[2rem] bg-white p-6 shadow-panel">
-            <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-primary">Machine entry routes</p>
-            <div className="mt-4 grid gap-2 text-sm text-muted-foreground">
-              {machinePages.map((page) => (
-                <Link key={page.href} href={page.href} className="block transition-colors hover:text-primary">
+          <div className="rounded-md border border-border bg-white p-6">
+            <h2 className="font-[var(--font-display)] text-3xl font-black">Value Pages</h2>
+            <div className="mt-5 space-y-3 text-sm">
+              {valuePages.map((page) => (
+                <Link key={page.href} href={page.href} className="block text-muted-foreground hover:text-primary">
                   {page.label}
                 </Link>
               ))}
             </div>
           </div>
-        </section>
-      </div>
+          <div className="rounded-md border border-border bg-white p-6">
+            <h2 className="font-[var(--font-display)] text-3xl font-black">Multi-Constraint Pages</h2>
+            <div className="mt-5 space-y-3 text-sm">
+              {multiConstraintPages.slice(0, 24).map((page) => (
+                <Link key={page.href} href={page.href} className="block text-muted-foreground hover:text-primary">
+                  {page.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
     </PublicShell>
   )
 }

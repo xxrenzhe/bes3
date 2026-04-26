@@ -25,6 +25,11 @@
     "seo:inspect-links": "tsx scripts/link-inspector.ts",
     "seo:repair-pages": "tsx scripts/repair-seo-pages.ts",
     "seo:syndicate": "tsx scripts/syndicate-pages.ts",
+    "hardcore:refresh-price-value": "tsx scripts/refresh-hardcore-price-value.ts",
+    "hardcore:evaluate-price-alerts": "tsx scripts/evaluate-price-alerts.ts",
+    "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
+    "hardcore:inspect-affiliate-links": "tsx scripts/inspect-hardcore-affiliate-links.ts",
+    "hardcore:youtube-transcript-command": "tsx scripts/youtube-transcript-command.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate:sqlite": "DB_TYPE=sqlite tsx scripts/migrate.ts",
     "db:migrate:postgres": "DB_TYPE=postgres tsx scripts/migrate.ts"
