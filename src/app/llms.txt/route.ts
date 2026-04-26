@@ -1,87 +1,54 @@
 import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
-import { listBrands, listCategories, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
+import { HARDCORE_CATEGORIES, listHardcoreProducts, listHardcoreTags } from '@/lib/hardcore'
 import { getSiteUrl } from '@/lib/site-url'
 
 export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
-  const [brands, categories, articles, products] = await Promise.all([
-    listBrands(),
-    listCategories(),
-    listPublishedArticles(),
-    listOpenCommerceProducts()
-  ])
-
-  const reviewCount = articles.filter((article) => article.type === 'review').length
-  const comparisonCount = articles.filter((article) => article.type === 'comparison').length
-  const guideCount = articles.filter((article) => article.type === 'guide').length
-  const lastModified = getLatestTimestamp([
-    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
-    ...products.map((product) => product.updatedAt || product.publishedAt),
-    ...brands.map((brand) => brand.latestUpdate)
-  ])
+  const [products, tags] = await Promise.all([listHardcoreProducts(), listHardcoreTags()])
+  const lastModified = getLatestTimestamp([new Date().toISOString()])
+  const sampleScenarios = HARDCORE_CATEGORIES.flatMap((category) =>
+    tags
+      .filter((tag) => tag.categorySlug === category.slug)
+      .slice(0, 2)
+      .map((tag) => `- ${tag.name}: ${siteUrl}/${category.slug}/best-${category.slug}-for-${tag.slug}`)
+  )
 
   const body = [
     '# Bes3',
     '',
-    '> Structured buying-guide site with public product, offer, category, brand, review, comparison, and guide coverage.',
+    '> Hardcore product evidence engine: real specs from hardware teardowns, not SEO spam.',
     '',
     '## Summary',
     '',
     `- Site: ${siteUrl}`,
-    `- Public categories: ${categories.length}`,
-    `- Public brands: ${brands.length}`,
-    `- Public products: ${products.length}`,
-    `- Public editorial pages: ${articles.length}`,
-    `- Reviews: ${reviewCount}`,
-    `- Comparisons: ${comparisonCount}`,
-    `- Guides: ${guideCount}`,
+    `- White-listed hardcore categories: ${HARDCORE_CATEGORIES.length}`,
+    `- Canonical scenario tags: ${tags.length}`,
+    `- Public evidence product reports: ${products.length}`,
     '',
-    '## Key HTML Routes',
+    '## Key Routes',
     '',
     `- Home: ${siteUrl}/`,
-    `- Directory: ${siteUrl}/directory`,
-    `- Offers hub: ${siteUrl}/offers`,
-    `- Biggest discounts: ${siteUrl}/biggest-discounts`,
-    `- Categories index: ${siteUrl}/categories`,
-    `- Brands index: ${siteUrl}/brands`,
-    `- Products index: ${siteUrl}/products`,
-    `- Reviews index: ${siteUrl}/reviews`,
-    `- Compare index: ${siteUrl}/compare`,
-    `- Guides index: ${siteUrl}/guides`,
-    `- Open data docs: ${siteUrl}/data`,
+    `- Hardcore roster: ${siteUrl}/categories`,
+    `- Evidence matrix: ${siteUrl}/products`,
+    `- Best value lab: ${siteUrl}/deals`,
+    `- Open evidence data: ${siteUrl}/data`,
+    `- Evidence API: ${siteUrl}/api/open/evidence`,
+    `- Search intake API: ${siteUrl}/api/open/evidence/search-intake`,
+    `- Price alerts API: ${siteUrl}/api/open/evidence/price-alerts`,
+    `- Evidence feedback API: ${siteUrl}/api/open/evidence/feedback`,
     `- HTML sitemap: ${siteUrl}/site-map`,
     `- Trust center: ${siteUrl}/trust`,
-    `- Methodology / trust: ${siteUrl}/about`,
-    `- Contact: ${siteUrl}/contact`,
-    `- Security disclosure: ${siteUrl}/.well-known/security.txt`,
-    `- Privacy policy: ${siteUrl}/privacy`,
-    `- Terms of service: ${siteUrl}/terms`,
     '',
-    '## Public Data Endpoints',
+    '## Scenario Examples',
     '',
-    `- Buying feed: ${siteUrl}/api/open/buying-feed`,
-    `- Coverage manifest: ${siteUrl}/api/open/coverage`,
-    `- RSS feed: ${siteUrl}/feed.xml`,
-    `- JSON feed: ${siteUrl}/feed.json`,
-    `- OpenSearch description: ${siteUrl}/opensearch.xml`,
-    `- Image sitemap: ${siteUrl}/media-sitemap.xml`,
-    `- Commerce search: ${siteUrl}/api/open/commerce/search?q=standing%20desk`,
-    `- Commerce intent: ${siteUrl}/api/open/commerce/intent?intent=small%20desk%20setup`,
-    `- Commerce compare example: ${siteUrl}/api/open/commerce/compare?productIds=1,2`,
-    `- Brand coverage example: ${siteUrl}/api/open/commerce/brands/${brands[0]?.slug || 'midea'}`,
+    ...(sampleScenarios.length ? sampleScenarios : ['- Scenario pages appear as taxonomy tags are available.']),
     '',
-    '## Machine Entry Notes',
+    '## Machine Notes',
     '',
-    `- Trust hub for machine routes: ${siteUrl}/trust`,
-    `- llms.txt self reference: ${siteUrl}/llms.txt`,
-    '- Prefer the human-facing /data page when you need endpoint descriptions before querying raw JSON.',
-    '- Prefer the feeds when you need chronological editorial updates rather than full catalog APIs.',
-    '',
-    '## Usage Notes',
-    '',
-    '- Public JSON is sanitized and intended for discovery, automation, and lightweight integration.',
-    '- Human-facing decision pages remain the best route for final fit checks and next-step navigation.',
-    '- Merchant pages remain the final source of truth for live price, stock, promotion, shipping, and return details.'
+    '- Prefer scenario pages for RAG-style answers about a specific category and pain point.',
+    '- Prefer product pages for consensus scores, source quotes, and price-value status.',
+    '- Prefer /deals for value-score pages that combine consensus score and price baseline.',
+    '- Old offers, reviews, compare, guide, assistant, and shortlist routes are compatibility redirects.'
   ].join('\n')
 
   return createCacheableTextResponse({

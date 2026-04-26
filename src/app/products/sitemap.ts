@@ -1,17 +1,14 @@
 import type { MetadataRoute } from 'next'
-import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
-import { listOpenCommerceProducts } from '@/lib/site-data'
+import { listHardcoreProducts } from '@/lib/hardcore'
+import { buildLocalizedSitemapRoute } from '@/lib/sitemap-utils'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const products = await listOpenCommerceProducts()
+  const products = await listHardcoreProducts()
 
-  return products.flatMap((product) => {
-    if (!product.slug) return []
-
-    return buildLocalizedSitemapRoute(`/products/${product.slug}`, {
-      lastModified: maxDate([product.updatedAt, product.publishedAt]),
+  return products.flatMap((product) =>
+    buildLocalizedSitemapRoute(`/products/${product.slug}`, {
       changeFrequency: 'weekly',
-      priority: 0.85
+      priority: product.consensus.evidenceCount > 0 ? 0.86 : 0.55
     })
-  })
+  )
 }

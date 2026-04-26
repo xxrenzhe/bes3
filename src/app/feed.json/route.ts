@@ -13,7 +13,7 @@ export async function GET(request: Request) {
     title: 'Bes3 Editorial Feed',
     home_page_url: siteUrl,
     feed_url: `${siteUrl}/feed.json`,
-    description: 'Latest Bes3 reviews, comparisons, and guides for buyers who want structured updates.',
+    description: 'Latest Bes3 evidence updates and legacy editorial compatibility entries.',
     language: 'en-US',
     items: entries.map((entry) => ({
       id: entry.id,

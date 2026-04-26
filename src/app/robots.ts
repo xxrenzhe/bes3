@@ -6,18 +6,17 @@ export default function robots(): MetadataRoute.Robots {
   return {
     rules: [
       {
+        userAgent: ['GPTBot', 'ClaudeBot', 'Google-Extended', 'PerplexityBot'],
+        allow: '/'
+      },
+      {
         userAgent: '*',
         allow: [
           '/',
           '/site-map',
-          '/brands',
           '/categories',
           '/products',
-          '/reviews',
-          '/compare',
-          '/guides',
-          '/offers',
-          '/biggest-discounts',
+          '/deals',
           '/feed.xml',
           '/feed.json',
           '/opensearch.xml',

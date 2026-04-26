@@ -1,46 +1,37 @@
 import type { MetadataRoute } from 'next'
-import { buildLocalizedSitemapRoute, maxDate } from '@/lib/sitemap-utils'
-import { getCategorySlug } from '@/lib/category'
-import { listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
+import { HARDCORE_CATEGORIES, listHardcoreTags } from '@/lib/hardcore'
+import { buildLocalizedSitemapRoute } from '@/lib/sitemap-utils'
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [articles, brands, products] = await Promise.all([
-    listPublishedArticles(),
-    listBrands(),
-    listOpenCommerceProducts()
-  ])
-  const offerCategories = Array.from(
-    new Set(products.map((product) => getCategorySlug(product.category)).filter(Boolean))
+  const tags = await listHardcoreTags()
+  const scenarioRoutes = HARDCORE_CATEGORIES.flatMap((category) =>
+    tags.filter((tag) => tag.categorySlug === category.slug).slice(0, 8)
+      .map((tag) => `/${category.slug}/best-${category.slug}-for-${tag.slug}`)
   )
-  const siteFreshness = maxDate([
-    ...articles.flatMap((article) => [article.updatedAt, article.publishedAt, article.createdAt]),
-    ...products.flatMap((product) => [product.updatedAt, product.publishedAt]),
-    ...brands.map((brand) => brand.latestUpdate)
-  ])
+  const multiConstraintRoutes = HARDCORE_CATEGORIES.flatMap((category) => {
+    const categoryTags = tags.filter((tag) => tag.categorySlug === category.slug && tag.isCorePainpoint).slice(0, 4)
+    return categoryTags.flatMap((first, firstIndex) =>
+      categoryTags.slice(firstIndex + 1).map((second) => `/${category.slug}/best-${first.slug}-${second.slug}-${category.slug}`)
+    )
+  })
 
   return [
-    ...buildLocalizedSitemapRoute('', { lastModified: siteFreshness, changeFrequency: 'daily', priority: 1 }),
-    ...buildLocalizedSitemapRoute('/about', { lastModified: siteFreshness, changeFrequency: 'monthly', priority: 0.8 }),
-    ...buildLocalizedSitemapRoute('/brands', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
-    ...buildLocalizedSitemapRoute('/categories', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
-    ...buildLocalizedSitemapRoute('/compare', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.84 }),
-    ...buildLocalizedSitemapRoute('/contact', { lastModified: siteFreshness, changeFrequency: 'monthly', priority: 0.4 }),
-    ...buildLocalizedSitemapRoute('/data', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.74 }),
-    ...buildLocalizedSitemapRoute('/offers', { lastModified: siteFreshness, changeFrequency: 'daily', priority: 0.92 }),
-    ...buildLocalizedSitemapRoute('/biggest-discounts', { lastModified: siteFreshness, changeFrequency: 'daily', priority: 0.86 }),
-    ...buildLocalizedSitemapRoute('/directory', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
-    ...buildLocalizedSitemapRoute('/guides', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.8 }),
-    ...buildLocalizedSitemapRoute('/newsletter', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.6 }),
-    ...buildLocalizedSitemapRoute('/products', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.88 }),
-    ...buildLocalizedSitemapRoute('/reviews', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.83 }),
-    ...buildLocalizedSitemapRoute('/site-map', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.7 }),
-    ...buildLocalizedSitemapRoute('/trust', { lastModified: siteFreshness, changeFrequency: 'monthly', priority: 0.72 }),
-    ...buildLocalizedSitemapRoute('/start', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.9 }),
-    ...buildLocalizedSitemapRoute('/tools', { lastModified: siteFreshness, changeFrequency: 'weekly', priority: 0.6 }),
-    ...buildLocalizedSitemapRoute('/privacy', { lastModified: siteFreshness, changeFrequency: 'yearly', priority: 0.2 }),
-    ...buildLocalizedSitemapRoute('/terms', { lastModified: siteFreshness, changeFrequency: 'yearly', priority: 0.2 }),
-    ...offerCategories.flatMap((category) =>
-      buildLocalizedSitemapRoute(`/offers/${category}`, { lastModified: siteFreshness, changeFrequency: 'daily', priority: 0.78 })
-    )
+    ...buildLocalizedSitemapRoute('', { changeFrequency: 'daily', priority: 1 }),
+    ...buildLocalizedSitemapRoute('/categories', { changeFrequency: 'weekly', priority: 0.95 }),
+    ...buildLocalizedSitemapRoute('/products', { changeFrequency: 'weekly', priority: 0.9 }),
+    ...buildLocalizedSitemapRoute('/deals', { changeFrequency: 'daily', priority: 0.9 }),
+    ...buildLocalizedSitemapRoute('/data', { changeFrequency: 'weekly', priority: 0.74 }),
+    ...buildLocalizedSitemapRoute('/trust', { changeFrequency: 'monthly', priority: 0.72 }),
+    ...buildLocalizedSitemapRoute('/about', { changeFrequency: 'monthly', priority: 0.7 }),
+    ...buildLocalizedSitemapRoute('/privacy', { changeFrequency: 'yearly', priority: 0.2 }),
+    ...buildLocalizedSitemapRoute('/terms', { changeFrequency: 'yearly', priority: 0.2 }),
+    ...HARDCORE_CATEGORIES.flatMap((category) =>
+      buildLocalizedSitemapRoute(`/categories/${category.slug}`, { changeFrequency: 'weekly', priority: 0.88 })
+    ),
+    ...HARDCORE_CATEGORIES.flatMap((category) =>
+      buildLocalizedSitemapRoute(`/deals/best-${category.slug}-under-500`, { changeFrequency: 'daily', priority: 0.82 })
+    ),
+    ...scenarioRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.8 })),
+    ...multiConstraintRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.76 }))
   ]
 }

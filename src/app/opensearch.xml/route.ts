@@ -1,5 +1,5 @@
 import { createCacheableTextResponse, getLatestTimestamp } from '@/lib/http-cache'
-import { listBrands, listOpenCommerceProducts, listPublishedArticles } from '@/lib/site-data'
+import { listHardcoreProducts } from '@/lib/hardcore'
 import { getSiteUrl } from '@/lib/site-url'
 
 function escapeXml(value: string) {
@@ -13,31 +13,25 @@ function escapeXml(value: string) {
 
 export async function GET(request: Request) {
   const siteUrl = getSiteUrl()
-  const [articles, brands, products] = await Promise.all([
-    listPublishedArticles(),
-    listBrands(),
-    listOpenCommerceProducts()
-  ])
+  const products = await listHardcoreProducts()
 
   const lastModified = getLatestTimestamp([
-    ...articles.map((article) => article.updatedAt || article.publishedAt || article.createdAt),
-    ...products.map((product) => product.updatedAt || product.publishedAt),
-    ...brands.map((brand) => brand.latestUpdate)
+    ...products.map(() => new Date().toISOString())
   ])
 
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<OpenSearchDescription xmlns="http://a9.com/-/spec/opensearch/1.1/">',
-    `<ShortName>${escapeXml('Bes3 Search')}</ShortName>`,
-    `<Description>${escapeXml('Search Bes3 products, reviews, comparisons, guides, and offers.')}</Description>`,
+    `<ShortName>${escapeXml('Bes3 Evidence')}</ShortName>`,
+    `<Description>${escapeXml('Browse Bes3 teardown-backed product evidence reports.')}</Description>`,
     `<InputEncoding>${escapeXml('UTF-8')}</InputEncoding>`,
     `<OutputEncoding>${escapeXml('UTF-8')}</OutputEncoding>`,
     `<Language>${escapeXml('en-us')}</Language>`,
-    `<Url type="${escapeXml('text/html')}" method="${escapeXml('get')}" template="${escapeXml(`${siteUrl}/search?q={searchTerms}&scope=products`)}" />`,
+    `<Url type="${escapeXml('text/html')}" method="${escapeXml('get')}" template="${escapeXml(`${siteUrl}/products?q={searchTerms}`)}" />`,
     `<Image height="${escapeXml('64')}" width="${escapeXml('64')}" type="${escapeXml('image/svg+xml')}">${escapeXml(`${siteUrl}/icon.svg`)}</Image>`,
     `<Developer>${escapeXml('Bes3')}</Developer>`,
-    `<Tags>${escapeXml('search reviews comparisons guides offers products')}</Tags>`,
-    `<Attribution>${escapeXml('Search results and decision guidance by Bes3')}</Attribution>`,
+    `<Tags>${escapeXml('hardware teardowns evidence products consensus score')}</Tags>`,
+    `<Attribution>${escapeXml('Evidence reports and price-value analysis by Bes3')}</Attribution>`,
     `<SyndicationRight>${escapeXml('open')}</SyndicationRight>`,
     '<AdultContent>false</AdultContent>',
     '</OpenSearchDescription>'

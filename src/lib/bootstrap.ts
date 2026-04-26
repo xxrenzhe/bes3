@@ -2,6 +2,7 @@ import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
+import { HARDCORE_CATEGORIES } from '@/lib/hardcore-catalog'
 import { getRuntimeAdminPasswordState } from '@/lib/runtime-secrets'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
@@ -99,6 +100,30 @@ const DEFAULT_PROMPTS = [
     version: 'v1',
     promptContent:
       'Answer the shopping question using only the supplied Bes3 product facts, offers, and evidence. Recommend the clearest next action and keep the tone concise.'
+  },
+  {
+    promptId: 'taxonomy_refinement',
+    category: 'factExtraction',
+    name: 'Taxonomy Refinement',
+    version: 'v2',
+    promptContent:
+      'You are an expert E-commerce Taxonomist and SEO Specialist. Group raw queries for {{category.name}} into Canonical Tags. Each tag must represent a user pain point, usage scenario, or physical test. Return strict JSON array with canonical_tag, synonyms, and is_core_painpoint.'
+  },
+  {
+    promptId: 'video_evidence_extraction',
+    category: 'factExtraction',
+    name: 'Hardcore Video Evidence Extraction',
+    version: 'v2',
+    promptContent:
+      'You are a hardcore hardware engineer and ruthless product reviewer. Analyze {{category.name}} transcript against {{canonicalTags}}. Return strict JSON with is_advertorial, overall_sentiment, scenario_performance[{canonical_tag,rating,evidence_quote,timestamp_seconds,context_snippet}], and unexpected_brilliant_usecases. Do not include untested tags.'
+  },
+  {
+    promptId: 'shorts_evidence_extraction',
+    category: 'factExtraction',
+    name: 'Shorts Evidence Extraction',
+    version: 'v2',
+    promptContent:
+      'Analyze a short product video for {{category.name}}. Return strict JSON with verdict_type, killer_feature, fatal_flaw, and vibe_quote. Do not infer comprehensive physical performance from a short clip.'
   }
 ] as const
 
@@ -440,6 +465,261 @@ async function ensureSeedBrandKnowledge(): Promise<void> {
   }
 }
 
+async function ensureHardcoreTaxonomySeed(): Promise<void> {
+  const db = await getDatabase()
+
+  for (const category of HARDCORE_CATEGORIES) {
+    await ignoreUniqueViolation(() =>
+      db.exec(
+        `
+          INSERT INTO hardcore_categories (name, slug, status, meta_config_json)
+          VALUES (?, ?, 'active', ?)
+        `,
+        [
+          category.name,
+          category.slug,
+          JSON.stringify({
+            coreProducts: category.coreProducts,
+            metrics: category.metrics,
+            redditSeeds: category.redditSeeds
+          })
+        ]
+      )
+    )
+
+    const categoryRow = await db.queryOne<{ id: number }>(
+      'SELECT id FROM hardcore_categories WHERE slug = ? LIMIT 1',
+      [category.slug]
+    )
+
+    for (const [index, painpoint] of category.painpoints.entries()) {
+      const slug = slugify(painpoint)
+      const seedKeywords = Array.from(
+        new Set([
+          painpoint,
+          ...category.redditSeeds.filter((seed) =>
+            seed.toLowerCase().includes(painpoint.split(' ')[0].toLowerCase())
+          )
+        ])
+      )
+
+      await ignoreUniqueViolation(() =>
+        db.exec(
+          `
+            INSERT INTO taxonomy_tags (
+              category_id,
+              category_slug,
+              canonical_name,
+              slug,
+              keywords_json,
+              search_volume,
+              is_core_painpoint,
+              status
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+          `,
+          [
+            categoryRow?.id || null,
+            category.slug,
+            painpoint,
+            slug,
+            JSON.stringify({ synonyms: seedKeywords, reddit_mentions: category.redditSeeds }),
+            Math.max(1000 - index * 120, 100),
+            index < 4 ? 1 : 0
+          ]
+        )
+      )
+    }
+  }
+}
+
+async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
+  const db = await getDatabase()
+  const productSlug = slugify('Roborock Q Revo Pet Hair Demo')
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO products (
+          source_platform,
+          source_affiliate_link,
+          resolved_url,
+          canonical_url,
+          slug,
+          brand,
+          product_name,
+          category,
+          description,
+          price_amount,
+          price_currency,
+          current_price,
+          hist_low_price,
+          avg_90d_price,
+          price_status,
+          rating,
+          review_count,
+          specs_json,
+          review_highlights_json,
+          published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+      `,
+      [
+        'manual',
+        'https://example.com/affiliate/roborock-q-revo-demo',
+        'https://example.com/affiliate/roborock-q-revo-demo',
+        'https://example.com/products/roborock-q-revo-demo',
+        productSlug,
+        'Roborock',
+        'Q Revo Pet Hair Demo',
+        'robot-vacuums',
+        'Seeded v2 evidence product used to keep the hardcore matrix, scenario pages, and value map visible before live ingestion runs.',
+        499,
+        'USD',
+        499,
+        449,
+        629,
+        'great-value',
+        4.4,
+        8,
+        JSON.stringify({ navigation: 'LiDAR', mop: 'self-washing dock', bin: 'auto-empty dock' }),
+        JSON.stringify(['Seeded teardown-style evidence for Pet Hair', 'Below 90-day average price window'])
+      ]
+    )
+  )
+
+  const product = await db.queryOne<{ id: number }>('SELECT id FROM products WHERE slug = ? LIMIT 1', [productSlug])
+  if (!product?.id) return
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO affiliate_links (
+          product_id,
+          platform,
+          affiliate_url,
+          original_url,
+          country_code,
+          commission_rate,
+          status,
+          last_verified
+        ) VALUES (?, 'PartnerBoost', ?, ?, 'US', ?, 'active', CURRENT_TIMESTAMP)
+      `,
+      [
+        product.id,
+        'https://example.com/affiliate/roborock-q-revo-demo',
+        'https://example.com/products/roborock-q-revo-demo',
+        0.08
+      ]
+    )
+  )
+
+  const existingPriceSnapshot = await db.queryOne<{ id: number }>(
+    'SELECT id FROM price_value_snapshots WHERE product_id = ? AND source = ? LIMIT 1',
+    [product.id, 'seed']
+  )
+  if (!existingPriceSnapshot?.id) {
+    await db.exec(
+      `
+        INSERT INTO price_value_snapshots (
+          product_id,
+          current_price,
+          hist_low_price,
+          avg_90d_price,
+          consensus_score,
+          value_score,
+          entry_status,
+          source
+        ) VALUES (?, ?, ?, ?, ?, ?, 'great-value', 'seed')
+      `,
+      [product.id, 499, 449, 629, 4, (4 * 100) / 499]
+    )
+  }
+
+  await ignoreUniqueViolation(() =>
+    db.exec(
+      `
+        INSERT INTO review_videos (
+          youtube_id,
+          channel_name,
+          channel_url,
+          blogger_rank,
+          authority_tier,
+          title,
+          video_type,
+          transcript,
+          description,
+          processed_status,
+          published_at
+        ) VALUES (?, ?, ?, ?, ?, ?, 'long-form', ?, ?, 'success', CURRENT_TIMESTAMP)
+      `,
+      [
+        'demoPetHair001',
+        'VacuumWars Demo Lab',
+        'https://www.youtube.com/@VacuumWars',
+        2,
+        'specialist',
+        'Roborock Q Revo pet hair teardown demo',
+        'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+        'Demo video description with product identity controlled by Bes3 seed data.'
+      ]
+    )
+  )
+
+  const video = await db.queryOne<{ id: number }>('SELECT id FROM review_videos WHERE youtube_id = ? LIMIT 1', ['demoPetHair001'])
+  const petHairTag = await db.queryOne<{ id: number }>(
+    'SELECT id FROM taxonomy_tags WHERE category_slug = ? AND slug = ? LIMIT 1',
+    ['robot-vacuums', 'pet-hair']
+  )
+  if (!video?.id || !petHairTag?.id) return
+
+  const existingReport = await db.queryOne<{ id: number }>(
+    'SELECT id FROM analysis_reports WHERE product_id = ? AND video_id = ? AND tag_id = ? LIMIT 1',
+    [product.id, video.id, petHairTag.id]
+  )
+  if (existingReport?.id) {
+    await db.exec(
+      `
+        UPDATE analysis_reports
+        SET context_snippet = COALESCE(context_snippet, ?), quality_flags_json = COALESCE(quality_flags_json, ?)
+        WHERE id = ?
+      `,
+      [
+        'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+        JSON.stringify({ validation: 'seeded_quote_with_context' }),
+        existingReport.id
+      ]
+    )
+    return
+  }
+
+  await db.exec(
+    `
+      INSERT INTO analysis_reports (
+        product_id,
+        video_id,
+        tag_id,
+        rating,
+        evidence_quote,
+        timestamp_seconds,
+        context_snippet,
+        evidence_confidence,
+        evidence_type,
+        is_advertorial,
+        quality_flags_json
+      ) VALUES (?, ?, ?, 'Good', ?, ?, ?, ?, 'side-by-side', 0, ?)
+    `,
+    [
+      product.id,
+      video.id,
+      petHairTag.id,
+      'Collected most embedded hair but still needed a second pass near the baseboards.',
+      428,
+      'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+      0.86,
+      JSON.stringify({ validation: 'seeded_quote_with_context' })
+    ]
+  )
+}
+
 export async function bootstrapApplication(): Promise<void> {
   if (!bootstrapPromise) {
     bootstrapPromise = (async () => {
@@ -447,6 +727,8 @@ export async function bootstrapApplication(): Promise<void> {
       await ensureDefaultAdmin()
       await ensureDefaultSettings()
       await ensureDefaultPrompts()
+      await ensureHardcoreTaxonomySeed()
+      await ensureHardcoreDemoEvidenceSeed()
       await ensureSeedContent()
       await ensureSeedBrandKnowledge()
     })().catch((error) => {

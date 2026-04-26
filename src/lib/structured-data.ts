@@ -130,18 +130,13 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
 ]
 
 const CORE_ENTRY_LINKS: ItemListEntry[] = [
-  { name: 'Assistant', path: '/assistant' },
-  { name: 'Start Here', path: '/start' },
-  { name: 'Search', path: '/search' },
-  { name: 'Directory', path: '/directory' },
-  { name: 'Offers', path: '/offers' },
-  { name: 'Biggest Discounts', path: '/biggest-discounts' },
-  { name: 'Brands', path: '/brands' },
+  { name: 'Hardcore Roster', path: '/categories' },
+  { name: 'Evidence Matrix', path: '/products' },
+  { name: 'Best Value Lab', path: '/deals' },
+  { name: 'Open Data', path: '/data' },
+  { name: 'Trust Center', path: '/trust' },
   { name: 'Categories', path: '/categories' },
-  { name: 'Products', path: '/products' },
-  { name: 'Reviews', path: '/reviews' },
-  { name: 'Compare', path: '/compare' },
-  { name: 'Guides', path: '/guides' }
+  { name: 'Products', path: '/products' }
 ]
 
 function buildOrganizationReference() {
@@ -488,12 +483,12 @@ export function buildOrganizationSchema(locale: SiteLocale = DEFAULT_LOCALE): Sc
       '@type': 'ImageObject',
       url: toAbsoluteUrl('/icon.svg')
     },
-    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
+    description: 'Bes3 is a hardcore product evidence engine that turns creator teardown data, canonical pain points, and price history into scenario-driven comparison matrices.',
     slogan: DEFAULT_SITE_TAGLINE,
     availableLanguage: supportedLanguages,
     email: publicContactEmail || undefined,
     telephone: publicContactPhone || undefined,
-    knowsAbout: ['product reviews', 'product comparisons', 'buying guides', 'buyer decision systems', 'price tracking', 'shortlist workflows', 'brand and category discovery'],
+    knowsAbout: ['hardware teardowns', 'creator evidence', 'product testing', 'canonical pain points', 'consensus scoring', 'price-value analysis', 'programmatic SEO scenario pages'],
     areaServed: 'Worldwide',
     contactPoint: [
       {
@@ -529,7 +524,7 @@ export function buildOrganizationSchema(locale: SiteLocale = DEFAULT_LOCALE): Sc
 
 export function buildWebsiteSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaNode {
   const localizedHome = toAbsoluteUrl(addLocaleToPath('/', locale))
-  const localizedSearch = toAbsoluteUrl(addLocaleToPath('/search', locale))
+  const localizedProducts = toAbsoluteUrl(addLocaleToPath('/products', locale))
 
   return {
     '@context': SCHEMA_CONTEXT,
@@ -538,7 +533,7 @@ export function buildWebsiteSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaN
     url: localizedHome,
     name: DEFAULT_SITE_NAME,
     alternateName: DEFAULT_SITE_TAGLINE,
-    description: 'Bes3 is a structured buyer decision system for tech and home-office products, built to turn noisy research into shortlists, verdicts, comparisons, and wait flows.',
+    description: 'Bes3 is a hardcore product evidence engine built from teardown evidence, taxonomy tags, consensus scoring, and price-value timing.',
     inLanguage: SUPPORTED_LOCALES.map((entry) => getHtmlLang(entry)),
     about: buildOrganizationReference(),
     publisher: buildOrganizationReference(),
@@ -547,7 +542,7 @@ export function buildWebsiteSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaN
       '@type': 'SearchAction',
       target: {
         '@type': 'EntryPoint',
-        urlTemplate: `${localizedSearch}?q={search_term_string}&scope=products`,
+        urlTemplate: `${localizedProducts}?q={search_term_string}`,
         actionPlatform: [
           'https://schema.org/DesktopWebPlatform',
           'https://schema.org/MobileWebPlatform'
