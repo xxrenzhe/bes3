@@ -45,7 +45,7 @@ async function main() {
   const promote = process.argv.includes('--promote-pending')
 
   if (!filePath) {
-    throw new Error('Usage: npm run hardcore:import-intents -- --file=./intents.json --category=robot-vacuums --source=reddit')
+    throw new Error('Usage: npm run hardcore:import-intents -- --file=./intents.json --category=yard-pool-automation --source=reddit')
   }
 
   await bootstrapApplication()
