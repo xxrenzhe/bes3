@@ -2,14 +2,18 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, FileText, GitBranch, Globe2, LayoutDashboard, LogOut, Search, Settings, ShieldCheck, ShoppingCart, Wand2 } from 'lucide-react'
+import { ExternalLink, FileText, GitBranch, Globe2, LayoutDashboard, LogOut, Search, Settings, ShieldAlert, ShieldCheck, ShoppingCart, Tags, TrendingUp, Video, Wand2 } from 'lucide-react'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 const NAV_ITEMS = [
   { href: '/admin', label: 'Dashboard', icon: LayoutDashboard },
   { href: '/admin/products', label: 'Products', icon: ShoppingCart },
+  { href: '/admin/evidence', label: 'Evidence', icon: Video },
+  { href: '/admin/taxonomy', label: 'Taxonomy', icon: Tags },
+  { href: '/admin/price-value', label: 'Price & Value', icon: TrendingUp },
   { href: '/admin/pipeline-runs', label: 'Pipeline Runs', icon: GitBranch },
+  { href: '/admin/risk', label: 'Risk Center', icon: ShieldAlert },
   { href: '/admin/articles', label: 'Articles', icon: FileText },
   { href: '/admin/prompts', label: 'Prompts', icon: Wand2 },
   { href: '/admin/seo-ops', label: 'SEO Ops', icon: Globe2 },
