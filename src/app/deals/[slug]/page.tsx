@@ -7,7 +7,7 @@ import { getValueLandingPage } from '@/lib/hardcore'
 import { getPriceAlertLabel } from '@/lib/hardcore-ops'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
+import { buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 
 function normalizeValueSlug(slug: string) {
   if (slug.startsWith('best-value-')) return slug.slice('best-value-'.length)
@@ -77,6 +77,20 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
               path: `/products/${product.slug}`
             }))
           }),
+          ...page.products.slice(0, 10).map((product) =>
+            buildProductAggregateSchema({
+              path: `/products/${product.slug}`,
+              name: product.name,
+              description: `${product.name} is included in this best-value page using consensus score, current price, and 90-day price baselines.`,
+              image: product.imageUrl,
+              ratingValue: product.consensus.score5,
+              reviewCount: product.consensus.evidenceCount,
+              offerUrl: product.affiliateUrl ? `/go/${product.id}` : null,
+              price: product.price.currentPrice,
+              priceCurrency: product.price.currency,
+              availabilityStatus: product.affiliateStatus
+            })
+          ),
           buildFaqSchema(path, faqEntries)
         ]}
       />
