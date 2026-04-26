@@ -10,7 +10,25 @@
 
 import './load-env'
 import { getDatabase } from '../src/lib/db'
-import { startPipelineWorker } from '../src/lib/pipeline'
+import { markPipelineWorkerStopped, startPipelineWorker } from '../src/lib/pipeline'
+
+let shuttingDown = false
+
+async function shutdown(signal: string) {
+  if (shuttingDown) return
+  shuttingDown = true
+  console.log(`[bes3-worker] Received ${signal}, marking worker stopped...`)
+  try {
+    await markPipelineWorkerStopped()
+  } catch (error) {
+    console.error('[bes3-worker] Failed to mark worker stopped:', error)
+  } finally {
+    process.exit(0)
+  }
+}
+
+process.on('SIGTERM', () => void shutdown('SIGTERM'))
+process.on('SIGINT', () => void shutdown('SIGINT'))
 
 async function main() {
   console.log('[bes3-worker] Starting pipeline worker...')

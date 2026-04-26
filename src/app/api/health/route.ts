@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/db'
 import { getSettingValueOrEnv } from '@/lib/settings'
-import { getPipelineWorkerRuntimeConfig } from '@/lib/pipeline'
+import { getPipelineWorkerRuntimeConfig, listPipelineOperations } from '@/lib/pipeline'
 
 const BES3_VERSION = '0.1.0'
 
@@ -19,11 +19,23 @@ export async function GET() {
   }
 
   const mediaDriver = await getSettingValueOrEnv('media', 'driver', 'MEDIA_DRIVER', 'local')
+  const pipelineOps = await listPipelineOperations().catch(() => null)
+  const workerHasFreshHeartbeat = pipelineOps
+    ? pipelineOps.workers.some((worker) => {
+        const ageMs = Date.now() - new Date(worker.last_seen_at).getTime()
+        return worker.status !== 'stopped' && Number.isFinite(ageMs) && ageMs < 120_000
+      })
+    : false
 
   return NextResponse.json({
-    status: 'ok',
+    status: dbConnected ? 'ok' : 'degraded',
     version: BES3_VERSION,
-    worker: getPipelineWorkerRuntimeConfig(),
+    worker: {
+      ...getPipelineWorkerRuntimeConfig(),
+      heartbeatFresh: workerHasFreshHeartbeat,
+      staleRunningCount: pipelineOps?.staleRunningCount ?? null,
+      expiredLockCount: pipelineOps?.expiredLockCount ?? null
+    },
     database: {
       type: dbType,
       connected: dbConnected
