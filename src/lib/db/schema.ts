@@ -317,6 +317,7 @@ const SQLITE_SCHEMA = [
       status TEXT NOT NULL DEFAULT 'queued',
       dedupe_key TEXT NOT NULL UNIQUE,
       payload_json TEXT,
+      error_message TEXT,
       queued_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       sent_at TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1069,6 +1070,7 @@ async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<
   await ensureColumn(db, 'price_alert_notifications', 'status', "TEXT NOT NULL DEFAULT 'queued'")
   await ensureColumn(db, 'price_alert_notifications', 'dedupe_key', 'TEXT')
   await ensureColumn(db, 'price_alert_notifications', 'payload_json', jsonType)
+  await ensureColumn(db, 'price_alert_notifications', 'error_message', 'TEXT')
   await ensureColumn(db, 'price_alert_notifications', 'queued_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
   await ensureColumn(db, 'price_alert_notifications', 'sent_at', 'TEXT')
   await ensureColumn(db, 'price_alert_notifications', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
