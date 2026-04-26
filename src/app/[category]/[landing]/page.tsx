@@ -89,6 +89,88 @@ function EvidenceStream({ products }: { products: HardcoreProduct[] }) {
   )
 }
 
+function buildDecisionFit(products: HardcoreProduct[], tagLabel: string) {
+  const tested = testedProductCount(products)
+  const strongest = products.find((product) => product.consensus.evidenceCount > 0) || products[0] || null
+  const bestQuote = strongest?.consensus.bestQuote || strongest?.evidence[0] || null
+  const hasDealSignal = strongest?.price.entryStatus === 'best-deal' || strongest?.price.entryStatus === 'great-value'
+  const isResearching = !strongest || tested < 3
+
+  return {
+    strongest,
+    isResearching,
+    buySignals: [
+      tested >= 3
+        ? `${tested} products have usable creator evidence for ${tagLabel}.`
+        : `Only ${tested} product${tested === 1 ? '' : 's'} currently clears the evidence bar for ${tagLabel}.`,
+      strongest?.consensus.score10 != null
+        ? `${strongest.name} leads with a ${strongest.consensus.score10.toFixed(1)}/10 consensus score.`
+        : 'Consensus scoring is still waiting for more aligned evidence.',
+      hasDealSignal
+        ? `${strongest!.name} is in a ${strongest!.price.label.toLowerCase()} price window.`
+        : strongest
+          ? `${strongest.name} does not yet have a strong buy-window signal.`
+          : 'Price-value timing is still unavailable.'
+    ],
+    skipSignals: [
+      isResearching
+        ? 'Skip treating this as a final ranking until at least three products have useful evidence.'
+        : 'Skip products with no timestamped quote, even if their specs look strong.',
+      strongest?.consensus.controversy
+        ? `${strongest.name} has contradictory creator evidence, so read the proof before buying.`
+        : 'Skip the winner claim if the evidence stream does not match your exact use case.',
+      strongest?.affiliateStatus === 'out_of_stock'
+        ? `${strongest.name} is out of stock, so use the alternatives path instead of forcing the top pick.`
+        : 'Skip buying immediately when the price window is normal or overpriced.'
+    ],
+    proof: bestQuote
+  }
+}
+
+function DecisionFitSection({ products, tagLabel }: { products: HardcoreProduct[]; tagLabel: string }) {
+  const decision = buildDecisionFit(products, tagLabel)
+
+  return (
+    <section className="border-y border-border bg-slate-950 px-4 py-14 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+        <div>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Decision Fit</p>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
+            Who should act on this page, and who should wait.
+          </h2>
+          <p className="mt-4 text-sm leading-7 text-slate-300">
+            This summary converts evidence count, consensus score, creator proof, and price-value timing into a direct buying decision for {tagLabel}.
+          </p>
+          {decision.proof ? (
+            <blockquote className="mt-6 border-l-2 border-emerald-300 pl-4 text-sm leading-7 text-slate-200">
+              {decision.proof.evidenceQuote}
+              <span className="mt-2 block font-semibold text-white">Review by {decision.proof.channelName}</span>
+            </blockquote>
+          ) : null}
+        </div>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-md border border-emerald-300/30 bg-white/10 p-5">
+            <h3 className="text-base font-bold text-white">Use this page when</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
+              {decision.buySignals.map((signal) => (
+                <li key={signal} className="pl-1">{signal}</li>
+              ))}
+            </ul>
+          </div>
+          <div className="rounded-md border border-amber-300/30 bg-white/10 p-5">
+            <h3 className="text-base font-bold text-white">Wait or verify when</h3>
+            <ul className="mt-4 space-y-3 text-sm leading-6 text-slate-200">
+              {decision.skipSignals.map((signal) => (
+                <li key={signal} className="pl-1">{signal}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export async function generateMetadata({
   params
 }: {
@@ -207,6 +289,7 @@ export default async function ScenarioLandingPage({
           </p>
         </div>
       </section>
+      <DecisionFitSection products={products} tagLabel={tagLabel} />
       <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the evidence threshold.`} />
       <EvidenceStream products={products} />
       <section className="px-4 pb-14 sm:px-6 lg:px-8">
