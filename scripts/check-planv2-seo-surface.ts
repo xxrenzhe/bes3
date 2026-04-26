@@ -16,6 +16,7 @@ const checks: SurfaceCheck[] = [
     filePath: 'src/app/[category]/[landing]/page.tsx',
     required: [
       'BLUF:',
+      'DecisionFitSection',
       'HardcoreEvidenceMatrix',
       'EvidenceStream',
       'SeoFaqSection',
