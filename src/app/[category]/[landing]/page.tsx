@@ -7,10 +7,85 @@ import { getMultiConstraintLandingPage, getScenarioLandingPage } from '@/lib/har
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
+import type { HardcoreProduct } from '@/lib/hardcore'
 
 function normalizeScenarioSlug(category: string, landing: string) {
   const prefix = `best-${category}-for-`
   return landing.startsWith(prefix) ? landing.slice('best-'.length) : ''
+}
+
+function testedProductCount(products: HardcoreProduct[]) {
+  return products.filter((product) => product.consensus.evidenceCount > 0).length
+}
+
+function buildScenarioTitle({
+  categoryName,
+  tagLabel,
+  products
+}: {
+  categoryName: string
+  tagLabel: string
+  products: HardcoreProduct[]
+}) {
+  const count = Math.max(testedProductCount(products), 1)
+  return `Reddit Consensus: The ${count} Best ${categoryName} for ${tagLabel} (2026 Tested)`
+}
+
+function buildBluf({
+  products,
+  tagLabel
+}: {
+  products: HardcoreProduct[]
+  tagLabel: string
+}) {
+  const tested = testedProductCount(products)
+  const evidenceCount = products.reduce((total, product) => total + product.consensus.evidenceCount, 0)
+  const winner = products.find((product) => product.consensus.evidenceCount > 0) || products[0]
+  const proof = winner?.consensus.bestQuote || winner?.evidence[0]
+
+  if (!winner || !tested) {
+    return `BLUF: Bes3 is still researching ${tagLabel}. This page stays noindex until enough aligned products have creator evidence, price baselines, and usable quotes.`
+  }
+
+  return `BLUF: Bes3 analyzed ${evidenceCount} creator evidence reports across ${tested} tested products for ${tagLabel}. ${winner.name} is currently the strongest evidence-backed pick${proof ? ` because reviewers found: "${proof.evidenceQuote}"` : ''}.`
+}
+
+function EvidenceStream({ products }: { products: HardcoreProduct[] }) {
+  const reports = products.flatMap((product) =>
+    product.evidence.slice(0, 3).map((report) => ({ product, report }))
+  ).slice(0, 12)
+
+  if (!reports.length) return null
+
+  return (
+    <section className="px-4 py-14 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Evidence Stream</p>
+        <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Creator quotes remain visible to humans and crawlers.</h2>
+        <div className="mt-8 grid gap-5 md:grid-cols-2">
+          {reports.map(({ product, report }) => {
+            const timestamp = report.youtubeId
+              ? `https://www.youtube.com/watch?v=${report.youtubeId}${report.timestampSeconds ? `&t=${report.timestampSeconds}s` : ''}`
+              : null
+            return (
+              <blockquote key={`${product.id}-${report.id}`} className="border-l-2 border-primary bg-white py-2 pl-4 text-sm leading-7 text-muted-foreground">
+                {report.evidenceQuote}
+                <span className="mt-2 block font-semibold text-foreground">
+                  {product.name} · {report.rating} · {timestamp ? (
+                    <a href={timestamp} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                      Review by {report.channelName}
+                    </a>
+                  ) : (
+                    `Review by ${report.channelName}`
+                  )}
+                </span>
+              </blockquote>
+            )
+          })}
+        </div>
+      </div>
+    </section>
+  )
 }
 
 export async function generateMetadata({
@@ -26,7 +101,7 @@ export async function generateMetadata({
     if (multiPage) {
       const tagLabel = multiPage.tags.map((tag) => tag.name).join(' + ')
       return buildPageMetadata({
-        title: `Reddit Consensus: Best ${multiPage.category.name} for ${tagLabel}`,
+        title: buildScenarioTitle({ categoryName: multiPage.category.name, tagLabel, products: multiPage.products }),
         description: `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using teardown evidence and price-value signals.`,
         path: `/${multiPage.category.slug}/${resolved.landing}`,
         locale: getRequestLocale(),
@@ -44,7 +119,7 @@ export async function generateMetadata({
   }
 
   return buildPageMetadata({
-    title: `Reddit Consensus: Best ${page.category.name} for ${page.tag.name}`,
+    title: buildScenarioTitle({ categoryName: page.category.name, tagLabel: page.tag.name, products: page.products }),
     description: `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
     path: `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`,
     locale: getRequestLocale(),
@@ -66,10 +141,11 @@ export default async function ScenarioLandingPage({
   const path = page
     ? `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`
     : `/${multiPage!.category.slug}/${resolved.landing}`
-  const title = page
-    ? `Reddit Consensus: Best ${page.category.name} for ${page.tag.name}`
-    : `Reddit Consensus: Best ${multiPage!.category.name} for ${multiPage!.tags.map((tag) => tag.name).join(' + ')}`
   const products = page ? page.products : multiPage!.products
+  const tagLabel = page ? page.tag.name : multiPage!.tags.map((tag) => tag.name).join(' + ')
+  const categoryName = page ? page.category.name : multiPage!.category.name
+  const title = buildScenarioTitle({ categoryName, tagLabel, products })
+  const bluf = buildBluf({ products, tagLabel })
   const faqEntries = [
     {
       question: page ? `Why does this page focus on ${page.tag.name}?` : 'Why combine these constraints?',
@@ -120,11 +196,12 @@ export default async function ScenarioLandingPage({
             {title}.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            BLUF: Bes3 cross-checks YouTube teardown evidence against this pain point, then displays the matrix in raw HTML so humans and RAG crawlers can read it without hidden tabs.
+            {bluf}
           </p>
         </div>
       </section>
       <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the evidence threshold.`} />
+      <EvidenceStream products={products} />
     </PublicShell>
   )
 }
