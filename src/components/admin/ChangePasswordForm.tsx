@@ -48,6 +48,7 @@ export function ChangePasswordForm() {
       <label className="block space-y-2">
         <span className="text-sm font-semibold text-slate-700">Current password</span>
         <Input
+          name="current-password"
           value={currentPassword}
           onChange={(event) => setCurrentPassword(event.target.value)}
           type="password"
@@ -59,6 +60,7 @@ export function ChangePasswordForm() {
       <label className="block space-y-2">
         <span className="text-sm font-semibold text-slate-700">New password</span>
         <Input
+          name="new-password"
           value={nextPassword}
           onChange={(event) => setNextPassword(event.target.value)}
           type="password"
@@ -70,6 +72,7 @@ export function ChangePasswordForm() {
       <label className="block space-y-2">
         <span className="text-sm font-semibold text-slate-700">Confirm new password</span>
         <Input
+          name="confirm-password"
           value={confirmPassword}
           onChange={(event) => setConfirmPassword(event.target.value)}
           type="password"
@@ -79,7 +82,7 @@ export function ChangePasswordForm() {
       </label>
 
       <Button type="submit" disabled={isPending} className="min-h-[48px] w-full rounded-full">
-        {isPending ? 'Updating...' : 'Update password'}
+        {isPending ? 'Updating…' : 'Update password'}
       </Button>
     </form>
   )

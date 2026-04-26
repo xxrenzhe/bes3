@@ -51,8 +51,11 @@ export function LoginForm() {
       <label className="block space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Username</span>
         <Input
+          name="username"
           value={username}
           onChange={(event) => setUsername(event.target.value)}
+          autoComplete="username"
+          spellCheck={false}
           placeholder="Username"
           className="min-h-[54px] rounded-[1.25rem] border-slate-200 bg-slate-50 px-4 shadow-none focus-visible:ring-2"
         />
@@ -61,9 +64,11 @@ export function LoginForm() {
       <label className="block space-y-2">
         <span className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">Password</span>
         <Input
+          name="password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
           type="password"
+          autoComplete="current-password"
           placeholder="Password"
           className="min-h-[54px] rounded-[1.25rem] border-slate-200 bg-slate-50 px-4 shadow-none focus-visible:ring-2"
         />
@@ -85,7 +90,7 @@ export function LoginForm() {
       </div>
 
       <Button type="submit" disabled={isPending} className="min-h-[54px] w-full rounded-full px-6 text-base font-semibold">
-        {isPending ? 'Signing in...' : 'Sign in'}
+        {isPending ? 'Signing in…' : 'Sign in'}
       </Button>
     </form>
   )

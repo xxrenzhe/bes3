@@ -47,11 +47,17 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
             <LocaleSwitcher currentLocale={locale} currentPath={displayPath} />
           </nav>
           <details className="relative md:hidden">
-            <summary className="list-none rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold">Menu</summary>
+            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              Menu
+            </summary>
             <div className="absolute right-0 mt-3 w-64 rounded-md border border-border bg-white p-3 shadow-panel">
               <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
                 {navItems.map((item) => (
-                  <Link key={item.href} href={addLocaleToPath(item.href, locale)} className="rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted">
+                  <Link
+                    key={item.href}
+                    href={addLocaleToPath(item.href, locale)}
+                    className="flex min-h-11 items-center rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
                     {item.label}
                   </Link>
                 ))}
