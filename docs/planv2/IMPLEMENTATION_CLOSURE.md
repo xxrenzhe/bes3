@@ -35,6 +35,8 @@ Planv2 is considered landed when these commands complete locally:
 npm run type-check
 npm run hardcore:export-planv2-ops -- --limit=25
 npm run hardcore:resolve-video-entities -- --dry-run --limit=5
+npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=dQw4w9WgXcQ'
+npm run hardcore:inspect-affiliate-links -- --dry-run --limit=5
 npm run hardcore:evolve-taxonomy -- --dry-run --limit=5
 npm run hardcore:refresh-price-value -- --dry-run --limit=25
 npm run hardcore:evaluate-price-alerts
@@ -45,7 +47,7 @@ Operational commands that require external credentials, network services, or a l
 ```bash
 npm run hardcore:collect-intents -- --source=all --promote-pending
 npm run hardcore:import-keyword-planner -- --file=./keyword-planner.csv --category=yard-pool-automation --promote-pending
-npm run hardcore:youtube-transcript-command -- --url=https://www.youtube.com/watch?v=...
+npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=...'
 npm run hardcore:inspect-affiliate-links
 npm run hardcore:push-pseo
 ```
