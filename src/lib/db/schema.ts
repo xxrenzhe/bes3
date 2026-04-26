@@ -714,6 +714,7 @@ async function ensureIndex(db: DatabaseAdapter, indexName: string, statement: st
 }
 
 async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   await ensureColumn(db, 'content_pipeline_runs', 'run_type', "TEXT NOT NULL DEFAULT 'fullPipeline'")
   await ensureColumn(db, 'content_pipeline_runs', 'requested_action', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'worker_id', 'TEXT')
@@ -721,6 +722,7 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'content_pipeline_runs', 'started_at', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'finished_at', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'attempt_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'content_pipeline_jobs', 'payload_json', jsonType)
   await ensureIndex(
     db,
     'idx_content_pipeline_runs_status_created_at',
@@ -731,6 +733,14 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
     'idx_content_pipeline_runs_product_status',
     'CREATE INDEX idx_content_pipeline_runs_product_status ON content_pipeline_runs (product_id, status, updated_at)'
   )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_content_pipeline_jobs_payload_json_gin',
+      'CREATE INDEX idx_content_pipeline_jobs_payload_json_gin ON content_pipeline_jobs USING GIN (payload_json)'
+    )
+  }
 }
 
 async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
@@ -912,6 +922,11 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   if (db.type === 'postgres') {
     await ensureIndex(
       db,
+      'idx_hardcore_categories_meta_config_json_gin',
+      'CREATE INDEX idx_hardcore_categories_meta_config_json_gin ON hardcore_categories USING GIN (meta_config_json)'
+    )
+    await ensureIndex(
+      db,
       'idx_products_specs_json_gin',
       'CREATE INDEX idx_products_specs_json_gin ON products USING GIN (specs_json)'
     )
@@ -949,6 +964,21 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
       db,
       'idx_product_offers_raw_payload_json_gin',
       'CREATE INDEX idx_product_offers_raw_payload_json_gin ON product_offers USING GIN (raw_payload_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_articles_schema_json_gin',
+      'CREATE INDEX idx_articles_schema_json_gin ON articles USING GIN (schema_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_seo_pages_open_graph_json_gin',
+      'CREATE INDEX idx_seo_pages_open_graph_json_gin ON seo_pages USING GIN (open_graph_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_seo_pages_schema_json_gin',
+      'CREATE INDEX idx_seo_pages_schema_json_gin ON seo_pages USING GIN (schema_json)'
     )
   }
 }
@@ -998,12 +1028,13 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
 }
 
 async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   await ensureColumn(db, 'link_inspector_runs', 'status', "TEXT NOT NULL DEFAULT 'queued'")
   await ensureColumn(db, 'link_inspector_runs', 'total_checked', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'issues_found', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'broken_count', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'out_of_stock_count', 'INTEGER NOT NULL DEFAULT 0')
-  await ensureColumn(db, 'link_inspector_runs', 'payload_json', 'TEXT')
+  await ensureColumn(db, 'link_inspector_runs', 'payload_json', jsonType)
   await ensureColumn(db, 'link_inspector_runs', 'started_at', 'TEXT')
   await ensureColumn(db, 'link_inspector_runs', 'finished_at', 'TEXT')
   await ensureColumn(db, 'link_inspector_runs', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
@@ -1032,6 +1063,19 @@ async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
     'idx_publish_events_event_type_created_at',
     'CREATE INDEX idx_publish_events_event_type_created_at ON publish_events (event_type, created_at)'
   )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_link_inspector_runs_payload_json_gin',
+      'CREATE INDEX idx_link_inspector_runs_payload_json_gin ON link_inspector_runs USING GIN (payload_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_publish_events_payload_json_gin',
+      'CREATE INDEX idx_publish_events_payload_json_gin ON publish_events USING GIN (payload_json)'
+    )
+  }
 }
 
 async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
@@ -1059,6 +1103,14 @@ async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
     'idx_buyer_decision_events_source_created_at',
     'CREATE INDEX idx_buyer_decision_events_source_created_at ON buyer_decision_events (source, created_at)'
   )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_buyer_decision_events_metadata_json_gin',
+      'CREATE INDEX idx_buyer_decision_events_metadata_json_gin ON buyer_decision_events USING GIN (metadata_json)'
+    )
+  }
 }
 
 async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<void> {
@@ -1085,6 +1137,14 @@ async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<
     'idx_price_alert_notifications_alert',
     'CREATE INDEX idx_price_alert_notifications_alert ON price_alert_notifications (price_alert_id, status, queued_at)'
   )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_price_alert_notifications_payload_json_gin',
+      'CREATE INDEX idx_price_alert_notifications_payload_json_gin ON price_alert_notifications USING GIN (payload_json)'
+    )
+  }
 }
 
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
