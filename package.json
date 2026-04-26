@@ -35,6 +35,7 @@
     "hardcore:collect-intents": "tsx scripts/collect-hardcore-intents.ts",
     "hardcore:evolve-taxonomy": "tsx scripts/evolve-hardcore-taxonomy.ts",
     "hardcore:export-reddit-kit": "tsx scripts/export-reddit-reply-kit.ts",
+    "hardcore:capture-reddit-kit-screenshots": "tsx scripts/capture-reddit-kit-screenshots.ts",
     "hardcore:export-entity-review-queue": "tsx scripts/export-entity-review-queue.ts",
     "hardcore:import-pseo-signals": "tsx scripts/import-pseo-signals.ts",
     "hardcore:inspect-affiliate-links": "tsx scripts/inspect-hardcore-affiliate-links.ts",
