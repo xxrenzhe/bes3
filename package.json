@@ -29,6 +29,8 @@
     "hardcore:evaluate-price-alerts": "tsx scripts/evaluate-price-alerts.ts",
     "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
     "hardcore:collect-intents": "tsx scripts/collect-hardcore-intents.ts",
+    "hardcore:evolve-taxonomy": "tsx scripts/evolve-hardcore-taxonomy.ts",
+    "hardcore:import-pseo-signals": "tsx scripts/import-pseo-signals.ts",
     "hardcore:inspect-affiliate-links": "tsx scripts/inspect-hardcore-affiliate-links.ts",
     "hardcore:push-pseo": "tsx scripts/push-hardcore-pseo.ts",
     "hardcore:youtube-transcript-command": "tsx scripts/youtube-transcript-command.ts",

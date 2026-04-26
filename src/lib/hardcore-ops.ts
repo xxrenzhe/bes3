@@ -42,6 +42,14 @@ export interface EvidenceFeedbackInput {
   feedbackType: 'inaccurate' | 'wrong_product' | 'bad_quote' | 'useful' | string
 }
 
+export interface PseoPageSignalInput {
+  pathname: string
+  impressions?: number | null
+  clicks?: number | null
+  source?: string | null
+  capturedAt?: string | null
+}
+
 function normalizeQuery(value: string) {
   return value.replace(/\s+/g, ' ').trim().slice(0, 180)
 }
@@ -55,6 +63,32 @@ function priorityFromHits(hitCount: number) {
   if (hitCount >= 5) return 0.75
   if (hitCount >= 3) return 0.5
   return 0.25
+}
+
+function normalizePathname(value: string) {
+  const raw = String(value || '').trim()
+  if (!raw) return '/'
+  try {
+    const url = raw.startsWith('http') ? new URL(raw) : null
+    return url ? url.pathname.replace(/\/+$/, '') || '/' : `/${raw.replace(/^\/+/, '').replace(/\/+$/, '')}`
+  } catch {
+    return `/${raw.replace(/^\/+/, '').replace(/\/+$/, '')}`
+  }
+}
+
+function parsePseoPath(pathname: string) {
+  const parts = pathname.split('/').filter(Boolean)
+  if (parts[0] === 'deals') {
+    const match = parts[1]?.match(/^best-value-(.+)-under-\d+$/)
+    return match ? { categorySlug: match[1], tagSlug: null } : { categorySlug: null, tagSlug: null }
+  }
+  const categorySlug = parts[0] || null
+  const landing = parts[1] || ''
+  const singleTagPrefix = categorySlug ? `best-${categorySlug}-for-` : ''
+  if (categorySlug && landing.startsWith(singleTagPrefix)) {
+    return { categorySlug, tagSlug: landing.slice(singleTagPrefix.length) || null }
+  }
+  return { categorySlug, tagSlug: null }
 }
 
 export async function queueTaxonomyRescan(categorySlug: string, tagSlug: string, reason: string) {
@@ -260,6 +294,223 @@ export async function promoteIntentSourceToPendingTag({
   )
   await queueTaxonomyRescan(categorySlug, pendingSlug, `New external taxonomy intent: ${query}`)
   return { id: Number(result.lastInsertRowid || 0), status: 'created' as const }
+}
+
+export async function promotePendingTags({
+  limit = 50,
+  minPriorityScore = 0.5
+}: {
+  limit?: number
+  minPriorityScore?: number
+} = {}) {
+  const db = await getDatabase()
+  const rows = await db.query<{
+    id: number
+    category_slug: string
+    canonical_name: string
+    slug: string
+    trigger_query: string
+    hit_count: number
+    source: string
+    priority_score: number
+  }>(
+    `
+      SELECT id, category_slug, canonical_name, slug, trigger_query, hit_count, source, priority_score
+      FROM pending_tags
+      WHERE status = 'pending' AND priority_score >= ?
+      ORDER BY priority_score DESC, hit_count DESC, updated_at ASC
+      LIMIT ?
+    `,
+    [minPriorityScore, limit]
+  )
+
+  const promoted = []
+  for (const row of rows) {
+    const category = await db.queryOne<{ id: number }>(
+      'SELECT id FROM hardcore_categories WHERE slug = ? LIMIT 1',
+      [row.category_slug]
+    )
+    const keywordsJson = JSON.stringify({
+      synonyms: [row.trigger_query, row.canonical_name],
+      source: row.source,
+      pending_tag_id: row.id
+    })
+    const searchVolume = Math.max(100, Math.round(row.priority_score * 10000))
+    const isCorePainpoint = row.priority_score >= 0.75 ? 1 : 0
+    const existing = await db.queryOne<{ id: number; search_volume: number }>(
+      'SELECT id, search_volume FROM taxonomy_tags WHERE category_slug = ? AND slug = ? LIMIT 1',
+      [row.category_slug, row.slug]
+    )
+
+    if (existing?.id) {
+      await db.exec(
+        `
+          UPDATE taxonomy_tags
+          SET canonical_name = ?, keywords_json = COALESCE(keywords_json, ?), search_volume = ?, status = 'active', updated_at = CURRENT_TIMESTAMP
+          WHERE id = ?
+        `,
+        [row.canonical_name, keywordsJson, Math.max(existing.search_volume || 0, searchVolume), existing.id]
+      )
+    } else {
+      await db.exec(
+        `
+          INSERT INTO taxonomy_tags (
+            category_id,
+            category_slug,
+            canonical_name,
+            slug,
+            keywords_json,
+            search_volume,
+            is_core_painpoint,
+            status
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, 'active')
+        `,
+        [category?.id || null, row.category_slug, row.canonical_name, row.slug, keywordsJson, searchVolume, isCorePainpoint]
+      )
+    }
+
+    await db.exec(
+      `
+        UPDATE pending_tags
+        SET status = 'promoted', updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [row.id]
+    )
+    await queueTaxonomyRescan(row.category_slug, row.slug, `Promoted pending tag: ${row.trigger_query}`)
+    promoted.push({ id: row.id, categorySlug: row.category_slug, tagSlug: row.slug, searchVolume })
+  }
+
+  return promoted
+}
+
+export async function exportTaxonomyRescanJobs(limit = 100) {
+  const db = await getDatabase()
+  const rows = await db.query<{
+    id: number
+    category_slug: string
+    tag_slug: string
+    reason: string
+    canonical_name: string | null
+    keywords_json: string | null
+    video_id: number
+    youtube_id: string
+    title: string
+    transcript: string | null
+  }>(
+    `
+      SELECT
+        trq.id,
+        trq.category_slug,
+        trq.tag_slug,
+        trq.reason,
+        tt.canonical_name,
+        tt.keywords_json,
+        rv.id AS video_id,
+        rv.youtube_id,
+        rv.title,
+        rv.transcript
+      FROM taxonomy_rescan_queue trq
+      LEFT JOIN taxonomy_tags tt ON tt.category_slug = trq.category_slug AND tt.slug = trq.tag_slug
+      JOIN review_videos rv ON rv.processed_status IN ('success', 'pending')
+      WHERE trq.status = 'queued'
+        AND (rv.transcript IS NOT NULL OR rv.description IS NOT NULL)
+      ORDER BY trq.created_at ASC, rv.published_at DESC
+      LIMIT ?
+    `,
+    [limit]
+  )
+
+  return rows.map((row) => ({
+    queueId: row.id,
+    categorySlug: row.category_slug,
+    tagSlug: row.tag_slug,
+    reason: row.reason,
+    canonicalName: row.canonical_name || row.tag_slug,
+    keywords: row.keywords_json ? JSON.parse(row.keywords_json) : null,
+    video: {
+      id: row.video_id,
+      youtubeId: row.youtube_id,
+      title: row.title,
+      transcriptPreview: row.transcript?.slice(0, 1200) || null
+    }
+  }))
+}
+
+export async function markTaxonomyRescanQueueProcessing(ids: number[]) {
+  if (!ids.length) return 0
+  const db = await getDatabase()
+  const placeholders = ids.map(() => '?').join(', ')
+  const result = await db.exec(
+    `
+      UPDATE taxonomy_rescan_queue
+      SET status = 'processing', updated_at = CURRENT_TIMESTAMP
+      WHERE id IN (${placeholders}) AND status = 'queued'
+    `,
+    ids
+  )
+  return result.changes
+}
+
+export async function recordPseoPageSignal(input: PseoPageSignalInput) {
+  const pathname = normalizePathname(input.pathname)
+  const { categorySlug, tagSlug } = parsePseoPath(pathname)
+  const impressions = Math.max(0, Math.round(Number(input.impressions || 0)))
+  const clicks = Math.max(0, Math.round(Number(input.clicks || 0)))
+  const ctr = impressions > 0 ? clicks / impressions : 0
+  const db = await getDatabase()
+  const result = await db.exec(
+    `
+      INSERT INTO pseo_page_signals (pathname, category_slug, tag_slug, impressions, clicks, ctr, source, captured_at)
+      VALUES (?, ?, ?, ?, ?, ?, ?, COALESCE(?, CURRENT_TIMESTAMP))
+    `,
+    [pathname, categorySlug, tagSlug, impressions, clicks, ctr, input.source || 'ga4', input.capturedAt || null]
+  )
+  return { id: Number(result.lastInsertRowid || 0), pathname, categorySlug, tagSlug, impressions, clicks, ctr }
+}
+
+export async function applyPseoSignalsToTaxonomy(days = 30) {
+  const db = await getDatabase()
+  const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000).toISOString()
+  const rows = await db.query<{
+    category_slug: string
+    tag_slug: string
+    impressions: number
+    clicks: number
+  }>(
+    `
+      SELECT category_slug, tag_slug, SUM(impressions) AS impressions, SUM(clicks) AS clicks
+      FROM pseo_page_signals
+      WHERE tag_slug IS NOT NULL AND captured_at >= ?
+      GROUP BY category_slug, tag_slug
+    `,
+    [cutoff]
+  )
+
+  const updated = []
+  for (const row of rows) {
+    const impressions = Number(row.impressions || 0)
+    const clicks = Number(row.clicks || 0)
+    const ctr = impressions > 0 ? clicks / impressions : 0
+    const multiplier = impressions > 0 ? (ctr >= 0.05 ? 1.32 : 1.1) : 0.8
+    const status = impressions === 0 ? 'low_priority' : 'active'
+    await db.exec(
+      `
+        UPDATE taxonomy_tags
+        SET search_volume = CASE
+              WHEN ? = 'active' THEN CAST(search_volume * ? AS INTEGER)
+              ELSE search_volume
+            END,
+            status = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE category_slug = ? AND slug = ?
+      `,
+      [status, multiplier, status, row.category_slug, row.tag_slug]
+    )
+    updated.push({ categorySlug: row.category_slug, tagSlug: row.tag_slug, impressions, clicks, ctr, status })
+  }
+
+  return updated
 }
 
 export async function recordPriceValueSnapshot(input: PriceSnapshotInput) {

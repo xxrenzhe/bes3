@@ -252,6 +252,20 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS pseo_page_signals (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      pathname TEXT NOT NULL,
+      category_slug TEXT,
+      tag_slug TEXT,
+      impressions INTEGER NOT NULL DEFAULT 0,
+      clicks INTEGER NOT NULL DEFAULT 0,
+      ctr REAL NOT NULL DEFAULT 0,
+      source TEXT NOT NULL DEFAULT 'ga4',
+      captured_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS creator_feedback_events (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       analysis_report_id INTEGER,
@@ -814,6 +828,16 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
     db,
     'idx_taxonomy_rescan_queue_status',
     'CREATE INDEX idx_taxonomy_rescan_queue_status ON taxonomy_rescan_queue (status, category_slug, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_pseo_page_signals_path_captured',
+    'CREATE INDEX idx_pseo_page_signals_path_captured ON pseo_page_signals (pathname, captured_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_pseo_page_signals_tag',
+    'CREATE INDEX idx_pseo_page_signals_tag ON pseo_page_signals (category_slug, tag_slug, captured_at)'
   )
   await ensureIndex(
     db,
