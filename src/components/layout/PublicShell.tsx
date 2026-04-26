@@ -45,9 +45,6 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
               </Link>
             ))}
             <LocaleSwitcher currentLocale={locale} currentPath={displayPath} />
-            <Link href={addLocaleToPath('/login', locale)} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-              Admin
-            </Link>
           </nav>
           <details className="relative md:hidden">
             <summary className="list-none rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold">Menu</summary>
@@ -58,9 +55,6 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
                     {item.label}
                   </Link>
                 ))}
-                <Link href={addLocaleToPath('/login', locale)} className="rounded-md px-3 py-2 text-sm font-semibold text-primary">
-                  Admin
-                </Link>
               </nav>
             </div>
           </details>
