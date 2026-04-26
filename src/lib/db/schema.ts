@@ -308,6 +308,24 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS price_alert_notifications (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      price_alert_id INTEGER NOT NULL,
+      product_id INTEGER NOT NULL,
+      email TEXT NOT NULL,
+      channel TEXT NOT NULL DEFAULT 'email',
+      status TEXT NOT NULL DEFAULT 'queued',
+      dedupe_key TEXT NOT NULL UNIQUE,
+      payload_json TEXT,
+      queued_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      sent_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (price_alert_id) REFERENCES price_alerts(id) ON DELETE CASCADE,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS product_media_assets (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER NOT NULL,
@@ -1016,11 +1034,12 @@ async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
 }
 
 async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   await ensureColumn(db, 'buyer_decision_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'event_type', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'product_id', 'INTEGER')
   await ensureColumn(db, 'buyer_decision_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
-  await ensureColumn(db, 'buyer_decision_events', 'metadata_json', 'TEXT')
+  await ensureColumn(db, 'buyer_decision_events', 'metadata_json', jsonType)
   await ensureColumn(db, 'buyer_decision_events', 'referer', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'user_agent', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
@@ -1041,6 +1060,31 @@ async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
   )
 }
 
+async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  await ensureColumn(db, 'price_alert_notifications', 'price_alert_id', 'INTEGER')
+  await ensureColumn(db, 'price_alert_notifications', 'product_id', 'INTEGER')
+  await ensureColumn(db, 'price_alert_notifications', 'email', 'TEXT')
+  await ensureColumn(db, 'price_alert_notifications', 'channel', "TEXT NOT NULL DEFAULT 'email'")
+  await ensureColumn(db, 'price_alert_notifications', 'status', "TEXT NOT NULL DEFAULT 'queued'")
+  await ensureColumn(db, 'price_alert_notifications', 'dedupe_key', 'TEXT')
+  await ensureColumn(db, 'price_alert_notifications', 'payload_json', jsonType)
+  await ensureColumn(db, 'price_alert_notifications', 'queued_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'price_alert_notifications', 'sent_at', 'TEXT')
+  await ensureColumn(db, 'price_alert_notifications', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'price_alert_notifications', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureIndex(
+    db,
+    'idx_price_alert_notifications_status',
+    'CREATE INDEX idx_price_alert_notifications_status ON price_alert_notifications (status, queued_at, id)'
+  )
+  await ensureIndex(
+    db,
+    'idx_price_alert_notifications_alert',
+    'CREATE INDEX idx_price_alert_notifications_alert ON price_alert_notifications (price_alert_id, status, queued_at)'
+  )
+}
+
 export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   const statements = db.type === 'postgres' ? POSTGRES_SCHEMA : SQLITE_SCHEMA
   for (const statement of statements) {
@@ -1051,5 +1095,6 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   await ensureLinkInspectorSchema(db)
   await ensureMerchantClickSchema(db)
   await ensureDecisionEventSchema(db)
+  await ensurePriceAlertNotificationSchema(db)
   await ensureNewsletterSubscriberSchema(db)
 }

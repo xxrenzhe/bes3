@@ -15,12 +15,15 @@ function readNumberFlag(name: string, fallback: number) {
 
 async function main() {
   await bootstrapApplication()
-  const triggered = await evaluatePriceAlerts(readNumberFlag('limit', 250), hasFlag('mark-notified'))
+  const queueNotifications = hasFlag('queue-notifications')
+  const triggered = await evaluatePriceAlerts(readNumberFlag('limit', 250), hasFlag('mark-notified'), queueNotifications)
   console.log(
     JSON.stringify({
+      queueNotifications,
       triggered: triggered.length,
       alerts: triggered.map((alert) => ({
         id: alert.id,
+        notificationId: alert.notification_id || null,
         productId: alert.product_id,
         email: alert.email,
         productName: alert.product_name,
