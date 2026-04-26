@@ -44,6 +44,7 @@
     "hardcore:youtube-transcript-command": "tsx scripts/youtube-transcript-command.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:generate-baseline": "tsx scripts/generate-db-baseline.ts",
+    "db:check-drift": "tsx scripts/check-db-baseline-drift.ts",
     "db:migrate:sqlite": "DB_TYPE=sqlite tsx scripts/migrate.ts",
     "db:migrate:postgres": "DB_TYPE=postgres tsx scripts/migrate.ts"
   },
