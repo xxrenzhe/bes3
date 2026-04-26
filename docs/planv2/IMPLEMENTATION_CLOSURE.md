@@ -1,6 +1,6 @@
 # Planv2 Implementation Closure
 
-Generated on 2026-04-27 for BD epic `bes3-mhfm`.
+Generated on 2026-04-27 for BD epic `bes3-xcj3`.
 
 ## Coverage Assessment
 
@@ -15,17 +15,17 @@ Generated on 2026-04-27 for BD epic `bes3-mhfm`.
 | `7.多维加权共识算法与评分逻辑规范 (Weighted Consensus & Scoring Logic Spec).md` | Landed | `src/lib/hardcore.ts`, `src/app/api/open/evidence/feedback/route.ts`, `src/components/site/HardcoreEvidenceMatrix.tsx` |
 | `8.多源价格监测与“最佳性价比”决策算法 (Price-Value Entry-Point Spec).md` | Landed | `src/lib/hardcore.ts`, `src/lib/hardcore-ops.ts`, `scripts/refresh-hardcore-price-value.ts`, `scripts/evaluate-price-alerts.ts`, `scripts/dispatch-price-alert-notifications.ts` |
 | `9.自动化内容生成与 pSEO 联动执行手册 (Programmatic SEO Strategy).md` | Landed | `src/app/[category]/[landing]/page.tsx`, `src/app/deals/[slug]/page.tsx`, `scripts/push-hardcore-pseo.ts`, `scripts/export-reddit-reply-kit.ts`, `scripts/import-pseo-signals.ts` |
-| `10.Bes3 后台管理系统完整规划方案 (Admin Console Blueprint).md` | Landed | `src/components/layout/AdminShell.tsx`, `src/lib/admin-permissions.ts`, `src/lib/admin-governance.ts`, `src/app/api/admin/**`, `src/app/api/health/route.ts` |
+| `10.Bes3 后台管理系统完整规划方案 (Admin Console Blueprint).md` | Landed | `src/components/layout/AdminShell.tsx`, `src/lib/admin-permissions.ts`, `src/lib/admin-governance.ts`, `src/lib/prompts.ts`, `src/lib/admin-blueprint.ts`, `src/app/api/admin/**`, `src/app/api/health/route.ts` |
 | `11.Bes3 数据库架构生产化优化方案 (Database Architecture Optimization Plan).md` | Landed | `src/lib/db/schema.ts`, `src/lib/db/schema-definition.ts`, `scripts/generate-db-baseline.ts`, `scripts/check-db-baseline-drift.ts`, `docs/planv2/database-dictionary.generated.md` |
 
 ## BD Closure
 
 | BD task | Closure target | Result |
 | --- | --- | --- |
-| `bes3-dzzs` | Governance, RBAC, and audit coverage | Closed; committed as `2ab244e`. |
-| `bes3-w8jg` | Production readiness and schema drift | Closed; committed as `9e367cc`. |
-| `bes3-sbiv` | SEO and evidence surface verification | Closed; committed as `3c89609`. |
-| `bes3-3m30` | Final validation and closure documentation | This document records validation and should be closed after commit. |
+| `bes3-s72p` | Renewed audit and concrete gap map | Closed; committed as `95af92f`. |
+| `bes3-psk8` | Public decision explanation gap | Closed; committed as `77929e5`. |
+| `bes3-jusw` | Admin import and prompt guard gaps | Closed; committed as `7f1db36`. |
+| `bes3-jvt1` | Final validation and closure documentation | This document records validation and should be closed after commit. |
 
 ## Final Local Validation
 
@@ -35,9 +35,9 @@ Completed on 2026-04-27:
 | --- | --- |
 | `npm run type-check` | Passed. |
 | `npm run db:check-drift` | Passed; SQLite baseline, PostgreSQL baseline, and generated dictionary match runtime schema. |
-| `npm run hardcore:check-planv2-seo` | Passed; static public pSEO/evidence/compliance surface check is green. |
+| `npm run hardcore:check-planv2-seo` | Passed; static public pSEO/evidence/compliance surface check includes BLUF, Decision Fit, table, evidence stream, FAQ, schema, crawler policy, and compliance shell. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run ops:check-env` | Passed; warnings remain only for optional external integrations not configured in local validation. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run build` | Passed; Next.js production build generated 88 static pages and all dynamic routes. |
+| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run build` | Passed; Next.js production build generated 88 static pages and all dynamic routes after the public and admin changes. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:export-planv2-ops -- --limit=25` | Passed; generated 168 pSEO paths and reported zero unresolved entity videos, zero taxonomy rescan jobs, and zero queued price notifications. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:resolve-video-entities -- --dry-run --limit=5` | Passed; scanned 2 demo videos and matched 2 with confidence above 0.98. |
 | `npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=dQw4w9WgXcQ'` | Passed; generated a subtitle-only `yt-dlp` command with `--skip-download`, subtitle flags, jitter, and user-agent controls. |
@@ -48,7 +48,7 @@ Completed on 2026-04-27:
 
 ## Remaining Notes
 
-All planv2 business requirements now have code, operational scripts, or documented production runbooks in the repository. External-network actions remain intentionally operator-run because they require real deployment credentials or third-party accounts:
+All planv2 business requirements now have code, operational scripts, or documented production runbooks in the repository. The renewed audit file `docs/planv2/RE_AUDIT_2026-04-27.md` records the final gap map and the closure path used in this pass. External-network actions remain intentionally operator-run because they require real deployment credentials or third-party accounts:
 
 ```bash
 npm run hardcore:collect-intents -- --source=all --promote-pending
