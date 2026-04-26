@@ -42,8 +42,12 @@ const PUBLIC_PATHS = [
   '/trust',
   '/tools',
   '/login',
+  '/change-password',
   '/thank-you',
   '/api/auth/login',
+  '/api/auth/logout',
+  '/api/auth/me',
+  '/api/auth/change-password',
   '/api/newsletter',
   '/api/open/buying-feed',
   '/api/open/coverage',
@@ -250,10 +254,12 @@ function withLocaleCookie(response: NextResponse, locale: string) {
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
+  const requestId = request.headers.get('x-request-id') || crypto.randomUUID()
   const localeInPath = getLocaleFromPathname(pathname)
   const basePath = stripLocaleFromPath(pathname)
   const activeLocale = localeInPath || pickPreferredLocale(request)
   const requestHeaders = new Headers(request.headers)
+  requestHeaders.set('x-request-id', requestId)
   requestHeaders.set(REQUEST_LOCALE_HEADER, activeLocale)
   requestHeaders.set(REQUEST_DISPLAY_PATH_HEADER, localeInPath ? pathname : addLocaleToPath(basePath, activeLocale))
   const canonicalPublicPath = resolveCanonicalPublicPath(basePath)
@@ -283,17 +289,29 @@ export async function middleware(request: NextRequest) {
   const token = request.cookies.get('auth_token')?.value
   if (!token) {
     if (pathname.startsWith('/api/admin')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 })
     }
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
   try {
-    await jwtVerify(token, new TextEncoder().encode(process.env.JWT_SECRET || 'dev-only-jwt-secret-change-me'))
+    const jwtSecret = process.env.JWT_SECRET
+    if (!jwtSecret || (process.env.NODE_ENV === 'production' && jwtSecret === 'dev-only-jwt-secret-change-me')) {
+      throw new Error('JWT_SECRET is not configured')
+    }
+    const result = await jwtVerify(token, new TextEncoder().encode(jwtSecret))
+    const mustChangePassword = result.payload.mustChangePassword === true
+    const isPasswordChangePath = basePath === '/change-password' || basePath.startsWith('/api/auth/')
+    if (mustChangePassword && !isPasswordChangePath) {
+      if (pathname.startsWith('/api/admin')) {
+        return NextResponse.json({ error: 'Password change required', requestId }, { status: 403 })
+      }
+      return NextResponse.redirect(new URL('/change-password', request.url))
+    }
     return NextResponse.next({ request: { headers: requestHeaders } })
   } catch {
     if (pathname.startsWith('/api/admin')) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 })
     }
     return NextResponse.redirect(new URL('/login', request.url))
   }

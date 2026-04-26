@@ -6,5 +6,12 @@ export async function GET() {
   if (!session) {
     return NextResponse.json({ user: null }, { status: 401 })
   }
-  return NextResponse.json({ user: session })
+  return NextResponse.json({
+    user: {
+      userId: session.userId,
+      username: session.username,
+      role: session.role,
+      mustChangePassword: session.mustChangePassword
+    }
+  })
 }

@@ -13,6 +13,9 @@ export default async function AdminLayout({
   if (!session) {
     redirect('/login')
   }
+  if (session.mustChangePassword) {
+    redirect('/change-password')
+  }
 
   return <AdminShell>{children}</AdminShell>
 }

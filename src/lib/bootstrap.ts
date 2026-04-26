@@ -169,7 +169,7 @@ async function ensureDefaultAdmin(): Promise<void> {
       `
         UPDATE users
         SET username = ?, email = ?, password_hash = ?, role = 'admin', display_name = ?, is_active = ?,
-            must_change_password = ?, updated_at = CURRENT_TIMESTAMP
+            updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
       [
@@ -178,7 +178,6 @@ async function ensureDefaultAdmin(): Promise<void> {
         passwordHash,
         'Bes3 Administrator',
         1,
-        adminPasswordState.source === 'env' ? 0 : 1,
         userId
       ]
     )
@@ -192,13 +191,12 @@ async function ensureDefaultAdmin(): Promise<void> {
     await db.exec(
       `
         INSERT INTO users (username, email, password_hash, role, display_name, is_active, must_change_password)
-        VALUES (?, ?, ?, 'admin', 'Bes3 Administrator', 1, ?)
+        VALUES (?, ?, ?, 'admin', 'Bes3 Administrator', 1, 1)
       `,
       [
         DEFAULT_ADMIN_USERNAME,
         DEFAULT_ADMIN_EMAIL,
-        passwordHash,
-        adminPasswordState.source === 'env' ? 0 : 1
+        passwordHash
       ]
     )
   } catch (error) {

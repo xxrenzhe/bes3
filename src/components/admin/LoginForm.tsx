@@ -30,7 +30,8 @@ export function LoginForm() {
             toast.error(body.error || 'Login failed')
             return
           }
-          router.push('/admin')
+          const body = await response.json().catch(() => ({}))
+          router.push(body.mustChangePassword ? '/change-password' : '/admin')
           router.refresh()
         })
       }}
