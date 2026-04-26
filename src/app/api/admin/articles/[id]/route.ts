@@ -1,7 +1,8 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireAdminPermission } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { getArticlePath } from '@/lib/article-path'
 import { getBrandSlug } from '@/lib/site-data'
 import {
@@ -26,7 +27,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireAdmin()
+  const actor = await requireAdminPermission('articles:write')
   const articleId = Number((await params).id)
   const existing = await getAdminArticle(articleId)
 
@@ -69,6 +70,16 @@ export async function PUT(
     if (previousBrandSlug && existing.product_category) {
       revalidatePath(buildBrandCategoryPath(previousBrandSlug, existing.product_category))
     }
+
+    await logAdminAudit({
+      actor,
+      request,
+      action: 'article_updated',
+      entityType: 'articles',
+      entityId: articleId,
+      before: existing,
+      after: article
+    })
 
     return NextResponse.json(article)
   } catch (error) {

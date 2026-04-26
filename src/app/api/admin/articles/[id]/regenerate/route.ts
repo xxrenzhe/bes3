@@ -1,13 +1,15 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminPermission } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { getDatabase } from '@/lib/db'
 import { runPipelineFromLink } from '@/lib/pipeline'
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireAdmin()
+  const actor = await requireAdminPermission('articles:write')
+  const articleId = Number((await params).id)
   const db = await getDatabase()
   const article = await db.queryOne<{ source_affiliate_link: string }>(
     `
@@ -17,7 +19,7 @@ export async function POST(
       WHERE a.id = ?
       LIMIT 1
     `,
-    [Number((await params).id)]
+    [articleId]
   )
 
   if (!article?.source_affiliate_link) {
@@ -25,5 +27,13 @@ export async function POST(
   }
 
   const runId = await runPipelineFromLink(article.source_affiliate_link)
+  await logAdminAudit({
+    actor,
+    request,
+    action: 'article_regeneration_pipeline_queued',
+    entityType: 'content_pipeline_runs',
+    entityId: runId,
+    after: { articleId, runId, status: 'queued' }
+  })
   return NextResponse.json({ success: true, queued: true, runId, status: 'queued' })
 }

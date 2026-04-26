@@ -1,6 +1,6 @@
 export type DatabaseType = 'sqlite' | 'postgres'
 
-export type UserRole = 'admin'
+export type UserRole = 'admin' | 'evidence_ops' | 'content_seo_editor' | 'commerce_ops' | 'viewer'
 
 export type AffiliatePlatform = 'partnerboost_amazon' | 'partnerboost_dtc' | 'manual'
 

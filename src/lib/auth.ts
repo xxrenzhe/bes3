@@ -4,6 +4,8 @@ import { createHash, randomBytes } from 'node:crypto'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { getJwtSecret, hashPassword, verifyPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
+import { hasAdminPermission, isAdminRole, type AdminPermission } from '@/lib/admin-permissions'
+import type { UserRole } from '@/lib/types'
 
 const AUTH_COOKIE_NAME = 'auth_token'
 const SESSION_DURATION_SECONDS = 60 * 60 * 24 * 7
@@ -14,7 +16,7 @@ const LOGIN_RATE_LIMIT_MAX_FAILURES = 10
 export type AuthPayload = {
   userId: number
   username: string
-  role: 'admin'
+  role: UserRole
   sessionId: number
   jwtId: string
   mustChangePassword: boolean
@@ -31,7 +33,7 @@ type UserRow = {
   username: string
   email: string
   password_hash: string
-  role: 'admin'
+  role: UserRole
   is_active: number | boolean
   must_change_password: number | boolean
   failed_login_count: number | null
@@ -303,7 +305,7 @@ export async function readAuthSession(): Promise<AuthPayload | null> {
       is_active: number | boolean
       must_change_password: number | boolean
       username: string
-      role: 'admin'
+      role: UserRole
     }>(
       `
         SELECT s.id, s.user_id, s.expires_at, s.revoked_at, u.is_active, u.must_change_password, u.username, u.role
@@ -386,7 +388,15 @@ export async function changeAdminPassword(
 
 export async function requireAdmin(): Promise<AuthPayload> {
   const session = await readAuthSession()
-  if (!session || session.role !== 'admin') {
+  if (!session || !isAdminRole(session.role)) {
+    throw new Error('UNAUTHORIZED')
+  }
+  return session
+}
+
+export async function requireAdminPermission(permission: AdminPermission): Promise<AuthPayload> {
+  const session = await requireAdmin()
+  if (!hasAdminPermission(session.role, permission)) {
     throw new Error('UNAUTHORIZED')
   }
   return session

@@ -1,4 +1,5 @@
 import { DEFAULT_ADMIN_EMAIL, DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
+import { ADMIN_ROLE_PERMISSIONS } from '@/lib/admin-permissions'
 import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
@@ -227,6 +228,23 @@ async function ensureDefaultSettings(): Promise<void> {
         [category, key, value, dataType, isSensitive, description]
       )
     )
+  }
+}
+
+async function ensureAdminRolePermissions(): Promise<void> {
+  const db = await getDatabase()
+  for (const [role, permissions] of Object.entries(ADMIN_ROLE_PERMISSIONS)) {
+    for (const permission of permissions) {
+      await ignoreUniqueViolation(() =>
+        db.exec(
+          `
+            INSERT INTO admin_role_permissions (role, permission, allowed, created_at, updated_at)
+            VALUES (?, ?, 1, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)
+          `,
+          [role, permission]
+        )
+      )
+    }
   }
 }
 
@@ -724,6 +742,7 @@ export async function bootstrapApplication(): Promise<void> {
       await getDatabase()
       await ensureDefaultAdmin()
       await ensureDefaultSettings()
+      await ensureAdminRolePermissions()
       await ensureDefaultPrompts()
       await ensureHardcoreTaxonomySeed()
       await ensureHardcoreDemoEvidenceSeed()

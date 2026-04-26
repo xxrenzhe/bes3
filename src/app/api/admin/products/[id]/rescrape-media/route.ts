@@ -1,12 +1,22 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminPermission } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { rescrapeProductMedia } from '@/lib/pipeline'
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  await requireAdmin()
-  await rescrapeProductMedia(Number((await params).id))
+  const actor = await requireAdminPermission('products:write')
+  const productId = Number((await params).id)
+  await rescrapeProductMedia(productId)
+  await logAdminAudit({
+    actor,
+    request,
+    action: 'product_media_rescraped',
+    entityType: 'products',
+    entityId: productId,
+    after: { productId }
+  })
   return NextResponse.json({ success: true })
 }

@@ -381,7 +381,7 @@ export async function updateRiskAlertStatus(input: {
 
 export async function getUsersAccessSnapshot() {
   const db = await getDatabase()
-  const [summary, users, sessions, loginAttempts, securityEvents] = await Promise.all([
+  const [summary, users, sessions, loginAttempts, securityEvents, rolePermissions] = await Promise.all([
     db.queryOne(
       `
         SELECT
@@ -425,9 +425,16 @@ export async function getUsersAccessSnapshot() {
         ORDER BY created_at DESC, id DESC
         LIMIT 100
       `
+    ),
+    db.query(
+      `
+        SELECT role, permission, allowed
+        FROM admin_role_permissions
+        ORDER BY role ASC, permission ASC
+      `
     )
   ])
-  return { summary, users, sessions, loginAttempts, securityEvents }
+  return { summary, users, sessions, loginAttempts, securityEvents, rolePermissions }
 }
 
 export async function runUsersAccessAction(input: {
