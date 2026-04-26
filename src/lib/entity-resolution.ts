@@ -43,6 +43,37 @@ function jaccard(left: Set<string>, right: Set<string>) {
   return union ? intersection / union : 0
 }
 
+function levenshtein(left: string, right: string) {
+  const a = slugify(left)
+  const b = slugify(right)
+  if (!a || !b) return 0
+  if (a === b) return 0
+  const previous = Array.from({ length: b.length + 1 }, (_, index) => index)
+  const current = Array.from({ length: b.length + 1 }, () => 0)
+
+  for (let i = 1; i <= a.length; i += 1) {
+    current[0] = i
+    for (let j = 1; j <= b.length; j += 1) {
+      const cost = a[i - 1] === b[j - 1] ? 0 : 1
+      current[j] = Math.min(
+        current[j - 1] + 1,
+        previous[j] + 1,
+        previous[j - 1] + cost
+      )
+    }
+    for (let j = 0; j <= b.length; j += 1) previous[j] = current[j]
+  }
+
+  return previous[b.length]
+}
+
+function editSimilarity(left: string, right: string) {
+  const a = slugify(left)
+  const b = slugify(right)
+  const maxLength = Math.max(a.length, b.length, 1)
+  return 1 - levenshtein(a, b) / maxLength
+}
+
 function isLikelyAsin(value: string) {
   const normalized = value.toUpperCase()
   if (!/^[A-Z0-9]{10}$/.test(normalized)) return false
@@ -100,7 +131,9 @@ export function matchVideoEntity({
     .map((product) => {
       const identity = [product.brand || '', product.productName].join(' ')
       const identityTokens = tokenize(identity)
-      const score = Math.max(jaccard(titleTokens, identityTokens), jaccard(sourceTokens, identityTokens))
+      const tokenScore = Math.max(jaccard(titleTokens, identityTokens), jaccard(sourceTokens, identityTokens))
+      const editScore = Math.max(editSimilarity(title, identity), editSimilarity([title, transcriptIntro || ''].join(' '), identity))
+      const score = Math.max(tokenScore, editScore)
       const brandBoost = product.brand && (titleTokens.has(slugify(product.brand)) || sourceTokens.has(slugify(product.brand))) ? 0.15 : 0
       return {
         product,
