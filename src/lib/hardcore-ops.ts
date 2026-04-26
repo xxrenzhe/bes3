@@ -472,6 +472,7 @@ export async function recordPseoPageSignal(input: PseoPageSignalInput) {
 export async function applyPseoSignalsToTaxonomy(days = 30) {
   const db = await getDatabase()
   const cutoff = new Date(Date.now() - Math.max(1, days) * 24 * 60 * 60 * 1000).toISOString()
+  const longCutoff = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toISOString()
   const rows = await db.query<{
     category_slug: string
     tag_slug: string
@@ -492,7 +493,7 @@ export async function applyPseoSignalsToTaxonomy(days = 30) {
     const impressions = Number(row.impressions || 0)
     const clicks = Number(row.clicks || 0)
     const ctr = impressions > 0 ? clicks / impressions : 0
-    const multiplier = impressions > 0 ? (ctr >= 0.05 ? 1.32 : 1.1) : 0.8
+    const multiplier = impressions > 0 ? (ctr >= 0.05 ? 1.32 : 1.1) : 1
     const status = impressions === 0 ? 'low_priority' : 'active'
     await db.exec(
       `
@@ -508,6 +509,49 @@ export async function applyPseoSignalsToTaxonomy(days = 30) {
       [status, multiplier, status, row.category_slug, row.tag_slug]
     )
     updated.push({ categorySlug: row.category_slug, tagSlug: row.tag_slug, impressions, clicks, ctr, status })
+  }
+
+  const zeroSignalRows = await db.query<{
+    category_slug: string
+    slug: string
+    status: string
+    updated_at: string | null
+  }>(
+    `
+      SELECT tt.category_slug, tt.slug, tt.status, tt.updated_at
+      FROM taxonomy_tags tt
+      WHERE tt.status IN ('active', 'low_priority')
+        AND NOT EXISTS (
+          SELECT 1
+          FROM pseo_page_signals pps
+          WHERE pps.category_slug = tt.category_slug
+            AND pps.tag_slug = tt.slug
+            AND pps.impressions > 0
+            AND pps.captured_at >= ?
+        )
+    `,
+    [cutoff]
+  )
+
+  for (const row of zeroSignalRows) {
+    const updatedAt = row.updated_at ? new Date(row.updated_at).toISOString() : new Date().toISOString()
+    const status = updatedAt < longCutoff ? 'paused' : 'low_priority'
+    await db.exec(
+      `
+        UPDATE taxonomy_tags
+        SET status = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE category_slug = ? AND slug = ?
+      `,
+      [status, row.category_slug, row.slug]
+    )
+    updated.push({
+      categorySlug: row.category_slug,
+      tagSlug: row.slug,
+      impressions: 0,
+      clicks: 0,
+      ctr: 0,
+      status
+    })
   }
 
   return updated

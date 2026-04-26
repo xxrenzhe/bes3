@@ -386,7 +386,8 @@ async function listTagRows(categorySlug?: string): Promise<HardcoreTag[]> {
     `
       SELECT id, category_slug, canonical_name, slug, keywords_json, search_volume, is_core_painpoint, status
       FROM taxonomy_tags
-      ${categorySlug ? 'WHERE category_slug = ?' : ''}
+      WHERE (status IS NULL OR status != 'paused')
+      ${categorySlug ? 'AND category_slug = ?' : ''}
       ORDER BY is_core_painpoint DESC, search_volume DESC, canonical_name ASC
     `,
     categorySlug ? [categorySlug] : []
