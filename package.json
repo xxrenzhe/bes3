@@ -27,6 +27,7 @@
     "seo:syndicate": "tsx scripts/syndicate-pages.ts",
     "hardcore:refresh-price-value": "tsx scripts/refresh-hardcore-price-value.ts",
     "hardcore:evaluate-price-alerts": "tsx scripts/evaluate-price-alerts.ts",
+    "hardcore:dispatch-price-alerts": "tsx scripts/dispatch-price-alert-notifications.ts",
     "hardcore:export-planv2-ops": "tsx scripts/export-planv2-ops-manifest.ts",
     "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
     "hardcore:collect-intents": "tsx scripts/collect-hardcore-intents.ts",
