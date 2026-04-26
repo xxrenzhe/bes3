@@ -16,7 +16,22 @@ export function DataManagementConsole() {
         { label: 'Media Assets', key: 'media_assets' }
       ]}
       actions={[
-        { label: 'Record Dry-run Import', body: { importType: 'manual', sourceFilename: 'admin-dry-run.json', dryRun: true }, success: 'Dry-run import recorded', variant: 'outline' }
+        {
+          label: 'Validate Sample Import',
+          body: {
+            importType: 'manual',
+            sourceFilename: 'admin-dry-run.json',
+            dryRun: true,
+            keyField: 'externalId',
+            rows: [
+              { externalId: 'sample-product-1', name: 'Sample product' },
+              { externalId: 'sample-product-1', name: 'Duplicate sample product' },
+              { name: 'Missing key sample product' }
+            ]
+          },
+          success: 'Import dry-run validated',
+          variant: 'outline'
+        }
       ]}
       sections={[
         {
@@ -27,6 +42,7 @@ export function DataManagementConsole() {
             { label: 'File', key: 'source_filename' },
             { label: 'Status', key: 'status', badge: true },
             { label: 'Rows', key: 'total_rows' },
+            { label: 'Conflicts', key: 'conflict_rows' },
             { label: 'Created', key: 'created_at', date: true }
           ]
         },

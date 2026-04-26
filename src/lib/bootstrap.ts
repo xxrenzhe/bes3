@@ -128,6 +128,21 @@ const DEFAULT_PROMPTS = [
   }
 ] as const
 
+const DEFAULT_PROMPT_REGRESSION_CASES = DEFAULT_PROMPTS.map((prompt) => ({
+  promptId: prompt.promptId,
+  name: `${prompt.name} baseline regression`,
+  inputJson: JSON.stringify({
+    product: { productName: 'Baseline Demo Product' },
+    category: { name: 'Baseline Category' },
+    canonicalTags: ['real-world performance', 'price value']
+  }),
+  expectedOutputJson: JSON.stringify({
+    requiresStructuredOutput: true,
+    mustAvoidFabricatedEvidence: true,
+    mustPreserveEvidenceAttribution: true
+  })
+}))
+
 function isUniqueConstraintError(error: unknown): boolean {
   const code =
     typeof error === 'object' && error && 'code' in error
@@ -263,6 +278,31 @@ async function ensureDefaultPrompts(): Promise<void> {
           VALUES (?, ?, ?, ?, ?, ?, ?)
         `,
         [prompt.promptId, prompt.category, prompt.name, prompt.version, prompt.promptContent, 1, 'Initial Bes3 seed prompt']
+      )
+    )
+  }
+}
+
+async function ensureDefaultPromptRegressionCases(): Promise<void> {
+  const db = await getDatabase()
+  for (const regressionCase of DEFAULT_PROMPT_REGRESSION_CASES) {
+    const existing = await db.queryOne<{ id: number }>(
+      'SELECT id FROM prompt_regression_cases WHERE prompt_id = ? AND name = ? LIMIT 1',
+      [regressionCase.promptId, regressionCase.name]
+    )
+    if (existing?.id) continue
+    await ignoreUniqueViolation(() =>
+      db.exec(
+        `
+          INSERT INTO prompt_regression_cases (prompt_id, name, input_json, expected_output_json, status)
+          VALUES (?, ?, ?, ?, 'active')
+        `,
+        [
+          regressionCase.promptId,
+          regressionCase.name,
+          regressionCase.inputJson,
+          regressionCase.expectedOutputJson
+        ]
       )
     )
   }
@@ -744,6 +784,7 @@ export async function bootstrapApplication(): Promise<void> {
       await ensureDefaultSettings()
       await ensureAdminRolePermissions()
       await ensureDefaultPrompts()
+      await ensureDefaultPromptRegressionCases()
       await ensureHardcoreTaxonomySeed()
       await ensureHardcoreDemoEvidenceSeed()
       await ensureSeedContent()

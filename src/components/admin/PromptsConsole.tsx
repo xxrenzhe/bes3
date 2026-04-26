@@ -21,6 +21,12 @@ type PromptVersion = {
   promptContent: string
   isActive: boolean
   createdAt: string
+  regressionSummary: {
+    activeCases: number
+    casesWithExpectedOutput: number
+    invalidCases: number
+    ready: boolean
+  }
 }
 
 export function PromptsConsole() {
@@ -92,20 +98,20 @@ export function PromptsConsole() {
                 const response = await fetch('/api/admin/prompts', {
                   method: 'POST',
                   headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ ...draft, activate: true })
+                  body: JSON.stringify({ ...draft, activate: false })
                 })
                 if (!response.ok) {
                   toast.error('Failed to create prompt version')
                   return
                 }
-                toast.success('Prompt version created')
+                toast.success('Prompt version saved')
                 setDraft({ promptId: '', category: '', name: '', version: '', promptContent: '' })
                 await loadGroups()
                 if (selectedPromptId) await loadVersions(selectedPromptId)
               })
             }}
           >
-            Save Version
+            Save Inactive Version
           </Button>
         </div>
         <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
@@ -117,33 +123,68 @@ export function PromptsConsole() {
                   <div>
                     <p className="font-medium">{version.version}</p>
                     <p className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString()}</p>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Regression cases: {version.regressionSummary.activeCases} active · {version.regressionSummary.invalidCases} invalid
+                    </p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant={version.isActive ? 'secondary' : 'default'}
-                    disabled={version.isActive || isPending || !selectedPromptId}
-                    onClick={() => {
-                      startTransition(async () => {
-                        const promptId = selectedPromptId
-                        if (!promptId) return
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <Button
+                      size="sm"
+                      variant={version.isActive ? 'secondary' : 'default'}
+                      disabled={version.isActive || isPending || !selectedPromptId}
+                      onClick={() => {
+                        startTransition(async () => {
+                          const promptId = selectedPromptId
+                          if (!promptId) return
 
-                        const response = await fetch(`/api/admin/prompts/${promptId}`, {
-                          method: 'PUT',
-                          headers: { 'Content-Type': 'application/json' },
-                          body: JSON.stringify({ version: version.version })
+                          const response = await fetch(`/api/admin/prompts/${promptId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ version: version.version })
+                          })
+                          const body = await response.json().catch(() => ({}))
+                          if (!response.ok) {
+                            toast.error(body.error || 'Failed to activate version')
+                            return
+                          }
+                          toast.success('Prompt version activated')
+                          await loadVersions(promptId)
+                          await loadGroups()
                         })
-                        if (!response.ok) {
-                          toast.error('Failed to activate version')
-                          return
-                        }
-                        toast.success('Prompt version activated')
-                        await loadVersions(promptId)
-                        await loadGroups()
-                      })
-                    }}
-                  >
-                    {version.isActive ? 'Active' : 'Activate'}
-                  </Button>
+                      }}
+                    >
+                      {version.isActive ? 'Active' : 'Activate'}
+                    </Button>
+                    {!version.isActive && !version.regressionSummary.ready ? (
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        disabled={isPending || !selectedPromptId}
+                        onClick={() => {
+                          startTransition(async () => {
+                            const promptId = selectedPromptId
+                            if (!promptId) return
+
+                            const response = await fetch(`/api/admin/prompts/${promptId}`, {
+                              method: 'PUT',
+                              headers: { 'Content-Type': 'application/json' },
+                              body: JSON.stringify({ version: version.version, forceActivate: true })
+                            })
+                            const body = await response.json().catch(() => ({}))
+                            if (!response.ok) {
+                              toast.error(body.error || 'Failed to force activate version')
+                              return
+                            }
+                            toast.success('Prompt version force activated')
+                            await loadVersions(promptId)
+                            await loadGroups()
+                          })
+                        }}
+                      >
+                        Force Activate
+                      </Button>
+                    ) : null}
+                  </div>
                 </div>
                 <pre className="mt-4 overflow-x-auto rounded-2xl bg-[#f7f1e4] p-4 text-xs leading-6 text-slate-700">{version.promptContent}</pre>
               </div>
