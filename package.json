@@ -31,6 +31,7 @@
     "hardcore:export-planv2-ops": "tsx scripts/export-planv2-ops-manifest.ts",
     "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
     "hardcore:import-keyword-planner": "tsx scripts/import-keyword-planner-intents.ts",
+    "hardcore:import-shorts-evidence": "tsx scripts/import-shorts-evidence.ts",
     "hardcore:collect-intents": "tsx scripts/collect-hardcore-intents.ts",
     "hardcore:evolve-taxonomy": "tsx scripts/evolve-hardcore-taxonomy.ts",
     "hardcore:export-reddit-kit": "tsx scripts/export-reddit-reply-kit.ts",
