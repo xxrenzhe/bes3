@@ -39,7 +39,8 @@ function buildCoverageMatrix() {
       evidence: [
         'src/lib/db/schema.ts',
         'src/lib/hardcore.ts',
-        'src/lib/entity-resolution.ts'
+        'src/lib/entity-resolution.ts',
+        'src/lib/db/schema.ts#postgres-jsonb-gin-indexes'
       ]
     },
     {
@@ -47,7 +48,8 @@ function buildCoverageMatrix() {
       status: 'implemented',
       evidence: [
         'src/lib/hardcore-prompts.ts',
-        'src/lib/bootstrap.ts'
+        'src/lib/bootstrap.ts',
+        'scripts/import-shorts-evidence.ts'
       ]
     },
     {
@@ -57,7 +59,8 @@ function buildCoverageMatrix() {
         'src/app/robots.ts',
         'src/app/[category]/[landing]/page.tsx',
         'src/lib/structured-data.ts',
-        'src/app/llms.txt/route.ts'
+        'src/app/llms.txt/route.ts',
+        'src/components/site/HardcoreEvidenceMatrix.tsx'
       ]
     },
     {
@@ -99,10 +102,34 @@ function buildCoverageMatrix() {
         'src/app/deals/[slug]/page.tsx',
         'scripts/push-hardcore-pseo.ts',
         'scripts/export-reddit-reply-kit.ts',
+        'scripts/capture-reddit-kit-screenshots.ts',
         'scripts/import-pseo-signals.ts'
       ]
     }
   ]
+}
+
+function buildClosureChecks() {
+  return {
+    scenarioPages: {
+      liveThreshold: 'At least 3 products with useful evidence; otherwise noindex researching state.',
+      crawlerVisibleBlocks: ['BLUF', 'HTML comparison table', 'Evidence Stream blockquotes', 'FAQPage JSON-LD'],
+      faqEntriesPerScenario: 3
+    },
+    redditDistribution: {
+      screenshotAnchor: '#consensus-matrix',
+      exportCommand: 'npm run hardcore:export-reddit-kit',
+      screenshotCommand: 'npm run hardcore:capture-reddit-kit-screenshots -- --base-url=https://bes3.example --output-dir=storage/reddit-kit'
+    },
+    dataIntegrity: {
+      jsonbIndexPolicy: 'PostgreSQL JSONB columns are covered by GIN indexes where they support dynamic product, taxonomy, schema, payload, or event metadata queries.',
+      evidenceValidation: 'AI/Shorts imports must keep canonical tag, product, timestamp/context, quote, confidence, and quality flags attached before surfacing rankings.'
+    },
+    operations: {
+      noGitPushThisRun: true,
+      beadsLifecycle: 'Epic plus child tasks are created, claimed, closed, and synced through bd dolt push.'
+    }
+  }
 }
 
 async function main() {
@@ -155,6 +182,7 @@ async function main() {
       totalPaths: pseoPaths.size,
       samplePaths: Array.from(pseoPaths).slice(0, limit)
     },
+    closureChecks: buildClosureChecks(),
     operations: {
       taxonomyRescanJobs: rescanJobs.length,
       queuedPriceNotifications: Number(notificationSummary?.queued || 0),
@@ -163,13 +191,16 @@ async function main() {
     runbook: {
       collectIntents: 'npm run hardcore:collect-intents -- --source=all --promote-pending',
       importKeywordPlanner: 'npm run hardcore:import-keyword-planner -- --file=./keyword-planner.csv --category=yard-pool-automation --promote-pending',
+      importShortsEvidence: 'npm run hardcore:import-shorts-evidence -- --file=./shorts-evidence.json',
       evolveTaxonomy: 'npm run hardcore:evolve-taxonomy -- --mark-processing',
+      downloadTranscriptCommand: 'npm run hardcore:youtube-transcript-command -- --url=https://www.youtube.com/watch?v=...',
       resolveEntities: 'npm run hardcore:resolve-video-entities -- --resolve-redirects',
       inspectAffiliateLinks: 'npm run hardcore:inspect-affiliate-links',
       refreshPriceValue: 'npm run hardcore:refresh-price-value',
       queuePriceAlerts: 'npm run hardcore:evaluate-price-alerts -- --queue-notifications --mark-notified',
       dispatchPriceAlerts: 'npm run hardcore:dispatch-price-alerts -- --mark-sent',
       exportRedditKit: 'npm run hardcore:export-reddit-kit',
+      captureRedditKitScreenshots: 'npm run hardcore:capture-reddit-kit-screenshots -- --base-url=https://bes3.example --output-dir=storage/reddit-kit',
       pushPseo: 'npm run hardcore:push-pseo'
     }
   }))
