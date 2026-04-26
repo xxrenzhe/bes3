@@ -607,14 +607,38 @@ const SQLITE_SCHEMA = [
   `
 ]
 
-const POSTGRES_SCHEMA = SQLITE_SCHEMA.map((statement) =>
-  statement
+const POSTGRES_JSON_COLUMNS = [
+  'meta_config_json',
+  'raw_payload',
+  'specs_json',
+  'review_highlights_json',
+  'source_payload_json',
+  'keywords_json',
+  'quality_flags_json',
+  'entity_match_json',
+  'raw_payload_json',
+  'open_graph_json',
+  'schema_json',
+  'payload_json',
+  'metadata_json'
+]
+
+function toPostgresStatement(statement: string) {
+  let converted = statement
     .replace(/INTEGER PRIMARY KEY AUTOINCREMENT/g, 'BIGSERIAL PRIMARY KEY')
     .replace(/TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP/g, 'TIMESTAMPTZ NOT NULL DEFAULT NOW()')
     .replace(/TEXT NOT NULL DEFAULT 'queued'/g, "TEXT NOT NULL DEFAULT 'queued'")
     .replace(/TEXT NOT NULL DEFAULT 'draft'/g, "TEXT NOT NULL DEFAULT 'draft'")
     .replace(/TEXT NOT NULL DEFAULT 'site'/g, "TEXT NOT NULL DEFAULT 'site'")
-)
+
+  for (const column of POSTGRES_JSON_COLUMNS) {
+    converted = converted.replace(new RegExp(`\\b${column}\\s+TEXT\\b`, 'g'), `${column} JSONB`)
+  }
+
+  return converted
+}
+
+const POSTGRES_SCHEMA = SQLITE_SCHEMA.map(toPostgresStatement)
 
 async function listColumns(db: DatabaseAdapter, tableName: string): Promise<Set<string>> {
   if (db.type === 'sqlite') {
@@ -691,6 +715,7 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
 }
 
 async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   await ensureColumn(db, 'products', 'price_last_checked_at', 'TEXT')
   await ensureColumn(db, 'products', 'offer_last_checked_at', 'TEXT')
   await ensureColumn(db, 'products', 'attribute_completeness_score', 'REAL NOT NULL DEFAULT 0')
@@ -701,9 +726,9 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'products', 'avg_90d_price', 'REAL')
   await ensureColumn(db, 'products', 'price_status', 'TEXT')
   await ensureColumn(db, 'products', 'asin', 'TEXT')
-  await ensureColumn(db, 'review_videos', 'entity_match_json', 'TEXT')
+  await ensureColumn(db, 'review_videos', 'entity_match_json', jsonType)
   await ensureColumn(db, 'analysis_reports', 'context_snippet', 'TEXT')
-  await ensureColumn(db, 'analysis_reports', 'quality_flags_json', 'TEXT')
+  await ensureColumn(db, 'analysis_reports', 'quality_flags_json', jsonType)
 
   await ensureColumn(db, 'merchants', 'website_url', 'TEXT')
   await ensureColumn(db, 'merchants', 'country_code', 'TEXT')
@@ -723,7 +748,7 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'product_offers', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
   await ensureColumn(db, 'product_offers', 'source_url', 'TEXT')
   await ensureColumn(db, 'product_offers', 'confidence_score', 'REAL NOT NULL DEFAULT 0.7')
-  await ensureColumn(db, 'product_offers', 'raw_payload_json', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'raw_payload_json', jsonType)
   await ensureColumn(db, 'product_offers', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
   await ensureColumn(db, 'product_offers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
 
@@ -864,6 +889,49 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
     'idx_compatibility_facts_brand_category',
     'CREATE INDEX idx_compatibility_facts_brand_category ON compatibility_facts (brand_slug, category, last_checked_at)'
   )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_products_specs_json_gin',
+      'CREATE INDEX idx_products_specs_json_gin ON products USING GIN (specs_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_products_review_highlights_json_gin',
+      'CREATE INDEX idx_products_review_highlights_json_gin ON products USING GIN (review_highlights_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_products_source_payload_json_gin',
+      'CREATE INDEX idx_products_source_payload_json_gin ON products USING GIN (source_payload_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_affiliate_products_raw_payload_gin',
+      'CREATE INDEX idx_affiliate_products_raw_payload_gin ON affiliate_products USING GIN (raw_payload)'
+    )
+    await ensureIndex(
+      db,
+      'idx_taxonomy_tags_keywords_json_gin',
+      'CREATE INDEX idx_taxonomy_tags_keywords_json_gin ON taxonomy_tags USING GIN (keywords_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_review_videos_entity_match_json_gin',
+      'CREATE INDEX idx_review_videos_entity_match_json_gin ON review_videos USING GIN (entity_match_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_analysis_reports_quality_flags_json_gin',
+      'CREATE INDEX idx_analysis_reports_quality_flags_json_gin ON analysis_reports USING GIN (quality_flags_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_product_offers_raw_payload_json_gin',
+      'CREATE INDEX idx_product_offers_raw_payload_json_gin ON product_offers USING GIN (raw_payload_json)'
+    )
+  }
 }
 
 async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<void> {
