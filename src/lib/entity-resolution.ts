@@ -94,12 +94,14 @@ export function matchVideoEntity({
     }
   }
 
+  const titleTokens = tokenize(title)
   const sourceTokens = tokenize([title, transcriptIntro || ''].join(' '))
   const scored = products
     .map((product) => {
       const identity = [product.brand || '', product.productName].join(' ')
-      const score = jaccard(sourceTokens, tokenize(identity))
-      const brandBoost = product.brand && sourceTokens.has(slugify(product.brand)) ? 0.15 : 0
+      const identityTokens = tokenize(identity)
+      const score = Math.max(jaccard(titleTokens, identityTokens), jaccard(sourceTokens, identityTokens))
+      const brandBoost = product.brand && (titleTokens.has(slugify(product.brand)) || sourceTokens.has(slugify(product.brand))) ? 0.15 : 0
       return {
         product,
         confidence: Math.min(0.99, score + brandBoost)
