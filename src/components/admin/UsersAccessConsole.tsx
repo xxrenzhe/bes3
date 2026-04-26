@@ -12,6 +12,7 @@ type Snapshot = {
   sessions: Array<Record<string, any>>
   loginAttempts: Array<Record<string, any>>
   securityEvents: Array<Record<string, any>>
+  rolePermissions: Array<Record<string, any>>
 }
 
 function formatDate(value: unknown) {
@@ -138,6 +139,31 @@ export function UsersAccessConsole() {
               ))}
             </tbody>
           </table>
+        </div>
+      </section>
+
+      <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="font-semibold">Role Permission Matrix</p>
+            <p className="mt-1 text-sm text-muted-foreground">Planv2 operating roles and the write surfaces each role may own.</p>
+          </div>
+          <StatusBadge value={`${snapshot?.rolePermissions.length || 0} grants`} />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+          {['admin', 'evidence_ops', 'content_seo_editor', 'commerce_ops', 'viewer'].map((role) => {
+            const permissions = (snapshot?.rolePermissions || []).filter((item) => item.role === role && Number(item.allowed))
+            return (
+              <div key={role} className="rounded-2xl border border-border bg-slate-50 p-4">
+                <p className="text-sm font-semibold capitalize text-slate-950">{role.replace(/_/g, ' ')}</p>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {permissions.map((item) => (
+                    <StatusBadge key={`${role}-${item.permission}`} value={String(item.permission)} />
+                  ))}
+                </div>
+              </div>
+            )
+          })}
         </div>
       </section>
 

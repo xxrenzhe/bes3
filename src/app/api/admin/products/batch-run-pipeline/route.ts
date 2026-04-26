@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminPermission } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { batchRunPipelines } from '@/lib/pipeline'
 
 export async function POST(request: Request) {
-  await requireAdmin()
+  const actor = await requireAdminPermission('pipeline:write')
   const body = (await request.json().catch(() => ({}))) as { ids?: unknown[] }
   const ids = Array.isArray(body.ids)
     ? body.ids
@@ -15,5 +16,12 @@ export async function POST(request: Request) {
   }
 
   const runIds = await batchRunPipelines(ids)
+  await logAdminAudit({
+    actor,
+    request,
+    action: 'product_pipeline_batch_queued',
+    entityType: 'content_pipeline_runs',
+    after: { affiliateProductIds: ids, runIds }
+  })
   return NextResponse.json({ success: true, queued: true, runIds })
 }

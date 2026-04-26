@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { listSettingDiagnostics, listSettings, saveSetting } from '@/lib/settings'
 
@@ -21,7 +21,7 @@ export async function GET() {
 }
 
 export async function PUT(request: Request) {
-  const actor = await requireAdmin()
+  const actor = await requireAdminPermission('settings:write')
   const body = await request.json().catch(() => ({}))
   const items = Array.isArray(body.items) ? body.items : []
   const before = await listSettings()

@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { getEvidenceOperationsSnapshot, reviewEvidenceReport } from '@/lib/admin-blueprint'
 
@@ -9,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const actor = await requireAdmin()
+  const actor = await requireAdminPermission('evidence:write')
   const body = await request.json().catch(() => ({}))
   const result = await reviewEvidenceReport({
     actor,

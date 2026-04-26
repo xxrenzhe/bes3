@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminPermission } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { syncPartnerboostAmazonProducts, syncPartnerboostDtcProducts } from '@/lib/partnerboost'
 import { batchRunPipelines } from '@/lib/pipeline'
 
@@ -7,7 +8,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ platform: string }> }
 ) {
-  await requireAdmin()
+  const actor = await requireAdminPermission('products:write')
   const { platform } = await params
   const body = (await request.json().catch(() => ({}))) as {
     queuePipeline?: unknown
@@ -23,6 +24,19 @@ export async function POST(
         : result.createdIds
     const uniqueQueueIds = [...new Set(queueIds)]
     const runIds = queuePipeline && uniqueQueueIds.length > 0 ? await batchRunPipelines(uniqueQueueIds) : []
+    await logAdminAudit({
+      actor,
+      request,
+      action: `partnerboost_${platform}_sync`,
+      entityType: 'affiliate_products',
+      after: {
+        ...result,
+        queuePipeline,
+        queueScope,
+        queuedAffiliateProductIds: uniqueQueueIds,
+        queuedRunIds: runIds
+      }
+    })
 
     return NextResponse.json({
       ...result,

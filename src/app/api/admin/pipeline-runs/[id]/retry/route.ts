@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { getPipelineRun, retryPipelineRun } from '@/lib/pipeline'
 
@@ -7,7 +7,7 @@ export async function POST(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const actor = await requireAdmin()
+  const actor = await requireAdminPermission('pipeline:write')
   const runId = Number((await params).id)
   const before = await getPipelineRun(runId)
   const nextRunId = await retryPipelineRun(runId)
