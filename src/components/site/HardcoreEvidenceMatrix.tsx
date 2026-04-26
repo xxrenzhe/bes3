@@ -41,7 +41,7 @@ export function HardcoreEvidenceMatrix({
 }) {
   if (!products.length) {
     return (
-      <section className="border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
+      <section id="consensus-matrix" className="scroll-mt-24 border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
@@ -54,7 +54,7 @@ export function HardcoreEvidenceMatrix({
   }
 
   return (
-    <section className="border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
+    <section id="consensus-matrix" className="scroll-mt-24 border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Consensus Matrix</p>
