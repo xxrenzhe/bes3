@@ -74,6 +74,7 @@ function buildConfig() {
     googleServiceAccountJson: read('GOOGLE_SERVICE_ACCOUNT_JSON'),
     priceAlertWebhookUrl: read('PRICE_ALERT_WEBHOOK_URL'),
     pipelineWorkerEnabled: read('PIPELINE_WORKER_ENABLED', 'true'),
+    pipelineWorkerId: read('PIPELINE_WORKER_ID'),
     pipelineWorkerPollMs: read('PIPELINE_WORKER_POLL_MS', '2500'),
     pipelineWorkerConcurrency: read('PIPELINE_WORKER_CONCURRENCY', '1'),
     allowInsecureDefaults: read('BES3_ALLOW_INSECURE_DEFAULTS', 'false') === 'true'
@@ -238,7 +239,7 @@ function validate() {
     addResult(
       results,
       'info',
-      `Pipeline worker: ${config.pipelineWorkerEnabled === 'true' ? 'enabled' : 'disabled'} · poll ${config.pipelineWorkerPollMs}ms · concurrency ${config.pipelineWorkerConcurrency}`
+      `Pipeline worker: ${config.pipelineWorkerEnabled === 'true' ? 'enabled' : 'disabled'} · id ${config.pipelineWorkerId || 'auto'} · poll ${config.pipelineWorkerPollMs}ms · concurrency ${config.pipelineWorkerConcurrency}`
     )
   }
 
