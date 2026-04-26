@@ -162,11 +162,14 @@ async function main() {
     },
     runbook: {
       collectIntents: 'npm run hardcore:collect-intents -- --source=all --promote-pending',
+      importKeywordPlanner: 'npm run hardcore:import-keyword-planner -- --file=./keyword-planner.csv --category=yard-pool-automation --promote-pending',
       evolveTaxonomy: 'npm run hardcore:evolve-taxonomy -- --mark-processing',
       resolveEntities: 'npm run hardcore:resolve-video-entities -- --resolve-redirects',
       inspectAffiliateLinks: 'npm run hardcore:inspect-affiliate-links',
       refreshPriceValue: 'npm run hardcore:refresh-price-value',
       queuePriceAlerts: 'npm run hardcore:evaluate-price-alerts -- --queue-notifications --mark-notified',
+      dispatchPriceAlerts: 'npm run hardcore:dispatch-price-alerts -- --mark-sent',
+      exportRedditKit: 'npm run hardcore:export-reddit-kit',
       pushPseo: 'npm run hardcore:push-pseo'
     }
   }))
