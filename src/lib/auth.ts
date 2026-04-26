@@ -11,7 +11,7 @@ const FAILED_LOGIN_LOCK_THRESHOLD = 5
 const LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000
 const LOGIN_RATE_LIMIT_MAX_FAILURES = 10
 
-type AuthPayload = {
+export type AuthPayload = {
   userId: number
   username: string
   role: 'admin'

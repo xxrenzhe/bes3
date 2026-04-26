@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { activatePromptVersion, getPromptVersions } from '@/lib/prompts'
 
 export async function GET(
@@ -14,8 +15,20 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ promptId: string }> }
 ) {
-  await requireAdmin()
+  const actor = await requireAdmin()
+  const { promptId } = await params
+  const before = await getPromptVersions(promptId)
   const body = await request.json().catch(() => ({}))
-  await activatePromptVersion((await params).promptId, String(body.version || ''))
+  const version = String(body.version || '')
+  await activatePromptVersion(promptId, version)
+  await logAdminAudit({
+    actor,
+    request,
+    action: 'prompt_version_activated',
+    entityType: 'prompt_versions',
+    entityId: `${promptId}:${version}`,
+    before: { activeVersion: before.find((item) => item.isActive)?.version || null },
+    after: { activeVersion: version }
+  })
   return NextResponse.json({ success: true })
 }

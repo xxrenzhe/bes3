@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
+import { logAdminAudit } from '@/lib/admin-governance'
 import { createPromptVersion, listPromptGroups } from '@/lib/prompts'
 
 export async function GET() {
@@ -8,7 +9,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  await requireAdmin()
+  const actor = await requireAdmin()
   const body = await request.json().catch(() => ({}))
   await createPromptVersion({
     promptId: String(body.promptId || ''),
@@ -18,6 +19,19 @@ export async function POST(request: Request) {
     promptContent: String(body.promptContent || ''),
     changeNotes: body.changeNotes ? String(body.changeNotes) : undefined,
     activate: Boolean(body.activate)
+  })
+  await logAdminAudit({
+    actor,
+    request,
+    action: 'prompt_version_created',
+    entityType: 'prompt_versions',
+    entityId: `${String(body.promptId || '')}:${String(body.version || '')}`,
+    after: {
+      promptId: String(body.promptId || ''),
+      version: String(body.version || ''),
+      activate: Boolean(body.activate)
+    },
+    reason: body.changeNotes ? String(body.changeNotes) : null
   })
   return NextResponse.json({ success: true })
 }
