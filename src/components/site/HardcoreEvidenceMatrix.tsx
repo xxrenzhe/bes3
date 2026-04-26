@@ -17,6 +17,21 @@ function canBuy(status: string | null) {
   return !status || status === 'active' || status === 'unknown'
 }
 
+function findAlternativeProduct(products: HardcoreProduct[], current: HardcoreProduct) {
+  const currentTags = new Set(current.evidence.map((report) => report.tagSlug))
+  return products
+    .filter((product) => product.id !== current.id && product.affiliateUrl && canBuy(product.affiliateStatus))
+    .map((product) => {
+      const sharedEvidence = product.evidence.filter((report) => currentTags.has(report.tagSlug)).length
+      return { product, sharedEvidence }
+    })
+    .sort((left, right) => {
+      const sharedDelta = right.sharedEvidence - left.sharedEvidence
+      if (sharedDelta) return sharedDelta
+      return (right.product.consensus.score10 || 0) - (left.product.consensus.score10 || 0)
+    })[0]?.product || null
+}
+
 export function HardcoreEvidenceMatrix({
   products,
   emptyTitle = 'Evidence matrix is still researching this lane.'
@@ -63,6 +78,7 @@ export function HardcoreEvidenceMatrix({
               {products.map((product) => {
                 const timestampUrl = youtubeTimestampUrl(product)
                 const report = product.consensus.bestQuote || product.evidence[0]
+                const alternative = product.affiliateStatus === 'out_of_stock' ? findAlternativeProduct(products, product) : null
                 return (
                   <tr key={product.id} className="border-b border-border/70 align-top">
                     <td className="py-5 pr-6">
@@ -129,9 +145,18 @@ export function HardcoreEvidenceMatrix({
                           Check price
                         </a>
                       ) : product.affiliateStatus === 'out_of_stock' ? (
-                        <span className="inline-flex max-w-[180px] rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
-                          Currently Out of Stock
-                        </span>
+                        <div className="max-w-[220px] space-y-2">
+                          <span className="inline-flex rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
+                            Currently Out of Stock
+                          </span>
+                          {alternative ? (
+                            <Link href={`/products/${alternative.slug}`} className="block text-xs font-semibold text-primary hover:underline">
+                              Check alternatives: {alternative.name}
+                            </Link>
+                          ) : (
+                            <span className="block text-xs font-semibold text-muted-foreground">Check Alternatives when another verified pick is available.</span>
+                          )}
+                        </div>
                       ) : (
                         <span className="inline-flex rounded-md border border-border px-4 py-2 text-sm font-semibold text-muted-foreground">
                           Link pending
