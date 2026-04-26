@@ -29,6 +29,19 @@ export interface FaqEntry {
   answer: string
 }
 
+export interface ProductAggregateSchemaOptions {
+  path: string
+  name: string
+  description: string
+  image?: string | null
+  ratingValue?: number | null
+  reviewCount?: number | null
+  offerUrl?: string | null
+  price?: number | null
+  priceCurrency?: string | null
+  availabilityStatus?: string | null
+}
+
 interface WebPageSchemaOptions {
   path: string
   title: string
@@ -276,6 +289,63 @@ export function buildCollectionPageSchema({
     dateModified,
     mainEntity: items.length ? buildItemListSchema(path, items) : undefined
   })
+}
+
+function mapSchemaAvailability(status: string | null | undefined) {
+  switch (status) {
+    case 'out_of_stock':
+      return 'https://schema.org/OutOfStock'
+    case 'broken':
+      return 'https://schema.org/Discontinued'
+    default:
+      return 'https://schema.org/InStock'
+  }
+}
+
+export function buildProductAggregateSchema({
+  path,
+  name,
+  description,
+  image,
+  ratingValue,
+  reviewCount,
+  offerUrl,
+  price,
+  priceCurrency,
+  availabilityStatus
+}: ProductAggregateSchemaOptions): SchemaNode {
+  const url = toAbsoluteUrl(path)
+  const safeRating = ratingValue != null && Number.isFinite(ratingValue) ? Math.max(1, Math.min(5, ratingValue)) : null
+  const safeReviewCount = reviewCount != null && Number.isFinite(reviewCount) ? Math.max(1, Math.round(reviewCount)) : null
+
+  return {
+    '@context': SCHEMA_CONTEXT,
+    '@type': 'Product',
+    '@id': `${url}#product`,
+    name,
+    description,
+    image: image ? [toAbsoluteUrl(image)] : undefined,
+    url,
+    aggregateRating: safeRating
+      ? {
+          '@type': 'AggregateRating',
+          ratingValue: Number(safeRating.toFixed(2)),
+          reviewCount: safeReviewCount || 1,
+          bestRating: 5,
+          worstRating: 1
+        }
+      : undefined,
+    offers: offerUrl
+      ? {
+          '@type': 'Offer',
+          url: toAbsoluteUrl(offerUrl),
+          price: price != null && Number.isFinite(price) ? Number(price.toFixed(2)) : undefined,
+          priceCurrency: priceCurrency || 'USD',
+          availability: mapSchemaAvailability(availabilityStatus),
+          itemCondition: 'https://schema.org/NewCondition'
+        }
+      : undefined
+  }
 }
 
 export function buildSearchResultsPageSchema({

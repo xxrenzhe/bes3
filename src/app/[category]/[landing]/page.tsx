@@ -6,7 +6,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getMultiConstraintLandingPage, getScenarioLandingPage } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
+import { buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 
 function normalizeScenarioSlug(category: string, landing: string) {
   const prefix = `best-${category}-for-`
@@ -96,6 +96,20 @@ export default async function ScenarioLandingPage({
               path: `/products/${product.slug}`
             }))
           }),
+          ...products.slice(0, 10).map((product) =>
+            buildProductAggregateSchema({
+              path: `/products/${product.slug}`,
+              name: product.name,
+              description: `${product.name} ranked with creator teardown evidence, scenario ratings, and price-value timing for ${title}.`,
+              image: product.imageUrl,
+              ratingValue: product.consensus.score5,
+              reviewCount: product.consensus.evidenceCount,
+              offerUrl: product.affiliateUrl ? `/go/${product.id}` : null,
+              price: product.price.currentPrice,
+              priceCurrency: product.price.currency,
+              availabilityStatus: product.affiliateStatus
+            })
+          ),
           buildFaqSchema(path, faqEntries)
         ]}
       />
