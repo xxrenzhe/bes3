@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server'
-import { requireAdmin } from '@/lib/auth'
+import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { getDataManagementSnapshot, recordAdminImportRun } from '@/lib/admin-blueprint'
 
@@ -9,13 +9,15 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const actor = await requireAdmin()
+  const actor = await requireAdminPermission('data:write')
   const body = await request.json().catch(() => ({}))
   const result = await recordAdminImportRun({
     actor,
     importType: String(body.importType || 'manual'),
     sourceFilename: body.sourceFilename ? String(body.sourceFilename) : null,
-    dryRun: body.dryRun !== false
+    dryRun: body.dryRun !== false,
+    rows: Array.isArray(body.rows) ? body.rows : undefined,
+    keyField: body.keyField ? String(body.keyField) : null
   })
   await logAdminAudit({
     actor,

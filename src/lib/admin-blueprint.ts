@@ -543,21 +543,76 @@ export async function recordAdminImportRun(input: {
   importType: string
   sourceFilename?: string | null
   dryRun?: boolean
+  rows?: unknown[]
+  keyField?: string | null
 }) {
   const db = await getDatabase()
+  const rows = Array.isArray(input.rows) ? input.rows : []
+  const keyField = input.keyField || 'id'
+  const seenKeys = new Set<string>()
+  const conflictDetails: Array<{ row: number; reason: string; key?: string }> = []
+  let skippedRows = 0
+  let conflictRows = 0
+  let validRows = 0
+
+  rows.forEach((row, index) => {
+    if (!row || typeof row !== 'object' || Array.isArray(row)) {
+      skippedRows += 1
+      return
+    }
+    const rawKey = (row as Record<string, unknown>)[keyField]
+    const key = rawKey == null ? '' : String(rawKey).trim()
+    if (!key) {
+      conflictRows += 1
+      conflictDetails.push({ row: index + 1, reason: `missing_${keyField}` })
+      return
+    }
+    if (seenKeys.has(key)) {
+      conflictRows += 1
+      conflictDetails.push({ row: index + 1, reason: 'duplicate_key', key })
+      return
+    }
+    seenKeys.add(key)
+    validRows += 1
+  })
+  const createdRows = input.dryRun === false ? validRows : 0
+  const updatedRows = 0
+  const status = conflictRows > 0 ? 'warning' : 'completed'
+  const resultJson = {
+    mode: input.dryRun === false ? 'recorded-import' : 'validated-dry-run',
+    keyField,
+    validRows,
+    conflicts: conflictDetails.slice(0, 50)
+  }
   const result = await db.exec(
     `
       INSERT INTO admin_import_runs (
-        actor_id, import_type, source_filename, dry_run, status, total_rows, result_json, finished_at
-      ) VALUES (?, ?, ?, ?, 'completed', 0, ?, CURRENT_TIMESTAMP)
+        actor_id, import_type, source_filename, dry_run, status, total_rows,
+        created_rows, updated_rows, skipped_rows, conflict_rows, result_json, finished_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
     `,
     [
       input.actor.userId,
       input.importType || 'manual',
       input.sourceFilename || null,
       input.dryRun === false ? 0 : 1,
-      JSON.stringify({ mode: input.dryRun === false ? 'real-run-placeholder' : 'dry-run-placeholder' })
+      status,
+      rows.length,
+      createdRows,
+      updatedRows,
+      skippedRows,
+      conflictRows,
+      JSON.stringify(resultJson)
     ]
   )
-  return { importRunId: Number(result.lastInsertRowid || 0) }
+  return {
+    importRunId: Number(result.lastInsertRowid || 0),
+    status,
+    totalRows: rows.length,
+    createdRows,
+    updatedRows,
+    skippedRows,
+    conflictRows,
+    result: resultJson
+  }
 }

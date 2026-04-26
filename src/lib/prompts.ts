@@ -20,6 +20,23 @@ export interface PromptVersion {
   isActive: boolean
   changeNotes: string | null
   createdAt: string
+  regressionSummary: PromptRegressionSummary
+}
+
+export interface PromptRegressionSummary {
+  activeCases: number
+  casesWithExpectedOutput: number
+  invalidCases: number
+  ready: boolean
+}
+
+export class PromptActivationGuardError extends Error {
+  summary: PromptRegressionSummary
+
+  constructor(summary: PromptRegressionSummary) {
+    super('prompt_regression_guard_failed')
+    this.summary = summary
+  }
 }
 
 export async function listPromptGroups(): Promise<PromptGroup[]> {
@@ -54,7 +71,8 @@ export async function listPromptGroups(): Promise<PromptGroup[]> {
 
 export async function getPromptVersions(promptId: string): Promise<PromptVersion[]> {
   const db = await getDatabase()
-  const rows = await db.query<{
+  const [rows, regressionSummary] = await Promise.all([
+    db.query<{
     id: number
     prompt_id: string
     category: string
@@ -64,15 +82,17 @@ export async function getPromptVersions(promptId: string): Promise<PromptVersion
     is_active: number | boolean
     change_notes: string | null
     created_at: string
-  }>(
-    `
-      SELECT id, prompt_id, category, name, version, prompt_content, is_active, change_notes, created_at
-      FROM prompt_versions
-      WHERE prompt_id = ?
-      ORDER BY created_at DESC, id DESC
-    `,
-    [promptId]
-  )
+    }>(
+      `
+        SELECT id, prompt_id, category, name, version, prompt_content, is_active, change_notes, created_at
+        FROM prompt_versions
+        WHERE prompt_id = ?
+        ORDER BY created_at DESC, id DESC
+      `,
+      [promptId]
+    ),
+    getPromptRegressionSummary(promptId)
+  ])
 
   return rows.map((row) => ({
     id: row.id,
@@ -83,7 +103,8 @@ export async function getPromptVersions(promptId: string): Promise<PromptVersion
     promptContent: row.prompt_content,
     isActive: row.is_active === true || row.is_active === 1,
     changeNotes: row.change_notes,
-    createdAt: row.created_at
+    createdAt: row.created_at,
+    regressionSummary
   }))
 }
 
@@ -107,22 +128,63 @@ export async function createPromptVersion(input: {
   promptContent: string
   changeNotes?: string
   activate?: boolean
+  forceActivate?: boolean
 }): Promise<void> {
   const db = await getDatabase()
-  if (input.activate) {
-    await db.exec('UPDATE prompt_versions SET is_active = 0 WHERE prompt_id = ?', [input.promptId])
-  }
   await db.exec(
     `
       INSERT INTO prompt_versions (prompt_id, category, name, version, prompt_content, is_active, change_notes)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
-    [input.promptId, input.category, input.name, input.version, input.promptContent, input.activate ? 1 : 0, input.changeNotes || null]
+    [input.promptId, input.category, input.name, input.version, input.promptContent, 0, input.changeNotes || null]
   )
+
+  if (input.activate) {
+    await activatePromptVersion(input.promptId, input.version, { force: input.forceActivate === true })
+  }
 }
 
-export async function activatePromptVersion(promptId: string, version: string): Promise<void> {
+export async function getPromptRegressionSummary(promptId: string): Promise<PromptRegressionSummary> {
+  const db = await getDatabase()
+  const rows = await db.query<{ expected_output_json: string | null }>(
+    `
+      SELECT expected_output_json
+      FROM prompt_regression_cases
+      WHERE prompt_id = ? AND status = 'active'
+    `,
+    [promptId]
+  )
+  const invalidCases = rows.filter((row) => {
+    if (!row.expected_output_json) return true
+    try {
+      JSON.parse(row.expected_output_json)
+      return false
+    } catch {
+      return true
+    }
+  }).length
+  const casesWithExpectedOutput = rows.length - invalidCases
+
+  return {
+    activeCases: rows.length,
+    casesWithExpectedOutput,
+    invalidCases,
+    ready: rows.length > 0 && invalidCases === 0
+  }
+}
+
+export async function activatePromptVersion(
+  promptId: string,
+  version: string,
+  options: { force?: boolean } = {}
+): Promise<PromptRegressionSummary> {
+  const summary = await getPromptRegressionSummary(promptId)
+  if (!summary.ready && !options.force) {
+    throw new PromptActivationGuardError(summary)
+  }
+
   const db = await getDatabase()
   await db.exec('UPDATE prompt_versions SET is_active = 0 WHERE prompt_id = ?', [promptId])
   await db.exec('UPDATE prompt_versions SET is_active = 1 WHERE prompt_id = ? AND version = ?', [promptId, version])
+  return summary
 }

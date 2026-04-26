@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
-import { activatePromptVersion, getPromptVersions } from '@/lib/prompts'
+import { activatePromptVersion, getPromptVersions, PromptActivationGuardError } from '@/lib/prompts'
 
 export async function GET(
   _request: Request,
@@ -20,7 +20,22 @@ export async function PUT(
   const before = await getPromptVersions(promptId)
   const body = await request.json().catch(() => ({}))
   const version = String(body.version || '')
-  await activatePromptVersion(promptId, version)
+  const forceActivate = actor.role === 'admin' && body.forceActivate === true
+  let regressionSummary
+  try {
+    regressionSummary = await activatePromptVersion(promptId, version, { force: forceActivate })
+  } catch (error) {
+    if (error instanceof PromptActivationGuardError) {
+      return NextResponse.json(
+        {
+          error: 'Prompt regression guard failed',
+          regressionSummary: error.summary
+        },
+        { status: 409 }
+      )
+    }
+    throw error
+  }
   await logAdminAudit({
     actor,
     request,
@@ -28,7 +43,7 @@ export async function PUT(
     entityType: 'prompt_versions',
     entityId: `${promptId}:${version}`,
     before: { activeVersion: before.find((item) => item.isActive)?.version || null },
-    after: { activeVersion: version }
+    after: { activeVersion: version, forceActivate, regressionSummary }
   })
   return NextResponse.json({ success: true })
 }
