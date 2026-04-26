@@ -30,6 +30,148 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS admin_login_attempts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username_or_email TEXT NOT NULL,
+      user_id INTEGER,
+      ip_address TEXT NOT NULL,
+      user_agent TEXT,
+      device_type TEXT,
+      os TEXT,
+      browser TEXT,
+      success INTEGER NOT NULL DEFAULT 0,
+      failure_reason TEXT,
+      request_id TEXT,
+      attempted_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_user_sessions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      session_token_hash TEXT NOT NULL UNIQUE,
+      jwt_id TEXT,
+      ip_address TEXT NOT NULL,
+      user_agent TEXT,
+      device_fingerprint TEXT,
+      is_suspicious INTEGER NOT NULL DEFAULT 0,
+      suspicious_reason TEXT,
+      last_activity_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      expires_at TEXT NOT NULL,
+      revoked_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_security_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      event_type TEXT NOT NULL,
+      severity TEXT NOT NULL DEFAULT 'info',
+      ip_address TEXT,
+      user_agent TEXT,
+      metadata_json TEXT,
+      request_id TEXT,
+      resolved_at TEXT,
+      resolved_by INTEGER,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL,
+      FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_role_permissions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      role TEXT NOT NULL,
+      permission TEXT NOT NULL,
+      allowed INTEGER NOT NULL DEFAULT 1,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      UNIQUE(role, permission)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_password_history (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      password_hash TEXT NOT NULL,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      actor_id INTEGER,
+      actor_role TEXT,
+      action TEXT NOT NULL,
+      entity_type TEXT NOT NULL,
+      entity_id TEXT,
+      before_json TEXT,
+      after_json TEXT,
+      reason TEXT,
+      ip_address TEXT,
+      user_agent TEXT,
+      request_id TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_import_runs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      actor_id INTEGER,
+      import_type TEXT NOT NULL,
+      source_filename TEXT,
+      dry_run INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'queued',
+      total_rows INTEGER NOT NULL DEFAULT 0,
+      created_rows INTEGER NOT NULL DEFAULT 0,
+      updated_rows INTEGER NOT NULL DEFAULT 0,
+      skipped_rows INTEGER NOT NULL DEFAULT 0,
+      conflict_rows INTEGER NOT NULL DEFAULT 0,
+      error_json TEXT,
+      result_json TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      finished_at TEXT,
+      FOREIGN KEY (actor_id) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_risk_alerts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      risk_type TEXT NOT NULL,
+      severity TEXT NOT NULL DEFAULT 'warning',
+      entity_type TEXT,
+      entity_id TEXT,
+      title TEXT NOT NULL,
+      message TEXT,
+      status TEXT NOT NULL DEFAULT 'open',
+      details_json TEXT,
+      detected_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      resolved_at TEXT,
+      resolved_by INTEGER,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (resolved_by) REFERENCES users(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS admin_saved_views (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER,
+      view_key TEXT NOT NULL,
+      name TEXT NOT NULL,
+      filters_json TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+      UNIQUE(user_id, view_key, name)
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS system_settings (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       category TEXT NOT NULL,
@@ -55,6 +197,18 @@ const SQLITE_SCHEMA = [
       change_notes TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       UNIQUE(prompt_id, version)
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS prompt_regression_cases (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      prompt_id TEXT NOT NULL,
+      name TEXT NOT NULL,
+      input_json TEXT NOT NULL,
+      expected_output_json TEXT,
+      status TEXT NOT NULL DEFAULT 'active',
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
     )
   `,
   `
@@ -275,6 +429,24 @@ const SQLITE_SCHEMA = [
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (analysis_report_id) REFERENCES analysis_reports(id) ON DELETE SET NULL,
       FOREIGN KEY (video_id) REFERENCES review_videos(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS evidence_review_decisions (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      analysis_report_id INTEGER,
+      video_id INTEGER,
+      product_id INTEGER,
+      reviewer_id INTEGER,
+      decision TEXT NOT NULL,
+      before_json TEXT,
+      after_json TEXT,
+      reason TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (analysis_report_id) REFERENCES analysis_reports(id) ON DELETE SET NULL,
+      FOREIGN KEY (video_id) REFERENCES review_videos(id) ON DELETE SET NULL,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL,
+      FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE SET NULL
     )
   `,
   `
@@ -503,6 +675,35 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS worker_heartbeats (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      worker_id TEXT NOT NULL UNIQUE,
+      worker_type TEXT NOT NULL DEFAULT 'pipeline',
+      hostname TEXT,
+      pid INTEGER,
+      status TEXT NOT NULL DEFAULT 'starting',
+      current_run_id INTEGER,
+      last_seen_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      started_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      metadata_json TEXT,
+      FOREIGN KEY (current_run_id) REFERENCES content_pipeline_runs(id) ON DELETE SET NULL
+    )
+  `,
+  `
+    CREATE TABLE IF NOT EXISTS pipeline_queue_config (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      task_type TEXT NOT NULL UNIQUE,
+      enabled INTEGER NOT NULL DEFAULT 1,
+      priority INTEGER NOT NULL DEFAULT 100,
+      max_concurrency INTEGER NOT NULL DEFAULT 1,
+      timeout_seconds INTEGER NOT NULL DEFAULT 1800,
+      max_attempts INTEGER NOT NULL DEFAULT 3,
+      backoff_policy_json TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS articles (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       product_id INTEGER,
@@ -639,7 +840,16 @@ const POSTGRES_JSON_COLUMNS = [
   'open_graph_json',
   'schema_json',
   'payload_json',
-  'metadata_json'
+  'metadata_json',
+  'before_json',
+  'after_json',
+  'error_json',
+  'result_json',
+  'details_json',
+  'filters_json',
+  'input_json',
+  'expected_output_json',
+  'backoff_policy_json'
 ]
 
 function toPostgresStatement(statement: string) {
@@ -713,11 +923,148 @@ async function ensureIndex(db: DatabaseAdapter, indexName: string, statement: st
   }
 }
 
+async function ensureAdminOpsSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+
+  await ensureColumn(db, 'users', 'failed_login_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'users', 'locked_until', 'TEXT')
+  await ensureColumn(db, 'users', 'last_failed_login', 'TEXT')
+  await ensureColumn(db, 'users', 'last_login_at', 'TEXT')
+  await ensureColumn(db, 'users', 'must_change_password', 'INTEGER NOT NULL DEFAULT 0')
+
+  await ensureColumn(db, 'admin_login_attempts', 'request_id', 'TEXT')
+  await ensureColumn(db, 'admin_user_sessions', 'jwt_id', 'TEXT')
+  await ensureColumn(db, 'admin_security_events', 'metadata_json', jsonType)
+  await ensureColumn(db, 'admin_audit_logs', 'before_json', jsonType)
+  await ensureColumn(db, 'admin_audit_logs', 'after_json', jsonType)
+  await ensureColumn(db, 'admin_import_runs', 'error_json', jsonType)
+  await ensureColumn(db, 'admin_import_runs', 'result_json', jsonType)
+  await ensureColumn(db, 'admin_risk_alerts', 'details_json', jsonType)
+  await ensureColumn(db, 'admin_saved_views', 'filters_json', jsonType)
+  await ensureColumn(db, 'prompt_regression_cases', 'input_json', jsonType)
+  await ensureColumn(db, 'prompt_regression_cases', 'expected_output_json', jsonType)
+  await ensureColumn(db, 'evidence_review_decisions', 'before_json', jsonType)
+  await ensureColumn(db, 'evidence_review_decisions', 'after_json', jsonType)
+  await ensureColumn(db, 'worker_heartbeats', 'metadata_json', jsonType)
+  await ensureColumn(db, 'pipeline_queue_config', 'backoff_policy_json', jsonType)
+
+  await ensureIndex(
+    db,
+    'idx_admin_login_attempts_username_attempted',
+    'CREATE INDEX idx_admin_login_attempts_username_attempted ON admin_login_attempts (username_or_email, attempted_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_login_attempts_ip_attempted',
+    'CREATE INDEX idx_admin_login_attempts_ip_attempted ON admin_login_attempts (ip_address, attempted_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_login_attempts_success_attempted',
+    'CREATE INDEX idx_admin_login_attempts_success_attempted ON admin_login_attempts (success, attempted_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_user_sessions_user_active',
+    'CREATE INDEX idx_admin_user_sessions_user_active ON admin_user_sessions (user_id, revoked_at, expires_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_user_sessions_token_hash',
+    'CREATE INDEX idx_admin_user_sessions_token_hash ON admin_user_sessions (session_token_hash)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_user_sessions_device',
+    'CREATE INDEX idx_admin_user_sessions_device ON admin_user_sessions (device_fingerprint, last_activity_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_security_events_user_created',
+    'CREATE INDEX idx_admin_security_events_user_created ON admin_security_events (user_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_security_events_type_created',
+    'CREATE INDEX idx_admin_security_events_type_created ON admin_security_events (event_type, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_audit_logs_actor_created',
+    'CREATE INDEX idx_admin_audit_logs_actor_created ON admin_audit_logs (actor_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_audit_logs_entity_created',
+    'CREATE INDEX idx_admin_audit_logs_entity_created ON admin_audit_logs (entity_type, entity_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_import_runs_type_status',
+    'CREATE INDEX idx_admin_import_runs_type_status ON admin_import_runs (import_type, status, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_admin_risk_alerts_status_severity',
+    'CREATE INDEX idx_admin_risk_alerts_status_severity ON admin_risk_alerts (status, severity, detected_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_evidence_review_decisions_report',
+    'CREATE INDEX idx_evidence_review_decisions_report ON evidence_review_decisions (analysis_report_id, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_prompt_regression_cases_prompt',
+    'CREATE INDEX idx_prompt_regression_cases_prompt ON prompt_regression_cases (prompt_id, status)'
+  )
+  await ensureIndex(
+    db,
+    'idx_worker_heartbeats_seen',
+    'CREATE INDEX idx_worker_heartbeats_seen ON worker_heartbeats (worker_type, status, last_seen_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_pipeline_queue_config_enabled',
+    'CREATE INDEX idx_pipeline_queue_config_enabled ON pipeline_queue_config (enabled, priority, task_type)'
+  )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_admin_security_events_metadata_json_gin',
+      'CREATE INDEX idx_admin_security_events_metadata_json_gin ON admin_security_events USING GIN (metadata_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_admin_audit_logs_after_json_gin',
+      'CREATE INDEX idx_admin_audit_logs_after_json_gin ON admin_audit_logs USING GIN (after_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_admin_risk_alerts_details_json_gin',
+      'CREATE INDEX idx_admin_risk_alerts_details_json_gin ON admin_risk_alerts USING GIN (details_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_worker_heartbeats_metadata_json_gin',
+      'CREATE INDEX idx_worker_heartbeats_metadata_json_gin ON worker_heartbeats USING GIN (metadata_json)'
+    )
+  }
+}
+
 async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   await ensureColumn(db, 'content_pipeline_runs', 'run_type', "TEXT NOT NULL DEFAULT 'fullPipeline'")
   await ensureColumn(db, 'content_pipeline_runs', 'requested_action', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'worker_id', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'priority', 'INTEGER NOT NULL DEFAULT 100')
+  await ensureColumn(db, 'content_pipeline_runs', 'scheduled_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'locked_by', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'lock_expires_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'last_heartbeat_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'cancel_requested_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'payload_json', jsonType)
   await ensureColumn(db, 'content_pipeline_runs', 'locked_at', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'started_at', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'finished_at', 'TEXT')
@@ -733,12 +1080,27 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
     'idx_content_pipeline_runs_product_status',
     'CREATE INDEX idx_content_pipeline_runs_product_status ON content_pipeline_runs (product_id, status, updated_at)'
   )
+  await ensureIndex(
+    db,
+    'idx_content_pipeline_runs_claimable',
+    'CREATE INDEX idx_content_pipeline_runs_claimable ON content_pipeline_runs (status, priority, scheduled_at, created_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_content_pipeline_runs_worker_lock',
+    'CREATE INDEX idx_content_pipeline_runs_worker_lock ON content_pipeline_runs (worker_id, locked_at, lock_expires_at)'
+  )
 
   if (db.type === 'postgres') {
     await ensureIndex(
       db,
       'idx_content_pipeline_jobs_payload_json_gin',
       'CREATE INDEX idx_content_pipeline_jobs_payload_json_gin ON content_pipeline_jobs USING GIN (payload_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_content_pipeline_runs_payload_json_gin',
+      'CREATE INDEX idx_content_pipeline_runs_payload_json_gin ON content_pipeline_runs USING GIN (payload_json)'
     )
   }
 }
@@ -1152,6 +1514,7 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   for (const statement of statements) {
     await db.exec(statement)
   }
+  await ensureAdminOpsSchema(db)
   await ensureProductGraphSchema(db)
   await ensurePipelineRunSchema(db)
   await ensureLinkInspectorSchema(db)
