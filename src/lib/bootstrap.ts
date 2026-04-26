@@ -534,7 +534,7 @@ async function ensureHardcoreTaxonomySeed(): Promise<void> {
 
 async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
   const db = await getDatabase()
-  const productSlug = slugify('Roborock Q Revo Pet Hair Demo')
+  const productSlug = slugify('Dolphin Nautilus Pool Wall Demo')
 
   await ignoreUniqueViolation(() =>
     db.exec(
@@ -564,14 +564,14 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
       `,
       [
         'manual',
-        'https://example.com/affiliate/roborock-q-revo-demo',
-        'https://example.com/affiliate/roborock-q-revo-demo',
-        'https://example.com/products/roborock-q-revo-demo',
+        'https://example.com/affiliate/dolphin-nautilus-demo',
+        'https://example.com/affiliate/dolphin-nautilus-demo',
+        'https://example.com/products/dolphin-nautilus-demo',
         productSlug,
-        'Roborock',
-        'Q Revo Pet Hair Demo',
-        'robot-vacuums',
-        'Seeded v2 evidence product used to keep the hardcore matrix, scenario pages, and value map visible before live ingestion runs.',
+        'Dolphin',
+        'Nautilus Pool Wall Demo',
+        'yard-pool-automation',
+        'Seeded v2 evidence product used to keep the yard and pool automation matrix, scenario pages, and value map visible before live ingestion runs.',
         499,
         'USD',
         499,
@@ -580,8 +580,8 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
         'great-value',
         4.4,
         8,
-        JSON.stringify({ navigation: 'LiDAR', mop: 'self-washing dock', bin: 'auto-empty dock' }),
-        JSON.stringify(['Seeded teardown-style evidence for Pet Hair', 'Below 90-day average price window'])
+        JSON.stringify({ cable: 'tangle-resistant swivel', poolType: 'in-ground', filter: 'top-load basket' }),
+        JSON.stringify(['Seeded teardown-style evidence for Pool Wall Climbing', 'Below 90-day average price window'])
       ]
     )
   )
@@ -605,8 +605,8 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
       `,
       [
         product.id,
-        'https://example.com/affiliate/roborock-q-revo-demo',
-        'https://example.com/products/roborock-q-revo-demo',
+        'https://example.com/affiliate/dolphin-nautilus-demo',
+        'https://example.com/products/dolphin-nautilus-demo',
         0.08
       ]
     )
@@ -652,28 +652,28 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
         ) VALUES (?, ?, ?, ?, ?, ?, 'long-form', ?, ?, 'success', CURRENT_TIMESTAMP)
       `,
       [
-        'demoPetHair001',
-        'VacuumWars Demo Lab',
-        'https://www.youtube.com/@VacuumWars',
+        'demoPoolWall001',
+        'Pool Robot Demo Lab',
+        'https://www.youtube.com/@PoolRobotLab',
         2,
         'specialist',
-        'Roborock Q Revo pet hair teardown demo',
-        'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+        'Dolphin Nautilus pool wall climb demo',
+        'In the wall climbing test, the robot reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.',
         'Demo video description with product identity controlled by Bes3 seed data.'
       ]
     )
   )
 
-  const video = await db.queryOne<{ id: number }>('SELECT id FROM review_videos WHERE youtube_id = ? LIMIT 1', ['demoPetHair001'])
-  const petHairTag = await db.queryOne<{ id: number }>(
+  const video = await db.queryOne<{ id: number }>('SELECT id FROM review_videos WHERE youtube_id = ? LIMIT 1', ['demoPoolWall001'])
+  const poolWallTag = await db.queryOne<{ id: number }>(
     'SELECT id FROM taxonomy_tags WHERE category_slug = ? AND slug = ? LIMIT 1',
-    ['robot-vacuums', 'pet-hair']
+    ['yard-pool-automation', 'pool-wall-climbing']
   )
-  if (!video?.id || !petHairTag?.id) return
+  if (!video?.id || !poolWallTag?.id) return
 
   const existingReport = await db.queryOne<{ id: number }>(
     'SELECT id FROM analysis_reports WHERE product_id = ? AND video_id = ? AND tag_id = ? LIMIT 1',
-    [product.id, video.id, petHairTag.id]
+    [product.id, video.id, poolWallTag.id]
   )
   if (existingReport?.id) {
     await db.exec(
@@ -683,7 +683,7 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
         WHERE id = ?
       `,
       [
-        'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+        'In the wall climbing test, the robot reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.',
         JSON.stringify({ validation: 'seeded_quote_with_context' }),
         existingReport.id
       ]
@@ -710,10 +710,10 @@ async function ensureHardcoreDemoEvidenceSeed(): Promise<void> {
     [
       product.id,
       video.id,
-      petHairTag.id,
-      'Collected most embedded hair but still needed a second pass near the baseboards.',
+      poolWallTag.id,
+      'Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.',
       428,
-      'In the pet hair pickup test, the robot collected most embedded hair but still needed a second pass near the baseboards.',
+      'In the wall climbing test, the robot reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.',
       0.86,
       JSON.stringify({ validation: 'seeded_quote_with_context' })
     ]

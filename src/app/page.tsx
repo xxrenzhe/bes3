@@ -85,6 +85,34 @@ export default async function HomePage() {
         </div>
       </section>
 
+      <section className="border-b border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <div className="max-w-4xl">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Pain-Point Selector</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
+              Start with the failure mode you actually care about.
+            </h2>
+          </div>
+          <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+            {home.categories.slice(0, 8).flatMap((item) =>
+              item.coreTags.slice(0, 2).map((tag) => (
+                <Link
+                  key={`${item.category.slug}-${tag.slug}`}
+                  href={`/${item.category.slug}/best-${item.category.slug}-for-${tag.slug}`}
+                  className="rounded-md border border-border bg-white p-5 hover:border-primary"
+                >
+                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{item.category.name}</p>
+                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{tag.name}</h3>
+                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
+                    Reddit Consensus matrix for {tag.name.toLowerCase()} evidence, creator quotes, and price timing.
+                  </p>
+                </Link>
+              ))
+            )}
+          </div>
+        </div>
+      </section>
+
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">The Hardcore Roster</p>

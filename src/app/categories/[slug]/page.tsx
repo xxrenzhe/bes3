@@ -44,6 +44,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       answer: 'The tag engine clusters Amazon, Google, Reddit, and site-search language into canonical pain points so the page stays decision-focused.'
     }
   ]
+  const creatorStats = new Map<string, { evidenceCount: number; maxRank: number; authorityTier: string }>()
+  for (const product of page.products) {
+    for (const report of product.evidence) {
+      const current = creatorStats.get(report.channelName) || {
+        evidenceCount: 0,
+        maxRank: 0,
+        authorityTier: report.authorityTier
+      }
+      creatorStats.set(report.channelName, {
+        evidenceCount: current.evidenceCount + 1,
+        maxRank: Math.max(current.maxRank, report.bloggerRank),
+        authorityTier: current.maxRank >= report.bloggerRank ? current.authorityTier : report.authorityTier
+      })
+    }
+  }
+  const topCreators = Array.from(creatorStats.entries())
+    .map(([channelName, stats]) => ({ channelName, ...stats }))
+    .sort((left, right) => right.maxRank - left.maxRank || right.evidenceCount - left.evidenceCount)
+    .slice(0, 4)
 
   return (
     <PublicShell>
@@ -81,6 +100,25 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 </Link>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+      <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Creator Trust Layer</p>
+          <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-3xl font-black tracking-tight">
+            Expert signal is separated from affiliate eligibility.
+          </h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-4">
+            {(topCreators.length ? topCreators : [{ channelName: 'Researching', evidenceCount: 0, maxRank: 0, authorityTier: 'pending' }]).map((creator) => (
+              <div key={creator.channelName} className="rounded-md border border-border bg-white p-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{creator.authorityTier}</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{creator.channelName}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">
+                  {creator.evidenceCount} evidence report{creator.evidenceCount === 1 ? '' : 's'} · authority weight {creator.maxRank.toFixed(1)}
+                </p>
+              </div>
+            ))}
           </div>
         </div>
       </section>

@@ -9,12 +9,12 @@ export interface HardcoreCategory {
 
 export const HARDCORE_CATEGORIES: HardcoreCategory[] = [
   {
-    slug: 'robot-vacuums',
-    name: 'Robot Vacuums',
-    coreProducts: ['boundary-free mowers', 'pool robots', 'anti-tangle robot vacuums'],
-    metrics: ['obstacle logic', 'wall climbing', 'hair wrap rate', 'real suction recovery'],
-    painpoints: ['Pet Hair', 'Thick Carpet', 'Obstacle Avoidance', 'No-Go Navigation'],
-    redditSeeds: ['husky shedding everywhere', 'tangled hair on rollers', 'robot vacuum for high pile carpet']
+    slug: 'yard-pool-automation',
+    name: 'Yard and Pool Automation',
+    coreProducts: ['boundary-free robot mowers', 'pool robots', 'cordless pressure washers'],
+    metrics: ['obstacle pathing logic', 'pool wall climbing', 'true water pressure and flow', 'uneven terrain recovery'],
+    painpoints: ['Boundary Free Navigation', 'Pool Wall Climbing', 'Real Water Pressure', 'Uneven Terrain'],
+    redditSeeds: ['robot mower without boundary wire', 'pool robot climbs walls', 'cordless pressure washer real flow rate']
   },
   {
     slug: 'impact-wrenches',
