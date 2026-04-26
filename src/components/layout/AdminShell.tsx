@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { ExternalLink, FileText, GitBranch, Globe2, LayoutDashboard, LogOut, Search, Settings, ShieldAlert, ShieldCheck, ShoppingCart, Tags, TrendingUp, Video, Wand2 } from 'lucide-react'
+import { Database, ExternalLink, FileText, GitBranch, Globe2, LayoutDashboard, LogOut, Search, Settings, ShieldAlert, ShieldCheck, ShoppingCart, Tags, TrendingUp, Users, Video, Wand2 } from 'lucide-react'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +18,8 @@ const NAV_ITEMS = [
   { href: '/admin/prompts', label: 'Prompts', icon: Wand2 },
   { href: '/admin/seo-ops', label: 'SEO Ops', icon: Globe2 },
   { href: '/admin/governance', label: 'Governance', icon: ShieldCheck },
+  { href: '/admin/data', label: 'Data', icon: Database },
+  { href: '/admin/users', label: 'Users', icon: Users },
   { href: '/admin/settings', label: 'Settings', icon: Settings }
 ]
 

@@ -368,3 +368,178 @@ export async function updateRiskAlertStatus(input: {
   )
   return { success: true }
 }
+
+export async function getUsersAccessSnapshot() {
+  const db = await getDatabase()
+  const [summary, users, sessions, loginAttempts, securityEvents] = await Promise.all([
+    db.queryOne(
+      `
+        SELECT
+          (SELECT COUNT(*) FROM users) AS users,
+          (SELECT COUNT(*) FROM users WHERE is_active = 1) AS active_users,
+          (SELECT COUNT(*) FROM users WHERE locked_until IS NOT NULL AND locked_until > CURRENT_TIMESTAMP) AS locked_users,
+          (SELECT COUNT(*) FROM admin_user_sessions WHERE revoked_at IS NULL AND expires_at > CURRENT_TIMESTAMP) AS active_sessions
+      `
+    ),
+    db.query(
+      `
+        SELECT id, username, email, role, display_name, is_active, must_change_password,
+               failed_login_count, locked_until, last_failed_login, last_login_at, created_at, updated_at
+        FROM users
+        ORDER BY updated_at DESC, id DESC
+        LIMIT 100
+      `
+    ),
+    db.query(
+      `
+        SELECT s.id, s.user_id, u.username, s.ip_address, s.user_agent, s.device_fingerprint,
+               s.is_suspicious, s.suspicious_reason, s.last_activity_at, s.expires_at, s.revoked_at, s.created_at
+        FROM admin_user_sessions s
+        LEFT JOIN users u ON u.id = s.user_id
+        ORDER BY s.last_activity_at DESC, s.id DESC
+        LIMIT 100
+      `
+    ),
+    db.query(
+      `
+        SELECT id, username_or_email, user_id, ip_address, success, failure_reason, request_id, attempted_at
+        FROM admin_login_attempts
+        ORDER BY attempted_at DESC, id DESC
+        LIMIT 100
+      `
+    ),
+    db.query(
+      `
+        SELECT id, user_id, event_type, severity, ip_address, metadata_json, request_id, resolved_at, created_at
+        FROM admin_security_events
+        ORDER BY created_at DESC, id DESC
+        LIMIT 100
+      `
+    )
+  ])
+  return { summary, users, sessions, loginAttempts, securityEvents }
+}
+
+export async function runUsersAccessAction(input: {
+  actor: AuthPayload
+  action: string
+  userId?: number
+  sessionId?: number
+  active?: boolean
+}) {
+  const db = await getDatabase()
+  if (input.action === 'revokeSession') {
+    if (!input.sessionId) throw new Error('session_id_required')
+    await db.exec('UPDATE admin_user_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE id = ?', [input.sessionId])
+    return { revokedSessionId: input.sessionId }
+  }
+  if (input.action === 'unlockUser') {
+    if (!input.userId) throw new Error('user_id_required')
+    await db.exec(
+      `
+        UPDATE users
+        SET failed_login_count = 0, locked_until = NULL, last_failed_login = NULL, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [input.userId]
+    )
+    await db.exec(
+      `
+        INSERT INTO admin_security_events (user_id, event_type, severity, metadata_json, created_at)
+        VALUES (?, 'admin_user_unlocked', 'info', ?, CURRENT_TIMESTAMP)
+      `,
+      [input.userId, JSON.stringify({ actorId: input.actor.userId })]
+    )
+    return { unlockedUserId: input.userId }
+  }
+  if (input.action === 'setUserActive') {
+    if (!input.userId) throw new Error('user_id_required')
+    await db.exec('UPDATE users SET is_active = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [input.active ? 1 : 0, input.userId])
+    if (!input.active) {
+      await db.exec('UPDATE admin_user_sessions SET revoked_at = CURRENT_TIMESTAMP WHERE user_id = ? AND revoked_at IS NULL', [input.userId])
+    }
+    return { userId: input.userId, active: Boolean(input.active) }
+  }
+  throw new Error('unknown_users_access_action')
+}
+
+export async function getDataManagementSnapshot() {
+  const db = await getDatabase()
+  const [summary, imports, audits, migrations, settings, media, backups] = await Promise.all([
+    db.queryOne(
+      `
+        SELECT
+          (SELECT COUNT(*) FROM admin_import_runs) AS import_runs,
+          (SELECT COUNT(*) FROM admin_audit_logs) AS audit_logs,
+          (SELECT COUNT(*) FROM migration_history) AS migrations,
+          (SELECT COUNT(*) FROM product_media_assets) AS media_assets
+      `
+    ),
+    db.query(
+      `
+        SELECT id, actor_id, import_type, source_filename, dry_run, status, total_rows,
+               created_rows, updated_rows, skipped_rows, conflict_rows, error_json, result_json, created_at, finished_at
+        FROM admin_import_runs
+        ORDER BY created_at DESC, id DESC
+        LIMIT 100
+      `
+    ),
+    db.query(
+      `
+        SELECT id, actor_id, actor_role, action, entity_type, entity_id, reason, request_id, created_at
+        FROM admin_audit_logs
+        ORDER BY created_at DESC, id DESC
+        LIMIT 120
+      `
+    ),
+    db.query('SELECT id, migration_name, applied_at FROM migration_history ORDER BY applied_at DESC, id DESC LIMIT 100'),
+    db.query(
+      `
+        SELECT category, key, data_type, is_sensitive, updated_at
+        FROM system_settings
+        ORDER BY category ASC, key ASC
+        LIMIT 100
+      `
+    ),
+    db.query(
+      `
+        SELECT pma.id, pma.product_id, p.product_name, pma.storage_provider, pma.asset_role,
+               pma.mime_type, pma.created_at
+        FROM product_media_assets pma
+        LEFT JOIN products p ON p.id = pma.product_id
+        ORDER BY pma.created_at DESC, pma.id DESC
+        LIMIT 80
+      `
+    ),
+    Promise.resolve([
+      { name: 'Runtime backup', command: 'npm run ops:backup-runtime', scope: 'data + storage/media' },
+      { name: 'Runtime restore', command: 'BES3_RESTORE_CONFIRM=restore npm run ops:restore-runtime -- <archive>', scope: 'guarded restore' },
+      { name: 'Planv2 manifest', command: 'npm run hardcore:export-planv2-ops', scope: 'operational manifest export' }
+    ])
+  ])
+  return { summary, imports, audits, migrations, settings, media, backups }
+}
+
+export async function recordAdminImportRun(input: {
+  actor: AuthPayload
+  importType: string
+  sourceFilename?: string | null
+  dryRun?: boolean
+}) {
+  const db = await getDatabase()
+  const result = await db.exec(
+    `
+      INSERT INTO admin_import_runs (
+        actor_id, import_type, source_filename, dry_run, status, total_rows, result_json, finished_at
+      ) VALUES (?, ?, ?, ?, 'completed', 0, ?, CURRENT_TIMESTAMP)
+    `,
+    [
+      input.actor.userId,
+      input.importType || 'manual',
+      input.sourceFilename || null,
+      input.dryRun === false ? 0 : 1,
+      JSON.stringify({ mode: input.dryRun === false ? 'real-run-placeholder' : 'dry-run-placeholder' })
+    ]
+  )
+  return { importRunId: Number(result.lastInsertRowid || 0) }
+}
