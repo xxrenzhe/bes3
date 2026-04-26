@@ -16,6 +16,10 @@ interface ReviewVideoRow {
   description: string | null
 }
 
+interface ProductIdentityRow extends ProductIdentityCandidate {
+  product_name?: string | null
+}
+
 function readNumberFlag(name: string, fallback: number) {
   const prefix = `--${name}=`
   const raw = process.argv.find((item) => item.startsWith(prefix))?.slice(prefix.length)
@@ -33,14 +37,20 @@ async function main() {
   const limit = readNumberFlag('limit', 50)
   const dryRun = hasFlag('dry-run')
   const resolveRedirects = hasFlag('resolve-redirects')
-  const products = await db.query<ProductIdentityCandidate & { product_name?: string }>(
+  const productRows = await db.query<ProductIdentityRow>(
     `
-      SELECT id, brand, product_name AS productName, COALESCE(asin, '') AS asin
+      SELECT id, brand, product_name, product_name AS productName, COALESCE(asin, '') AS asin
       FROM products
       WHERE slug IS NOT NULL
       ORDER BY updated_at DESC, id DESC
     `
   )
+  const products = productRows.map((product) => ({
+    id: product.id,
+    brand: product.brand,
+    productName: product.productName || product.product_name || '',
+    asin: product.asin
+  }))
   const videos = await db.query<ReviewVideoRow>(
     `
       SELECT id, youtube_id, title, transcript, description
