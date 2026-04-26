@@ -127,7 +127,7 @@ function buildClosureChecks() {
     },
     operations: {
       noGitPushThisRun: true,
-      beadsLifecycle: 'Epic plus child tasks are created, claimed, closed, and synced through bd dolt push.'
+      beadsLifecycle: 'Epic plus child tasks are created, claimed, and closed locally. Remote sync is left to the operator when pushes are allowed.'
     }
   }
 }
