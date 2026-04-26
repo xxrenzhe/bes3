@@ -329,9 +329,19 @@ export async function getRiskOperationsSnapshot() {
     ),
     db.query(
       `
-        SELECT sp.pathname, sp.status, sp.indexing_status, sp.last_indexed_at, sp.updated_at
+        SELECT sp.pathname, sp.status,
+               CASE
+                 WHEN sp.status <> 'published' THEN sp.status
+                 WHEN sp.canonical_url IS NULL THEN 'missing_canonical'
+                 WHEN sp.schema_json IS NULL THEN 'missing_schema'
+                 ELSE 'ready'
+               END AS indexing_status,
+               sp.published_at AS last_indexed_at,
+               sp.updated_at
         FROM seo_pages sp
-        WHERE sp.status <> 'published' OR sp.indexing_status IN ('blocked', 'failed', 'noindex')
+        WHERE sp.status <> 'published'
+           OR sp.canonical_url IS NULL
+           OR sp.schema_json IS NULL
         ORDER BY sp.updated_at DESC, sp.id DESC
         LIMIT 80
       `
