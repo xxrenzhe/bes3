@@ -3,6 +3,11 @@ function readFlag(name: string) {
   return process.argv.find((item) => item.startsWith(prefix))?.slice(prefix.length) || ''
 }
 
+function readNumberFlag(name: string, fallback: number) {
+  const parsed = Number(readFlag(name))
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
+}
+
 function shellQuote(value: string) {
   return `'${value.replace(/'/g, "'\\''")}'`
 }
@@ -10,6 +15,8 @@ function shellQuote(value: string) {
 const url = readFlag('url')
 const outputDir = readFlag('output-dir') || 'storage/youtube-transcripts'
 const proxy = readFlag('proxy')
+const minSleep = readNumberFlag('min-sleep', 3)
+const maxSleep = Math.max(minSleep, readNumberFlag('max-sleep', 15))
 const userAgent =
   readFlag('user-agent') ||
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0 Safari/537.36'
@@ -24,15 +31,21 @@ const args = [
   '--skip-download',
   '--write-auto-sub',
   '--write-sub',
+  '--write-info-json',
   '--sub-lang',
   'en.*',
   '--sub-format',
   'vtt',
   '--no-playlist',
-  '--sleep-requests',
-  '3',
+  '--skip-unavailable-fragments',
+  '--sleep-interval',
+  String(minSleep),
   '--max-sleep-interval',
-  '15',
+  String(maxSleep),
+  '--sleep-requests',
+  String(minSleep),
+  '--extractor-args',
+  'youtube:player_client=web',
   '--user-agent',
   userAgent,
   '--output',

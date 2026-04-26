@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import type { HardcoreCategory, HardcoreRating, HardcoreTag } from '@/lib/hardcore'
+import { matchVideoEntity, type ProductIdentityCandidate } from '@/lib/entity-resolution'
 
 export const HARDCORE_RATINGS: HardcoreRating[] = ['Excellent', 'Good', 'Average', 'Struggles', 'Fails']
 
@@ -33,9 +34,17 @@ export const shortsEvidenceSchema = z.object({
   vibe_quote: z.string().min(4)
 })
 
+export const productEntityExtractionSchema = z.object({
+  brand: z.string().nullable(),
+  model: z.string().nullable(),
+  asin: z.string().nullable().default(null),
+  confidence_reason: z.string().min(4)
+})
+
 export type TaxonomyRefinementOutput = z.infer<typeof taxonomyRefinementSchema>
 export type VideoEvidenceOutput = z.infer<typeof videoEvidenceSchema>
 export type ShortsEvidenceOutput = z.infer<typeof shortsEvidenceSchema>
+export type ProductEntityExtractionOutput = z.infer<typeof productEntityExtractionSchema>
 
 function stringifyTagList(tags: HardcoreTag[]) {
   return tags.map((tag) => tag.name).join(', ')
@@ -109,6 +118,78 @@ export function buildShortsEvidencePrompt({
     'Transcript:',
     transcript
   ].join('\n')
+}
+
+export function buildProductEntityExtractionPrompt({
+  products,
+  title,
+  transcriptIntro,
+  description
+}: {
+  products: ProductIdentityCandidate[]
+  title: string
+  transcriptIntro?: string | null
+  description?: string | null
+}) {
+  return [
+    'You are a SKU entity resolution analyst. Your job is to identify the exact reviewed product, not a similar product.',
+    '',
+    'Rules:',
+    '1. Prefer an ASIN or merchant link from the video description when present.',
+    '2. If no ASIN is present, choose only from the product whitelist.',
+    '3. Use brand + model evidence from the title and first transcript minute.',
+    '4. If the reviewed product is ambiguous, return null brand and model rather than guessing.',
+    '5. Output STRICTLY as JSON with brand, model, asin, and confidence_reason.',
+    '',
+    'Product whitelist:',
+    JSON.stringify(
+      products.map((product) => ({
+        id: product.id,
+        brand: product.brand,
+        productName: product.productName,
+        asin: product.asin
+      })),
+      null,
+      2
+    ),
+    '',
+    `Video title: ${title}`,
+    '',
+    `Description: ${description || ''}`,
+    '',
+    `Transcript intro: ${transcriptIntro || ''}`
+  ].join('\n')
+}
+
+export function validateProductEntityExtractionOutput({
+  output,
+  products,
+  title,
+  transcriptIntro,
+  description
+}: {
+  output: unknown
+  products: ProductIdentityCandidate[]
+  title: string
+  transcriptIntro?: string | null
+  description?: string | null
+}) {
+  const parsed = productEntityExtractionSchema.parse(output)
+  const normalizedAsin = parsed.asin?.trim().toUpperCase() || null
+  const entityText = [parsed.brand || '', parsed.model || '', normalizedAsin || '', title, transcriptIntro || '', description || ''].join('\n')
+  const match = matchVideoEntity({
+    title: entityText,
+    transcriptIntro,
+    description,
+    products
+  })
+
+  return {
+    ...parsed,
+    asin: normalizedAsin,
+    accepted: Boolean(match.productId && match.confidence >= 0.9),
+    match
+  }
 }
 
 export function validateVideoEvidenceOutput(output: unknown, allowedTags: HardcoreTag[], transcript?: string) {
