@@ -99,6 +99,7 @@ export function buildVideoEvidencePrompt({
     '5. CONTEXT: Include a short context_snippet around the quote so code can verify the evidence was actually present.',
     '6. SHILL DETECTION: If the reviewer only praises official specs without physical testing, set is_advertorial true.',
     '7. ESCAPE HATCH: Put unusual tested scenarios outside our tags into unexpected_brilliant_usecases.',
+    '8. OUTPUT SHAPE: Return only this JSON object shape: {"is_advertorial":false,"overall_sentiment":"Positive","scenario_performance":[{"canonical_tag":"Pet Hair","rating":"Good","evidence_quote":"exact quote from transcript","timestamp_seconds":null,"context_snippet":"exact context from transcript"}],"unexpected_brilliant_usecases":[]}.',
     '',
     'Transcript:',
     transcript
