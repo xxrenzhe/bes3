@@ -3,6 +3,7 @@ import { bootstrapApplication } from '@/lib/bootstrap'
 import { getDatabase } from '@/lib/db'
 import { HARDCORE_CATEGORIES, listHardcoreTags } from '@/lib/hardcore'
 import { exportTaxonomyRescanJobs } from '@/lib/hardcore-ops'
+import { getMultiConstraintPseoRoutes, getScenarioPseoRoutes, getValuePseoRoutes } from '@/lib/pseo'
 
 function readNumberFlag(name: string, fallback: number) {
   const prefix = `--${name}=`
@@ -148,21 +149,10 @@ async function main() {
 
   for (const category of HARDCORE_CATEGORIES) {
     pseoPaths.add(`/categories/${category.slug}`)
-    pseoPaths.add(`/deals/best-value-${category.slug}-under-500`)
-    const categoryTags = tags
-      .filter((tag) => tag.categorySlug === category.slug)
-      .sort((left, right) => Number(right.isCorePainpoint) - Number(left.isCorePainpoint) || right.searchVolume - left.searchVolume)
-
-    for (const tag of categoryTags.slice(0, 12)) {
-      pseoPaths.add(`/${category.slug}/best-${category.slug}-for-${tag.slug}`)
-    }
-
-    for (const [firstIndex, first] of categoryTags.filter((tag) => tag.isCorePainpoint).slice(0, 4).entries()) {
-      for (const second of categoryTags.filter((tag) => tag.isCorePainpoint).slice(firstIndex + 1, 4)) {
-        pseoPaths.add(`/${category.slug}/best-${first.slug}-${second.slug}-${category.slug}`)
-      }
-    }
   }
+  for (const route of getValuePseoRoutes(HARDCORE_CATEGORIES)) pseoPaths.add(route.path)
+  for (const route of getScenarioPseoRoutes(tags, { limitPerCategory: 12 })) pseoPaths.add(route.path)
+  for (const route of getMultiConstraintPseoRoutes(tags)) pseoPaths.add(route.path)
 
   const [rescanJobs, notificationSummary, entitySummary] = await Promise.all([
     exportTaxonomyRescanJobs(limit),

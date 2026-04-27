@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/db'
 import { HARDCORE_CATEGORIES, listHardcoreProducts, listHardcoreTags } from '@/lib/hardcore'
+import { buildValuePseoPath } from '@/lib/pseo'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +34,7 @@ export async function GET() {
       painpoints: category.painpoints,
       routes: {
         category: `/categories/${category.slug}`,
-        value: `/deals/best-value-${category.slug}-under-500`,
+        value: buildValuePseoPath(category.slug, 500),
         scenarios: tags
           .filter((tag) => tag.categorySlug === category.slug)
           .slice(0, 6)

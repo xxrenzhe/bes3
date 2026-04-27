@@ -6,6 +6,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { ValueMap } from '@/components/site/ValueMap'
 import { HARDCORE_CATEGORIES, getHardcoreHome } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildValuePseoPath } from '@/lib/pseo'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
@@ -43,7 +44,7 @@ export default async function DealsPage() {
             description: 'Price-value pages ranked by teardown consensus and live price baselines.',
             items: HARDCORE_CATEGORIES.map((category) => ({
               name: `Best value ${category.name}`,
-              path: `/deals/best-value-${category.slug}-under-500`
+              path: buildValuePseoPath(category.slug, 500)
             }))
           }),
           buildFaqSchema('/deals', faqEntries)
@@ -62,7 +63,7 @@ export default async function DealsPage() {
             {HARDCORE_CATEGORIES.slice(0, 6).map((category) => (
               <Link
                 key={category.slug}
-                href={`/deals/best-value-${category.slug}-under-500`}
+                href={buildValuePseoPath(category.slug, 500)}
                 className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary"
               >
                 {category.name} under $500

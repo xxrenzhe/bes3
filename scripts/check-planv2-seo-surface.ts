@@ -22,9 +22,51 @@ const checks: SurfaceCheck[] = [
       'SeoFaqSection',
       'buildFaqSchema',
       'buildProductAggregateSchema',
+      'generateStaticParams',
+      'buildBreadcrumbSchema',
       'robots: page.status ===',
       'no fabricated winners'
     ]
+  },
+  {
+    label: 'Value pSEO page',
+    filePath: 'src/app/deals/[slug]/page.tsx',
+    required: [
+      'generateStaticParams',
+      'buildValuePseoPath',
+      'buildBreadcrumbSchema',
+      'buildProductAggregateSchema',
+      'robots: page.status ===',
+      'Price Drop Alert'
+    ]
+  },
+  {
+    label: 'Canonical pSEO route helpers',
+    filePath: 'src/lib/pseo.ts',
+    required: [
+      'buildScenarioPseoPath',
+      'buildValuePseoPath',
+      '/deals/best-',
+      'getScenarioPseoStaticParams',
+      'getValuePseoStaticParams'
+    ]
+  },
+  {
+    label: 'Automated SEO workflow',
+    filePath: 'scripts/run-seo-automation.ts',
+    required: [
+      'SEO_AUTOMATION_APPLY',
+      'hardcore:check-planv2-seo',
+      'applyPseoSignalsToTaxonomy',
+      'promotePendingTags',
+      'rerunGoogleIndexing',
+      '--push-index'
+    ]
+  },
+  {
+    label: 'SEO automation package command',
+    filePath: 'package.json',
+    required: ['hardcore:seo-automation']
   },
   {
     label: 'Evidence comparison table',

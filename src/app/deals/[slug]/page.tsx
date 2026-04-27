@@ -1,22 +1,24 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import Link from 'next/link'
+import { notFound, redirect } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getValueLandingPage } from '@/lib/hardcore'
 import { getPriceAlertLabel } from '@/lib/hardcore-ops'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildValuePseoPath, getValuePseoStaticParams, normalizeValuePseoSlug, parseValuePseoSlug } from '@/lib/pseo'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 
-function normalizeValueSlug(slug: string) {
-  if (slug.startsWith('best-value-')) return slug.slice('best-value-'.length)
-  if (slug.startsWith('best-')) return slug.slice('best-'.length)
-  return ''
+export const revalidate = 86400
+
+export function generateStaticParams() {
+  return getValuePseoStaticParams()
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const valueSlug = normalizeValueSlug((await params).slug)
+  const valueSlug = normalizeValuePseoSlug((await params).slug)
   const page = valueSlug ? await getValueLandingPage(valueSlug) : null
   if (!page) {
     return buildPageMetadata({
@@ -34,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return buildPageMetadata({
     title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
     description: `Bes3 ranks ${page.category.name} under $${page.priceLimit} by teardown consensus score, current price, 90-day average, and historical low.`,
-    path: `/deals/best-value-${page.category.slug}-under-${page.priceLimit}`,
+    path: buildValuePseoPath(page.category.slug, page.priceLimit),
     locale: await getRequestLocale(),
     robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
     keywords: [`best value ${page.category.name}`, `${page.category.name} under ${page.priceLimit}`, 'teardown consensus']
@@ -42,13 +44,24 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function BestValuePage({ params }: { params: Promise<{ slug: string }> }) {
-  const valueSlug = normalizeValueSlug((await params).slug)
+  const rawSlug = (await params).slug
+  const parsedSlug = parseValuePseoSlug(rawSlug)
+  if (rawSlug.startsWith('best-value-') && parsedSlug) {
+    redirect(buildValuePseoPath(parsedSlug.categorySlug, parsedSlug.priceLimit))
+  }
+  const valueSlug = parsedSlug?.valueSlug || ''
   const page = valueSlug ? await getValueLandingPage(valueSlug) : null
   if (!page) notFound()
-  const path = `/deals/best-value-${page.category.slug}-under-${page.priceLimit}`
+  const path = buildValuePseoPath(page.category.slug, page.priceLimit)
   const priceAlertPrefix = page.products.some((product) => getPriceAlertLabel(product.price.entryStatus, product.consensus.score5))
     ? '[Price Drop Alert] '
     : ''
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Deals', path: '/deals' },
+    { name: page.category.name, path: `/categories/${page.category.slug}` },
+    { name: `Under $${page.priceLimit}`, path }
+  ]
   const faqEntries = [
     {
       question: `How does Bes3 rank ${page.category.name} under $${page.priceLimit}?`,
@@ -72,6 +85,12 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
             path,
             title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
             description: 'Ranked by value score: consensus score multiplied by 100 and divided by current price.',
+            about: [
+              { '@type': 'Thing', name: page.category.name },
+              { '@type': 'Thing', name: 'price-value ranking' },
+              { '@type': 'Thing', name: `under $${page.priceLimit}` }
+            ],
+            breadcrumbItems,
             items: page.products.map((product) => ({
               name: product.name,
               path: `/products/${product.slug}`
@@ -91,6 +110,7 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
               availabilityStatus: product.affiliateStatus
             })
           ),
+          buildBreadcrumbSchema(path, breadcrumbItems),
           buildFaqSchema(path, faqEntries)
         ]}
       />
@@ -114,6 +134,34 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
               <p className="mt-3 text-sm leading-7 text-muted-foreground">{entry.answer}</p>
             </div>
           ))}
+        </div>
+      </section>
+      <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl border-t border-border pt-8">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Related Evidence</p>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
+            Looking beyond the under ${page.priceLimit} filter?
+          </h2>
+          <div className="mt-6 flex flex-wrap gap-3">
+            <Link
+              href={`/categories/${page.category.slug}`}
+              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              Top {page.category.name} list
+            </Link>
+            <Link
+              href="/products"
+              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              Full evidence matrix
+            </Link>
+            <Link
+              href="/deals"
+              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              Best Value Lab
+            </Link>
+          </div>
         </div>
       </section>
     </PublicShell>

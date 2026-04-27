@@ -1,23 +1,13 @@
 import type { MetadataRoute } from 'next'
 import { HARDCORE_CATEGORIES, listHardcoreTags } from '@/lib/hardcore'
+import { getMultiConstraintPseoRoutes, getScenarioPseoRoutes, getValuePseoRoutes } from '@/lib/pseo'
 import { buildLocalizedSitemapRoute } from '@/lib/sitemap-utils'
-
-function isSitemapEligible(status: string) {
-  return status !== 'low_priority' && status !== 'paused'
-}
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const tags = await listHardcoreTags()
-  const scenarioRoutes = HARDCORE_CATEGORIES.flatMap((category) =>
-    tags.filter((tag) => tag.categorySlug === category.slug && isSitemapEligible(tag.status)).slice(0, 8)
-      .map((tag) => `/${category.slug}/best-${category.slug}-for-${tag.slug}`)
-  )
-  const multiConstraintRoutes = HARDCORE_CATEGORIES.flatMap((category) => {
-    const categoryTags = tags.filter((tag) => tag.categorySlug === category.slug && tag.isCorePainpoint && isSitemapEligible(tag.status)).slice(0, 4)
-    return categoryTags.flatMap((first, firstIndex) =>
-      categoryTags.slice(firstIndex + 1).map((second) => `/${category.slug}/best-${first.slug}-${second.slug}-${category.slug}`)
-    )
-  })
+  const scenarioRoutes = getScenarioPseoRoutes(tags).map((route) => route.path)
+  const multiConstraintRoutes = getMultiConstraintPseoRoutes(tags).map((route) => route.path)
+  const valueRoutes = getValuePseoRoutes(HARDCORE_CATEGORIES).map((route) => route.path)
 
   return [
     ...buildLocalizedSitemapRoute('', { changeFrequency: 'daily', priority: 1 }),
@@ -32,9 +22,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...HARDCORE_CATEGORIES.flatMap((category) =>
       buildLocalizedSitemapRoute(`/categories/${category.slug}`, { changeFrequency: 'weekly', priority: 0.88 })
     ),
-    ...HARDCORE_CATEGORIES.flatMap((category) =>
-      buildLocalizedSitemapRoute(`/deals/best-value-${category.slug}-under-500`, { changeFrequency: 'daily', priority: 0.82 })
-    ),
+    ...valueRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'daily', priority: 0.82 })),
     ...scenarioRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.8 })),
     ...multiConstraintRoutes.flatMap((route) => buildLocalizedSitemapRoute(route, { changeFrequency: 'weekly', priority: 0.76 }))
   ]

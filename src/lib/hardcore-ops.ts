@@ -2,6 +2,7 @@ import { getDatabase } from '@/lib/db'
 import { classifyLinkHealth, extractAmazonUrls, type LinkHealthResult } from '@/lib/entity-resolution'
 import type { EntryStatus } from '@/lib/hardcore'
 import { summarizePriceValue } from '@/lib/hardcore'
+import { normalizeValuePseoSlug } from '@/lib/pseo'
 import { slugify } from '@/lib/slug'
 
 export interface SearchIntentInput {
@@ -104,7 +105,7 @@ function normalizePathname(value: string) {
 function parsePseoPath(pathname: string) {
   const parts = pathname.split('/').filter(Boolean)
   if (parts[0] === 'deals') {
-    const match = parts[1]?.match(/^best-value-(.+)-under-\d+$/)
+    const match = normalizeValuePseoSlug(parts[1] || '').match(/^(.+)-under-\d+$/)
     return match ? { categorySlug: match[1], tagSlug: null } : { categorySlug: null, tagSlug: null }
   }
   const categorySlug = parts[0] || null

@@ -1,14 +1,23 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
 import { StructuredData } from '@/components/site/StructuredData'
-import { getMultiConstraintLandingPage, getScenarioLandingPage } from '@/lib/hardcore'
+import { getMultiConstraintLandingPage, getScenarioLandingPage, listHardcoreTags } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildScenarioPseoPath, buildValuePseoPath, getScenarioPseoStaticParams } from '@/lib/pseo'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 import type { HardcoreProduct } from '@/lib/hardcore'
+
+export const revalidate = 86400
+
+export async function generateStaticParams() {
+  const tags = await listHardcoreTags()
+  return getScenarioPseoStaticParams(tags)
+}
 
 function normalizeScenarioSlug(category: string, landing: string) {
   const prefix = `best-${category}-for-`
@@ -171,6 +180,47 @@ function DecisionFitSection({ products, tagLabel }: { products: HardcoreProduct[
   )
 }
 
+function RelatedPseoLinks({
+  categorySlug,
+  categoryName,
+  valuePath,
+  tagLabel
+}: {
+  categorySlug: string
+  categoryName: string
+  valuePath: string
+  tagLabel: string
+}) {
+  const links = [
+    { href: `/categories/${categorySlug}`, label: `Top ${categoryName} list` },
+    { href: valuePath, label: `${categoryName} under $500` },
+    { href: '/products', label: 'Full evidence matrix' },
+    { href: '/deals', label: 'Best Value Lab' }
+  ]
+
+  return (
+    <section className="px-4 pb-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl border-t border-border pt-8">
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Related Evidence</p>
+        <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
+          Looking for more options for {tagLabel}?
+        </h2>
+        <div className="mt-6 flex flex-wrap gap-3">
+          {links.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
 export async function generateMetadata({
   params
 }: {
@@ -204,7 +254,7 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: buildScenarioTitle({ categoryName: page.category.name, tagLabel: page.tag.name, products: page.products }),
     description: `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
-    path: `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`,
+    path: buildScenarioPseoPath(page.category.slug, page.tag.slug),
     locale: await getRequestLocale(),
     robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
     keywords: [`best ${page.category.name} for ${page.tag.name}`, `${page.tag.name} ${page.category.name}`, 'Reddit consensus']
@@ -222,13 +272,21 @@ export default async function ScenarioLandingPage({
   const multiPage = page ? null : await getMultiConstraintLandingPage(resolved.category, resolved.landing)
   if (!page && !multiPage) notFound()
   const path = page
-    ? `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`
+    ? buildScenarioPseoPath(page.category.slug, page.tag.slug)
     : `/${multiPage!.category.slug}/${resolved.landing}`
   const products = page ? page.products : multiPage!.products
   const tagLabel = page ? page.tag.name : multiPage!.tags.map((tag) => tag.name).join(' + ')
   const categoryName = page ? page.category.name : multiPage!.category.name
+  const categorySlug = page ? page.category.slug : multiPage!.category.slug
+  const valuePath = buildValuePseoPath(categorySlug, 500)
   const title = buildScenarioTitle({ categoryName, tagLabel, products })
   const bluf = buildBluf({ products, tagLabel })
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Categories', path: '/categories' },
+    { name: categoryName, path: `/categories/${categorySlug}` },
+    { name: tagLabel, path }
+  ]
   const faqEntries = [
     {
       question: page ? `Why does this page focus on ${page.tag.name}?` : 'Why combine these constraints?',
@@ -256,6 +314,12 @@ export default async function ScenarioLandingPage({
             path,
             title,
             description: `Scenario matrix for ${page ? page.category.name : multiPage!.category.name}.`,
+            about: [
+              { '@type': 'Thing', name: categoryName },
+              { '@type': 'Thing', name: tagLabel },
+              { '@type': 'Thing', name: 'Reddit consensus product evidence' }
+            ],
+            breadcrumbItems,
             items: products.map((product) => ({
               name: product.name,
               path: `/products/${product.slug}`
@@ -275,6 +339,7 @@ export default async function ScenarioLandingPage({
               availabilityStatus: product.affiliateStatus
             })
           ),
+          buildBreadcrumbSchema(path, breadcrumbItems),
           buildFaqSchema(path, faqEntries)
         ]}
       />
@@ -301,6 +366,7 @@ export default async function ScenarioLandingPage({
           />
         </div>
       </section>
+      <RelatedPseoLinks categorySlug={categorySlug} categoryName={categoryName} valuePath={valuePath} tagLabel={tagLabel} />
     </PublicShell>
   )
 }

@@ -70,7 +70,7 @@ export function HardcoreEvidenceMatrix({
                 <th className="px-4 py-4">Consensus</th>
                 <th className="px-4 py-4">Evidence</th>
                 <th className="px-4 py-4">Price/Value</th>
-                <th className="px-4 py-4">Source Proof</th>
+                <th className="px-4 py-4">Hardcore Proof</th>
                 <th className="py-4 pl-4">Action</th>
               </tr>
             </thead>

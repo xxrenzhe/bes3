@@ -4,6 +4,7 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { StructuredData } from '@/components/site/StructuredData'
 import { HARDCORE_CATEGORIES, listHardcoreProducts, listHardcoreTags } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildValuePseoPath } from '@/lib/pseo'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildWebPageSchema } from '@/lib/structured-data'
 
@@ -38,7 +39,7 @@ export default async function HtmlSitemapPage() {
       }))
   )
   const valuePages = HARDCORE_CATEGORIES.map((category) => ({
-    href: `/deals/best-value-${category.slug}-under-500`,
+    href: buildValuePseoPath(category.slug, 500),
     label: `Best ${category.name} under $500`
   }))
   const multiConstraintPages = HARDCORE_CATEGORIES.flatMap((category) => {
