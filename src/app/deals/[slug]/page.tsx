@@ -101,7 +101,7 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
             {priceAlertPrefix}Best value {page.category.name} under ${page.priceLimit}.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Formula: value score equals consensus score times 100 divided by current price. Pages stay in researching mode until enough products have both evidence and price baselines.
+            Formula: value score equals consensus score times 100 divided by current price. Pages stay unpublished until enough products have both review evidence and price history.
           </p>
         </div>
       </section>

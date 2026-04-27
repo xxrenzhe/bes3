@@ -26,7 +26,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   if (!product) {
     return buildPageMetadata({
       title: 'Product Researching',
-      description: 'This Bes3 product is not available in the hardcore evidence graph yet.',
+      description: 'This Bes3 product is not available in the public ratings system yet.',
       path: '/products',
       locale: getRequestLocale(),
       robots: { index: false, follow: true }
@@ -52,11 +52,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const faqEntries = [
     {
       question: 'Why might the score still be researching?',
-      answer: 'Bes3 needs aligned product identity, creator evidence, scenario tags, and non-advertorial quotes before making a confident claim.'
+      answer: 'Bes3 needs exact product matching, enough review evidence, use-case coverage, and trustworthy quotes before making a confident claim.'
     },
     {
       question: 'Does commission change the score?',
-      answer: 'No. Affiliate links are commercial eligibility and handoff plumbing. Consensus score comes from creator authority, evidence confidence, and rating quality.'
+      answer: 'No. A store link only makes a product purchasable from the page. The score comes from review quality, evidence confidence, and rating consistency.'
     }
   ]
 
@@ -115,7 +115,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               {product.name}
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              {product.description || 'This product is in the evidence graph, but the teardown summary is still being built from source reports.'}
+              {product.description || 'This product is in the public catalog, but the full review summary is still being built from source material.'}
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href={`/categories/${product.categorySlug}`} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
@@ -187,7 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="rounded-md border border-border bg-white p-6">
                 <p className="font-semibold">No source quote has cleared validation yet.</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  The entity can exist before the score is ready. Bes3 keeps it visible but blocks false winner claims until evidence is attached.
+                  A product page can exist before the score is ready. Bes3 keeps it visible but blocks false winner claims until evidence is attached.
                 </p>
               </div>
             )}

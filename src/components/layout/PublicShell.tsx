@@ -10,7 +10,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const locale = getRequestLocale()
   const displayPath = getRequestDisplayPath()
   const navItems = [
-    { href: '/categories', label: 'Hardcore Roster' },
+    { href: '/categories', label: 'Categories' },
     { href: '/products', label: 'Evidence Matrix' },
     { href: '/deals', label: 'Best Value' },
     { href: '/data', label: 'Open Data' },
@@ -34,7 +34,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
           <Link href={addLocaleToPath('/', locale)} className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 font-black text-white">B3</div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Hardcore Rotten Tomatoes</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Independent Product Ratings</p>
               <p className="font-[var(--font-display)] text-xl font-black tracking-tight">{DEFAULT_SITE_NAME}</p>
             </div>
           </Link>
@@ -72,16 +72,16 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border bg-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Cut the crap</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Buyer-First Reviews</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black">{DEFAULT_SITE_NAME}</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
           </div>
           <nav aria-label="Explore" className="flex flex-col gap-3 text-sm text-slate-300">
-            <Link href={addLocaleToPath('/categories', locale)}>Hardcore Roster</Link>
+            <Link href={addLocaleToPath('/categories', locale)}>Categories</Link>
             <Link href={addLocaleToPath('/products', locale)}>Evidence Matrix</Link>
             <Link href={addLocaleToPath('/deals', locale)}>Best Value Lab</Link>
             <Link href={addLocaleToPath('/site-map', locale)}>Sitemap</Link>
-            <Link href="/llms.txt">LLMs Manifest</Link>
+            <Link href={addLocaleToPath('/contact', locale)}>Contact</Link>
           </nav>
           <nav aria-label="Company" className="flex flex-col gap-3 text-sm text-slate-300">
             <Link href={addLocaleToPath('/about', locale)}>About</Link>

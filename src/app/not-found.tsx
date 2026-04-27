@@ -12,14 +12,14 @@ export default function NotFound() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">404 Recovery</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            That route is outside the evidence graph.
+            That page could not be found.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Requested path: {requestPath}. Bes3 now routes recovery through the hardcore roster, product evidence matrix, and best-value lab.
+            Requested path: {requestPath}. Try starting again from categories, product comparisons, or best-value pages.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <Link href="/categories" className="rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-              Open hardcore roster
+              Browse categories
             </Link>
             <Link href="/products" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
               Open evidence matrix

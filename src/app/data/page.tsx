@@ -10,30 +10,30 @@ import { buildDataCatalogSchema, buildDatasetSchema, buildFaqSchema } from '@/li
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Open Evidence Data',
-    description: 'Bes3 exposes its v2 evidence graph conceptually through categories, taxonomy tags, product reports, scenario pages, and value pages.',
+    description: 'Bes3 exposes public category, product, scenario, and pricing data through human-readable pages and open endpoints.',
     path: '/data',
     locale: getRequestLocale(),
-    keywords: ['open evidence data', 'taxonomy tags', 'teardown evidence', 'scenario pages']
+    keywords: ['open evidence data', 'use-case tags', 'hands-on evidence', 'scenario pages']
   })
 }
 
 export default async function OpenDataPage() {
   const [products, tags] = await Promise.all([listHardcoreProducts(), listHardcoreTags()])
   const entries = [
-    { name: 'Hardcore roster', path: '/categories', description: 'The 14 white-listed physical product lanes.' },
+    { name: 'Categories', path: '/categories', description: 'The product areas Bes3 currently covers.' },
     { name: 'Evidence matrix', path: '/products', description: 'Product reports ranked by consensus score and evidence count.' },
     { name: 'Best value lab', path: '/deals', description: 'Price-value windows combining consensus score with live and historical price data.' },
-    { name: 'Evidence API', path: '/api/open/evidence', description: 'Public JSON inventory of categories, tags, product evidence reports, and v2 routes.' },
-    { name: 'Search intake API', path: '/api/open/evidence/search-intake', description: 'POST endpoint for capturing new user pain-point language into the taxonomy loop.' },
+    { name: 'Evidence API', path: '/api/open/evidence', description: 'Public JSON inventory of categories, tags, product evidence reports, and route coverage.' },
+    { name: 'Search intake API', path: '/api/open/evidence/search-intake', description: 'POST endpoint for capturing new user problem language into the taxonomy system.' },
     { name: 'Price alerts API', path: '/api/open/evidence/price-alerts', description: 'POST endpoint for tracking price-value thresholds for a scored product.' },
     { name: 'Evidence feedback API', path: '/api/open/evidence/feedback', description: 'POST endpoint for lowering or raising confidence on a creator evidence item.' },
-    { name: 'XML sitemap', path: '/sitemap.xml', description: 'Machine-discoverable v2 route graph.' },
-    { name: 'Scenario sitemap', path: '/taxonomy/sitemap.xml', description: 'Canonical pain-point landing pages for RAG and search crawlers.' }
+    { name: 'XML sitemap', path: '/sitemap.xml', description: 'Machine-discoverable route map for the public site.' },
+    { name: 'Scenario sitemap', path: '/taxonomy/sitemap.xml', description: 'Use-case landing pages for search and AI crawlers.' }
   ]
   const faqEntries = [
     {
-      question: 'What data model does Bes3 v2 expose?',
-      answer: 'The public model is category, canonical tag, product, creator evidence, consensus score, and price-value status. Admin-only ingestion details stay private.'
+      question: 'What public data does Bes3 expose?',
+      answer: 'The public model includes categories, use-case tags, product reports, review evidence, consensus scores, and price-value status. Admin-only ingestion details stay private.'
     },
     {
       question: 'Why are old commerce API links not the center anymore?',
@@ -47,14 +47,14 @@ export default async function OpenDataPage() {
         data={[
           buildDatasetSchema({
             path: '/data',
-            name: 'Bes3 v2 evidence graph',
+            name: 'Bes3 evidence dataset',
             description: 'Public route and schema surface for teardown-backed product evidence.',
-            keywords: ['hardcore categories', 'taxonomy tags', 'analysis reports', 'price value snapshots'],
+            keywords: ['product categories', 'use-case tags', 'analysis reports', 'price value snapshots'],
             variableMeasured: ['categories', 'taxonomy tags', 'products', 'evidence reports', 'value windows']
           }),
           buildDataCatalogSchema({
             path: '/data',
-            name: 'Bes3 v2 data catalog',
+            name: 'Bes3 data catalog',
             description: 'Machine-readable entry points for the evidence engine.',
             entries
           }),
@@ -65,10 +65,10 @@ export default async function OpenDataPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Open Evidence Data</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            The public surface follows the evidence graph.
+            Public data stays readable to both people and machines.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 v2 is built around {HARDCORE_CATEGORIES.length} white-listed lanes, {tags.length} canonical pain points, and {products.length} public product reports.
+            Bes3 currently covers {HARDCORE_CATEGORIES.length} product categories, {tags.length} buyer-use-case tags, and {products.length} public product reports.
           </p>
         </div>
       </section>

@@ -97,7 +97,7 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
                             valueScore: null,
                             entryStatus: 'unknown',
                             label: product.priceAmount ? `${product.priceCurrency || 'USD'} ${Number(product.priceAmount).toFixed(2)}` : 'Researching',
-                            explanation: 'Offer and price history are refreshed by the commerce pipeline.'
+                            explanation: 'Offer and price history are updated regularly.'
                           }}
                         />
                       </dd>
@@ -105,8 +105,8 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
                   </>
                 ) : (
                   <div>
-                    <dt className="font-semibold text-foreground">Product link</dt>
-                    <dd className="mt-1 text-muted-foreground">This article is published before a public product entity is ready.</dd>
+                      <dt className="font-semibold text-foreground">Product link</dt>
+                    <dd className="mt-1 text-muted-foreground">This article is published before a full product rating page is ready.</dd>
                   </div>
                 )}
               </dl>

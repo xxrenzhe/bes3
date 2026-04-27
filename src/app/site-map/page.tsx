@@ -10,10 +10,10 @@ import { buildCollectionPageSchema, buildWebPageSchema } from '@/lib/structured-
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Site Map',
-    description: 'Browse the Bes3 evidence engine: hardcore categories, evidence matrix, value pages, and scenario landing pages.',
+    description: 'Browse Bes3 categories, comparison pages, best-value pages, and buyer-focused landing pages.',
     path: '/site-map',
     locale: getRequestLocale(),
-    keywords: ['site map', 'evidence matrix', 'scenario pages', 'hardcore categories']
+    keywords: ['site map', 'product ratings', 'scenario pages', 'product categories']
   })
 }
 
@@ -21,7 +21,7 @@ export default async function HtmlSitemapPage() {
   const [products, tags] = await Promise.all([listHardcoreProducts(), listHardcoreTags()])
   const mainPages = [
     { href: '/', label: 'Home' },
-    { href: '/categories', label: 'Hardcore Roster' },
+    { href: '/categories', label: 'Categories' },
     { href: '/products', label: 'Evidence Matrix' },
     { href: '/deals', label: 'Best Value Lab' },
     { href: '/data', label: 'Open Data' },
@@ -64,7 +64,7 @@ export default async function HtmlSitemapPage() {
           buildCollectionPageSchema({
             path: '/site-map',
             title: 'Site Map',
-            description: 'Hardcore category, product, value, and scenario route directory.',
+            description: 'Category, product, value, and scenario route directory.',
             items: [
               ...mainPages.map((page) => ({ name: page.label, path: page.href })),
               ...HARDCORE_CATEGORIES.map((category) => ({ name: category.name, path: `/categories/${category.slug}` })),
@@ -80,10 +80,10 @@ export default async function HtmlSitemapPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">HTML Sitemap</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Bes3 route graph.
+            Bes3 site map.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The public graph now centers on the hardcore roster, product evidence reports, value windows, and scenario-driven pSEO pages.
+            The public site centers on categories, product evidence reports, best-value windows, and buyer-focused landing pages.
           </p>
         </div>
       </section>

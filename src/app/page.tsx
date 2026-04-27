@@ -10,7 +10,7 @@ import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Hardcore Product Evidence Engine',
+    title: 'Independent Product Ratings',
     description:
       'Bes3 turns YouTube hardware teardowns into scenario-driven comparison matrices with consensus scores, source quotes, and price-value timing.',
     path: '/',
@@ -26,11 +26,11 @@ export default async function HomePage() {
   const faqEntries = [
     {
       question: 'What changed in Bes3?',
-      answer: 'Bes3 is no longer a generic buying guide. It is a hardcore evidence engine that ranks products by creator teardown data, canonical pain points, and price-value windows.'
+      answer: 'Bes3 is no longer a generic buying guide. It now focuses on hands-on review evidence, real buyer questions, and price-aware comparisons.'
     },
     {
       question: 'Why does Bes3 show researching states?',
-      answer: 'The product refuses to invent winners. If entity matching, creator evidence, affiliate availability, or price baselines are missing, the page says so.'
+      answer: 'Bes3 does not invent winners. If exact product matching, review evidence, store availability, or price baselines are missing, the page says so.'
     }
   ]
 
@@ -40,8 +40,8 @@ export default async function HomePage() {
         data={[
           buildCollectionPageSchema({
             path: '/',
-            title: 'Hardcore Product Evidence Engine',
-            description: 'Scenario-driven comparison matrices built from teardown evidence.',
+            title: 'Independent Product Ratings',
+            description: 'Comparison pages built from hands-on review evidence.',
             items: home.categories.map((item) => ({
               name: item.category.name,
               path: `/categories/${item.category.slug}`
@@ -53,16 +53,16 @@ export default async function HomePage() {
       <section className="border-b border-border bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Project Hardcore</p>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buyer-First Ratings</p>
             <h1 className="mt-5 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              Real specs from hardware teardowns, not SEO spam.
+              Real testing insights for better buying decisions.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Bes3 converts long YouTube teardowns, Reddit pain points, affiliate SKU matching, and price history into dynamic comparison matrices for high-stakes physical products.
+              Bes3 converts long-form video reviews, real buyer concerns, exact product matching, and price history into clearer comparisons for products that are hard to judge from specs alone.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/categories" className="rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                Open the hardcore roster
+                Browse categories
               </Link>
               <Link href="/deals" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
                 Check best value windows
@@ -71,9 +71,9 @@ export default async function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             {[
-              ['White-list lanes', String(home.categories.length), 'Only high-value physical categories survive.'],
-              ['Live matrices', String(liveCategories), 'Evidence-complete categories.'],
-              ['Evidence reports', String(evidenceCount), 'Creator quotes currently normalized.']
+              ['Categories tracked', String(home.categories.length), 'Product areas where hands-on testing matters most.'],
+              ['Live comparisons', String(liveCategories), 'Categories with enough verified review coverage.'],
+              ['Review excerpts', String(evidenceCount), 'Source-backed quotes currently available.']
             ].map(([label, value, note]) => (
               <div key={label} className="rounded-md border border-border bg-slate-50 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
@@ -104,7 +104,7 @@ export default async function HomePage() {
                   <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{item.category.name}</p>
                   <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{tag.name}</h3>
                   <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    Reddit Consensus matrix for {tag.name.toLowerCase()} evidence, creator quotes, and price timing.
+                    See which products handle {tag.name.toLowerCase()} best based on review evidence and price timing.
                   </p>
                 </Link>
               ))
@@ -115,9 +115,9 @@ export default async function HomePage() {
 
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">The Hardcore Roster</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Categories</p>
           <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight">
-            Fourteen lanes where physical tests beat spec sheets.
+            Fourteen product areas where real-world testing beats spec sheets.
           </h2>
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {home.categories.map((item) => (

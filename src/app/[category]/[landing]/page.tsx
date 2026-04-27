@@ -233,8 +233,8 @@ export default async function ScenarioLandingPage({
     {
       question: page ? `Why does this page focus on ${page.tag.name}?` : 'Why combine these constraints?',
       answer: page
-        ? `${page.tag.name} is treated as a canonical pain point. Products only deserve a ranking when the evidence pipeline finds real creator tests for that scenario.`
-        : 'Multi-constraint pages only rank products when the same evidence graph can satisfy more than one real buying pain point.'
+        ? `${page.tag.name} is treated as a core buyer need. Products only deserve a ranking when Bes3 finds real review coverage for that use case.`
+        : 'Multi-constraint pages only rank products when the same body of review evidence supports more than one real buyer need.'
     },
     {
       question: 'Why can this page show researching instead of a winner?',
