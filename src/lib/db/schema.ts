@@ -686,6 +686,38 @@ const SQLITE_SCHEMA = [
     )
   `,
   `
+    CREATE TABLE IF NOT EXISTS product_scrape_tasks (
+      id TEXT PRIMARY KEY,
+      run_id INTEGER NOT NULL UNIQUE,
+      affiliate_product_id INTEGER,
+      product_id INTEGER,
+      source_link TEXT NOT NULL,
+      final_url TEXT,
+      country_code TEXT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      stage TEXT,
+      progress INTEGER NOT NULL DEFAULT 0,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      max_attempts INTEGER NOT NULL DEFAULT 2,
+      proxy_country TEXT,
+      proxy_used TEXT,
+      browser_engine TEXT,
+      http_status INTEGER,
+      request_headers_json TEXT,
+      redirect_chain_json TEXT,
+      browser_signals_json TEXT,
+      result_json TEXT,
+      error_message TEXT,
+      started_at TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (run_id) REFERENCES content_pipeline_runs(id) ON DELETE CASCADE,
+      FOREIGN KEY (affiliate_product_id) REFERENCES affiliate_products(id) ON DELETE SET NULL,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    )
+  `,
+  `
     CREATE TABLE IF NOT EXISTS worker_heartbeats (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       worker_id TEXT NOT NULL UNIQUE,
@@ -853,6 +885,9 @@ const POSTGRES_JSON_COLUMNS = [
   'schema_json',
   'payload_json',
   'metadata_json',
+  'request_headers_json',
+  'redirect_chain_json',
+  'browser_signals_json',
   'before_json',
   'after_json',
   'error_json',
@@ -1113,6 +1148,58 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
       db,
       'idx_content_pipeline_runs_payload_json_gin',
       'CREATE INDEX idx_content_pipeline_runs_payload_json_gin ON content_pipeline_runs USING GIN (payload_json)'
+    )
+  }
+}
+
+async function ensureProductScrapeTaskSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  await ensureColumn(db, 'product_scrape_tasks', 'affiliate_product_id', 'INTEGER')
+  await ensureColumn(db, 'product_scrape_tasks', 'product_id', 'INTEGER')
+  await ensureColumn(db, 'product_scrape_tasks', 'final_url', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'country_code', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'stage', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'progress', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'product_scrape_tasks', 'attempt_count', 'INTEGER NOT NULL DEFAULT 0')
+  await ensureColumn(db, 'product_scrape_tasks', 'max_attempts', 'INTEGER NOT NULL DEFAULT 2')
+  await ensureColumn(db, 'product_scrape_tasks', 'proxy_country', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'proxy_used', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'browser_engine', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'http_status', 'INTEGER')
+  await ensureColumn(db, 'product_scrape_tasks', 'request_headers_json', jsonType)
+  await ensureColumn(db, 'product_scrape_tasks', 'redirect_chain_json', jsonType)
+  await ensureColumn(db, 'product_scrape_tasks', 'browser_signals_json', jsonType)
+  await ensureColumn(db, 'product_scrape_tasks', 'result_json', jsonType)
+  await ensureColumn(db, 'product_scrape_tasks', 'error_message', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'started_at', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'completed_at', 'TEXT')
+  await ensureColumn(db, 'product_scrape_tasks', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureIndex(
+    db,
+    'idx_product_scrape_tasks_status_updated',
+    'CREATE INDEX idx_product_scrape_tasks_status_updated ON product_scrape_tasks (status, updated_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_scrape_tasks_affiliate',
+    'CREATE INDEX idx_product_scrape_tasks_affiliate ON product_scrape_tasks (affiliate_product_id, status, updated_at)'
+  )
+  await ensureIndex(
+    db,
+    'idx_product_scrape_tasks_product',
+    'CREATE INDEX idx_product_scrape_tasks_product ON product_scrape_tasks (product_id, status, updated_at)'
+  )
+
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_product_scrape_tasks_browser_signals_json_gin',
+      'CREATE INDEX idx_product_scrape_tasks_browser_signals_json_gin ON product_scrape_tasks USING GIN (browser_signals_json)'
+    )
+    await ensureIndex(
+      db,
+      'idx_product_scrape_tasks_result_json_gin',
+      'CREATE INDEX idx_product_scrape_tasks_result_json_gin ON product_scrape_tasks USING GIN (result_json)'
     )
   }
 }
@@ -1560,6 +1647,7 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   await ensureAdminOpsSchema(db)
   await ensureProductGraphSchema(db)
   await ensurePipelineRunSchema(db)
+  await ensureProductScrapeTaskSchema(db)
   await ensureLinkInspectorSchema(db)
   await ensureMerchantClickSchema(db)
   await ensureDecisionEventSchema(db)

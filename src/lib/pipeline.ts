@@ -10,6 +10,7 @@ import { getDecisionFunnelSummary } from '@/lib/decision-events'
 import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
 import { getDatabase } from '@/lib/db'
+import { runDeepProductScrapeTask } from '@/lib/deep-product-scraper'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { dispatchSeoNotifications } from '@/lib/seo-ops'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
@@ -21,7 +22,6 @@ import {
   type ProductAcquisitionHints
 } from '@/lib/product-acquisition'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
-import { resolveAffiliateLink } from '@/lib/url-resolver'
 import { slugify } from '@/lib/slug'
 
 export interface PipelineRunListItem {
@@ -293,6 +293,7 @@ const DEFAULT_PIPELINE_QUEUE_CONFIG: Array<{
   maxAttempts: number
 }> = [
   { taskType: 'fullPipeline', enabled: 1, priority: 100, maxConcurrency: 1, timeoutSeconds: 3600, maxAttempts: 3 },
+  { taskType: 'deepProductScrape', enabled: 1, priority: 60, maxConcurrency: 1, timeoutSeconds: 900, maxAttempts: 3 },
   { taskType: 'workspaceAction', enabled: 1, priority: 50, maxConcurrency: 2, timeoutSeconds: 1800, maxAttempts: 3 }
 ]
 
@@ -527,7 +528,7 @@ async function createRun(input: {
       input.sourceLink,
       input.runType,
       input.requestedAction || null,
-      input.runType === 'workspaceAction' ? 50 : 100
+      input.runType === 'workspaceAction' ? 50 : input.runType === 'deepProductScrape' ? 60 : 100
     ]
   )
   return Number(result.lastInsertRowid)
@@ -823,6 +824,8 @@ async function runPipelineWorkerTick() {
               throw new Error('Queued workspace action is missing product_id or requested_action')
             }
             await executeProductWorkspaceActionRun(run.id, run.product_id, run.requested_action, slotWorkerId)
+          } else if (run.run_type === 'deepProductScrape') {
+            await executeDeepProductScrapeRun(run.id, run.source_link, run.affiliate_product_id, slotWorkerId)
           } else {
             await executeFullPipelineRun(run.id, run.source_link, run.affiliate_product_id, slotWorkerId)
           }
@@ -2106,6 +2109,19 @@ export async function runPipelineFromLink(sourceLink: string, hints: ProductAcqu
   return runId
 }
 
+export async function runDeepProductScrapeFromLink(sourceLink: string, hints: ProductAcquisitionHints = {}): Promise<number> {
+  const affiliateProductId = await upsertManualAffiliateLink(sourceLink, hints)
+  const productId = await findProductIdByAffiliateProductId(affiliateProductId)
+  const runId = await createRun({
+    sourceLink,
+    affiliateProductId,
+    productId,
+    runType: 'deepProductScrape'
+  })
+  await startPipelineWorker()
+  return runId
+}
+
 async function executeFullPipelineRun(
   runId: number,
   sourceLink: string,
@@ -2121,20 +2137,29 @@ async function executeFullPipelineRun(
     const sourceCountryCode = affiliateProduct?.country_code || 'US'
 
     await assertRunNotCancelled(runId)
-    const resolveJob = await createJob(runId, 'resolveAffiliateLink')
-    await markRun(runId, 'running', 'resolveAffiliateLink')
-    const resolved = await resolveAffiliateLink(sourceLink, sourceCountryCode)
+    const scrapeJob = await createJob(runId, 'deepBrowserScrape')
+    await markRun(runId, 'running', 'deepBrowserScrape')
+    const deepScrape = await runDeepProductScrapeTask({
+      runId,
+      sourceLink,
+      affiliateProductId,
+      productId,
+      countryCode: sourceCountryCode
+    })
+    const resolved = {
+      finalUrl: deepScrape.finalUrl,
+      landingHtml: deepScrape.landingHtml,
+      redirectTrail: deepScrape.redirectTrail
+    }
+    const scraped = mergeAffiliateFallbackIntoScrape(affiliateProduct, deepScrape.scraped)
     await assertRunNotCancelled(runId)
-    await finishJob(resolveJob, 'completed', 'Affiliate link resolved', resolved)
-
-    await assertRunNotCancelled(runId)
-    const scrapeJob = await createJob(runId, 'scrapeProductFacts')
-    await markRun(runId, 'running', 'scrapeProductFacts')
-    const scraped = mergeAffiliateFallbackIntoScrape(affiliateProduct, scrapeProductPage(resolved.finalUrl, resolved.landingHtml))
-    await assertRunNotCancelled(runId)
-    await finishJob(scrapeJob, 'completed', 'Product page scraped', {
+    await finishJob(scrapeJob, 'completed', 'Deep browser product page scraped', {
+      taskId: deepScrape.taskId,
       productName: scraped.productName,
-      imageCount: scraped.imageUrls.length
+      imageCount: scraped.imageUrls.length,
+      browserUsed: deepScrape.browserUsed,
+      fallbackUsed: deepScrape.fallbackUsed,
+      confidence: scraped.dataConfidenceScore
     })
 
     await assertRunNotCancelled(runId)
@@ -2312,7 +2337,7 @@ async function executeFullPipelineRun(
     await finishJob(pingJob, 'completed', 'Ping/indexing completed')
 
     await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
-    await db.exec('UPDATE content_pipeline_runs SET product_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [productId, runId])
+    await dbUpdateRunProductId(runId, productId)
   } catch (error: any) {
     const message = error?.message || 'Pipeline failed'
     if (isPipelineCancelledError(error)) {
@@ -2327,6 +2352,101 @@ async function executeFullPipelineRun(
   }
 }
 
+async function executeDeepProductScrapeRun(
+  runId: number,
+  sourceLink: string,
+  affiliateProductId: number | null,
+  workerId: string
+): Promise<void> {
+  let productId: number | null = null
+
+  try {
+    await assertRunNotCancelled(runId)
+    const affiliateProduct = affiliateProductId ? await getAffiliateProductById(affiliateProductId) : null
+    const sourcePlatform = affiliateProduct?.platform || 'manual'
+    const sourceCountryCode = affiliateProduct?.country_code || 'US'
+
+    const scrapeJob = await createJob(runId, 'deepBrowserScrape')
+    await markRun(runId, 'running', 'deepBrowserScrape')
+    const deepScrape = await runDeepProductScrapeTask({
+      runId,
+      sourceLink,
+      affiliateProductId,
+      productId,
+      countryCode: sourceCountryCode
+    })
+    const scraped = mergeAffiliateFallbackIntoScrape(affiliateProduct, deepScrape.scraped)
+    await assertRunNotCancelled(runId)
+    await finishJob(scrapeJob, 'completed', 'Deep browser product facts captured', {
+      taskId: deepScrape.taskId,
+      finalUrl: deepScrape.finalUrl,
+      browserUsed: deepScrape.browserUsed,
+      fallbackUsed: deepScrape.fallbackUsed,
+      imageCount: scraped.imageUrls.length,
+      offerCount: scraped.offers.length
+    })
+
+    await assertRunNotCancelled(runId)
+    const mediaJob = await createJob(runId, 'persistMediaAssets')
+    await markRun(runId, 'running', 'persistMediaAssets')
+    productId = await ensureProductShell({
+      affiliateProductId,
+      sourcePlatform,
+      sourceLink,
+      finalUrl: deepScrape.finalUrl,
+      productName: scraped.productName,
+      brand: scraped.brand,
+      productModel: scraped.productModel,
+      modelNumber: scraped.modelNumber,
+      productType: scraped.productType,
+      category: scraped.category,
+      categorySlug: scraped.categorySlug,
+      youtubeMatchTerms: scraped.youtubeMatchTerms
+    })
+    const persistedMediaUrls: string[] = []
+    for (const [index, imageUrl] of scraped.imageUrls.slice(0, 6).entries()) {
+      await assertRunNotCancelled(runId)
+      try {
+        const assetRole = index === 0 ? 'hero' : 'gallery'
+        const publicUrl = await persistMediaAsset({ productId, sourceUrl: imageUrl, assetRole, index, countryCode: sourceCountryCode })
+        persistedMediaUrls.push(publicUrl)
+      } catch (error: any) {
+        persistedMediaUrls.push(imageUrl)
+        await publishEvent('media.persist.warning', 'warning', { imageUrl, error: error?.message || String(error) })
+      }
+    }
+    await finishJob(mediaJob, 'completed', 'Deep scrape media persisted', { persistedMediaUrls })
+
+    await assertRunNotCancelled(runId)
+    const normalizeJob = await createJob(runId, 'normalizeProduct')
+    await markRun(runId, 'running', 'normalizeProduct')
+    await updateProductFromScrape(productId, scraped)
+    await persistProductGraphFromScrape(productId, scraped)
+    await assertRunNotCancelled(runId)
+    await finishJob(normalizeJob, 'completed', 'Deep scrape product graph normalized', { productId })
+
+    await markRun(runId, 'completed', null, null, { workerId: null, finished: true })
+    await dbUpdateRunProductId(runId, productId)
+  } catch (error: any) {
+    const message = error?.message || 'Deep product scrape failed'
+    if (isPipelineCancelledError(error)) {
+      await markRun(runId, 'cancelled', null, message, { workerId: null, finished: true })
+      await finalizeLastRunningJob(runId, 'cancelled', message)
+      return
+    }
+
+    await markRun(runId, 'failed', null, message, { workerId: null, finished: true })
+    await finalizeLastRunningJob(runId, 'failed', message, { stack: error?.stack || null })
+    throw error
+  }
+}
+
+async function dbUpdateRunProductId(runId: number, productId: number): Promise<void> {
+  const db = await getDatabase()
+  await db.exec('UPDATE content_pipeline_runs SET product_id = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?', [productId, runId])
+  await db.exec('UPDATE product_scrape_tasks SET product_id = ?, updated_at = CURRENT_TIMESTAMP WHERE run_id = ?', [productId, runId])
+}
+
 export async function batchRunPipelines(ids: number[]): Promise<number[]> {
   const runs: number[] = []
   for (const id of ids) {
@@ -2337,10 +2457,21 @@ export async function batchRunPipelines(ids: number[]): Promise<number[]> {
 
 export async function rescrapeProductMedia(productId: number): Promise<void> {
   const db = await getDatabase()
-  const product = await db.queryOne<any>('SELECT source_affiliate_link FROM products WHERE id = ? LIMIT 1', [productId])
+  const product = await db.queryOne<any>('SELECT source_affiliate_link, affiliate_product_id FROM products WHERE id = ? LIMIT 1', [productId])
   if (!product?.source_affiliate_link) throw new Error('Product source link missing')
-  const resolved = await resolveAffiliateLink(product.source_affiliate_link)
-  const scraped = scrapeProductPage(resolved.finalUrl, resolved.landingHtml)
+  const runId = await createRun({
+    sourceLink: product.source_affiliate_link,
+    affiliateProductId: product.affiliate_product_id || null,
+    productId,
+    runType: 'deepProductScrape'
+  })
+  const deepScrape = await runDeepProductScrapeTask({
+    runId,
+    sourceLink: product.source_affiliate_link,
+    affiliateProductId: product.affiliate_product_id || null,
+    productId
+  })
+  const scraped = deepScrape.scraped
   await db.exec('DELETE FROM product_media_assets WHERE product_id = ?', [productId])
   for (const [index, imageUrl] of scraped.imageUrls.slice(0, 6).entries()) {
     await persistMediaAsset({

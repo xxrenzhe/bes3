@@ -108,6 +108,9 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const aiKey = read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
   const aiTimeoutMs = read('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000')
   const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')
+  const deepScrapeEnabled = read('deepScrape', 'enabled', 'DEEP_PRODUCT_SCRAPE_ENABLED', 'true') !== 'false'
+  const deepScrapeTimeoutMs = read('deepScrape', 'timeoutMs', 'DEEP_PRODUCT_SCRAPE_TIMEOUT_MS', '60000')
+  const deepScrapeRequireProxy = read('deepScrape', 'requireProxy', 'DEEP_PRODUCT_SCRAPE_REQUIRE_PROXY', 'false') === 'true'
   const amazonToken = read('affiliateSync', 'partnerboostAmazonToken', 'PARTNERBOOST_AMAZON_TOKEN')
   const dtcToken = read('affiliateSync', 'partnerboostDtcToken', 'PARTNERBOOST_DTC_TOKEN')
   const mediaDriver = read('media', 'driver', 'MEDIA_DRIVER', 'local')
@@ -169,6 +172,14 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
       title: 'Proxy Pool',
       status: proxyPool !== '[]' && proxyPool !== '' ? 'configured' : 'missing',
       detail: proxyPool !== '[]' && proxyPool !== '' ? 'Browser proxy pool configured' : 'No proxy endpoints configured'
+    },
+    {
+      id: 'deep-scrape',
+      title: 'Deep Product Scrape',
+      status: deepScrapeEnabled ? (deepScrapeRequireProxy && (proxyPool === '[]' || proxyPool === '') ? 'partial' : 'configured') : 'missing',
+      detail: deepScrapeEnabled
+        ? `Playwright enabled · timeout ${deepScrapeTimeoutMs}ms · proxy ${deepScrapeRequireProxy ? 'required' : 'optional'}`
+        : 'Deep browser scraping disabled'
     },
     {
       id: 'affiliate-amazon',

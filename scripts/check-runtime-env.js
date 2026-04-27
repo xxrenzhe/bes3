@@ -70,6 +70,11 @@ function buildConfig() {
     geminiApiKey: read('GEMINI_API_KEY'),
     geminiModel: read('GEMINI_MODEL', GEMINI_ACTIVE_MODEL),
     browserProxyUrlsJson: read('BROWSER_PROXY_URLS_JSON', '[]'),
+    deepProductScrapeEnabled: read('DEEP_PRODUCT_SCRAPE_ENABLED', 'true'),
+    deepProductScrapeTimeoutMs: read('DEEP_PRODUCT_SCRAPE_TIMEOUT_MS', '60000'),
+    deepProductScrapeWaitAfterLoadMs: read('DEEP_PRODUCT_SCRAPE_WAIT_AFTER_LOAD_MS', '1500'),
+    deepProductScrapeMaxAttempts: read('DEEP_PRODUCT_SCRAPE_MAX_ATTEMPTS', '2'),
+    deepProductScrapeRequireProxy: read('DEEP_PRODUCT_SCRAPE_REQUIRE_PROXY', 'false'),
     googleIndexingEnabled: read('GOOGLE_INDEXING_ENABLED', 'false'),
     googleServiceAccountJson: read('GOOGLE_SERVICE_ACCOUNT_JSON'),
     priceAlertWebhookUrl: read('PRICE_ALERT_WEBHOOK_URL'),
@@ -203,6 +208,32 @@ function validate() {
   } else {
     addResult(results, 'info', `Planv2 proxy pool: ${proxyPool.length} endpoint(s) configured`)
   }
+
+  if (!['true', 'false'].includes(String(config.deepProductScrapeEnabled))) {
+    errors.push('DEEP_PRODUCT_SCRAPE_ENABLED should be "true" or "false"')
+  }
+  if (!['true', 'false'].includes(String(config.deepProductScrapeRequireProxy))) {
+    errors.push('DEEP_PRODUCT_SCRAPE_REQUIRE_PROXY should be "true" or "false"')
+  }
+  if (!isPositiveInteger(config.deepProductScrapeTimeoutMs)) {
+    errors.push('DEEP_PRODUCT_SCRAPE_TIMEOUT_MS must be a positive integer')
+  }
+  if (!isPositiveInteger(config.deepProductScrapeWaitAfterLoadMs)) {
+    errors.push('DEEP_PRODUCT_SCRAPE_WAIT_AFTER_LOAD_MS must be a positive integer')
+  }
+  if (!isPositiveInteger(config.deepProductScrapeMaxAttempts)) {
+    errors.push('DEEP_PRODUCT_SCRAPE_MAX_ATTEMPTS must be a positive integer')
+  } else if (Number.parseInt(String(config.deepProductScrapeMaxAttempts), 10) > 5) {
+    warnings.push('DEEP_PRODUCT_SCRAPE_MAX_ATTEMPTS above 5 is discouraged')
+  }
+  if (config.deepProductScrapeRequireProxy === 'true' && proxyPool && proxyPool.length === 0) {
+    errors.push('BROWSER_PROXY_URLS_JSON is required when DEEP_PRODUCT_SCRAPE_REQUIRE_PROXY=true')
+  }
+  addResult(
+    results,
+    'info',
+    `Deep product scrape: ${config.deepProductScrapeEnabled === 'true' ? 'enabled' : 'disabled'} · timeout ${config.deepProductScrapeTimeoutMs}ms · proxy ${config.deepProductScrapeRequireProxy === 'true' ? 'required' : 'optional'}`
+  )
 
   if (!['true', 'false'].includes(String(config.googleIndexingEnabled))) {
     errors.push('GOOGLE_INDEXING_ENABLED should be "true" or "false"')
