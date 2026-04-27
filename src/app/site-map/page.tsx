@@ -10,7 +10,7 @@ import { buildCollectionPageSchema, buildWebPageSchema } from '@/lib/structured-
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Site Map',
-    description: 'Browse the Bes3 v2 evidence engine: hardcore categories, evidence matrix, value pages, and scenario landing pages.',
+    description: 'Browse the Bes3 evidence engine: hardcore categories, evidence matrix, value pages, and scenario landing pages.',
     path: '/site-map',
     locale: getRequestLocale(),
     keywords: ['site map', 'evidence matrix', 'scenario pages', 'hardcore categories']
@@ -58,7 +58,7 @@ export default async function HtmlSitemapPage() {
           buildWebPageSchema({
             path: '/site-map',
             title: 'Site Map',
-            description: 'Browse the Bes3 v2 evidence engine.',
+            description: 'Browse the Bes3 evidence engine.',
             type: 'CollectionPage'
           }),
           buildCollectionPageSchema({
@@ -80,7 +80,7 @@ export default async function HtmlSitemapPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">HTML Sitemap</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Bes3 v2 route graph.
+            Bes3 route graph.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
             The public graph now centers on the hardcore roster, product evidence reports, value windows, and scenario-driven pSEO pages.

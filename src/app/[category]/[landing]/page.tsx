@@ -238,7 +238,7 @@ export default async function ScenarioLandingPage({
     },
     {
       question: 'Why can this page show researching instead of a winner?',
-      answer: 'The v2 rule is no fabricated winners. A scenario page needs at least three products with useful evidence before it becomes a live recommendation matrix.'
+      answer: 'The rule is no fabricated winners. A scenario page needs at least three products with useful evidence before it becomes a live recommendation matrix.'
     },
     {
       question: page ? `How does Bes3 prove the ${page.tag.name} ranking?` : 'How does Bes3 prove a multi-constraint ranking?',
