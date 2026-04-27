@@ -637,6 +637,37 @@ CREATE TABLE IF NOT EXISTS content_pipeline_jobs (
       FOREIGN KEY (run_id) REFERENCES content_pipeline_runs(id) ON DELETE CASCADE
     );
 
+CREATE TABLE IF NOT EXISTS product_scrape_tasks (
+      id TEXT PRIMARY KEY,
+      run_id BIGINT NOT NULL UNIQUE,
+      affiliate_product_id BIGINT,
+      product_id BIGINT,
+      source_link TEXT NOT NULL,
+      final_url TEXT,
+      country_code TEXT,
+      status TEXT NOT NULL DEFAULT 'queued',
+      stage TEXT,
+      progress INTEGER NOT NULL DEFAULT 0,
+      attempt_count INTEGER NOT NULL DEFAULT 0,
+      max_attempts INTEGER NOT NULL DEFAULT 2,
+      proxy_country TEXT,
+      proxy_used TEXT,
+      browser_engine TEXT,
+      http_status INTEGER,
+      request_headers_json JSONB,
+      redirect_chain_json JSONB,
+      browser_signals_json JSONB,
+      result_json JSONB,
+      error_message TEXT,
+      started_at TIMESTAMPTZ,
+      completed_at TIMESTAMPTZ,
+      created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+      FOREIGN KEY (run_id) REFERENCES content_pipeline_runs(id) ON DELETE CASCADE,
+      FOREIGN KEY (affiliate_product_id) REFERENCES affiliate_products(id) ON DELETE SET NULL,
+      FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE SET NULL
+    );
+
 CREATE TABLE IF NOT EXISTS worker_heartbeats (
       id BIGSERIAL PRIMARY KEY,
       worker_id TEXT NOT NULL UNIQUE,
@@ -861,6 +892,12 @@ CREATE INDEX IF NOT EXISTS idx_content_pipeline_runs_product_status ON content_p
 CREATE INDEX IF NOT EXISTS idx_content_pipeline_runs_status_created_at ON content_pipeline_runs (status, created_at, id);
 
 CREATE INDEX IF NOT EXISTS idx_content_pipeline_runs_worker_lock ON content_pipeline_runs (worker_id, locked_at, lock_expires_at);
+
+CREATE INDEX IF NOT EXISTS idx_product_scrape_tasks_affiliate ON product_scrape_tasks (affiliate_product_id, status, updated_at);
+
+CREATE INDEX IF NOT EXISTS idx_product_scrape_tasks_product ON product_scrape_tasks (product_id, status, updated_at);
+
+CREATE INDEX IF NOT EXISTS idx_product_scrape_tasks_status_updated ON product_scrape_tasks (status, updated_at);
 
 CREATE INDEX IF NOT EXISTS idx_worker_heartbeats_seen ON worker_heartbeats (worker_type, status, last_seen_at);
 

@@ -9,6 +9,10 @@ export type MediaAssetRole = 'hero' | 'gallery' | 'variant' | 'review' | 'thumbn
 export type MediaStorageProvider = 'local' | 's3'
 
 export type PipelineStage =
+  | 'proxyWarmup'
+  | 'deepBrowserResolve'
+  | 'deepBrowserScrape'
+  | 'extractBrowserSignals'
   | 'resolveAffiliateLink'
   | 'scrapeProductFacts'
   | 'persistMediaAssets'
@@ -27,7 +31,7 @@ export type PipelineStage =
   | 'revalidateAndSitemap'
   | 'pingAndIndexing'
 
-export type PipelineRunType = 'fullPipeline' | 'workspaceAction'
+export type PipelineRunType = 'fullPipeline' | 'workspaceAction' | 'deepProductScrape'
 
 export type PipelineStatus = 'queued' | 'running' | 'partialFailed' | 'failed' | 'completed' | 'cancelled'
 

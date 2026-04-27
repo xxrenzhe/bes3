@@ -57,6 +57,14 @@ function validateSettingInput(item: SettingInput): string | null {
     }
   }
 
+  if (category === 'deepScrape' && ['timeoutMs', 'waitAfterLoadMs', 'maxAttempts'].includes(key)) {
+    const parsed = Number.parseInt(value, 10)
+    const max = key === 'maxAttempts' ? 5 : key === 'waitAfterLoadMs' ? 10000 : 180000
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > max) {
+      return `${key} must be a number between 1 and ${max}`
+    }
+  }
+
   return null
 }
 

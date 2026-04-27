@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState, useTransition } from 'react'
-import { Database, RefreshCw, ServerCog, ShieldCheck, SlidersHorizontal, Wand2 } from 'lucide-react'
+import { Bot, Database, RefreshCw, ServerCog, ShieldCheck, SlidersHorizontal, Wand2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 import { Button } from '@/components/ui/button'
@@ -25,7 +25,7 @@ type SettingDiagnostic = {
   detail: string
 }
 
-const CATEGORY_ORDER = ['ai', 'proxy', 'affiliateSync', 'media', 'seo'] as const
+const CATEGORY_ORDER = ['ai', 'proxy', 'deepScrape', 'affiliateSync', 'media', 'seo'] as const
 
 const CATEGORY_META: Record<string, { title: string; description: string }> = {
   ai: {
@@ -35,6 +35,10 @@ const CATEGORY_META: Record<string, { title: string; description: string }> = {
   proxy: {
     title: 'Proxy Settings',
     description: 'Define browser proxy pools and routing defaults used by scraping or anti-bot workflows.'
+  },
+  deepScrape: {
+    title: 'Deep Scraping',
+    description: 'Control Playwright browser scraping, wait strategy, proxy requirements, and retry budget for product acquisition.'
   },
   affiliateSync: {
     title: 'Affiliate Sync',
@@ -57,6 +61,11 @@ const FIELD_META: Record<string, { label: string; placeholder?: string; rows?: n
   'ai.geminiApiKey': { label: 'Gemini API Key', placeholder: 'AIza...' },
   'proxy.browserProxyUrlsJson': { label: 'Proxy Pool JSON', placeholder: '["http://user:pass@proxy:port"]', rows: 5 },
   'proxy.defaultCountryCode': { label: 'Default Proxy Country', placeholder: 'US' },
+  'deepScrape.enabled': { label: 'Deep Scrape Enabled' },
+  'deepScrape.timeoutMs': { label: 'Navigation Timeout MS', placeholder: '60000' },
+  'deepScrape.waitAfterLoadMs': { label: 'Post-load Wait MS', placeholder: '1500' },
+  'deepScrape.maxAttempts': { label: 'Max Attempts', placeholder: '2' },
+  'deepScrape.requireProxy': { label: 'Require Proxy' },
   'affiliateSync.partnerboostAmazonBaseUrl': { label: 'Amazon Base URL', placeholder: 'https://app.partnerboost.com' },
   'affiliateSync.partnerboostAmazonToken': { label: 'Amazon Token', placeholder: 'token' },
   'affiliateSync.partnerboostDtcBaseUrl': { label: 'DTC Base URL', placeholder: 'https://app.partnerboost.com' },
@@ -105,6 +114,7 @@ function serializeItems(items: SettingItem[]) {
 
 function getCategoryIcon(category: string) {
   if (category === 'ai') return SlidersHorizontal
+  if (category === 'deepScrape') return Bot
   if (category === 'media') return Database
   if (category === 'seo') return Wand2
   return ShieldCheck
