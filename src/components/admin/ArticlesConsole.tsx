@@ -194,7 +194,7 @@ export function ArticlesConsole() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
               <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary">Queue</p>
@@ -238,7 +238,7 @@ export function ArticlesConsole() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
           {selectedArticle && draft ? (
             <div className="space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-4">

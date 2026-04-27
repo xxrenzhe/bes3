@@ -9,6 +9,32 @@ function parseNumber(value: unknown) {
   return Number.isFinite(parsed) ? parsed : null
 }
 
+export async function GET() {
+  return NextResponse.json({
+    endpoint: '/api/open/evidence/price-alerts',
+    method: 'POST',
+    description: 'Register or refresh a public price alert for a scored Bes3 product.',
+    accepts: {
+      productId: 'number (optional if productSlug is provided)',
+      productSlug: 'string (optional if productId is provided)',
+      email: 'string (required)',
+      targetPrice: 'number (optional)',
+      targetValueScore: 'number (optional)'
+    },
+    returns: {
+      success: 'boolean',
+      status: 'string',
+      productId: 'number'
+    },
+    sampleBody: {
+      productSlug: 'q-revo-pet-hair',
+      email: 'buyer@example.com',
+      targetPrice: 599,
+      targetValueScore: 0.72
+    }
+  })
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const productId = Number(body.productId)

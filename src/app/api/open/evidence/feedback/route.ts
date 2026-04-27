@@ -3,6 +3,27 @@ import { recordEvidenceFeedback } from '@/lib/hardcore-ops'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET() {
+  return NextResponse.json({
+    endpoint: '/api/open/evidence/feedback',
+    method: 'POST',
+    description: 'Capture public feedback on creator evidence quality for ranking governance.',
+    accepts: {
+      analysisReportId: 'number (optional if videoId is provided)',
+      videoId: 'number (optional if analysisReportId is provided)',
+      feedbackType: 'string (optional, defaults to "inaccurate")'
+    },
+    returns: {
+      success: 'boolean',
+      feedback: 'object'
+    },
+    sampleBody: {
+      analysisReportId: 42,
+      feedbackType: 'useful'
+    }
+  })
+}
+
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}))
   const analysisReportId = Number(body.analysisReportId)

@@ -117,21 +117,21 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
   }
 
   return (
-    <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
+    <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+        <div className="min-w-0">
           <p className="font-semibold">{section.title}</p>
           <p className="mt-1 text-sm text-muted-foreground">
             {filteredRows.length} visible · {rows.length} total · {selectedKeys.size} selected
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Input
             aria-label={`Filter ${section.title}`}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="Filter rows"
-            className="min-h-11 w-56"
+            className="min-h-11 w-full sm:w-56"
           />
           {selectedKeys.size > 0 ? (
             <Button type="button" variant="outline" onClick={() => setSelectedKeys(new Set())}>
@@ -183,7 +183,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
                           {column.badge ? (
                             <StatusBadge value={formatValue(value)} />
                           ) : (
-                            <span className="line-clamp-2 text-muted-foreground">
+                            <span className="line-clamp-2 break-words text-muted-foreground">
                               {column.date ? formatDate(value) : formatValue(value)}
                             </span>
                           )}
@@ -207,7 +207,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
         <p className="text-sm text-muted-foreground">
           Page {safePage} of {totalPages}
         </p>
-        <div className="flex gap-2">
+        <div className="flex w-full gap-2 sm:w-auto">
           <Button type="button" variant="outline" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
             Previous
           </Button>

@@ -132,7 +132,7 @@ export function ProductsConsole() {
   return (
     <div className="space-y-8 p-6 lg:p-10">
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Affiliate Sync</p>
           <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Import and launch the full Bes3 workflow.</h1>
           <div className="mt-5 flex items-start gap-3 rounded-[24px] border border-border/70 bg-[#f7f1e4] p-4">
@@ -174,7 +174,7 @@ export function ProductsConsole() {
             </Button>
           </div>
         </div>
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Direct Import</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Paste a link and seed exact product identity.</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
@@ -214,7 +214,7 @@ export function ProductsConsole() {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+      <section className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Affiliate Products</p>
@@ -227,7 +227,57 @@ export function ProductsConsole() {
             Batch Queue Pipeline
           </Button>
         </div>
-        <div className="mt-6 overflow-x-auto">
+        <div className="mt-6 grid grid-cols-1 gap-4 md:hidden">
+          {affiliateProducts.map((item) => {
+            const checked = selectedIds.includes(item.id)
+            const linkedProductId = productIdByAffiliateId.get(item.id)
+            return (
+              <article key={item.id} className="rounded-[24px] border border-border bg-[#f7f1e4] p-5">
+                <div className="flex items-start gap-3">
+                  <Checkbox
+                    checked={checked}
+                    onCheckedChange={(value) => {
+                      setSelectedIds((current) => value ? [...current, item.id] : current.filter((id) => id !== item.id))
+                    }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <div className="break-words font-medium">{item.product_name || item.promo_link || item.product_url}</div>
+                    <div className="mt-2 break-words text-sm text-muted-foreground">
+                      {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || 'No identity hints'}
+                    </div>
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      <StatusBadge value={item.platform} />
+                      <span className="text-xs text-muted-foreground">{new Date(item.updated_at).toLocaleString()}</span>
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      {linkedProductId ? (
+                        <Link
+                          href={`/admin/products/${linkedProductId}`}
+                          className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
+                        >
+                          Open Workspace
+                        </Link>
+                      ) : null}
+                      <Button
+                        disabled={isPending}
+                        size="sm"
+                        onClick={() =>
+                          trigger(`/api/admin/products/${item.id}/run-pipeline`, {
+                            successMessage: 'Pipeline queued',
+                            navigateToProduct: true
+                          })
+                        }
+                      >
+                        Queue Pipeline
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )
+          })}
+        </div>
+        <div className="mt-6 hidden overflow-x-auto md:block">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
               <tr>
@@ -250,8 +300,8 @@ export function ProductsConsole() {
                       }} />
                     </td>
                     <td className="py-4 pr-3">
-                      <div className="font-medium">{item.product_name || item.promo_link || item.product_url}</div>
-                      <div className="text-muted-foreground">
+                      <div className="break-words font-medium">{item.product_name || item.promo_link || item.product_url}</div>
+                      <div className="break-words text-muted-foreground">
                         {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || 'No identity hints'}
                       </div>
                     </td>
@@ -291,21 +341,21 @@ export function ProductsConsole() {
         </div>
       </section>
 
-      <section className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+      <section className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
         <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Products</p>
         <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Normalized product database</h2>
-        <div className="mt-6 grid gap-5 lg:grid-cols-2">
+        <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
           {products.map((product) => (
             <div key={product.id} className="rounded-[28px] border border-border bg-[#f7f1e4] p-5">
-              <div className="flex items-start gap-4">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
                 <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-[20px] border border-border bg-white">
                   {product.hero_image_url ? (
                     <Image src={product.hero_image_url} alt={product.product_name} fill sizes="96px" className="object-cover" />
                   ) : null}
                 </div>
-                <div>
-                  <h3 className="font-[var(--font-display)] text-2xl font-semibold">{product.product_name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">
+                <div className="min-w-0 flex-1">
+                  <h3 className="break-words font-[var(--font-display)] text-2xl font-semibold">{product.product_name}</h3>
+                  <p className="mt-2 break-words text-sm text-muted-foreground">
                     {[product.category || product.category_slug || 'uncategorized', product.product_model || product.model_number, product.product_type].filter(Boolean).join(' · ')}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -313,9 +363,9 @@ export function ProductsConsole() {
                     {product.last_run_stage ? <StatusBadge value={product.last_run_stage} /> : null}
                   </div>
                 </div>
-                <div className="ml-auto text-right text-sm text-muted-foreground">
+                <div className="text-sm text-muted-foreground sm:ml-auto sm:text-right">
                   <div>{product.price_amount ? `$${product.price_amount.toFixed(2)}` : 'N/A'}</div>
-                  <div>{product.slug || 'draft slug'}</div>
+                  <div className="break-words">{product.slug || 'draft slug'}</div>
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
