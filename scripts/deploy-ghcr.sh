@@ -8,6 +8,7 @@ IMAGE=${BES3_IMAGE:-ghcr.io/xxrenzhe/bes3:prod-latest}
 HEALTHCHECK_URL=${BES3_HEALTHCHECK_URL:-http://127.0.0.1/api/health}
 ENV_FILE="${APP_DIR}/.env.production"
 COMPOSE_FILE="${APP_DIR}/docker-compose.yml"
+SKIP_PULL=${BES3_SKIP_PULL:-false}
 
 require_command() {
   if ! command -v "$1" >/dev/null 2>&1; then
@@ -52,7 +53,9 @@ fi
 echo "Deploying image ${IMAGE}"
 (
   cd "$APP_DIR"
-  BES3_IMAGE="$IMAGE" docker compose pull
+  if [[ "$SKIP_PULL" != "true" ]]; then
+    BES3_IMAGE="$IMAGE" docker compose pull
+  fi
   docker run --rm --env-file "$ENV_FILE" "$IMAGE" node /app/scripts/check-runtime-env.js
   docker run --rm \
     --env-file "$ENV_FILE" \

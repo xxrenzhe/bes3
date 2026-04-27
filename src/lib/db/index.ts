@@ -46,6 +46,14 @@ async function getAppliedMigrations(db: DatabaseAdapter): Promise<Set<string>> {
   return new Set(rows.map(r => r.migration_name))
 }
 
+function isDuplicateMigrationHistoryInsert(message: string, file: string) {
+  return (
+    (message.includes('UNIQUE constraint failed: migration_history.migration_name') ||
+      message.includes('duplicate key value violates unique constraint')) &&
+    message.includes(file)
+  )
+}
+
 async function runMigrations(db: DatabaseAdapter): Promise<number> {
   const isPostgres = db.type === 'postgres'
   const migrationsDir = isPostgres
@@ -86,7 +94,14 @@ async function runMigrations(db: DatabaseAdapter): Promise<number> {
           throw error
         }
       }
-      await db.exec('INSERT INTO migration_history (migration_name) VALUES (?)', [file])
+      try {
+        await db.exec('INSERT INTO migration_history (migration_name) VALUES (?)', [file])
+      } catch (error: any) {
+        const msg = error?.message ? String(error.message) : String(error)
+        if (!isDuplicateMigrationHistoryInsert(msg, file)) {
+          throw error
+        }
+      }
     })
 
     console.log(`[migration] ✅ ${file}`)

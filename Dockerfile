@@ -10,6 +10,17 @@ ENV NEXT_TELEMETRY_DISABLED=1
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
+RUN printf '%s\n' \
+  'NODE_ENV=production' \
+  'PORT=80' \
+  'HOSTNAME=0.0.0.0' \
+  'NEXT_PUBLIC_APP_URL=https://bes3.com' \
+  'BES3_ALLOWED_HOSTS=bes3.com,www.bes3.com,localhost,localhost:3000,127.0.0.1,127.0.0.1:3000' \
+  'JWT_SECRET=build-only-jwt-secret-0123456789abcdef' \
+  'DEFAULT_ADMIN_USERNAME=autobes3' \
+  'DEFAULT_ADMIN_EMAIL=admin@bes3.com' \
+  'DEFAULT_ADMIN_PASSWORD=BuildOnly!23456789' \
+  > .env.production
 RUN npm run build
 
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
