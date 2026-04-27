@@ -529,6 +529,7 @@ export async function getDataManagementSnapshot() {
       `
     ),
     Promise.resolve([
+      { name: 'Release preflight', command: 'npm run ops:preflight-release .env.production', scope: 'env + security + drift + build' },
       { name: 'Runtime backup', command: 'npm run ops:backup-runtime', scope: 'data + storage/media' },
       { name: 'Runtime restore', command: 'BES3_RESTORE_CONFIRM=restore npm run ops:restore-runtime -- <archive>', scope: 'guarded restore' },
       { name: 'Schema drift check', command: 'npm run db:check-drift', scope: 'schema baseline + dictionary' },
