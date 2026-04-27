@@ -25,7 +25,7 @@ export default async function DealsPage() {
   const faqEntries = [
     {
       question: 'How does Bes3 decide whether something is a deal?',
-      answer: 'V2 combines the consensus score from teardown evidence with current price, historical low, and 90-day average price. A cheap weak product should not outrank a proven product automatically.'
+      answer: 'Bes3 combines the consensus score from teardown evidence with current price, historical low, and 90-day average price. A cheap weak product should not outrank a proven product automatically.'
     },
     {
       question: 'Why do some products show price baseline pending?',

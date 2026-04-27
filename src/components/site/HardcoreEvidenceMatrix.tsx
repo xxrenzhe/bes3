@@ -46,7 +46,7 @@ export function HardcoreEvidenceMatrix({
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-            V2 refuses to fabricate winners. This page waits until the pipeline has aligned products, creator evidence, affiliate links, and price baselines.
+            Bes3 refuses to fabricate winners. This page waits until the pipeline has aligned products, creator evidence, affiliate links, and price baselines.
           </p>
         </div>
       </section>

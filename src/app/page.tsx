@@ -25,7 +25,7 @@ export default async function HomePage() {
   const evidenceCount = home.products.reduce((total, product) => total + product.consensus.evidenceCount, 0)
   const faqEntries = [
     {
-      question: 'What changed in Bes3 v2?',
+      question: 'What changed in Bes3?',
       answer: 'Bes3 is no longer a generic buying guide. It is a hardcore evidence engine that ranks products by creator teardown data, canonical pain points, and price-value windows.'
     },
     {

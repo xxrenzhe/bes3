@@ -12,7 +12,7 @@ export default function NotFound() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">404 Recovery</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            That route is outside the v2 evidence graph.
+            That route is outside the evidence graph.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
             Requested path: {requestPath}. Bes3 now routes recovery through the hardcore roster, product evidence matrix, and best-value lab.

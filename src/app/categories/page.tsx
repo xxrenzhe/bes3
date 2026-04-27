@@ -40,7 +40,7 @@ export default async function CategoriesIndexPage() {
             The whitelist is the product strategy.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 v2 rejects low-stakes shopping lists. These are the categories where physical testing, creator disagreement, SKU precision, and price timing materially change the decision.
+            Bes3 rejects low-stakes shopping lists. These are the categories where physical testing, creator disagreement, SKU precision, and price timing materially change the decision.
           </p>
         </div>
       </section>

@@ -35,7 +35,7 @@ export default function TrustPage() {
           buildCollectionPageSchema({
             path: '/trust',
             title: 'Trust Center',
-            description: 'Policy and machine-discovery entry points for Bes3 v2.',
+            description: 'Policy and machine-discovery entry points for Bes3.',
             items: [
               { name: 'Privacy', path: '/privacy' },
               { name: 'Terms', path: '/terms' },
@@ -54,7 +54,7 @@ export default function TrustPage() {
             Trust is enforced by evidence constraints.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 v2 ranks products through creator authority, evidence confidence, scenario fit, advertorial penalties, and price baselines. It does not hide commercial disclosure behind neutral-looking buttons.
+            Bes3 ranks products through creator authority, evidence confidence, scenario fit, advertorial penalties, and price baselines. It does not hide commercial disclosure behind neutral-looking buttons.
           </p>
         </div>
       </section>

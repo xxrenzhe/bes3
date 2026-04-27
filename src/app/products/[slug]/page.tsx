@@ -187,7 +187,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="rounded-md border border-border bg-white p-6">
                 <p className="font-semibold">No source quote has cleared validation yet.</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  The entity can exist before the score is ready. V2 keeps it visible but blocks false winner claims until evidence is attached.
+                  The entity can exist before the score is ready. Bes3 keeps it visible but blocks false winner claims until evidence is attached.
                 </p>
               </div>
             )}
