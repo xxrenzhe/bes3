@@ -163,6 +163,21 @@ const PUBLIC_FAMILY_ALIASES: Array<{
 
 const PUBLIC_ROUTE_FAMILIES = ['/brands/', '/categories/', '/compare/', '/deals/', '/guides/', '/offers/', '/products/', '/reviews/']
 
+const MALICIOUS_SCAN_PATTERNS = [
+  /^\/\.env(?:$|[./])/i,
+  /^\/\.git(?:$|\/)/i,
+  /^\/wp-admin(?:$|\/)/i,
+  /^\/wp-login\.php$/i,
+  /^\/xmlrpc\.php$/i,
+  /^\/phpmyadmin(?:$|\/)/i,
+  /^\/pma(?:$|\/)/i,
+  /^\/adminer(?:\.php)?$/i,
+  /^\/vendor\/phpunit(?:$|\/)/i,
+  /^\/config(?:\.php|\.json|\.yml|\.yaml)$/i,
+  /^\/backup(?:$|[./_-])/i,
+  /^\/database(?:$|[./_-])/i
+]
+
 function stripCommonPublicPathArtifacts(pathname: string) {
   return (
     pathname
@@ -227,6 +242,29 @@ function isLocaleRedirectCandidate(pathname: string) {
   return !pathname.startsWith('/api/') && pathname !== '/robots.txt' && pathname !== '/sitemap.xml'
 }
 
+function normalizeSecurityPath(pathname: string) {
+  try {
+    return decodeURIComponent(pathname).replace(/\/+/g, '/')
+  } catch {
+    return pathname.replace(/\/+/g, '/')
+  }
+}
+
+function isMaliciousScanPath(pathname: string) {
+  const normalized = normalizeSecurityPath(pathname)
+  return MALICIOUS_SCAN_PATTERNS.some((pattern) => pattern.test(normalized))
+}
+
+function blockedScanResponse(requestId: string) {
+  return new NextResponse('Not Found', {
+    status: 404,
+    headers: {
+      'x-request-id': requestId,
+      'x-bes3-blocked-reason': 'scan-path'
+    }
+  })
+}
+
 function pickPreferredLocale(request: NextRequest) {
   const cookieLocale = normalizeLocale(request.cookies.get(LOCALE_COOKIE_NAME)?.value)
   if (cookieLocale !== DEFAULT_LOCALE) return cookieLocale
@@ -263,6 +301,10 @@ export async function middleware(request: NextRequest) {
   requestHeaders.set(REQUEST_LOCALE_HEADER, activeLocale)
   requestHeaders.set(REQUEST_DISPLAY_PATH_HEADER, localeInPath ? pathname : addLocaleToPath(basePath, activeLocale))
   const canonicalPublicPath = resolveCanonicalPublicPath(basePath)
+
+  if (isMaliciousScanPath(basePath)) {
+    return blockedScanResponse(requestId)
+  }
 
   if (canonicalPublicPath && canonicalPublicPath !== basePath) {
     const redirectUrl = request.nextUrl.clone()
