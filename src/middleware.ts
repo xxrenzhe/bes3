@@ -12,6 +12,7 @@ import {
   normalizeLocale,
   stripLocaleFromPath
 } from '@/lib/i18n'
+import { hasValidInternalServiceToken } from '@/lib/internal-service'
 
 const PUBLIC_PATHS = [
   '/',
@@ -353,6 +354,13 @@ export async function middleware(request: NextRequest) {
     }
 
     return withLocaleCookie(NextResponse.next({ request: { headers: requestHeaders } }), activeLocale)
+  }
+
+  if (basePath.startsWith('/api/internal/')) {
+    if (hasValidInternalServiceToken(request.headers)) {
+      return NextResponse.next({ request: { headers: requestHeaders } })
+    }
+    return NextResponse.json({ error: 'Unauthorized', requestId }, { status: 401 })
   }
 
   const token = request.cookies.get('auth_token')?.value

@@ -17,6 +17,10 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   NODE_VERSION: '20'
   RUN_OPTIONAL_TESTS: ${{ vars.RUN_OPTIONAL_TESTS || 'false' }}
+  NEXT_PUBLIC_APP_URL: https://bes3.com
+  BES3_ALLOWED_HOSTS: bes3.com,www.bes3.com,localhost,localhost:3000,127.0.0.1,127.0.0.1:3000,127.0.0.1:3100
+  JWT_SECRET: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+  DEFAULT_ADMIN_PASSWORD: ChangeMe!23456789
 
 jobs:
   build-and-test:
@@ -47,8 +51,42 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run schema drift check
+        run: npm run db:check-drift
+
+      - name: Run production env gate
+        run: npm run ops:check-env
+
       - name: Run production build
         run: npm run build
+
+      - name: Run health smoke checks
+        env:
+          PORT: 3100
+          PIPELINE_WORKER_ENABLED: 'false'
+        run: |
+          set -euo pipefail
+          node .next/standalone/server.js > /tmp/bes3-start.log 2>&1 &
+          SERVER_PID=$!
+          cleanup() {
+            kill "$SERVER_PID" >/dev/null 2>&1 || true
+            wait "$SERVER_PID" >/dev/null 2>&1 || true
+          }
+          trap cleanup EXIT
+
+          for _ in 1 2 3 4 5 6 7 8 9 10; do
+            if curl -sf http://127.0.0.1:3100/api/health > /tmp/bes3-health.json; then
+              break
+            fi
+            sleep 3
+          done
+
+          curl -sf http://127.0.0.1:3100/api/health > /tmp/bes3-health.json
+          node -e "const fs=require('fs'); const body=JSON.parse(fs.readFileSync('/tmp/bes3-health.json','utf8')); if(body.status!=='ok') throw new Error('public health is not ok'); if(body.service!=='bes3') throw new Error('public health payload is incomplete')"
+
+          test \"$(curl -s -o /tmp/bes3-health-unauth.json -w '%{http_code}' http://127.0.0.1:3100/api/internal/health)\" = \"401\"
+          curl -sf -H \"x-bes3-internal-token: ${JWT_SECRET}\" http://127.0.0.1:3100/api/internal/health > /tmp/bes3-health-internal.json
+          node -e "const fs=require('fs'); const body=JSON.parse(fs.readFileSync('/tmp/bes3-health-internal.json','utf8')); if(!body.database || !body.worker || !body.migrations) throw new Error('internal health payload is incomplete')"
 
       - name: Run optional tests
         if: ${{ env.RUN_OPTIONAL_TESTS == 'true' }}
