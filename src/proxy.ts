@@ -53,6 +53,7 @@ const PUBLIC_PATHS = [
   '/api/open/buying-feed',
   '/api/open/coverage',
   '/api/health',
+  '/api/internal/health',
   '/sitemap.xml',
   '/robots.txt',
   '/editorial/sitemap.xml',
