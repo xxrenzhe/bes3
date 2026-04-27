@@ -532,6 +532,7 @@ export async function getDataManagementSnapshot() {
       { name: 'Runtime backup', command: 'npm run ops:backup-runtime', scope: 'data + storage/media' },
       { name: 'Runtime restore', command: 'BES3_RESTORE_CONFIRM=restore npm run ops:restore-runtime -- <archive>', scope: 'guarded restore' },
       { name: 'Schema drift check', command: 'npm run db:check-drift', scope: 'schema baseline + dictionary' },
+      { name: 'Dependency audit', command: 'npm run ops:check-dependency-audit', scope: 'npm audit + risk sync allowlist' },
       { name: 'Planv2 manifest', command: 'npm run hardcore:export-planv2-ops', scope: 'operational manifest export' }
     ])
   ])

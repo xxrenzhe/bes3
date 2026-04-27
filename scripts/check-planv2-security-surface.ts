@@ -4,23 +4,23 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const root = process.cwd()
-const middlewarePath = path.join(root, 'src', 'middleware.ts')
+const proxyPath = path.join(root, 'src', 'proxy.ts')
 const robotsPath = path.join(root, 'src', 'app', 'robots.ts')
 
 const checks = [
   {
-    label: 'middleware request id propagation',
-    filePath: middlewarePath,
+    label: 'proxy request id propagation',
+    filePath: proxyPath,
     required: ['crypto.randomUUID()', "requestHeaders.set('x-request-id'", "return NextResponse.json({ error: 'Unauthorized', requestId }"]
   },
   {
-    label: 'middleware scan blocking',
-    filePath: middlewarePath,
+    label: 'proxy scan blocking',
+    filePath: proxyPath,
     required: ['MALICIOUS_SCAN_PATTERNS', 'isMaliciousScanPath', 'x-bes3-blocked-reason', 'wp-admin', '\\.env']
   },
   {
     label: 'public/admin route separation',
-    filePath: middlewarePath,
+    filePath: proxyPath,
     required: ["pathname.startsWith('/api/admin')", "return NextResponse.redirect(new URL('/login'", "pathname.startsWith('/api/open/')"]
   },
   {
