@@ -116,6 +116,11 @@ async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
   }
 }
 
+async function getDefaultProxyCountry(): Promise<string | null> {
+  const value = await getSettingValueOrEnv('proxy', 'defaultCountryCode', 'PROXY_DEFAULT_COUNTRY', '')
+  return normalizeCountryCode(value)
+}
+
 let proxyAgentConstructorPromise: Promise<((url: string) => unknown) | null> | null = null
 
 async function getProxyAgentConstructor(): Promise<((url: string) => unknown) | null> {
@@ -135,7 +140,7 @@ export async function resolveBrowserProxy(countryCode?: string | null): Promise<
   const proxies = await loadBrowserProxySettings()
   if (!proxies.length) return null
 
-  const candidates = getCountryCandidates(countryCode)
+  const candidates = getCountryCandidates(countryCode || await getDefaultProxyCountry())
   const preferred =
     proxies.find((item) => item.country && candidates.has(String(item.country).toUpperCase())) ||
     proxies.find((item) => !item.country) ||

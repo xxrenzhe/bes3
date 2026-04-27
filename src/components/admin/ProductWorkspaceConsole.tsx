@@ -344,6 +344,14 @@ export function ProductWorkspaceConsole({
                   <p className="mt-1 font-medium">{workspace.product.brand || 'N/A'}</p>
                 </div>
                 <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Model</p>
+                  <p className="mt-1 font-medium">{workspace.product.productModel || workspace.product.modelNumber || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Product Type</p>
+                  <p className="mt-1 font-medium">{workspace.product.productType || 'N/A'}</p>
+                </div>
+                <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Slug</p>
                   <p className="mt-1 font-medium">{workspace.product.slug || 'N/A'}</p>
                 </div>
@@ -360,6 +368,12 @@ export function ProductWorkspaceConsole({
                 <div>
                   <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Canonical URL</p>
                   <p className="mt-1 break-all text-sm text-muted-foreground">{workspace.product.canonicalUrl || 'N/A'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">YouTube Match Terms</p>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    {workspace.product.youtubeMatchTerms.length ? workspace.product.youtubeMatchTerms.join(' · ') : 'N/A'}
+                  </p>
                 </div>
               </div>
             </div>

@@ -15,6 +15,12 @@ interface ReviewVideoRow {
 
 interface ProductIdentityRow extends ProductIdentityCandidate {
   product_name?: string | null
+  product_model?: string | null
+  model_number?: string | null
+  product_type?: string | null
+  category?: string | null
+  category_slug?: string | null
+  youtube_match_terms_json?: string | null
 }
 
 function readNumberFlag(name: string, fallback: number) {
@@ -37,6 +43,16 @@ function parseMatch(value: string | null) {
   }
 }
 
+function parseStringArray(value: string | null | undefined): string[] {
+  if (!value) return []
+  try {
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.filter((item): item is string => typeof item === 'string') : []
+  } catch {
+    return []
+  }
+}
+
 async function main() {
   await bootstrapApplication()
   const db = await getDatabase()
@@ -45,7 +61,8 @@ async function main() {
   const minConfidence = Number(process.argv.find((item) => item.startsWith('--min-confidence='))?.slice('--min-confidence='.length) || 0.9)
   const productRows = await db.query<ProductIdentityRow>(
     `
-      SELECT id, brand, product_name, product_name AS productName, COALESCE(asin, '') AS asin
+      SELECT id, brand, product_name, product_name AS productName, COALESCE(asin, '') AS asin,
+        product_model, model_number, product_type, category, category_slug, youtube_match_terms_json
       FROM products
       WHERE slug IS NOT NULL
       ORDER BY updated_at DESC, id DESC
@@ -55,7 +72,13 @@ async function main() {
     id: product.id,
     brand: product.brand,
     productName: product.productName || product.product_name || '',
-    asin: product.asin
+    asin: product.asin,
+    productModel: product.product_model,
+    modelNumber: product.model_number,
+    productType: product.product_type,
+    category: product.category,
+    categorySlug: product.category_slug,
+    youtubeMatchTerms: parseStringArray(product.youtube_match_terms_json)
   }))
   const videos = await db.query<ReviewVideoRow>(
     `

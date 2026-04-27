@@ -10,6 +10,11 @@ export interface AdminWorkspaceProduct {
   canonicalUrl: string | null
   slug: string | null
   brand: string | null
+  productModel: string | null
+  modelNumber: string | null
+  productType: string | null
+  categorySlug: string | null
+  youtubeMatchTerms: string[]
   productName: string
   category: string | null
   description: string | null
@@ -123,6 +128,11 @@ type ProductRow = {
   canonical_url: string | null
   slug: string | null
   brand: string | null
+  product_model: string | null
+  model_number: string | null
+  product_type: string | null
+  category_slug: string | null
+  youtube_match_terms_json: string | null
   product_name: string
   category: string | null
   description: string | null
@@ -239,8 +249,9 @@ export async function getAdminProductWorkspace(productId: number): Promise<Admin
   const productRow = await db.queryOne<ProductRow>(
     `
       SELECT id, affiliate_product_id, source_platform, source_affiliate_link, resolved_url, canonical_url, slug, brand,
-        product_name, category, description, price_amount, price_currency, rating, review_count, specs_json,
-        review_highlights_json, updated_at, published_at
+        product_model, model_number, product_type, category_slug, youtube_match_terms_json, product_name, category,
+        description, price_amount, price_currency, rating, review_count, specs_json, review_highlights_json, updated_at,
+        published_at
       FROM products
       WHERE id = ?
       LIMIT 1
@@ -343,6 +354,11 @@ export async function getAdminProductWorkspace(productId: number): Promise<Admin
       canonicalUrl: productRow.canonical_url,
       slug: productRow.slug,
       brand: productRow.brand,
+      productModel: productRow.product_model,
+      modelNumber: productRow.model_number,
+      productType: productRow.product_type,
+      categorySlug: productRow.category_slug,
+      youtubeMatchTerms: parseArray(productRow.youtube_match_terms_json),
       productName: productRow.product_name,
       category: productRow.category,
       description: productRow.description,

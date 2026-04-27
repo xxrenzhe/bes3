@@ -15,6 +15,11 @@ import { dispatchSeoNotifications } from '@/lib/seo-ops'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getBrandSlug, listBrands, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
+import {
+  buildProductIdentityEnrichment,
+  normalizeProductAcquisitionHints,
+  type ProductAcquisitionHints
+} from '@/lib/product-acquisition'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { resolveAffiliateLink } from '@/lib/url-resolver'
 import { slugify } from '@/lib/slug'
@@ -881,6 +886,12 @@ async function ensureProductShell(input: {
   finalUrl: string
   productName: string
   brand: string | null
+  productModel?: string | null
+  modelNumber?: string | null
+  productType?: string | null
+  category?: string | null
+  categorySlug?: string | null
+  youtubeMatchTerms?: string[] | null
 }): Promise<number> {
   const db = await getDatabase()
   const slug = slugify(input.productName)
@@ -912,6 +923,12 @@ async function ensureProductShell(input: {
             resolved_url = COALESCE(resolved_url, ?),
             canonical_url = COALESCE(canonical_url, ?),
             brand = COALESCE(brand, ?),
+            product_model = COALESCE(product_model, ?),
+            model_number = COALESCE(model_number, ?),
+            product_type = COALESCE(product_type, ?),
+            category = COALESCE(category, ?),
+            category_slug = COALESCE(category_slug, ?),
+            youtube_match_terms_json = COALESCE(youtube_match_terms_json, ?),
             product_name = COALESCE(product_name, ?),
             updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
@@ -922,6 +939,12 @@ async function ensureProductShell(input: {
         input.finalUrl,
         input.finalUrl,
         input.brand,
+        input.productModel || null,
+        input.modelNumber || null,
+        input.productType || null,
+        input.category || null,
+        input.categorySlug || null,
+        input.youtubeMatchTerms?.length ? JSON.stringify(input.youtubeMatchTerms) : null,
         input.productName,
         existingByIdentity.id
       ]
@@ -932,8 +955,9 @@ async function ensureProductShell(input: {
   const result = await db.exec(
     `
       INSERT INTO products (
-        affiliate_product_id, source_platform, source_affiliate_link, resolved_url, canonical_url, slug, brand, product_name
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        affiliate_product_id, source_platform, source_affiliate_link, resolved_url, canonical_url, slug, brand,
+        product_model, model_number, product_type, category, category_slug, youtube_match_terms_json, product_name
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       input.affiliateProductId || null,
@@ -943,6 +967,12 @@ async function ensureProductShell(input: {
       input.finalUrl,
       slug,
       input.brand,
+      input.productModel || null,
+      input.modelNumber || null,
+      input.productType || null,
+      input.category || null,
+      input.categorySlug || null,
+      input.youtubeMatchTerms?.length ? JSON.stringify(input.youtubeMatchTerms) : null,
       input.productName
     ]
   )
@@ -976,6 +1006,16 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
   if (!affiliateProduct) return scraped
 
   const rawPayload = parseAffiliateRawPayload(affiliateProduct)
+  const acquisitionHints = normalizeProductAcquisitionHints({
+    ...(rawPayload.acquisitionHints || {}),
+    brandName: affiliateProduct.brand,
+    productModel: affiliateProduct.product_model,
+    modelNumber: affiliateProduct.model_number,
+    productType: affiliateProduct.product_type,
+    category: affiliateProduct.category,
+    categorySlug: affiliateProduct.category_slug,
+    countryCode: affiliateProduct.country_code
+  })
   const specs = { ...scraped.specs }
   const assignSpec = (label: string, value: unknown) => {
     const text = String(value || '').trim()
@@ -985,12 +1025,26 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
 
   assignSpec('ASIN', affiliateProduct.asin)
   assignSpec('Brand', affiliateProduct.brand)
-  assignSpec('Category', rawPayload.category || rawPayload.subcategory)
+  assignSpec('Model', acquisitionHints.productModel)
+  assignSpec('Model Number', acquisitionHints.modelNumber)
+  assignSpec('Product Type', acquisitionHints.productType)
+  assignSpec('Category', acquisitionHints.category || rawPayload.category || rawPayload.subcategory)
   assignSpec('Availability', rawPayload.availability)
   assignSpec('Merchant', rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name)
 
   const fallbackImage = affiliateProduct.image_url ? [affiliateProduct.image_url] : []
-  const fallbackCategory = String(rawPayload.category || rawPayload.subcategory || '').trim() || null
+  const fallbackCategory = acquisitionHints.category || String(rawPayload.category || rawPayload.subcategory || '').trim() || null
+  const identity = buildProductIdentityEnrichment({
+    productName:
+      scraped.productName && !/^unknown\b/i.test(scraped.productName)
+        ? scraped.productName
+        : affiliateProduct.product_name || String(rawPayload.product_name || rawPayload.name || '').trim() || scraped.productName,
+    brand: scraped.brand || affiliateProduct.brand || String(rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name || '').trim() || null,
+    category: scraped.category || fallbackCategory,
+    specs,
+    rawPayload,
+    hints: acquisitionHints
+  })
   const referencePriceAmount = [rawPayload.original_price, rawPayload.list_price, rawPayload.compare_at_price]
     .map((value) => {
       const parsed = Number.parseFloat(String(value ?? '').replace(/[^\d.-]/g, ''))
@@ -1014,7 +1068,12 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
         ? scraped.productName
         : affiliateProduct.product_name || String(rawPayload.product_name || rawPayload.name || '').trim() || scraped.productName,
     brand: scraped.brand || affiliateProduct.brand || String(rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name || '').trim() || null,
-    category: scraped.category || fallbackCategory,
+    productModel: scraped.productModel || identity.productModel,
+    modelNumber: scraped.modelNumber || identity.modelNumber,
+    productType: scraped.productType || identity.productType,
+    category: scraped.category || identity.category || fallbackCategory,
+    categorySlug: scraped.categorySlug || identity.categorySlug,
+    youtubeMatchTerms: scraped.youtubeMatchTerms.length ? scraped.youtubeMatchTerms : identity.youtubeMatchTerms,
     description:
       scraped.description ||
       String(rawPayload.description || rawPayload.promotion_title || '').trim() ||
@@ -1059,9 +1118,10 @@ async function updateProductFromScrape(productId: number, scraped: ReturnType<ty
   await db.exec(
     `
       UPDATE products
-      SET resolved_url = ?, canonical_url = ?, slug = ?, brand = ?, product_name = ?, category = ?, description = ?,
+      SET resolved_url = ?, canonical_url = ?, slug = ?, brand = ?, product_model = ?, model_number = ?,
+          product_type = ?, product_name = ?, category = ?, category_slug = ?, description = ?,
           price_amount = ?, price_currency = ?, rating = ?, review_count = ?, specs_json = ?, review_highlights_json = ?,
-          source_payload_json = ?, price_last_checked_at = ?, offer_last_checked_at = ?, attribute_completeness_score = ?,
+          youtube_match_terms_json = ?, source_payload_json = ?, price_last_checked_at = ?, offer_last_checked_at = ?, attribute_completeness_score = ?,
           data_confidence_score = ?, source_count = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `,
@@ -1070,8 +1130,12 @@ async function updateProductFromScrape(productId: number, scraped: ReturnType<ty
       scraped.finalUrl,
       slugify(scraped.productName),
       scraped.brand,
+      scraped.productModel,
+      scraped.modelNumber,
+      scraped.productType,
       scraped.productName,
       scraped.category,
+      scraped.categorySlug,
       scraped.description,
       scraped.priceAmount,
       scraped.priceCurrency,
@@ -1079,6 +1143,7 @@ async function updateProductFromScrape(productId: number, scraped: ReturnType<ty
       scraped.reviewCount,
       JSON.stringify(scraped.specs),
       JSON.stringify(scraped.reviewHighlights),
+      JSON.stringify(scraped.youtubeMatchTerms),
       JSON.stringify(scraped),
       scraped.priceLastCheckedAt,
       scraped.offerLastCheckedAt,
@@ -2028,8 +2093,8 @@ export async function runPipelineForAffiliateProduct(affiliateProductId: number)
   return runId
 }
 
-export async function runPipelineFromLink(sourceLink: string): Promise<number> {
-  const affiliateProductId = await upsertManualAffiliateLink(sourceLink)
+export async function runPipelineFromLink(sourceLink: string, hints: ProductAcquisitionHints = {}): Promise<number> {
+  const affiliateProductId = await upsertManualAffiliateLink(sourceLink, hints)
   const productId = await findProductIdByAffiliateProductId(affiliateProductId)
   const runId = await createRun({
     sourceLink,
@@ -2081,7 +2146,13 @@ async function executeFullPipelineRun(
       sourceLink,
       finalUrl: resolved.finalUrl,
       productName: scraped.productName,
-      brand: scraped.brand
+      brand: scraped.brand,
+      productModel: scraped.productModel,
+      modelNumber: scraped.modelNumber,
+      productType: scraped.productType,
+      category: scraped.category,
+      categorySlug: scraped.categorySlug,
+      youtubeMatchTerms: scraped.youtubeMatchTerms
     })
     const persistedMediaUrls: string[] = []
     for (const [index, imageUrl] of scraped.imageUrls.slice(0, 6).entries()) {

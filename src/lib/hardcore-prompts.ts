@@ -154,7 +154,13 @@ export function buildProductEntityExtractionPrompt({
         id: product.id,
         brand: product.brand,
         productName: product.productName,
-        asin: product.asin
+        asin: product.asin,
+        productModel: product.productModel,
+        modelNumber: product.modelNumber,
+        productType: product.productType,
+        category: product.category,
+        categorySlug: product.categorySlug,
+        youtubeMatchTerms: product.youtubeMatchTerms || []
       })),
       null,
       2

@@ -105,6 +105,7 @@ const JSON_COLUMNS = new Set([
   'quality_flags_json',
   'source_payload_json',
   'specs_json',
+  'youtube_match_terms_json',
   'review_highlights_json',
   'raw_payload',
   'entity_match_json',

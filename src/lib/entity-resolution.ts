@@ -5,6 +5,12 @@ export interface ProductIdentityCandidate {
   brand: string | null
   productName: string
   asin: string | null
+  productModel?: string | null
+  modelNumber?: string | null
+  productType?: string | null
+  category?: string | null
+  categorySlug?: string | null
+  youtubeMatchTerms?: string[]
 }
 
 export interface EntityMatchResult {
@@ -74,6 +80,16 @@ function editSimilarity(left: string, right: string) {
   return 1 - levenshtein(a, b) / maxLength
 }
 
+function normalizeTerm(value: string) {
+  return slugify(value).replace(/-/g, ' ')
+}
+
+function evidenceIncludesTerm(evidence: string, term: string) {
+  const normalizedEvidence = ` ${normalizeTerm(evidence)} `
+  const normalizedTerm = normalizeTerm(term)
+  return Boolean(normalizedTerm && normalizedEvidence.includes(` ${normalizedTerm} `))
+}
+
 function isLikelyAsin(value: string) {
   const normalized = value.toUpperCase()
   if (!/^[A-Z0-9]{10}$/.test(normalized)) return false
@@ -127,17 +143,31 @@ export function matchVideoEntity({
 
   const titleTokens = tokenize(title)
   const sourceTokens = tokenize([title, transcriptIntro || ''].join(' '))
+  const evidenceTextLower = [title, transcriptIntro || '', description || ''].join('\n')
   const scored = products
     .map((product) => {
-      const identity = [product.brand || '', product.productName].join(' ')
-      const identityTokens = tokenize(identity)
-      const tokenScore = Math.max(jaccard(titleTokens, identityTokens), jaccard(sourceTokens, identityTokens))
-      const editScore = Math.max(editSimilarity(title, identity), editSimilarity([title, transcriptIntro || ''].join(' '), identity))
-      const score = Math.max(tokenScore, editScore)
+      const identityCandidates = [
+        [product.brand || '', product.productName].join(' '),
+        [product.brand || '', product.productModel || ''].join(' '),
+        [product.brand || '', product.modelNumber || ''].join(' '),
+        [product.productModel || '', product.productType || ''].join(' '),
+        ...(product.youtubeMatchTerms || [])
+      ].filter((item) => item.trim().length > 0)
+      const score = identityCandidates.reduce((bestScore, identity) => {
+        const identityTokens = tokenize(identity)
+        const tokenScore = Math.max(jaccard(titleTokens, identityTokens), jaccard(sourceTokens, identityTokens))
+        const editScore = Math.max(editSimilarity(title, identity), editSimilarity([title, transcriptIntro || ''].join(' '), identity))
+        const exactTermBoost = evidenceIncludesTerm(evidenceTextLower, identity) ? 0.22 : 0
+        return Math.max(bestScore, tokenScore, editScore, Math.min(0.98, tokenScore + exactTermBoost))
+      }, 0)
+      const modelNumberBoost =
+        product.modelNumber && evidenceIncludesTerm(evidenceTextLower, product.modelNumber) ? 0.35 : 0
+      const modelBoost =
+        product.productModel && evidenceIncludesTerm(evidenceTextLower, product.productModel) ? 0.18 : 0
       const brandBoost = product.brand && (titleTokens.has(slugify(product.brand)) || sourceTokens.has(slugify(product.brand))) ? 0.15 : 0
       return {
         product,
-        confidence: Math.min(0.99, score + brandBoost)
+        confidence: Math.min(0.99, score + brandBoost + modelBoost + modelNumberBoost)
       }
     })
     .sort((left, right) => right.confidence - left.confidence)
