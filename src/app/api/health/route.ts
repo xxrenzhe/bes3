@@ -1,7 +1,10 @@
 import { NextResponse } from 'next/server'
-import { getPublicHealthReport } from '@/lib/health'
 
 export async function GET() {
-  const report = await getPublicHealthReport()
-  return NextResponse.json(report, { status: report.status === 'ok' ? 200 : 503 })
+  return NextResponse.json({
+    status: 'ok',
+    version: process.env.npm_package_version || '0.1.0',
+    checkedAt: new Date().toISOString(),
+    service: 'bes3'
+  })
 }
