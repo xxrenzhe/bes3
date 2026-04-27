@@ -264,10 +264,11 @@ async function configureStealthContext(context: BrowserContext, countryCode: str
 }
 
 async function extractBrowserSignals(page: Page): Promise<BrowserSignals> {
-  return page.evaluate(() => {
-    const clean = (value: unknown) => String(value || '').replace(/\s+/g, ' ').trim()
-    const readMeta = (selector: string) => clean(document.querySelector(selector)?.getAttribute('content')) || null
-    const absoluteUrl = (value: string | null) => {
+  return page.evaluate(`
+    (() => {
+    const clean = (value) => String(value || '').replace(/\\s+/g, ' ').trim()
+    const readMeta = (selector) => clean(document.querySelector(selector)?.getAttribute('content')) || null
+    const absoluteUrl = (value) => {
       const text = clean(value)
       if (!text || text.startsWith('data:')) return null
       try {
@@ -277,8 +278,8 @@ async function extractBrowserSignals(page: Page): Promise<BrowserSignals> {
       }
     }
     const imageUrls = Array.from(document.querySelectorAll('img'))
-      .map((image) => absoluteUrl((image as HTMLImageElement).currentSrc || (image as HTMLImageElement).src || image.getAttribute('data-src')))
-      .filter((value): value is string => Boolean(value))
+      .map((image) => absoluteUrl(image.currentSrc || image.src || image.getAttribute('data-src')))
+      .filter((value) => Boolean(value))
       .slice(0, 80)
     const bulletTexts = Array.from(document.querySelectorAll('li, [data-hook="feature-bullets"] span, #feature-bullets span, .product__description li'))
       .map((node) => clean(node.textContent))
@@ -288,7 +289,7 @@ async function extractBrowserSignals(page: Page): Promise<BrowserSignals> {
       .map((node) => clean(node.textContent))
       .filter((text) => text.length >= 20 && text.length <= 600)
       .slice(0, 40)
-    const specs: Record<string, string> = {}
+    const specs = {}
     for (const row of Array.from(document.querySelectorAll('tr'))) {
       const cells = Array.from(row.querySelectorAll('th,td')).map((cell) => clean(cell.textContent))
       if (cells.length >= 2 && cells[0] && cells[1] && cells[0].length <= 80 && cells[1].length <= 220) {
@@ -322,7 +323,8 @@ async function extractBrowserSignals(page: Page): Promise<BrowserSignals> {
       schemaCount: document.querySelectorAll('script[type="application/ld+json"]').length,
       textLength: clean(document.body?.innerText).length
     }
-  })
+    })()
+  `)
 }
 
 async function prepareBrowser(countryCode: string): Promise<{
