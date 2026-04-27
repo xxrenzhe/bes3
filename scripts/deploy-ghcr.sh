@@ -54,6 +54,12 @@ echo "Deploying image ${IMAGE}"
   cd "$APP_DIR"
   BES3_IMAGE="$IMAGE" docker compose pull
   docker run --rm --env-file "$ENV_FILE" "$IMAGE" node /app/scripts/check-runtime-env.js
+  docker run --rm \
+    --env-file "$ENV_FILE" \
+    -v "${APP_DIR}/data:/app/data" \
+    -v "${APP_DIR}/storage/media:/app/storage/media" \
+    "$IMAGE" \
+    ./node_modules/.bin/tsx /app/scripts/migrate.ts
   BES3_IMAGE="$IMAGE" docker compose up -d --no-build
 )
 

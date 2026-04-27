@@ -17,6 +17,7 @@ set -euo pipefail
 HEALTH_URL="${HEALTH_URL:-http://localhost/api/health}"
 TIMEOUT="${TIMEOUT:-10}"
 LOG_FILE="${LOG_FILE:-}"
+HEALTHCHECK_TOKEN="${HEALTHCHECK_TOKEN:-}"
 
 log() {
   local ts
@@ -31,8 +32,13 @@ log() {
 check_health() {
   local http_code
   local response
+  local curl_headers=()
 
-  http_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time "$TIMEOUT" "$HEALTH_URL" 2>/dev/null || echo "000")
+  if [[ -n "${HEALTHCHECK_TOKEN}" ]]; then
+    curl_headers=(-H "x-bes3-internal-token: ${HEALTHCHECK_TOKEN}")
+  fi
+
+  http_code=$(curl -s -o /dev/null -w '%{http_code}' --max-time "$TIMEOUT" "${curl_headers[@]}" "$HEALTH_URL" 2>/dev/null || echo "000")
   if [[ "$http_code" == "000" ]]; then
     log "FAIL: 无法连接到 ${HEALTH_URL}"
     return 2
@@ -43,7 +49,7 @@ check_health() {
     return 1
   fi
 
-  response=$(curl -sf --max-time "$TIMEOUT" "$HEALTH_URL" 2>/dev/null)
+  response=$(curl -sf --max-time "$TIMEOUT" "${curl_headers[@]}" "$HEALTH_URL" 2>/dev/null)
 
   local status
   status=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).status' 2>/dev/null || echo "unknown")
@@ -52,20 +58,20 @@ check_health() {
     return 1
   fi
 
+  local version
+  version=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).version || "unknown"' 2>/dev/null || echo "unknown")
+  local checked_at
+  checked_at=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).checkedAt || "unknown"' 2>/dev/null || echo "unknown")
   local db_connected
-  db_connected=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).database?.connected' 2>/dev/null || echo "unknown")
-  if [[ "$db_connected" != "true" ]]; then
-    log "WARN: database.connected=${db_connected}"
-  fi
-
+  db_connected=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).database?.connected ?? "n/a"' 2>/dev/null || echo "n/a")
   local worker_enabled
-  worker_enabled=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.enabled' 2>/dev/null || echo "unknown")
+  worker_enabled=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.enabled ?? "n/a"' 2>/dev/null || echo "n/a")
   local worker_poll_ms
-  worker_poll_ms=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.pollMs' 2>/dev/null || echo "unknown")
+  worker_poll_ms=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.pollMs ?? "n/a"' 2>/dev/null || echo "n/a")
   local worker_concurrency
-  worker_concurrency=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.concurrency' 2>/dev/null || echo "unknown")
+  worker_concurrency=$(echo "$response" | node -pe 'JSON.parse(require("fs").readFileSync("/dev/stdin","utf8")).worker?.concurrency ?? "n/a"' 2>/dev/null || echo "n/a")
 
-  log "OK: status=${status}, database.connected=${db_connected}, worker.enabled=${worker_enabled}, worker.pollMs=${worker_poll_ms}, worker.concurrency=${worker_concurrency}"
+  log "OK: status=${status}, version=${version}, checkedAt=${checked_at}, database.connected=${db_connected}, worker.enabled=${worker_enabled}, worker.pollMs=${worker_poll_ms}, worker.concurrency=${worker_concurrency}"
   return 0
 }
 
@@ -73,9 +79,10 @@ main() {
   if [[ $# -gt 0 ]]; then
     case "$1" in
       -h|--help)
-        echo "用法: $0 [--url URL] [--log FILE]"
+        echo "用法: $0 [--url URL] [--log FILE] [--token TOKEN]"
         echo "  --url URL    健康检查端点 (默认: http://localhost/api/health)"
         echo "  --log FILE   日志文件 (默认: 输出到 stdout)"
+        echo "  --token      内部健康检查令牌，可用于 /api/internal/health"
         exit 0
         ;;
       --url)
@@ -84,6 +91,10 @@ main() {
         ;;
       --log)
         LOG_FILE="$2"
+        shift 2
+        ;;
+      --token)
+        HEALTHCHECK_TOKEN="$2"
         shift 2
         ;;
     esac

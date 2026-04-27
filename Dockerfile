@@ -19,11 +19,16 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=80
 ENV HOSTNAME=0.0.0.0
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
+COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
-COPY scripts/check-runtime-env.js /app/scripts/check-runtime-env.js
-COPY scripts/worker-standalone.js /app/scripts/worker-standalone.js
+COPY package.json /app/package.json
+COPY tsconfig.json /app/tsconfig.json
+COPY src /app/src
+COPY scripts /app/scripts
+COPY migrations /app/migrations
+COPY pg-migrations /app/pg-migrations
 COPY supervisord.conf /app/supervisord.conf
 RUN mkdir -p /app/data /app/storage/media /app/scripts
 VOLUME ["/app/data", "/app/storage/media"]

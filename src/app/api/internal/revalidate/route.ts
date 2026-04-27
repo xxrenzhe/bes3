@@ -1,13 +1,11 @@
 import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
+import { hasValidInternalServiceToken } from '@/lib/internal-service'
 import { getBrandSlug } from '@/lib/site-data'
 
 export async function POST(request: Request) {
-  const internalToken = request.headers.get('x-bes3-internal-token') || ''
-  const expectedToken = process.env.JWT_SECRET || ''
-
-  if (!expectedToken || internalToken !== expectedToken) {
+  if (!hasValidInternalServiceToken(request.headers)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 

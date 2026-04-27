@@ -1,5 +1,43 @@
 const path = require('path')
 
+function parseAllowedHosts(rawValue) {
+  return String(rawValue || '')
+    .split(',')
+    .map((value) => value.trim())
+    .filter(Boolean)
+}
+
+function buildAllowedHosts() {
+  const hosts = new Set([
+    'bes3.com',
+    'www.bes3.com',
+    'localhost',
+    'localhost:3000',
+    '127.0.0.1',
+    '127.0.0.1:3000'
+  ])
+
+  const appUrl = String(process.env.NEXT_PUBLIC_APP_URL || '').trim()
+  if (appUrl) {
+    try {
+      const parsed = new URL(appUrl)
+      if (parsed.host) hosts.add(parsed.host)
+      if (parsed.hostname === 'bes3.com') hosts.add('www.bes3.com')
+      if (parsed.hostname === 'www.bes3.com') hosts.add('bes3.com')
+    } catch {
+      // Ignore invalid URLs here and let runtime env validation fail.
+    }
+  }
+
+  for (const host of parseAllowedHosts(process.env.BES3_ALLOWED_HOSTS)) {
+    hosts.add(host)
+  }
+
+  return Array.from(hosts)
+}
+
+const allowedHosts = buildAllowedHosts()
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
@@ -18,14 +56,8 @@ const nextConfig = {
       'playwright'
     ],
     serverActions: {
-      allowedOrigins: [
-        'localhost:3000',
-        'localhost'
-      ],
-      allowedForwardedHosts: [
-        'localhost:3000',
-        'localhost'
-      ]
+      allowedOrigins: allowedHosts,
+      allowedForwardedHosts: allowedHosts
     }
   },
   images: {
@@ -55,6 +87,31 @@ const nextConfig = {
   },
   async headers() {
     return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'Referrer-Policy',
+            value: 'strict-origin-when-cross-origin'
+          },
+          {
+            key: 'X-Content-Type-Options',
+            value: 'nosniff'
+          },
+          {
+            key: 'X-Frame-Options',
+            value: 'SAMEORIGIN'
+          },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()'
+          },
+          {
+            key: 'Strict-Transport-Security',
+            value: 'max-age=31536000; includeSubDomains; preload'
+          }
+        ]
+      },
       {
         source: '/_next/static/:path*',
         headers: [
