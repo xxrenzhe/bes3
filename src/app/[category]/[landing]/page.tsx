@@ -187,7 +187,7 @@ export async function generateMetadata({
         title: buildScenarioTitle({ categoryName: multiPage.category.name, tagLabel, products: multiPage.products }),
         description: `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using teardown evidence and price-value signals.`,
         path: `/${multiPage.category.slug}/${resolved.landing}`,
-        locale: getRequestLocale(),
+        locale: await getRequestLocale(),
         robots: multiPage.status === 'researching' ? { index: false, follow: true } : undefined,
         keywords: [`best ${multiPage.category.name} for ${tagLabel}`, 'multi constraint product evidence', 'Reddit consensus']
       })
@@ -196,7 +196,7 @@ export async function generateMetadata({
       title: 'Scenario Researching',
       description: 'This Bes3 scenario page is not ready yet.',
       path: `/${resolved.category}/${resolved.landing}`,
-      locale: getRequestLocale(),
+      locale: await getRequestLocale(),
       robots: { index: false, follow: true }
     })
   }
@@ -205,7 +205,7 @@ export async function generateMetadata({
     title: buildScenarioTitle({ categoryName: page.category.name, tagLabel: page.tag.name, products: page.products }),
     description: `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
     path: `/${page.category.slug}/best-${page.category.slug}-for-${page.tag.slug}`,
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
     keywords: [`best ${page.category.name} for ${page.tag.name}`, `${page.tag.name} ${page.category.name}`, 'Reddit consensus']
   })

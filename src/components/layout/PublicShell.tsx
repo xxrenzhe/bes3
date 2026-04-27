@@ -7,8 +7,8 @@ import { addLocaleToPath } from '@/lib/i18n'
 import { getRequestDisplayPath, getRequestLocale } from '@/lib/request-locale'
 
 export async function PublicShell({ children }: { children: React.ReactNode }) {
-  const locale = getRequestLocale()
-  const displayPath = getRequestDisplayPath()
+  const locale = await getRequestLocale()
+  const displayPath = await getRequestDisplayPath()
   const navItems = [
     { href: '/categories', label: 'Categories' },
     { href: '/products', label: 'Evidence Matrix' },

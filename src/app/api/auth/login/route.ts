@@ -31,7 +31,7 @@ export async function POST(request: Request) {
   }
 
   const token = await createAuthToken(session)
-  cookies().set(getAuthCookieName(), token, {
+  ;(await cookies()).set(getAuthCookieName(), token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

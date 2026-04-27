@@ -29,7 +29,7 @@ export async function POST(request: Request) {
     mustChangePassword: false
   }
   const token = await createAuthToken(refreshedSession)
-  cookies().set(getAuthCookieName(), token, {
+  ;(await cookies()).set(getAuthCookieName(), token, {
     httpOnly: true,
     sameSite: 'lax',
     secure: process.env.NODE_ENV === 'production',

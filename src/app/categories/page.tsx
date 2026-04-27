@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Categories',
     description: 'Browse the product categories where hands-on testing matters more than official specs.',
     path: '/categories',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['product categories', 'hands-on tests', 'product evidence']
   })
 }

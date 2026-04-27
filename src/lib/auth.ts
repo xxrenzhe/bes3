@@ -288,7 +288,7 @@ export async function createAuthToken(payload: AuthPayload): Promise<string> {
 }
 
 export async function readAuthSession(): Promise<AuthPayload | null> {
-  const token = cookies().get(AUTH_COOKIE_NAME)?.value
+  const token = (await cookies()).get(AUTH_COOKIE_NAME)?.value
   if (!token) return null
 
   try {

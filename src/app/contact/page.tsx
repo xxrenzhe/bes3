@@ -17,7 +17,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Contact Bes3 for unusual buyer questions, correction requests, and partnership conversations when the public pages are not enough.',
     path: '/contact',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['contact bes3', 'buyer support', 'editorial corrections', 'partnership inquiries']
   })
 }

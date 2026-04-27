@@ -11,7 +11,7 @@ import { buildOrganizationSchema, buildWebsiteSchema } from '@/lib/structured-da
 import './globals.css'
 
 export async function generateMetadata(): Promise<Metadata> {
-  const locale = getRequestLocale()
+  const locale = await getRequestLocale()
   const localizedHome = addLocaleToPath('/', locale)
   const alternates = buildLanguageAlternatesWithDefault('/')
 
@@ -65,7 +65,7 @@ export default async function RootLayout({
   children: React.ReactNode
 }) {
   await bootstrapApplication()
-  const locale = getRequestLocale()
+  const locale = await getRequestLocale()
 
   return (
     <html lang={getHtmlLang(locale)} suppressHydrationWarning>

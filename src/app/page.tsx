@@ -14,7 +14,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Bes3 turns YouTube hardware teardowns into scenario-driven comparison matrices with consensus scores, source quotes, and price-value timing.',
     path: '/',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['hardware teardown reviews', 'real specs', 'Reddit consensus', 'product evidence matrix']
   })
 }

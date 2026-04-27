@@ -11,12 +11,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'About Bes3',
     description: 'Bes3 helps people compare products using hands-on reviews, real buyer questions, and price history.',
     path: '/about',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['about Bes3', 'hardware teardown evidence', 'consensus scoring', 'price value analysis']
   })
 }
 
-export default function AboutPage() {
+export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 now?',

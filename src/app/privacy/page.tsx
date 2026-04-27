@@ -14,11 +14,11 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Read how Bes3 handles subscriber and internal admin data while keeping the buyer-first product promise aligned with privacy expectations.',
     path: '/privacy',
-    locale: getRequestLocale()
+    locale: await getRequestLocale()
   })
 }
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
   const summaryCards = [
     {
       label: 'What Bes3 stores',

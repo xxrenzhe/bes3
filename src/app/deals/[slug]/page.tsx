@@ -23,7 +23,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: 'Best Value Researching',
       description: 'This Bes3 value page is not ready yet.',
       path: '/deals',
-      locale: getRequestLocale(),
+      locale: await getRequestLocale(),
       robots: { index: false, follow: true }
     })
   }
@@ -35,7 +35,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
     description: `Bes3 ranks ${page.category.name} under $${page.priceLimit} by teardown consensus score, current price, 90-day average, and historical low.`,
     path: `/deals/best-value-${page.category.slug}-under-${page.priceLimit}`,
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
     keywords: [`best value ${page.category.name}`, `${page.category.name} under ${page.priceLimit}`, 'teardown consensus']
   })

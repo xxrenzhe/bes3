@@ -41,20 +41,11 @@ const allowedHosts = buildAllowedHosts()
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  swcMinify: true,
   compress: true,
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
+  serverExternalPackages: ['better-sqlite3', 'cheerio', 'undici', 'postgres', 'pg', 'playwright'],
   experimental: {
-    instrumentationHook: true,
-    serverComponentsExternalPackages: [
-      'better-sqlite3',
-      'cheerio',
-      'undici',
-      'postgres',
-      'pg',
-      'playwright'
-    ],
     serverActions: {
       allowedOrigins: allowedHosts,
       allowedForwardedHosts: allowedHosts

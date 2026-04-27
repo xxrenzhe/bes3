@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Evidence Matrix',
     description: 'Browse products through Bes3 consensus scores, source evidence, and price-value windows.',
     path: '/products',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['product evidence matrix', 'consensus score', 'teardown reviews']
   })
 }

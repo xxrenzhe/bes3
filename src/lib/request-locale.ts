@@ -9,9 +9,9 @@ import {
   stripLocaleFromPath
 } from '@/lib/i18n'
 
-export function getRequestLocale() {
-  const headerStore = headers()
-  const cookieStore = cookies()
+export async function getRequestLocale() {
+  const headerStore = await headers()
+  const cookieStore = await cookies()
 
   return normalizeLocale(
     headerStore.get(REQUEST_LOCALE_HEADER) ||
@@ -20,15 +20,15 @@ export function getRequestLocale() {
   )
 }
 
-export function getRequestDisplayPath() {
-  const headerStore = headers()
+export async function getRequestDisplayPath() {
+  const headerStore = await headers()
   return headerStore.get(REQUEST_DISPLAY_PATH_HEADER) || '/'
 }
 
-export function getRequestBasePath() {
-  return stripLocaleFromPath(getRequestDisplayPath())
+export async function getRequestBasePath() {
+  return stripLocaleFromPath(await getRequestDisplayPath())
 }
 
-export function getLocalizedRequestPath(pathname?: string | null) {
-  return addLocaleToPath(pathname || getRequestBasePath(), getRequestLocale())
+export async function getLocalizedRequestPath(pathname?: string | null) {
+  return addLocaleToPath(pathname || (await getRequestBasePath()), await getRequestLocale())
 }

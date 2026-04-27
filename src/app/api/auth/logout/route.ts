@@ -5,7 +5,7 @@ import { getAuthCookieName, readAuthSession, revokeAuthSession } from '@/lib/aut
 export async function POST(request: Request) {
   const session = await readAuthSession()
   await revokeAuthSession(session)
-  cookies().delete(getAuthCookieName())
+  ;(await cookies()).delete(getAuthCookieName())
 
   const wantsJson = request.headers.get('content-type')?.includes('application/json')
   if (wantsJson) {

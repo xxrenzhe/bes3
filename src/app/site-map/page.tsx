@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Site Map',
     description: 'Browse Bes3 categories, comparison pages, best-value pages, and buyer-focused landing pages.',
     path: '/site-map',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['site map', 'product ratings', 'scenario pages', 'product categories']
   })
 }

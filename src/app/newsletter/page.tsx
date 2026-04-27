@@ -44,7 +44,7 @@ export async function generateMetadata({
     title,
     description,
     path: '/newsletter',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: {
       index: !hasPrefill,
       follow: true

@@ -10,7 +10,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Internal Login',
     description: 'Internal-only Bes3 admin login for the team managing products, editorial pages, and operational settings.',
     path: '/login',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: {
       index: false,
       follow: false
@@ -18,7 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
   })
 }
 
-export default function LoginPage() {
+export default async function LoginPage() {
   const publicRoutes = [
     {
       eyebrow: 'Search',

@@ -11,12 +11,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Trust Center',
     description: 'Bes3 trust policy for affiliate disclosure, creator evidence, fair use, AI extraction, and price-value scoring.',
     path: '/trust',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['Bes3 trust', 'affiliate disclosure', 'creator evidence', 'fair use', 'AI extraction']
   })
 }
 
-export default function TrustPage() {
+export default async function TrustPage() {
   const faqEntries = [
     {
       question: 'How does Bes3 handle affiliate links?',
