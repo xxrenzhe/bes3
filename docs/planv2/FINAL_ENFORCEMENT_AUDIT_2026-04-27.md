@@ -6,13 +6,13 @@ BD epic: `bes3-bvcc`
 
 The previous implementation passes the core planv2 product, pSEO, evidence, database, admin, and production checks. This pass focused only on requirements that were already functionally present but not yet strongly enforced through shared UI behavior or middleware gates.
 
-## Remaining Enforcement Gaps
+## Enforcement Gaps Closed In This Pass
 
 | Gap | Planv2 requirement | Current state | Closure task |
 | --- | --- | --- | --- |
-| Admin shared table operations | Admin tables must support filtering, sorting, pagination, empty states, and safe async actions. | Individual consoles render data, but the shared `OperationsConsole` still slices rows and has no common filter/sort/pagination affordance. | `bes3-weo2` |
-| Action confirmation | Batch or operational actions should show confirmation and affected scope. | Some bespoke consoles confirm destructive edits, but shared operation actions trigger immediately. | `bes3-weo2` |
-| Scanner blocking | Middleware should generate request IDs and block common malicious scan paths. | Request IDs exist; scanner blocking is not explicit. | `bes3-ddk5` |
+| Admin shared table operations | Admin tables must support filtering, sorting, pagination, empty states, and safe async actions. | Closed by shared `OperationsConsole` filter, sort, pagination, row selection, and empty state controls. | `bes3-weo2`, commit `ced103f` |
+| Action confirmation | Batch or operational actions should show confirmation and affected scope. | Closed by confirmation prompts on shared operation actions and the data import sample workflow. | `bes3-weo2`, commit `ced103f` |
+| Scanner blocking | Middleware should generate request IDs and block common malicious scan paths. | Closed by middleware scanner-path blocking with `x-request-id`, `x-bes3-blocked-reason`, and a static planv2 security surface check. | `bes3-ddk5`, commit `fd394e1` |
 
 ## Confirmed Non-Gaps
 

@@ -1,6 +1,6 @@
 # Planv2 Implementation Closure
 
-Generated on 2026-04-27 for BD epic `bes3-xcj3`.
+Generated on 2026-04-27 for BD epic `bes3-bvcc`.
 
 ## Coverage Assessment
 
@@ -22,10 +22,15 @@ Generated on 2026-04-27 for BD epic `bes3-xcj3`.
 
 | BD task | Closure target | Result |
 | --- | --- | --- |
+| `bes3-bvcc` | Final planv2 enforcement closure pass | Closed; all child tasks committed locally and no remote push is part of the run. |
+| `bes3-6xod` | Map final planv2 enforcement gaps | Closed; committed as `135e357`. |
+| `bes3-weo2` | Enforce admin table operations UX | Closed; committed as `ced103f`. |
+| `bes3-ddk5` | Enforce planv2 security middleware gates | Closed; committed as `fd394e1`. |
+| `bes3-4oy9` | Validate final enforcement closure | Closed; committed as the final closure documentation commit. |
 | `bes3-s72p` | Renewed audit and concrete gap map | Closed; committed as `95af92f`. |
 | `bes3-psk8` | Public decision explanation gap | Closed; committed as `77929e5`. |
 | `bes3-jusw` | Admin import and prompt guard gaps | Closed; committed as `7f1db36`. |
-| `bes3-jvt1` | Final validation and closure documentation | This document records validation and should be closed after commit. |
+| `bes3-jvt1` | Previous validation and closure documentation | Closed in the previous pass. |
 
 ## Final Local Validation
 
@@ -36,19 +41,21 @@ Completed on 2026-04-27:
 | `npm run type-check` | Passed. |
 | `npm run db:check-drift` | Passed; SQLite baseline, PostgreSQL baseline, and generated dictionary match runtime schema. |
 | `npm run hardcore:check-planv2-seo` | Passed; static public pSEO/evidence/compliance surface check includes BLUF, Decision Fit, table, evidence stream, FAQ, schema, crawler policy, and compliance shell. |
+| `npm run ops:check-planv2-security` | Passed; static middleware and robots checks cover request IDs, scanner blocking, public/admin boundary separation, and crawler exclusions. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run ops:check-env` | Passed; warnings remain only for optional external integrations not configured in local validation. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run build` | Passed; Next.js production build generated 88 static pages and all dynamic routes after the public and admin changes. |
 | `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:export-planv2-ops -- --limit=25` | Passed; generated 168 pSEO paths and reported zero unresolved entity videos, zero taxonomy rescan jobs, and zero queued price notifications. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:resolve-video-entities -- --dry-run --limit=5` | Passed; scanned 2 demo videos and matched 2 with confidence above 0.98. |
+| `npm run hardcore:resolve-video-entities -- --dry-run --limit=5` | Passed; scanned 2 demo videos and matched 2 with confidence above 0.98. |
 | `npm run hardcore:youtube-transcript-command -- '--url=https://www.youtube.com/watch?v=dQw4w9WgXcQ'` | Passed; generated a subtitle-only `yt-dlp` command with `--skip-download`, subtitle flags, jitter, and user-agent controls. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:inspect-affiliate-links -- --dry-run --limit=5` | Passed; dry-run completed with no inspected links in the current local seed set. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:evolve-taxonomy -- --dry-run --limit=5` | Passed; no pending promotions or rescan jobs in local seed data. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:refresh-price-value -- --dry-run --limit=25` | Passed; previewed 5 products without writing snapshots. |
-| `NEXT_PUBLIC_APP_URL=https://bes3.example.com JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run hardcore:evaluate-price-alerts -- --limit=25` | Passed; no active local alerts triggered. |
+| `npm run hardcore:inspect-affiliate-links -- --dry-run --limit=5` | Passed; dry-run completed with no inspected links in the current local seed set. |
+| `npm run hardcore:evolve-taxonomy -- --dry-run --limit=5` | Passed; no pending promotions or rescan jobs in local seed data. |
+| `npm run hardcore:refresh-price-value -- --dry-run --limit=5` | Passed; previewed 5 products without writing snapshots. |
+| `npm run hardcore:evaluate-price-alerts -- --dry-run --limit=5` | Passed; no active local alerts triggered. |
+| `NEXT_PUBLIC_APP_URL=http://127.0.0.1:3010 JWT_SECRET=... DEFAULT_ADMIN_PASSWORD=... npm run start -- -p 3010` plus `curl` smoke checks | Passed; `/` returned 200 with no public login/admin link match, `/admin` redirected to `/login`, `/api/admin/dashboard` returned 401 with request ID, `/.env` returned scanner-blocked 404, and `robots.txt` excludes admin/auth while allowing open APIs. |
 
 ## Remaining Notes
 
-All planv2 business requirements now have code, operational scripts, or documented production runbooks in the repository. The renewed audit file `docs/planv2/RE_AUDIT_2026-04-27.md` records the final gap map and the closure path used in this pass. External-network actions remain intentionally operator-run because they require real deployment credentials or third-party accounts:
+All planv2 business requirements now have code, operational scripts, enforced middleware checks, shared admin UX behavior, or documented production runbooks in the repository. The renewed audit file `docs/planv2/RE_AUDIT_2026-04-27.md` records the broader gap map, and `docs/planv2/FINAL_ENFORCEMENT_AUDIT_2026-04-27.md` records the final enforcement pass used to close the remaining UI and middleware gaps. External-network actions remain intentionally operator-run because they require real deployment credentials or third-party accounts:
 
 ```bash
 npm run hardcore:collect-intents -- --source=all --promote-pending
