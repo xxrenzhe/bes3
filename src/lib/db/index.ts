@@ -10,6 +10,12 @@ let dbPromise: Promise<DatabaseAdapter> | null = null
 let schemaReady = false
 let migrationsRan = false
 let schemaPromise: Promise<void> | null = null
+const SQLITE_BOOTSTRAP_LOCK_POLL_MS = 150
+const SQLITE_BOOTSTRAP_LOCK_STALE_MS = 120_000
+
+function getSQLiteDatabasePath(): string {
+  return process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'bes3.db')
+}
 
 function createDatabase(): DatabaseAdapter {
   const databaseUrl = process.env.DATABASE_URL
@@ -17,8 +23,60 @@ function createDatabase(): DatabaseAdapter {
     return new PostgresAdapter(databaseUrl)
   }
 
-  const databasePath = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'bes3.db')
+  const databasePath = getSQLiteDatabasePath()
   return new SQLiteAdapter(databasePath)
+}
+
+function getSQLiteBootstrapLockPath(): string {
+  return `${getSQLiteDatabasePath()}.bootstrap.lock`
+}
+
+async function sleep(ms: number): Promise<void> {
+  await new Promise((resolve) => setTimeout(resolve, ms))
+}
+
+async function withSQLiteBootstrapLock<T>(task: () => Promise<T>): Promise<T> {
+  const lockPath = getSQLiteBootstrapLockPath()
+  const lockDirectory = path.dirname(lockPath)
+
+  if (!fs.existsSync(lockDirectory)) {
+    fs.mkdirSync(lockDirectory, { recursive: true })
+  }
+
+  while (true) {
+    try {
+      const handle = fs.openSync(lockPath, 'wx')
+      fs.writeFileSync(handle, JSON.stringify({ pid: process.pid, createdAt: new Date().toISOString() }))
+
+      try {
+        return await task()
+      } finally {
+        fs.closeSync(handle)
+        if (fs.existsSync(lockPath)) {
+          fs.unlinkSync(lockPath)
+        }
+      }
+    } catch (error: any) {
+      if (error?.code !== 'EEXIST') {
+        throw error
+      }
+
+      try {
+        const stats = fs.statSync(lockPath)
+        if (Date.now() - stats.mtimeMs > SQLITE_BOOTSTRAP_LOCK_STALE_MS) {
+          fs.unlinkSync(lockPath)
+          continue
+        }
+      } catch (statError: any) {
+        if (statError?.code === 'ENOENT') {
+          continue
+        }
+        throw statError
+      }
+
+      await sleep(SQLITE_BOOTSTRAP_LOCK_POLL_MS)
+    }
+  }
 }
 
 async function ensureMigrationHistory(db: DatabaseAdapter): Promise<void> {
@@ -46,12 +104,17 @@ async function getAppliedMigrations(db: DatabaseAdapter): Promise<Set<string>> {
   return new Set(rows.map(r => r.migration_name))
 }
 
-function isDuplicateMigrationHistoryInsert(message: string, file: string) {
-  return (
-    (message.includes('UNIQUE constraint failed: migration_history.migration_name') ||
-      message.includes('duplicate key value violates unique constraint')) &&
-    message.includes(file)
+async function reserveMigrationExecution(db: DatabaseAdapter, file: string): Promise<boolean> {
+  if (db.type === 'sqlite') {
+    const result = await db.exec('INSERT OR IGNORE INTO migration_history (migration_name) VALUES (?)', [file])
+    return result.changes > 0
+  }
+
+  const result = await db.exec(
+    'INSERT INTO migration_history (migration_name) VALUES (?) ON CONFLICT (migration_name) DO NOTHING',
+    [file]
   )
+  return result.changes > 0
 }
 
 async function runMigrations(db: DatabaseAdapter): Promise<number> {
@@ -78,7 +141,12 @@ async function runMigrations(db: DatabaseAdapter): Promise<number> {
     const rawContent = fs.readFileSync(path.join(migrationsDir, file), 'utf-8')
     const statements = splitSqlStatements(rawContent)
 
-    await db.transaction(async () => {
+    const didExecute = await db.transaction(async () => {
+      const reserved = await reserveMigrationExecution(db, file)
+      if (!reserved) {
+        return false
+      }
+
       for (const stmt of statements) {
         const trimmed = stmt.trim()
         if (!trimmed) continue
@@ -94,15 +162,13 @@ async function runMigrations(db: DatabaseAdapter): Promise<number> {
           throw error
         }
       }
-      try {
-        await db.exec('INSERT INTO migration_history (migration_name) VALUES (?)', [file])
-      } catch (error: any) {
-        const msg = error?.message ? String(error.message) : String(error)
-        if (!isDuplicateMigrationHistoryInsert(msg, file)) {
-          throw error
-        }
-      }
+
+      return true
     })
+
+    if (!didExecute) {
+      continue
+    }
 
     console.log(`[migration] ✅ ${file}`)
     executed++
@@ -119,17 +185,19 @@ export async function getDatabase(): Promise<DatabaseAdapter> {
   const db = await dbPromise
   if (!schemaReady) {
     if (!schemaPromise) {
-      schemaPromise = ensureSchema(db)
-        .then(async () => {
-          schemaReady = true
-          if (!migrationsRan) {
-            const count = await runMigrations(db)
-            if (count > 0) {
-              console.log(`[migration] 共执行 ${count} 个迁移`)
-            }
-            migrationsRan = true
+      const prepareSchema = async () => {
+        await ensureSchema(db)
+        schemaReady = true
+        if (!migrationsRan) {
+          const count = await runMigrations(db)
+          if (count > 0) {
+            console.log(`[migration] 共执行 ${count} 个迁移`)
           }
-        })
+          migrationsRan = true
+        }
+      }
+
+      schemaPromise = Promise.resolve(db.type === 'sqlite' ? withSQLiteBootstrapLock(prepareSchema) : prepareSchema())
         .catch((error) => {
           schemaPromise = null
           throw error

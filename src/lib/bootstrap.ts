@@ -10,6 +10,10 @@ import { slugify } from '@/lib/slug'
 
 let bootstrapPromise: Promise<void> | null = null
 
+function isBuildProcess(): boolean {
+  return process.env.NEXT_PHASE === 'phase-production-build' || process.env.npm_lifecycle_event === 'build'
+}
+
 const DEFAULT_SETTINGS = [
   ['ai', 'provider', process.env.AI_PROVIDER || process.env.GEMINI_PROVIDER || 'gemini', 'string', 0, 'AI provider'],
   ['ai', 'geminiModel', GEMINI_ACTIVE_MODEL, 'string', 0, 'Gemini model'],
@@ -790,6 +794,9 @@ export async function bootstrapApplication(): Promise<void> {
   if (!bootstrapPromise) {
     bootstrapPromise = (async () => {
       await getDatabase()
+      if (isBuildProcess()) {
+        return
+      }
       await ensureDefaultAdmin()
       await ensureDefaultSettings()
       await ensureAdminRolePermissions()
