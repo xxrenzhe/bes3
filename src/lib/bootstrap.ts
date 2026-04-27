@@ -11,7 +11,7 @@ import { slugify } from '@/lib/slug'
 let bootstrapPromise: Promise<void> | null = null
 
 const DEFAULT_SETTINGS = [
-  ['ai', 'provider', 'gemini', 'string', 0, 'AI provider'],
+  ['ai', 'provider', process.env.AI_PROVIDER || process.env.GEMINI_PROVIDER || 'gemini', 'string', 0, 'AI provider'],
   ['ai', 'geminiModel', GEMINI_ACTIVE_MODEL, 'string', 0, 'Gemini model'],
   ['ai', 'geminiBaseUrl', process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com', 'string', 0, 'Gemini API base URL'],
   ['ai', 'geminiApiKey', '', 'secret', 1, 'Gemini API key used for keyword and article generation'],

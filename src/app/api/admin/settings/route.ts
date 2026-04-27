@@ -50,6 +50,10 @@ function validateSettingInput(item: SettingInput): string | null {
     }
   }
 
+  if (category === 'ai' && key === 'provider' && value && !['gemini', 'relay'].includes(value.trim())) {
+    return 'AI provider must be gemini or relay'
+  }
+
   if (category === 'affiliateSync' && ['amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'].includes(key)) {
     const parsed = Number.parseInt(value, 10)
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 500) {
