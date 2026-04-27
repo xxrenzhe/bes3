@@ -8,7 +8,7 @@ import { getRequestLocale } from '@/lib/request-locale'
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Internal Login',
-    description: 'Internal-only Bes3 CMS login for the team managing products, editorial pages, and operational settings.',
+    description: 'Internal-only Bes3 admin login for the team managing products, editorial pages, and operational settings.',
     path: '/login',
     locale: getRequestLocale(),
     robots: {
@@ -23,7 +23,7 @@ export default function LoginPage() {
     {
       eyebrow: 'Search',
       title: 'Return to the buyer guide',
-      description: 'Use product search if you were trying to narrow a real purchase decision instead of entering the internal CMS.',
+      description: 'Use product search if you were trying to narrow a real purchase decision instead of entering the internal admin area.',
       href: '/search?scope=products',
       label: 'Open search'
     },
@@ -68,7 +68,7 @@ export default function LoginPage() {
           <div className="mt-8 rounded-[1.75rem] border border-emerald-200/15 bg-white/5 p-5">
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Boundary note</p>
             <p className="mt-3 text-sm leading-7 text-slate-200">
-              If you are a shopper, this is the wrong page. The public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This login is only for the team running the CMS.
+              If you are a shopper, this is the wrong page. The public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This login is only for the team running the admin console.
             </p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -109,7 +109,7 @@ export default function LoginPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-white/80 px-4 py-3 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.35)]">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Internal Only</p>
-              <p className="mt-1 text-sm text-slate-600">Use Bes3 team credentials to enter the CMS.</p>
+              <p className="mt-1 text-sm text-slate-600">Use Bes3 team credentials to enter the admin console.</p>
             </div>
             <Link href="/" className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
               Return to public site →

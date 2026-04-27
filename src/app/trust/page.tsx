@@ -54,7 +54,7 @@ export default function TrustPage() {
             Trust is enforced by evidence constraints.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 ranks products through creator authority, evidence confidence, scenario fit, advertorial penalties, and price baselines. It does not hide commercial disclosure behind neutral-looking buttons.
+            Bes3 ranks products using review quality, source consistency, use-case fit, and price history. It does not hide commercial disclosure behind neutral-looking buttons.
           </p>
         </div>
       </section>

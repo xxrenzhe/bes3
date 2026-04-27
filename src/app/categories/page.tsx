@@ -9,11 +9,11 @@ import { buildCollectionPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Hardcore Roster',
-    description: 'The Bes3 category whitelist covers high-value physical products where teardown evidence matters more than official specs.',
+    title: 'Categories',
+    description: 'Browse the product categories where hands-on testing matters more than official specs.',
     path: '/categories',
     locale: getRequestLocale(),
-    keywords: ['hardcore product categories', 'teardown tests', 'product evidence']
+    keywords: ['product categories', 'hands-on tests', 'product evidence']
   })
 }
 
@@ -25,8 +25,8 @@ export default async function CategoriesIndexPage() {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/categories',
-          title: 'Hardcore Roster',
-          description: 'White-listed Bes3 categories for teardown-driven product evidence.',
+          title: 'Categories',
+          description: 'Bes3 categories for evidence-backed product comparisons.',
           items: home.categories.map((item) => ({
             name: item.category.name,
             path: `/categories/${item.category.slug}`
@@ -35,12 +35,12 @@ export default async function CategoriesIndexPage() {
       />
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Hardcore Roster</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Categories</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            The whitelist is the product strategy.
+            A focused set of categories keeps the site useful.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 rejects low-stakes shopping lists. These are the categories where physical testing, creator disagreement, SKU precision, and price timing materially change the decision.
+            These are the categories where physical testing, reviewer disagreement, exact model matching, and price timing materially change the buying decision.
           </p>
         </div>
       </section>

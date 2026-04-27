@@ -41,7 +41,7 @@ export default function PrivacyPage() {
     'Wait-update signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
     'Affiliate attribution can pass through PartnerBoost or YeahPromos when a reader clicks a merchant handoff link, but Bes3 does not sell personal profiles.',
     'Nonessential tracking is treated as opt-in. The cookie banner provides a one-click Reject all control for public readers.',
-    'Admin accounts and sign-in records exist to protect the CMS, not to profile public readers.',
+    'Admin accounts and sign-in records exist to protect the admin area, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
   ]
 
@@ -180,7 +180,7 @@ export default function PrivacyPage() {
             </p>
             <h3>Data we store</h3>
             <ul>
-              <li>Administrator accounts and sign-in records used to secure the internal CMS.</li>
+              <li>Administrator accounts and sign-in records used to secure the internal admin area.</li>
               <li>Affiliate product records, article metadata, and site settings required to publish Bes3 pages.</li>
               <li>Wait-update signups submitted through the site, including the preference information needed to deliver the selected updates.</li>
             </ul>

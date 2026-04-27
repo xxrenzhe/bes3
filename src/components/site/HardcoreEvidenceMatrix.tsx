@@ -34,7 +34,7 @@ function findAlternativeProduct(products: HardcoreProduct[], current: HardcorePr
 
 export function HardcoreEvidenceMatrix({
   products,
-  emptyTitle = 'Evidence matrix is still researching this lane.'
+  emptyTitle = 'We are still collecting enough verified reviews for this category.'
 }: {
   products: HardcoreProduct[]
   emptyTitle?: string
@@ -46,7 +46,7 @@ export function HardcoreEvidenceMatrix({
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Bes3 refuses to fabricate winners. This page waits until the pipeline has aligned products, creator evidence, affiliate links, and price baselines.
+            Bes3 refuses to fabricate winners. This page waits until product matching, review evidence, store availability, and price baselines are all in place.
           </p>
         </div>
       </section>
@@ -70,7 +70,7 @@ export function HardcoreEvidenceMatrix({
                 <th className="px-4 py-4">Consensus</th>
                 <th className="px-4 py-4">Evidence</th>
                 <th className="px-4 py-4">Price/Value</th>
-                <th className="px-4 py-4">Hardcore Proof</th>
+                <th className="px-4 py-4">Source Proof</th>
                 <th className="py-4 pl-4">Action</th>
               </tr>
             </thead>

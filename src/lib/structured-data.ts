@@ -143,7 +143,7 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
 ]
 
 const CORE_ENTRY_LINKS: ItemListEntry[] = [
-  { name: 'Hardcore Roster', path: '/categories' },
+  { name: 'Categories', path: '/categories' },
   { name: 'Evidence Matrix', path: '/products' },
   { name: 'Best Value Lab', path: '/deals' },
   { name: 'Open Data', path: '/data' },
@@ -553,12 +553,12 @@ export function buildOrganizationSchema(locale: SiteLocale = DEFAULT_LOCALE): Sc
       '@type': 'ImageObject',
       url: toAbsoluteUrl('/icon.svg')
     },
-    description: 'Bes3 is a hardcore product evidence engine that turns creator teardown data, canonical pain points, and price history into scenario-driven comparison matrices.',
+    description: 'Bes3 helps shoppers make better product decisions using hands-on review evidence, common buyer questions, and price history.',
     slogan: DEFAULT_SITE_TAGLINE,
     availableLanguage: supportedLanguages,
     email: publicContactEmail || undefined,
     telephone: publicContactPhone || undefined,
-    knowsAbout: ['hardware teardowns', 'creator evidence', 'product testing', 'canonical pain points', 'consensus scoring', 'price-value analysis', 'programmatic SEO scenario pages'],
+    knowsAbout: ['hands-on reviews', 'product testing', 'buyer questions', 'consensus scoring', 'price analysis', 'comparison guides'],
     areaServed: 'Worldwide',
     contactPoint: [
       {
@@ -603,7 +603,7 @@ export function buildWebsiteSchema(locale: SiteLocale = DEFAULT_LOCALE): SchemaN
     url: localizedHome,
     name: DEFAULT_SITE_NAME,
     alternateName: DEFAULT_SITE_TAGLINE,
-    description: 'Bes3 is a hardcore product evidence engine built from teardown evidence, taxonomy tags, consensus scoring, and price-value timing.',
+    description: 'Bes3 is a product decision site built from hands-on review evidence, buyer questions, consensus scoring, and price timing.',
     inLanguage: SUPPORTED_LOCALES.map((entry) => getHtmlLang(entry)),
     about: buildOrganizationReference(),
     publisher: buildOrganizationReference(),

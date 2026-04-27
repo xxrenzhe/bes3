@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: DEFAULT_SITE_NAME,
       template: `%s | ${DEFAULT_SITE_NAME}`
     },
-    description: 'Bes3 turns hardware teardown evidence, canonical pain points, and price history into scenario-driven product decision matrices.',
+    description: 'Bes3 turns hands-on review evidence, real buyer questions, and price history into clearer product decisions.',
     applicationName: DEFAULT_SITE_NAME,
     publisher: DEFAULT_SITE_NAME,
     metadataBase: new URL(getSiteUrl()),
@@ -49,12 +49,12 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: DEFAULT_SITE_NAME,
       locale: getOgLocale(locale),
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 turns hardware teardown evidence, canonical pain points, and price history into scenario-driven product decision matrices.'
+      description: 'Bes3 turns hands-on review evidence, real buyer questions, and price history into clearer product decisions.'
     },
     twitter: {
       card: 'summary',
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 turns hardware teardown evidence, canonical pain points, and price history into scenario-driven product decision matrices.'
+      description: 'Bes3 turns hands-on review evidence, real buyer questions, and price history into clearer product decisions.'
     }
   }
 }
