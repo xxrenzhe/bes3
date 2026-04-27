@@ -30,7 +30,8 @@ export function DataManagementConsole() {
             ]
           },
           success: 'Import dry-run validated',
-          variant: 'outline'
+          variant: 'outline',
+          confirmMessage: 'Run a dry-run import validation for 3 sample rows? This records one admin import run with expected conflicts.'
         }
       ]}
       sections={[
