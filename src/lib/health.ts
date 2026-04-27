@@ -110,12 +110,50 @@ export async function getDetailedHealthReport() {
   }
 }
 
+export async function getDetailedHealthReportSafe() {
+  try {
+    return await getDetailedHealthReport()
+  } catch (error) {
+    return {
+      status: 'degraded' as const,
+      version: BES3_VERSION,
+      checkedAt: new Date().toISOString(),
+      worker: {
+        ...getPipelineWorkerRuntimeConfig(),
+        heartbeatFresh: false,
+        staleRunningCount: null,
+        expiredLockCount: null
+      },
+      database: {
+        type: 'unknown',
+        connected: false
+      },
+      media: {
+        driver: process.env.MEDIA_DRIVER || 'local'
+      },
+      migrations: {
+        available: false,
+        applied: 0,
+        expected: 0,
+        pending: null,
+        latestApplied: null
+      },
+      dependencies: [] as Array<{
+        id: string
+        title: string
+        status: 'ok' | 'degraded' | 'unavailable'
+        detail: string
+      }>,
+      error: error instanceof Error ? error.message : String(error)
+    }
+  }
+}
+
 export async function getPublicHealthReport() {
-  const report = await getDetailedHealthReport()
   return {
-    status: report.status,
-    version: report.version,
-    checkedAt: report.checkedAt,
+    status: 'ok' as const,
+    version: BES3_VERSION,
+    checkedAt: new Date().toISOString(),
     service: 'bes3'
   }
 }
