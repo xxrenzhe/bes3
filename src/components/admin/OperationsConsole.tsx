@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState, useTransition } from 'react'
+import { useCallback, useEffect, useMemo, useState, useTransition } from 'react'
 import { RefreshCw } from 'lucide-react'
 import { toast } from 'sonner'
 import { StatusBadge } from '@/components/admin/StatusBadge'
@@ -232,7 +232,7 @@ export function OperationsConsole({
   const [snapshot, setSnapshot] = useState<Record<string, any> | null>(null)
   const [isPending, startTransition] = useTransition()
 
-  const load = async () => {
+  const load = useCallback(async () => {
     const response = await fetch(endpoint)
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
@@ -240,11 +240,11 @@ export function OperationsConsole({
       return
     }
     setSnapshot(body as Record<string, any>)
-  }
+  }, [endpoint])
 
   useEffect(() => {
     void load()
-  }, [])
+  }, [load])
 
   const metrics = useMemo(() => {
     const summary = snapshot?.summary || {}
