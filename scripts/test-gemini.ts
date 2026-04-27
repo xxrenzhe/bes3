@@ -10,6 +10,7 @@ function readCliFlag(name: string): string {
 
 async function main() {
   const apiKey = readCliFlag('api-key') || process.env.GEMINI_API_KEY || ''
+  const provider = readCliFlag('provider') || process.env.AI_PROVIDER || process.env.GEMINI_PROVIDER || 'gemini'
   const requestedModel = readCliFlag('model') || process.env.GEMINI_MODEL || GEMINI_ACTIVE_MODEL
   const model = normalizeGeminiModel(requestedModel)
 
@@ -23,7 +24,7 @@ async function main() {
 
   const result = await generateGeminiContent({
     apiKey,
-    provider: 'gemini',
+    provider,
     model,
     prompt:
       'Reply with a single short JSON object using keys status, provider, and model. Set status to ok.',

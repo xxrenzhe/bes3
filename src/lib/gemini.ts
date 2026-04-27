@@ -55,6 +55,47 @@ function extractGeminiText(payload: any): string | null {
   return text || null
 }
 
+function extractRelayText(payload: any): string | null {
+  const anthropicText = Array.isArray(payload?.content)
+    ? payload.content
+        .map((item: any) => {
+          if (typeof item === 'string') return item
+          if (item?.type === 'text' && typeof item?.text === 'string') return item.text
+          return ''
+        })
+        .join('')
+        .trim()
+    : typeof payload?.content === 'string'
+      ? payload.content.trim()
+      : ''
+
+  const openAiText = (() => {
+    const content = payload?.choices?.[0]?.message?.content
+    if (typeof content === 'string') return content.trim()
+    if (Array.isArray(content)) {
+      return content
+        .map((item: any) => {
+          if (typeof item === 'string') return item
+          if (item?.type === 'text' && typeof item?.text === 'string') return item.text
+          if (item?.type === 'output_text' && typeof item?.text === 'string') return item.text
+          return ''
+        })
+        .join('')
+        .trim()
+    }
+    return ''
+  })()
+
+  const genericText =
+    typeof payload?.output_text === 'string'
+      ? payload.output_text.trim()
+      : typeof payload?.text === 'string'
+        ? payload.text.trim()
+        : ''
+
+  return anthropicText || openAiText || genericText || null
+}
+
 function extractUsage(payload: any): GeminiGenerateResult['usage'] | undefined {
   const usage = payload?.usageMetadata
   if (!usage || typeof usage !== 'object') return undefined
@@ -62,6 +103,23 @@ function extractUsage(payload: any): GeminiGenerateResult['usage'] | undefined {
   const inputTokens = Number(usage.promptTokenCount || 0)
   const outputTokens = Number(usage.candidatesTokenCount || 0)
   const totalTokens = Number(usage.totalTokenCount || inputTokens + outputTokens || 0)
+
+  if (!inputTokens && !outputTokens && !totalTokens) return undefined
+
+  return {
+    inputTokens,
+    outputTokens,
+    totalTokens
+  }
+}
+
+function extractRelayUsage(payload: any): GeminiGenerateResult['usage'] | undefined {
+  const usage = payload?.usage || payload?.usageMetadata
+  if (!usage || typeof usage !== 'object') return undefined
+
+  const inputTokens = Number(usage.input_tokens || usage.prompt_tokens || usage.promptTokenCount || 0)
+  const outputTokens = Number(usage.output_tokens || usage.completion_tokens || usage.candidatesTokenCount || 0)
+  const totalTokens = Number(usage.total_tokens || usage.totalTokenCount || inputTokens + outputTokens || 0)
 
   if (!inputTokens && !outputTokens && !totalTokens) return undefined
 
@@ -124,7 +182,7 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
   const config = await getGeminiConfig()
   const provider = String(params.provider || config.provider || 'gemini').trim() || 'gemini'
   const apiKey = String(params.apiKey || config.apiKey || '').trim()
-  if (provider !== 'gemini') return null
+  if (provider !== 'gemini' && provider !== 'relay') return null
   if (!apiKey) return null
 
   const model = normalizeGeminiModel(params.model || config.model)
@@ -137,22 +195,43 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
     const startedAt = Date.now()
 
     try {
+      const relayBaseUrl =
+        config.baseUrl.includes('generativelanguage.googleapis.com')
+          ? 'https://aicode.cat/v1/messages'
+          : config.baseUrl
       const response = await fetch(
-        `${config.baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: params.prompt }] }],
-            generationConfig: {
-              temperature: params.temperature ?? 0.4,
-              maxOutputTokens: params.maxOutputTokens ?? 4096,
-              ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
-              ...(params.responseSchema ? { responseSchema: params.responseSchema } : {})
+        provider === 'relay'
+          ? relayBaseUrl
+          : `${config.baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        provider === 'relay'
+          ? {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': apiKey
+              },
+              body: JSON.stringify({
+                model,
+                messages: [{ role: 'user', content: params.prompt }],
+                temperature: params.temperature ?? 0.4,
+                max_tokens: params.maxOutputTokens ?? 4096
+              }),
+              signal: controller.signal
             }
-          }),
-          signal: controller.signal
-        }
+          : {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                contents: [{ parts: [{ text: params.prompt }] }],
+                generationConfig: {
+                  temperature: params.temperature ?? 0.4,
+                  maxOutputTokens: params.maxOutputTokens ?? 4096,
+                  ...(params.responseMimeType ? { responseMimeType: params.responseMimeType } : {}),
+                  ...(params.responseSchema ? { responseSchema: params.responseSchema } : {})
+                }
+              }),
+              signal: controller.signal
+            }
       )
 
       const payload = await response.json().catch(() => null)
@@ -169,17 +248,17 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
         return null
       }
 
-      const text = extractGeminiText(payload)
+      const text = provider === 'relay' ? extractRelayText(payload) : extractGeminiText(payload)
       if (!text) {
         const finishReason = payload?.candidates?.[0]?.finishReason || 'unknown'
-        console.warn(`[ai] Gemini returned no text candidates (finish: ${finishReason})`)
+        console.warn(`[ai] ${provider} returned no text candidates (finish: ${finishReason})`)
         return null
       }
 
       return {
         text,
         model,
-        usage: extractUsage(payload),
+        usage: provider === 'relay' ? extractRelayUsage(payload) : extractUsage(payload),
         latencyMs: Date.now() - startedAt
       }
     } catch (error: any) {
