@@ -318,7 +318,7 @@ function withLocaleCookie(response: NextResponse, locale: string) {
   return response
 }
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl
   const requestId = request.headers.get('x-request-id') || crypto.randomUUID()
   const localeInPath = getLocaleFromPathname(pathname)
