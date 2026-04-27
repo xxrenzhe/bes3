@@ -159,18 +159,22 @@ async function getGeminiConfig(): Promise<{
   baseUrl: string
   timeoutMs: number
 }> {
-  const provider = await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
-  const apiKey = await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const provider =
+    process.env.AI_PROVIDER ||
+    process.env.GEMINI_PROVIDER ||
+    await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
+  const apiKey = process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
   const model = normalizeGeminiModel(
-    await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
+    process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   )
   const baseUrl = (
+    process.env.GEMINI_BASE_URL ||
     await getSettingValueOrEnv('ai', 'geminiBaseUrl', 'GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com')
   ).replace(/\/+$/, '')
   const timeoutMs = Math.max(
     5000,
     Number.parseInt(
-      await getSettingValueOrEnv('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000'),
+      process.env.GEMINI_TIMEOUT_MS || await getSettingValueOrEnv('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000'),
       10
     ) || 30000
   )
