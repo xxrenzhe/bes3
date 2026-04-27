@@ -28,6 +28,18 @@ export async function resolveAffiliateLink(url: string, countryCode?: string | n
   landingHtml: string
   redirectTrail: string[]
 }> {
+  return resolveAffiliateLinkWithOptions(url, countryCode)
+}
+
+export async function resolveAffiliateLinkWithOptions(
+  url: string,
+  countryCode?: string | null,
+  options: { strictProxy?: boolean } = {}
+): Promise<{
+  finalUrl: string
+  landingHtml: string
+  redirectTrail: string[]
+}> {
   const redirectTrail: string[] = [url]
   const response = await fetchWithBrowserProxy(url, {
     redirect: 'follow',
@@ -35,7 +47,7 @@ export async function resolveAffiliateLink(url: string, countryCode?: string | n
       'user-agent':
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36'
     }
-  }, countryCode)
+  }, countryCode, { strict: options.strictProxy })
   const landingHtml = await response.text()
   let finalUrl = response.url || url
 
@@ -49,7 +61,7 @@ export async function resolveAffiliateLink(url: string, countryCode?: string | n
         'user-agent':
           'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36'
       }
-    }, countryCode)
+    }, countryCode, { strict: options.strictProxy })
     return {
       finalUrl: nextResponse.url || absolute,
       landingHtml: await nextResponse.text(),
@@ -61,7 +73,11 @@ export async function resolveAffiliateLink(url: string, countryCode?: string | n
     try {
       const browser = await chromium.launch({
         headless: true,
-        proxy: await getPlaywrightProxy(countryCode)
+        proxy: await getPlaywrightProxy(countryCode),
+        args: [
+          '--disable-http2',
+          '--disable-quic'
+        ]
       })
       const page = await browser.newPage()
       await page.goto(url, { waitUntil: 'networkidle', timeout: 45000 })
@@ -74,7 +90,10 @@ export async function resolveAffiliateLink(url: string, countryCode?: string | n
         landingHtml: html,
         redirectTrail
       }
-    } catch {
+    } catch (error: any) {
+      if (options.strictProxy) {
+        throw new Error(`Proxy browser link resolution failed: ${error?.message || error}`)
+      }
       return {
         finalUrl,
         landingHtml,

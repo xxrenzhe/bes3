@@ -14,6 +14,10 @@ type ParsedProxyEndpoint = {
   originalUrl: string
 }
 
+type BrowserProxyFetchOptions = {
+  strict?: boolean
+}
+
 const COUNTRY_ALIAS_MAP: Readonly<Record<string, string[]>> = {
   GB: ['UK'],
   UK: ['GB']
@@ -149,14 +153,25 @@ export async function resolveBrowserProxy(countryCode?: string | null): Promise<
   return preferred?.url ? parseProxyEndpoint(preferred.url) : null
 }
 
-export async function fetchWithBrowserProxy(input: string, init?: RequestInit, countryCode?: string | null): Promise<Response> {
+export async function fetchWithBrowserProxy(
+  input: string,
+  init?: RequestInit,
+  countryCode?: string | null,
+  options: BrowserProxyFetchOptions = {}
+): Promise<Response> {
   const proxy = await resolveBrowserProxy(countryCode)
   if (!proxy || proxy.protocol === 'socks5') {
+    if (options.strict) {
+      throw new Error(`Browser proxy is required but no supported HTTP proxy is configured for ${countryCode || 'default'}`)
+    }
     return fetch(input, init)
   }
 
   const createProxyAgent = await getProxyAgentConstructor()
   if (!createProxyAgent) {
+    if (options.strict) {
+      throw new Error('Browser proxy is required but undici ProxyAgent is unavailable')
+    }
     return fetch(input, init)
   }
 
@@ -172,6 +187,9 @@ export async function fetchWithBrowserProxy(input: string, init?: RequestInit, c
       dispatcher
     } as RequestInit & { dispatcher: unknown })
   } catch (error: any) {
+    if (options.strict) {
+      throw new Error(`Proxy request via ${proxy.host}:${proxy.port} failed: ${error?.message || error}`)
+    }
     console.warn(`[proxy] request via ${proxy.host}:${proxy.port} failed, falling back to direct fetch: ${error?.message || error}`)
     return fetch(input, init)
   }
