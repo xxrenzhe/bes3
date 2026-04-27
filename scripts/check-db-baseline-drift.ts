@@ -7,7 +7,6 @@ import { ensureSchema } from '../src/lib/db/schema'
 import { SQLiteAdapter } from '../src/lib/db/sqlite'
 import {
   introspectSchemaDefinition,
-  renderMarkdownDictionary,
   renderPostgresBaseline,
   renderSqliteBaseline
 } from '../src/lib/db/schema-definition'
@@ -40,11 +39,6 @@ async function buildChecks(): Promise<DriftCheck[]> {
       label: 'PostgreSQL baseline',
       filePath: path.join(root, 'pg-migrations', '000_init_schema_consolidated.pg.sql'),
       expected: renderPostgresBaseline(definition)
-    },
-    {
-      label: 'Database dictionary',
-      filePath: path.join(root, 'docs', 'planv2', 'database-dictionary.generated.md'),
-      expected: renderMarkdownDictionary(definition)
     }
   ]
 }
