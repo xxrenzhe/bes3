@@ -2,12 +2,24 @@
 
 import Link from 'next/link'
 import { useEffect, useState, useTransition } from 'react'
-import { Globe2, Rss, Search } from 'lucide-react'
+import { CalendarClock, Globe2, Play, Rocket, Rss, Search, ShieldCheck } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 
 type SeoOpsSummary = {
+  automationDefaults: {
+    apply: boolean
+    pushIndex: boolean
+    limit: number
+    signalFile: string
+    signalSource: string
+    minPriority: number
+    signalDays: number
+  }
   supportedLocales: string[]
   seoRemediationQueue: Array<{
     severity: 'high' | 'medium' | 'low'
@@ -94,6 +106,19 @@ type SeoOpsSummary = {
   }>
 }
 
+type AutomationResult = {
+  ok: boolean
+  apply: boolean
+  pushIndex: boolean
+  importedSignals: number
+  updatedTags: number
+  promotedTags: number
+  rescanJobs: number
+  pseoPaths: number
+  indexing: string
+  samplePaths: string[]
+}
+
 function formatDate(value: string | null) {
   if (!value) return 'N/A'
   return new Date(value).toLocaleString()
@@ -121,6 +146,15 @@ function summarizePayload(payloadJson: string | null) {
 
 export function SeoOpsConsole() {
   const [summary, setSummary] = useState<SeoOpsSummary | null>(null)
+  const [automationResult, setAutomationResult] = useState<AutomationResult | null>(null)
+  const [automationConfig, setAutomationConfig] = useState({
+    limit: '200',
+    signalDays: '30',
+    minPriority: '0.5',
+    signalFile: '',
+    signalSource: 'ga4',
+    pushIndex: false
+  })
   const [isPending, startTransition] = useTransition()
 
   const load = async () => {
@@ -128,7 +162,17 @@ export function SeoOpsConsole() {
     if (!response.ok) {
       throw new Error('Failed to load SEO operations summary')
     }
-    setSummary((await response.json()) as SeoOpsSummary)
+    const payload = (await response.json()) as SeoOpsSummary
+    setSummary(payload)
+    setAutomationConfig((current) => ({
+      ...current,
+      limit: String(payload.automationDefaults.limit || current.limit),
+      signalDays: String(payload.automationDefaults.signalDays || current.signalDays),
+      minPriority: String(payload.automationDefaults.minPriority || current.minPriority),
+      signalFile: payload.automationDefaults.signalFile || current.signalFile,
+      signalSource: payload.automationDefaults.signalSource || current.signalSource,
+      pushIndex: payload.automationDefaults.pushIndex || current.pushIndex
+    }))
   }
 
   useEffect(() => {
@@ -151,6 +195,34 @@ export function SeoOpsConsole() {
       }
       await load()
       toast.success(successMessage)
+    })
+  }
+
+  const triggerAutomation = (action: 'automationPreview' | 'automationApply') => {
+    startTransition(async () => {
+      const response = await fetch('/api/admin/seo-ops', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          action,
+          limit: Number(automationConfig.limit),
+          signalDays: Number(automationConfig.signalDays),
+          minPriority: Number(automationConfig.minPriority),
+          signalFile: automationConfig.signalFile.trim(),
+          signalSource: automationConfig.signalSource.trim() || 'ga4',
+          pushIndex: automationConfig.pushIndex
+        })
+      })
+      const payload = await response.json().catch(() => ({}))
+      if (!response.ok) {
+        toast.error(payload.error || 'SEO automation failed')
+        return
+      }
+      setAutomationResult(payload.result as AutomationResult)
+      await load()
+      toast.success(action === 'automationApply' ? 'SEO automation applied' : 'SEO automation preview completed')
     })
   }
 
@@ -227,6 +299,138 @@ export function SeoOpsConsole() {
               {(summary?.recentIndexingEvents.length || 0) + (summary?.recentSyndicationEvents.length || 0)}
             </p>
             <p className="mt-2 text-sm text-slate-600">Recent indexing and syndication dispatch records stored in the publish event log.</p>
+          </div>
+        </div>
+      </section>
+
+      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
+        <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+          <div>
+            <div className="flex items-center gap-3">
+              <span className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-950 text-white">
+                <CalendarClock className="h-5 w-5" />
+              </span>
+              <div>
+                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Automation</p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Scheduled pSEO runbook</h2>
+              </div>
+            </div>
+            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">
+              The same runner is used by this panel and by cron. Preview runs validation and path discovery only. Apply mode may import search signals, evolve taxonomy state, and optionally push pSEO URLs to indexing.
+            </p>
+            <div className="mt-6 grid gap-3 text-sm text-slate-700 sm:grid-cols-3">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <ShieldCheck className="h-4 w-4 text-emerald-700" />
+                <p className="mt-3 font-semibold text-slate-950">Preview first</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">No writes and no indexing calls.</p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <Play className="h-4 w-4 text-primary" />
+                <p className="mt-3 font-semibold text-slate-950">Apply signals</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">Updates taxonomy and rescan work.</p>
+              </div>
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+                <Rocket className="h-4 w-4 text-amber-700" />
+                <p className="mt-3 font-semibold text-slate-950">Push index</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">Requires Google credentials.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="rounded-md border border-slate-200 bg-slate-50/70 p-5">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="seo-automation-limit">Path limit</Label>
+                <Input
+                  id="seo-automation-limit"
+                  type="number"
+                  min={1}
+                  value={automationConfig.limit}
+                  onChange={(event) => setAutomationConfig((current) => ({ ...current, limit: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="seo-automation-signal-days">Signal window days</Label>
+                <Input
+                  id="seo-automation-signal-days"
+                  type="number"
+                  min={1}
+                  value={automationConfig.signalDays}
+                  onChange={(event) => setAutomationConfig((current) => ({ ...current, signalDays: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="seo-automation-min-priority">Minimum priority</Label>
+                <Input
+                  id="seo-automation-min-priority"
+                  type="number"
+                  min={0}
+                  step={0.05}
+                  value={automationConfig.minPriority}
+                  onChange={(event) => setAutomationConfig((current) => ({ ...current, minPriority: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="seo-automation-signal-source">Signal source</Label>
+                <Input
+                  id="seo-automation-signal-source"
+                  value={automationConfig.signalSource}
+                  onChange={(event) => setAutomationConfig((current) => ({ ...current, signalSource: event.target.value }))}
+                />
+              </div>
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="seo-automation-signal-file">Signal file path</Label>
+                <Input
+                  id="seo-automation-signal-file"
+                  value={automationConfig.signalFile}
+                  placeholder="./ga4-pseo.csv"
+                  onChange={(event) => setAutomationConfig((current) => ({ ...current, signalFile: event.target.value }))}
+                />
+              </div>
+            </div>
+
+            <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-200 bg-white p-4">
+              <div>
+                <Label htmlFor="seo-automation-push-index">Push indexing after apply</Label>
+                <p className="mt-1 text-xs leading-5 text-slate-500">Uses the configured Google Indexing API credentials.</p>
+              </div>
+              <Switch
+                id="seo-automation-push-index"
+                checked={automationConfig.pushIndex}
+                onCheckedChange={(checked) => setAutomationConfig((current) => ({ ...current, pushIndex: checked }))}
+              />
+            </div>
+
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Button disabled={isPending} variant="secondary" onClick={() => triggerAutomation('automationPreview')}>
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Preview Run
+              </Button>
+              <Button disabled={isPending} onClick={() => triggerAutomation('automationApply')}>
+                <Play className="mr-2 h-4 w-4" />
+                Apply Run
+              </Button>
+            </div>
+
+            {automationResult ? (
+              <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p className="font-semibold text-slate-950">Last automation result</p>
+                  <StatusBadge value={automationResult.ok ? 'configured' : 'warning'} />
+                </div>
+                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
+                  <span>{automationResult.pseoPaths} paths</span>
+                  <span>{automationResult.updatedTags} updated tags</span>
+                  <span>{automationResult.promotedTags} promoted tags</span>
+                  <span>{automationResult.importedSignals} signals</span>
+                  <span>{automationResult.rescanJobs} rescan jobs</span>
+                  <span>{automationResult.indexing}</span>
+                </div>
+                <div className="mt-4 max-h-32 overflow-auto whitespace-pre-wrap rounded-md bg-slate-950 p-3 text-xs leading-6 text-slate-100">
+                  {automationResult.samplePaths.length ? automationResult.samplePaths.join('\n') : 'No sample paths returned'}
+                </div>
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

@@ -52,15 +52,48 @@ const checks: SurfaceCheck[] = [
     ]
   },
   {
-    label: 'Automated SEO workflow',
+    label: 'Automated SEO workflow CLI',
     filePath: 'scripts/run-seo-automation.ts',
+    required: [
+      'getSeoAutomationDefaults',
+      'runSeoAutomation',
+      'skip-checks',
+      'push-index'
+    ]
+  },
+  {
+    label: 'Automated SEO workflow core',
+    filePath: 'src/lib/seo-automation.ts',
     required: [
       'SEO_AUTOMATION_APPLY',
       'hardcore:check-planv2-seo',
       'applyPseoSignalsToTaxonomy',
       'promotePendingTags',
-      'rerunGoogleIndexing',
-      '--push-index'
+      'rerunGoogleIndexing'
+    ]
+  },
+  {
+    label: 'Admin SEO automation controls',
+    filePath: 'src/components/admin/SeoOpsConsole.tsx',
+    required: [
+      'SEO Automation',
+      'Scheduled pSEO runbook',
+      'automationPreview',
+      'automationApply',
+      'Preview Run',
+      'Apply Run',
+      'Push indexing after apply'
+    ]
+  },
+  {
+    label: 'Admin SEO automation API',
+    filePath: 'src/app/api/admin/seo-ops/route.ts',
+    required: [
+      'getSeoAutomationDefaults',
+      'runSeoAutomation',
+      'automationPreview',
+      'automationApply',
+      'seo_ops_automation_apply'
     ]
   },
   {

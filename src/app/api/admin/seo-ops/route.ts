@@ -2,10 +2,15 @@ import { NextResponse } from 'next/server'
 import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { getSeoOperationsSummary, rerunGoogleIndexing, rerunSyndication, runLinkInspector } from '@/lib/seo-ops'
+import { getSeoAutomationDefaults, runSeoAutomation } from '@/lib/seo-automation'
 
 export async function GET() {
   await requireAdmin()
-  return NextResponse.json(await getSeoOperationsSummary())
+  const [summary, automationDefaults] = await Promise.all([
+    getSeoOperationsSummary(),
+    Promise.resolve(getSeoAutomationDefaults())
+  ])
+  return NextResponse.json({ ...summary, automationDefaults })
 }
 
 export async function POST(request: Request) {
@@ -48,6 +53,33 @@ export async function POST(request: Request) {
       after: { paths: paths || null, result }
     })
     return NextResponse.json({ success: true, result })
+  }
+
+  if (action === 'automationPreview' || action === 'automationApply') {
+    const apply = action === 'automationApply'
+    const result = await runSeoAutomation({
+      apply,
+      pushIndex: apply && body.pushIndex === true,
+      skipChecks: body.skipChecks === true,
+      limit: Number(body.limit) > 0 ? Number(body.limit) : undefined,
+      signalDays: Number(body.signalDays) > 0 ? Number(body.signalDays) : undefined,
+      minPriority: Number.isFinite(Number(body.minPriority)) ? Number(body.minPriority) : undefined,
+      signalFile: typeof body.signalFile === 'string' ? body.signalFile : undefined,
+      signalSource: typeof body.signalSource === 'string' ? body.signalSource : undefined
+    })
+    await logAdminAudit({
+      actor,
+      request,
+      action: apply ? 'seo_ops_automation_apply' : 'seo_ops_automation_preview',
+      entityType: 'seo_ops',
+      after: {
+        apply,
+        pushIndex: apply && body.pushIndex === true,
+        limit: Number(body.limit) > 0 ? Number(body.limit) : null,
+        result
+      }
+    })
+    return NextResponse.json({ success: result.ok, result }, { status: result.ok ? 200 : 422 })
   }
 
   return NextResponse.json({ error: 'Unknown SEO ops action' }, { status: 400 })
