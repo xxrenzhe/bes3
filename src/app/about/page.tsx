@@ -54,7 +54,7 @@ export default async function AboutPage() {
             ['Use-case driven', 'We organize reviews around the buyer questions people actually have, not generic spec lists.'],
             ['No commission ranking', 'Products need a working store link, but commission does not decide the ranking.'],
             ['Price-aware', 'Consensus score is combined with current price, historical low, and 90-day average to identify buy windows.'],
-            ['No fake certainty', 'Researching states are valid. A thin page is better than a fabricated recommendation.'],
+            ['No fake certainty', 'Limited-coverage pages are acceptable. A thin page is better than a fabricated recommendation.'],
             ['Source-linked', 'When possible, the page links back to the original review source so you can verify the claim yourself.']
           ].map(([title, description]) => (
             <div key={title} className="rounded-md border border-border bg-white p-6">

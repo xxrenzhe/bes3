@@ -26,11 +26,11 @@ export default async function HomePage() {
   const faqEntries = [
     {
       question: 'What changed in Bes3?',
-      answer: 'Bes3 is no longer a generic buying guide. It now focuses on hands-on review evidence, real buyer questions, and price-aware comparisons.'
+      answer: 'Bes3 now focuses on hands-on review evidence, real buyer questions, and price-aware comparisons for products that are hard to judge from specs alone.'
     },
     {
-      question: 'Why does Bes3 show researching states?',
-      answer: 'Bes3 does not invent winners. If exact product matching, review evidence, store availability, or price baselines are missing, the page says so.'
+      question: 'Why do some pages show limited coverage?',
+      answer: 'Bes3 does not invent winners. If exact product matching, trusted review evidence, store availability, or price history are still incomplete, the page says so clearly.'
     }
   ]
 
