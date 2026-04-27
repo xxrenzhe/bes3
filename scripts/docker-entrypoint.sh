@@ -69,6 +69,8 @@ log_step_start "database and application bootstrap"
 run_with_signal_forward ./node_modules/.bin/tsx /app/scripts/db-init.ts
 log_step_end "database and application bootstrap"
 
+export SKIP_RUNTIME_DB_INIT=true
+
 PRE_SUPERVISOR_COST_SEC=$(( $(now_ts) - STARTUP_BEGIN_TS ))
 
 echo ""

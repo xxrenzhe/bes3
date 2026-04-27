@@ -1,10 +1,22 @@
 import { NextResponse } from 'next/server'
+import { getDetailedHealthReportSafe } from '@/lib/health'
 
 export async function GET() {
-  return NextResponse.json({
-    status: 'ok',
-    version: process.env.npm_package_version || '0.1.0',
-    checkedAt: new Date().toISOString(),
-    service: 'bes3'
-  })
+  const report = await getDetailedHealthReportSafe()
+  const databaseConnected = report.database.connected
+  const status = databaseConnected ? 'ok' : 'degraded'
+
+  return NextResponse.json(
+    {
+      status,
+      version: report.version,
+      checkedAt: report.checkedAt,
+      service: 'bes3',
+      database: {
+        connected: databaseConnected,
+        type: report.database.type
+      }
+    },
+    { status: databaseConnected ? 200 : 503 }
+  )
 }
