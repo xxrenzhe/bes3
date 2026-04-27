@@ -5,6 +5,7 @@ import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
 import { HARDCORE_CATEGORIES } from '@/lib/hardcore-catalog'
 import { getRuntimeAdminPasswordState } from '@/lib/runtime-secrets'
+import { saveSetting } from '@/lib/settings'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
 
@@ -249,14 +250,46 @@ async function ensureDefaultSettings(): Promise<void> {
     )
     if (existing?.id) continue
     await ignoreUniqueViolation(() =>
-      db.exec(
-        `
-          INSERT INTO system_settings (category, key, value, data_type, is_sensitive, description)
-          VALUES (?, ?, ?, ?, ?, ?)
-        `,
-        [category, key, value, dataType, isSensitive, description]
-      )
+      saveSetting({
+        category,
+        key,
+        value,
+        dataType,
+        isSensitive: Boolean(isSensitive),
+        description
+      })
     )
+  }
+}
+
+async function migrateSensitiveSettingsToEncryptedStorage(): Promise<void> {
+  const db = await getDatabase()
+  const rows = await db.query<{
+    category: string
+    key: string
+    value: string | null
+    data_type: typeof DEFAULT_SETTINGS[number][3]
+    description: string | null
+  }>(
+    `
+      SELECT category, key, value, data_type, description
+      FROM system_settings
+      WHERE is_sensitive = 1
+        AND value IS NOT NULL
+        AND TRIM(value) <> ''
+        AND (encrypted_value IS NULL OR encrypted_value = '')
+    `
+  )
+
+  for (const row of rows) {
+    await saveSetting({
+      category: row.category,
+      key: row.key,
+      value: row.value,
+      dataType: row.data_type,
+      isSensitive: true,
+      description: row.description
+    })
   }
 }
 
@@ -799,6 +832,7 @@ export async function bootstrapApplication(): Promise<void> {
       }
       await ensureDefaultAdmin()
       await ensureDefaultSettings()
+      await migrateSensitiveSettingsToEncryptedStorage()
       await ensureAdminRolePermissions()
       await ensureDefaultPrompts()
       await ensureDefaultPromptRegressionCases()

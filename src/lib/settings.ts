@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/db'
+import { decryptSecret, encryptSecret } from '@/lib/crypto'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
-import { getRuntimeAdminPasswordState, getRuntimeJwtSecretState } from '@/lib/runtime-secrets'
+import { getRuntimeAdminPasswordState, getRuntimeEncryptionKeyState, getRuntimeJwtSecretState } from '@/lib/runtime-secrets'
 import type { SettingDataType } from '@/lib/types'
 
 export interface SettingRecord {
@@ -23,18 +24,48 @@ function mapSetting(row: {
   category: string
   key: string
   value: string | null
+  encrypted_value: string | null
   data_type: SettingDataType
   is_sensitive: number | boolean
   description: string | null
 }): SettingRecord {
+  const isSensitive = row.is_sensitive === true || row.is_sensitive === 1
   return {
     category: row.category,
     key: row.key,
-    value: row.value,
+    value: resolveStoredSettingValue({
+      value: row.value,
+      encryptedValue: row.encrypted_value,
+      isSensitive
+    }),
     dataType: row.data_type,
-    isSensitive: row.is_sensitive === true || row.is_sensitive === 1,
+    isSensitive,
     description: row.description
   }
+}
+
+function resolveStoredSettingValue(input: {
+  value: string | null
+  encryptedValue: string | null
+  isSensitive: boolean
+}): string | null {
+  if (input.isSensitive && input.encryptedValue) {
+    return decryptSecret(input.encryptedValue)
+  }
+  return input.value
+}
+
+function prepareStoredSettingValue(value: string | null, isSensitive: boolean) {
+  if (!isSensitive) return { value, encryptedValue: null }
+  if (!value || !value.trim()) return { value: null, encryptedValue: null }
+  return { value: null, encryptedValue: encryptSecret(value) }
+}
+
+export function redactSensitiveSettings(settings: SettingRecord[]): SettingRecord[] {
+  return settings.map((item) => ({
+    ...item,
+    value: item.isSensitive && item.value ? '[redacted]' : item.value
+  }))
 }
 
 export async function listSettings(): Promise<SettingRecord[]> {
@@ -43,20 +74,30 @@ export async function listSettings(): Promise<SettingRecord[]> {
     category: string
     key: string
     value: string | null
+    encrypted_value: string | null
     data_type: SettingDataType
     is_sensitive: number | boolean
     description: string | null
-  }>('SELECT category, key, value, data_type, is_sensitive, description FROM system_settings ORDER BY category, key')
+  }>('SELECT category, key, value, encrypted_value, data_type, is_sensitive, description FROM system_settings ORDER BY category, key')
   return rows.map(mapSetting)
 }
 
 export async function getSettingValue(category: string, key: string): Promise<string | null> {
   const db = await getDatabase()
-  const row = await db.queryOne<{ value: string | null }>(
-    'SELECT value FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
+  const row = await db.queryOne<{
+    value: string | null
+    encrypted_value: string | null
+    is_sensitive: number | boolean
+  }>(
+    'SELECT value, encrypted_value, is_sensitive FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
     [category, key]
   )
-  return row?.value ?? null
+  if (!row) return null
+  return resolveStoredSettingValue({
+    value: row.value,
+    encryptedValue: row.encrypted_value,
+    isSensitive: row.is_sensitive === true || row.is_sensitive === 1
+  })
 }
 
 export async function getSettingValueOrEnv(
@@ -90,6 +131,20 @@ function describeSecretSource(label: string, source: 'env' | 'missing'): string 
   }
 }
 
+function normalizeHttpUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function inferS3PublicBaseUrl(endpoint: string, bucket: string): string {
+  const normalizedEndpoint = normalizeHttpUrl(endpoint)
+  const normalizedBucket = bucket.trim()
+  if (!normalizedEndpoint || !normalizedBucket) return ''
+  return `${normalizedEndpoint}/${normalizedBucket}`
+}
+
 export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const settings = await listSettings()
   const map = new Map(settings.map((item) => [`${item.category}.${item.key}`, item.value]))
@@ -120,6 +175,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const mediaS3SecretAccessKey = read('media', 's3SecretAccessKey', 'S3_SECRET_ACCESS_KEY')
   const mediaBucket = read('media', 's3Bucket', 'S3_BUCKET')
   const mediaPublicBaseUrl = read('media', 'publicBaseUrl', 'MEDIA_PUBLIC_BASE_URL')
+  const effectiveMediaPublicBaseUrl = normalizeHttpUrl(mediaPublicBaseUrl) || inferS3PublicBaseUrl(mediaS3Endpoint, mediaBucket)
   const siteName = read('seo', 'siteName', undefined, 'Bes3')
   const siteTagline = read('seo', 'siteTagline', undefined, 'The Best 3 Tech Picks, Decoded.')
   const siteUrl = read('seo', 'appUrl', 'NEXT_PUBLIC_APP_URL')
@@ -132,9 +188,11 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
   const linkInspectorMaxUrls = read('seo', 'linkInspectorMaxUrls', 'LINK_INSPECTOR_MAX_URLS', '60')
   const jwtSecretState = getRuntimeJwtSecretState()
   const adminPasswordState = getRuntimeAdminPasswordState()
+  const encryptionKeyState = getRuntimeEncryptionKeyState()
   const runtimePort = process.env.PORT || '80'
   const isJwtStrong = Boolean(jwtSecretState.value) && jwtSecretState.value.length >= 32
   const isAdminPasswordRotated = Boolean(adminPasswordState.value) && adminPasswordState.value.length >= 16
+  const isEncryptionKeyReady = Boolean(encryptionKeyState.value)
   let parsedSyndicationTargets: unknown[] = []
   try {
     const parsed = JSON.parse(syndicationTargetsJson)
@@ -156,8 +214,8 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
     {
       id: 'runtime-security',
       title: 'Runtime Security',
-      status: getDiagnosticStatus([isJwtStrong, isAdminPasswordRotated]),
-      detail: `${describeSecretSource('JWT secret', jwtSecretState.source)} · ${describeSecretSource('Admin password', adminPasswordState.source)} · port ${runtimePort}`
+      status: getDiagnosticStatus([isJwtStrong, isAdminPasswordRotated, isEncryptionKeyReady]),
+      detail: `${describeSecretSource('JWT secret', jwtSecretState.source)} · ${describeSecretSource('Admin password', adminPasswordState.source)} · ${describeSecretSource('Encryption key', encryptionKeyState.source)} · port ${runtimePort}`
     },
     {
       id: 'ai',
@@ -200,7 +258,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
         mediaDriver === 's3'
           ? getDiagnosticStatus([
               Boolean(mediaBucket),
-              Boolean(mediaPublicBaseUrl),
+              Boolean(effectiveMediaPublicBaseUrl),
               Boolean(mediaS3Endpoint),
               Boolean(mediaS3AccessKeyId),
               Boolean(mediaS3SecretAccessKey)
@@ -208,7 +266,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
           : getDiagnosticStatus([Boolean(mediaLocalRoot)]),
       detail:
         mediaDriver === 's3'
-          ? `S3 mode · bucket ${mediaBucket || 'missing'} · endpoint ${mediaS3Endpoint || 'missing'} · public URL ${mediaPublicBaseUrl || 'missing'}`
+          ? `S3 mode · bucket ${mediaBucket || 'missing'} · endpoint ${mediaS3Endpoint || 'missing'} · public URL ${effectiveMediaPublicBaseUrl || 'missing'}`
           : `Local mode · root ${mediaLocalRoot}`
     },
     {
@@ -255,6 +313,8 @@ export async function saveSetting(input: {
   description?: string | null
 }): Promise<void> {
   const db = await getDatabase()
+  const isSensitive = Boolean(input.isSensitive)
+  const stored = prepareStoredSettingValue(input.value, isSensitive)
   const existing = await db.queryOne<{ id: number }>(
     'SELECT id FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
     [input.category, input.key]
@@ -264,19 +324,19 @@ export async function saveSetting(input: {
     await db.exec(
       `
         UPDATE system_settings
-        SET value = ?, data_type = ?, is_sensitive = ?, description = ?, updated_at = CURRENT_TIMESTAMP
+        SET value = ?, encrypted_value = ?, data_type = ?, is_sensitive = ?, description = ?, updated_at = CURRENT_TIMESTAMP
         WHERE id = ?
       `,
-      [input.value, input.dataType || 'string', input.isSensitive ? 1 : 0, input.description || null, existing.id]
+      [stored.value, stored.encryptedValue, input.dataType || 'string', isSensitive ? 1 : 0, input.description || null, existing.id]
     )
     return
   }
 
   await db.exec(
     `
-      INSERT INTO system_settings (category, key, value, data_type, is_sensitive, description)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO system_settings (category, key, value, encrypted_value, data_type, is_sensitive, description)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
-    [input.category, input.key, input.value, input.dataType || 'string', input.isSensitive ? 1 : 0, input.description || null]
+    [input.category, input.key, stored.value, stored.encryptedValue, input.dataType || 'string', isSensitive ? 1 : 0, input.description || null]
   )
 }

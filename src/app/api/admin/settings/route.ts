@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
-import { listSettingDiagnostics, listSettings, saveSetting } from '@/lib/settings'
+import { listSettingDiagnostics, listSettings, redactSensitiveSettings, saveSetting } from '@/lib/settings'
 
 type SettingInput = {
   category?: unknown
@@ -90,7 +90,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error }, { status: 400 })
     }
   }
-  const before = await listSettings()
+  const before = redactSensitiveSettings(await listSettings())
   for (const item of items) {
     await saveSetting({
       category: String(item.category || ''),

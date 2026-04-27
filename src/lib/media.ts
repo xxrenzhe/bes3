@@ -19,6 +19,40 @@ type MediaConfig = {
   s3ForcePathStyle: boolean
 }
 
+function normalizeHttpUrl(value: string): string {
+  const trimmed = value.trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function shouldAutoForcePathStyle(endpoint: string): boolean {
+  const normalized = normalizeHttpUrl(endpoint)
+  if (!normalized) return false
+
+  try {
+    const { hostname } = new URL(normalized)
+    return !hostname.toLowerCase().endsWith('.amazonaws.com')
+  } catch {
+    return false
+  }
+}
+
+function getS3PublicBaseUrl(config: MediaConfig): string {
+  const explicitBaseUrl = normalizeHttpUrl(config.publicBaseUrl)
+  if (explicitBaseUrl) return explicitBaseUrl
+
+  const endpoint = normalizeHttpUrl(config.s3Endpoint)
+  const bucket = config.s3Bucket.trim()
+  if (!endpoint || !bucket) return ''
+
+  return `${endpoint}/${bucket}`
+}
+
+function buildPublicObjectUrl(baseUrl: string, storageKey: string): string {
+  return `${baseUrl.replace(/\/+$/, '')}/${storageKey.replace(/^\/+/, '')}`
+}
+
 async function getMediaConfig(): Promise<MediaConfig> {
   const driver = (await getSettingValueOrEnv('media', 'driver', 'MEDIA_DRIVER', 'local')) as MediaStorageProvider
   const localRoot = await getSettingValueOrEnv('media', 'localRoot', 'MEDIA_LOCAL_ROOT', 'storage/media')
@@ -59,8 +93,8 @@ export async function getResolvedLocalMediaRoot(): Promise<string> {
 function createS3Client(config: MediaConfig): S3Client {
   return new S3Client({
     region: config.s3Region || 'auto',
-    endpoint: config.s3Endpoint || undefined,
-    forcePathStyle: config.s3ForcePathStyle,
+    endpoint: normalizeHttpUrl(config.s3Endpoint) || undefined,
+    forcePathStyle: config.s3ForcePathStyle || shouldAutoForcePathStyle(config.s3Endpoint),
     credentials: config.s3AccessKeyId && config.s3SecretAccessKey
       ? {
           accessKeyId: config.s3AccessKeyId,
@@ -120,8 +154,8 @@ export async function persistMediaAsset(input: {
         ContentType: contentType || undefined
       })
     )
-    const baseUrl = config.publicBaseUrl.replace(/\/$/, '')
-    publicUrl = baseUrl ? `${baseUrl}/${storageKey}` : input.sourceUrl
+    const baseUrl = getS3PublicBaseUrl(config)
+    publicUrl = baseUrl ? buildPublicObjectUrl(baseUrl, storageKey) : input.sourceUrl
   }
 
   const db = await getDatabase()

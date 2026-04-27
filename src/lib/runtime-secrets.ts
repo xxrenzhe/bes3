@@ -17,6 +17,11 @@ export const JWT_SECRET_PLACEHOLDERS = new Set([
   'replace-with-a-long-random-secret-at-least-32-chars'
 ])
 
+export const ENCRYPTION_KEY_PLACEHOLDERS = new Set([
+  'your-32-byte-hex-encryption-key-here-64-chars',
+  'replace-with-a-random-32-byte-hex-encryption-key'
+])
+
 if (typeof window !== 'undefined') {
   throw new Error('Runtime secrets are server-only and cannot be imported in the browser.')
 }
@@ -55,4 +60,16 @@ export function getRuntimeJwtSecretState(): RuntimeSecretState {
     placeholders: JWT_SECRET_PLACEHOLDERS,
     minLength: 32
   })
+}
+
+export function getRuntimeEncryptionKeyState(): RuntimeSecretState {
+  const envValue = normalizeSecretValue(process.env.ENCRYPTION_KEY)
+  if (
+    envValue &&
+    !ENCRYPTION_KEY_PLACEHOLDERS.has(envValue) &&
+    /^[0-9a-fA-F]{64}$/.test(envValue)
+  ) {
+    return { value: envValue, source: 'env' }
+  }
+  return { value: '', source: 'missing' }
 }

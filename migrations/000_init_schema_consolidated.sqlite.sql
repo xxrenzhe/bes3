@@ -160,6 +160,7 @@ CREATE TABLE IF NOT EXISTS system_settings (
       category TEXT NOT NULL,
       key TEXT NOT NULL,
       value TEXT,
+      encrypted_value TEXT,
       data_type TEXT NOT NULL DEFAULT 'string',
       is_sensitive INTEGER NOT NULL DEFAULT 0,
       description TEXT,

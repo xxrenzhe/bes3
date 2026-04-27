@@ -18,6 +18,10 @@ const DEFAULT_JWT_SECRETS = new Set([
   'dev-only-jwt-secret-change-me-before-production',
   'replace-with-a-long-random-secret-at-least-32-chars'
 ])
+const DEFAULT_ENCRYPTION_KEYS = new Set([
+  'your-32-byte-hex-encryption-key-here-64-chars',
+  'replace-with-a-random-32-byte-hex-encryption-key'
+])
 
 function parseEnvFile(filePath) {
   const values = {}
@@ -53,6 +57,7 @@ function buildConfig() {
     port: read('PORT', '80'),
     appUrl: read('NEXT_PUBLIC_APP_URL'),
     jwtSecret: read('JWT_SECRET'),
+    encryptionKey: read('ENCRYPTION_KEY'),
     adminPassword: read('DEFAULT_ADMIN_PASSWORD'),
     databaseUrl: read('DATABASE_URL'),
     databasePath: read('DATABASE_PATH', './data/bes3.db'),
@@ -107,6 +112,20 @@ function isHttpUrl(value) {
   return /^https?:\/\//i.test(String(value || ''))
 }
 
+function normalizeHttpUrl(value) {
+  const trimmed = String(value || '').trim().replace(/\/+$/, '')
+  if (!trimmed) return ''
+  if (isHttpUrl(trimmed)) return trimmed
+  return `https://${trimmed}`
+}
+
+function inferS3PublicBaseUrl(endpoint, bucket) {
+  const normalizedEndpoint = normalizeHttpUrl(endpoint)
+  const normalizedBucket = String(bucket || '').trim()
+  if (!normalizedEndpoint || !normalizedBucket) return ''
+  return `${normalizedEndpoint}/${normalizedBucket}`
+}
+
 function isPositiveInteger(value) {
   return /^\d+$/.test(String(value)) && Number.parseInt(String(value), 10) > 0
 }
@@ -138,6 +157,20 @@ function validate() {
     errors.push('JWT_SECRET is required')
   } else if (DEFAULT_JWT_SECRETS.has(config.jwtSecret) || config.jwtSecret.length < 32) {
     const message = 'JWT_SECRET must be replaced with a strong random secret of at least 32 characters'
+    if (config.nodeEnv === 'production' && !config.allowInsecureDefaults) {
+      errors.push(message)
+    } else {
+      warnings.push(message)
+    }
+  }
+
+  if (!config.encryptionKey) {
+    errors.push('ENCRYPTION_KEY is required')
+  } else if (
+    DEFAULT_ENCRYPTION_KEYS.has(config.encryptionKey) ||
+    !/^[0-9a-fA-F]{64}$/.test(config.encryptionKey)
+  ) {
+    const message = 'ENCRYPTION_KEY must be a 64-character hex string generated from 32 random bytes'
     if (config.nodeEnv === 'production' && !config.allowInsecureDefaults) {
       errors.push(message)
     } else {
@@ -181,8 +214,8 @@ function validate() {
     }
   } else {
     addResult(results, 'info', `Media mode: s3 (${config.s3Bucket || 'missing bucket'})`)
+    const effectivePublicBaseUrl = normalizeHttpUrl(config.mediaPublicBaseUrl) || inferS3PublicBaseUrl(config.s3Endpoint, config.s3Bucket)
     const missingS3 = [
-      ['MEDIA_PUBLIC_BASE_URL', config.mediaPublicBaseUrl],
       ['S3_ENDPOINT', config.s3Endpoint],
       ['S3_BUCKET', config.s3Bucket],
       ['S3_ACCESS_KEY_ID', config.s3AccessKeyId],
@@ -193,6 +226,8 @@ function validate() {
 
     if (missingS3.length > 0) {
       errors.push(`Missing required S3 configuration: ${missingS3.join(', ')}`)
+    } else if (!config.mediaPublicBaseUrl && effectivePublicBaseUrl) {
+      warnings.push(`MEDIA_PUBLIC_BASE_URL not set; runtime will infer ${effectivePublicBaseUrl}`)
     }
   }
 
