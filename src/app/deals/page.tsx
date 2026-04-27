@@ -15,7 +15,7 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Bes3 ranks buying windows by combining teardown consensus scores, current price, historical lows, and 90-day average price baselines.',
     path: '/deals',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['best value tech', 'price value score', 'teardown consensus', 'price drop alerts']
   })
 }

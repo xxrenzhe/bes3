@@ -12,7 +12,7 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Open Evidence Data',
     description: 'Bes3 exposes public category, product, scenario, and pricing data through human-readable pages and open endpoints.',
     path: '/data',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['open evidence data', 'use-case tags', 'hands-on evidence', 'scenario pages']
   })
 }

@@ -13,11 +13,11 @@ export async function generateMetadata(): Promise<Metadata> {
     description:
       'Understand how Bes3 works as a shopping guide, where affiliate links fit, and when store terms take over.',
     path: '/terms',
-    locale: getRequestLocale()
+    locale: await getRequestLocale()
   })
 }
 
-export default function TermsPage() {
+export default async function TermsPage() {
   const summaryCards = [
     {
       label: 'What Bes3 is',

@@ -10,12 +10,12 @@ export async function generateMetadata(): Promise<Metadata> {
     title: 'Shopping Tools',
     description: 'Use Bes3 shopping tools to check price-drop math, shortlist readiness, and a public buying-data feed without leaving the buyer workflow.',
     path: '/tools',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     keywords: ['shopping tools', 'price drop calculator', 'shortlist tool', 'buying data feed']
   })
 }
 
-export default function ToolsPage() {
+export default async function ToolsPage() {
   return (
     <PublicShell>
       <div className="mx-auto max-w-7xl space-y-12 px-4 py-16 sm:px-6 lg:px-8">

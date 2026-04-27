@@ -67,7 +67,7 @@ export async function generateMetadata({
     title: meta.title,
     description: meta.description,
     path: '/thank-you',
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: {
       index: false,
       follow: false

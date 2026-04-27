@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: 'Category Researching',
       description: 'This category is not currently part of the public Bes3 coverage set.',
       path: '/categories',
-      locale: getRequestLocale(),
+      locale: await getRequestLocale(),
       robots: { index: false, follow: true }
     })
   }
@@ -25,7 +25,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${page.category.name} Evidence Matrix`,
     description: `Hands-on review evidence, buyer use cases, and price timing for ${page.category.name}.`,
     path: `/categories/${page.category.slug}`,
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: page.products.filter((product) => product.consensus.evidenceCount > 0).length < 3 ? { index: false, follow: true } : undefined,
     keywords: [page.category.name, 'teardown evidence', 'Reddit consensus', ...page.category.painpoints]
   })

@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: 'Product Researching',
       description: 'This Bes3 product is not available in the public ratings system yet.',
       path: '/products',
-      locale: getRequestLocale(),
+      locale: await getRequestLocale(),
       robots: { index: false, follow: true }
     })
   }
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     title: `${product.name} Evidence Report`,
     description: `${product.name} scored from teardown evidence, scenario tags, affiliate link health, and price-value timing.`,
     path: `/products/${product.slug}`,
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     robots: product.consensus.evidenceCount === 0 ? { index: false, follow: true } : undefined,
     image: product.imageUrl,
     category: product.categoryName,

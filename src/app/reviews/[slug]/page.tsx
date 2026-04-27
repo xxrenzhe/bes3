@@ -14,7 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       title: 'Review Researching',
       description: 'This Bes3 review is not available yet.',
       path: '/reviews',
-      locale: getRequestLocale(),
+      locale: await getRequestLocale(),
       robots: { index: false, follow: true }
     })
   }
@@ -28,7 +28,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       pageType: 'review'
     }),
     path,
-    locale: getRequestLocale(),
+    locale: await getRequestLocale(),
     type: 'article',
     image: article.heroImageUrl || article.product?.heroImageUrl,
     section: 'Reviews',

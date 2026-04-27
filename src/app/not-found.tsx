@@ -3,8 +3,8 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { HARDCORE_CATEGORIES } from '@/lib/hardcore'
 import { getRequestBasePath } from '@/lib/request-locale'
 
-export default function NotFound() {
-  const requestPath = getRequestBasePath()
+export default async function NotFound() {
+  const requestPath = await getRequestBasePath()
 
   return (
     <PublicShell>
