@@ -1,6 +1,11 @@
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS deps
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
+RUN apt-get update && apt-get install -y --no-install-recommends \
+  python3 \
+  make \
+  g++ \
+  && rm -rf /var/lib/apt/lists/*
 COPY package.json package-lock.json ./
 RUN npm ci
 
@@ -32,8 +37,8 @@ COPY scripts /app/scripts
 COPY migrations /app/migrations
 COPY pg-migrations /app/pg-migrations
 COPY supervisord.conf /app/supervisord.conf
-RUN mkdir -p /app/data /app/storage/media /app/scripts
+RUN mkdir -p /app/data /app/storage/media /app/scripts /var/log/supervisor && chmod +x /app/scripts/docker-entrypoint.sh
 VOLUME ["/app/data", "/app/storage/media"]
 EXPOSE 80
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s --retries=3 CMD node -e "fetch('http://127.0.0.1:80/api/health').then((res) => process.exit(res.ok ? 0 : 1)).catch(() => process.exit(1))"
-CMD ["supervisord", "-c", "/app/supervisord.conf"]
+ENTRYPOINT ["/app/scripts/docker-entrypoint.sh"]
