@@ -1,4 +1,5 @@
 import { load } from 'cheerio'
+import { buildProductIdentityEnrichment } from '@/lib/product-acquisition'
 
 export interface ScrapedOffer {
   merchantName: string
@@ -36,7 +37,12 @@ export interface ScrapedProduct {
   finalUrl: string
   productName: string
   brand: string | null
+  productModel: string | null
+  modelNumber: string | null
+  productType: string | null
   category: string | null
+  categorySlug: string | null
+  youtubeMatchTerms: string[]
   description: string | null
   priceAmount: number | null
   priceCurrency: string | null
@@ -512,24 +518,39 @@ function scrapeShopifyProduct(finalUrl: string, html: string): ScrapedProduct {
     specsCount: attributeFacts.length,
     reviewHighlightCount: reviewHighlights.length
   })
+  const productName =
+    normalizeTextSnippet(productSchema.name) ||
+    normalizeTextSnippet(tfxProduct.title) ||
+    normalizeTextSnippet($('meta[property="og:title"]').attr('content')) ||
+    normalizeTextSnippet($('h1').first().text()) ||
+    'Unknown Shopify Product'
+  const brand =
+    normalizeTextSnippet(productSchema.brand?.name) ||
+    normalizeTextSnippet(tfxProduct.vendor) ||
+    normalizeTextSnippet($('meta[property="og:site_name"]').attr('content')) ||
+    null
+  const category =
+    normalizeTextSnippet(productSchema.category) ||
+    normalizeTextSnippet(tfxProduct.type) ||
+    null
+  const identity = buildProductIdentityEnrichment({
+    productName,
+    brand,
+    category,
+    specs,
+    rawPayload: tfxProduct
+  })
 
   return {
     finalUrl,
-    productName:
-      normalizeTextSnippet(productSchema.name) ||
-      normalizeTextSnippet(tfxProduct.title) ||
-      normalizeTextSnippet($('meta[property="og:title"]').attr('content')) ||
-      normalizeTextSnippet($('h1').first().text()) ||
-      'Unknown Shopify Product',
-    brand:
-      normalizeTextSnippet(productSchema.brand?.name) ||
-      normalizeTextSnippet(tfxProduct.vendor) ||
-      normalizeTextSnippet($('meta[property="og:site_name"]').attr('content')) ||
-      null,
-    category:
-      normalizeTextSnippet(productSchema.category) ||
-      normalizeTextSnippet(tfxProduct.type) ||
-      null,
+    productName,
+    brand,
+    productModel: identity.productModel,
+    modelNumber: identity.modelNumber,
+    productType: identity.productType,
+    category: identity.category || category,
+    categorySlug: identity.categorySlug,
+    youtubeMatchTerms: identity.youtubeMatchTerms,
     description,
     priceAmount: domPriceAmount,
     priceCurrency,
@@ -651,22 +672,37 @@ function scrapeAmazonProduct(finalUrl: string, html: string): ScrapedProduct {
     specsCount: attributeFacts.length,
     reviewHighlightCount: reviewHighlights.length
   })
+  const productName =
+    $('#productTitle').text().trim() ||
+    productSchema.name ||
+    $('title').text().replace(/\s*\|\s*Amazon.*$/, '').trim() ||
+    'Unknown Amazon Product'
+  const brand =
+    normalizeAmazonBrand($('#bylineInfo').first().text()) ||
+    productSchema.brand?.name ||
+    null
+  const category =
+    $('#wayfinding-breadcrumbs_feature_div li').eq(0).text().trim() ||
+    productSchema.category ||
+    'tech'
+  const identity = buildProductIdentityEnrichment({
+    productName,
+    brand,
+    category,
+    specs,
+    rawPayload: productSchema
+  })
 
   return {
     finalUrl,
-    productName:
-      $('#productTitle').text().trim() ||
-      productSchema.name ||
-      $('title').text().replace(/\s*\|\s*Amazon.*$/, '').trim() ||
-      'Unknown Amazon Product',
-    brand:
-      normalizeAmazonBrand($('#bylineInfo').first().text()) ||
-      productSchema.brand?.name ||
-      null,
-    category:
-      $('#wayfinding-breadcrumbs_feature_div li').eq(0).text().trim() ||
-      productSchema.category ||
-      'tech',
+    productName,
+    brand,
+    productModel: identity.productModel,
+    modelNumber: identity.modelNumber,
+    productType: identity.productType,
+    category: identity.category || category,
+    categorySlug: identity.categorySlug,
+    youtubeMatchTerms: identity.youtubeMatchTerms,
     description:
       $('#productDescription p').first().text().trim() ||
       $('#feature-bullets').text().trim().slice(0, 500) ||
@@ -827,24 +863,39 @@ function scrapeGenericProduct(finalUrl: string, html: string): ScrapedProduct {
     specsCount: attributeFacts.length,
     reviewHighlightCount: reviewHighlights.length
   })
+  const productName =
+    productSchema.name ||
+    $('meta[property="og:title"]').attr('content') ||
+    $('h1').first().text().trim() ||
+    $('title').text().trim() ||
+    'Unknown Product'
+  const brand =
+    productSchema.brand?.name ||
+    $('[itemprop="brand"]').first().text().trim() ||
+    $('meta[name="brand"]').attr('content') ||
+    null
+  const category =
+    productSchema.category ||
+    $('meta[property="product:category"]').attr('content') ||
+    null
+  const identity = buildProductIdentityEnrichment({
+    productName,
+    brand,
+    category,
+    specs,
+    rawPayload: productSchema
+  })
 
   return {
     finalUrl,
-    productName:
-      productSchema.name ||
-      $('meta[property="og:title"]').attr('content') ||
-      $('h1').first().text().trim() ||
-      $('title').text().trim() ||
-      'Unknown Product',
-    brand:
-      productSchema.brand?.name ||
-      $('[itemprop="brand"]').first().text().trim() ||
-      $('meta[name="brand"]').attr('content') ||
-      null,
-    category:
-      productSchema.category ||
-      $('meta[property="product:category"]').attr('content') ||
-      null,
+    productName,
+    brand,
+    productModel: identity.productModel,
+    modelNumber: identity.modelNumber,
+    productType: identity.productType,
+    category: identity.category || category,
+    categorySlug: identity.categorySlug,
+    youtubeMatchTerms: identity.youtubeMatchTerms,
     description:
       productDescription,
     priceAmount: normalizePrice(String(offers.price || $('[itemprop="price"]').attr('content') || '')) ?? fallbackDomPriceAmount,

@@ -7,6 +7,11 @@ export interface ProductRecord {
   slug: string | null
   affiliateProductId: number | null
   brand: string | null
+  productModel: string | null
+  modelNumber: string | null
+  productType: string | null
+  categorySlug: string | null
+  youtubeMatchTerms: string[]
   productName: string
   category: string | null
   description: string | null
@@ -319,6 +324,11 @@ function mapProductRow(row: any): ProductRecord {
     slug: row.slug,
     affiliateProductId: row.affiliate_product_id ?? null,
     brand: row.brand,
+    productModel: row.product_model || null,
+    modelNumber: row.model_number || null,
+    productType: row.product_type || null,
+    categorySlug: row.category_slug || null,
+    youtubeMatchTerms: parseJsonArray(row.youtube_match_terms_json),
     productName: row.product_name,
     category: row.category,
     description: row.description,
@@ -348,6 +358,11 @@ function mapArticleRow(row: any): ArticleRecord {
         slug: row.product_slug,
         affiliateProductId: row.affiliate_product_id ?? null,
         brand: row.brand,
+        productModel: row.product_model || null,
+        modelNumber: row.model_number || null,
+        productType: row.product_type || null,
+        categorySlug: row.category_slug || null,
+        youtubeMatchTerms: parseJsonArray(row.youtube_match_terms_json),
         productName: row.product_name,
         category: row.category,
         description: row.product_description,
@@ -442,7 +457,8 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
   const db = await getDatabase()
   const rows = await db.query(
     `
-      SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
+      SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
+        p.youtube_match_terms_json, p.product_name, p.category, p.description AS product_description,
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
@@ -470,7 +486,8 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
   const db = await getDatabase()
   const row = await db.queryOne(
     `
-      SELECT a.*, p.slug AS product_slug, p.brand, p.product_name, p.category, p.description AS product_description,
+      SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
+        p.youtube_match_terms_json, p.product_name, p.category, p.description AS product_description,
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
@@ -504,7 +521,8 @@ const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromi
   const db = await getDatabase()
   const rows = await db.query<any>(
     `
-      SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
+      SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
+        product_name, category, description, price_amount, price_currency,
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
@@ -531,7 +549,8 @@ const getProductBySlugCached = async (slug: string): Promise<ProductRecord | nul
   const db = await getDatabase()
   const row = await db.queryOne<any>(
     `
-      SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
+      SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
+        product_name, category, description, price_amount, price_currency,
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
@@ -564,7 +583,8 @@ export async function getProductById(productId: number): Promise<ProductRecord |
   const db = await getDatabase()
   const row = await db.queryOne<any>(
     `
-      SELECT id, slug, brand, product_name, category, description, price_amount, price_currency,
+      SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
+        product_name, category, description, price_amount, price_currency,
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
@@ -915,7 +935,16 @@ export async function searchProducts(query: string): Promise<ProductRecord[]> {
   if (!lowered) return products
 
   return products.filter((product) => {
-    return [product.productName, product.brand || '', product.category || '', product.description || '', product.reviewHighlights.join(' ')]
+    return [
+      product.productName,
+      product.brand || '',
+      product.productModel || '',
+      product.modelNumber || '',
+      product.productType || '',
+      product.category || '',
+      product.description || '',
+      product.reviewHighlights.join(' ')
+    ]
       .join(' ')
       .toLowerCase()
       .includes(lowered)

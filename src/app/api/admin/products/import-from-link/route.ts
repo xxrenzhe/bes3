@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { getPipelineRun, runPipelineFromLink } from '@/lib/pipeline'
+import { normalizeProductAcquisitionHints } from '@/lib/product-acquisition'
 
 export async function POST(request: Request) {
   const actor = await requireAdminPermission('pipeline:write')
@@ -10,8 +11,9 @@ export async function POST(request: Request) {
   if (!link) {
     return NextResponse.json({ error: 'Affiliate link is required' }, { status: 400 })
   }
+  const hints = normalizeProductAcquisitionHints(body)
 
-  const runId = await runPipelineFromLink(link)
+  const runId = await runPipelineFromLink(link, hints)
   const payload = await getPipelineRun(runId)
   await logAdminAudit({
     actor,
@@ -19,7 +21,7 @@ export async function POST(request: Request) {
     action: 'product_import_pipeline_queued',
     entityType: 'content_pipeline_runs',
     entityId: runId,
-    after: { link, productId: payload?.product_id || null, runId, status: payload?.status || 'queued' }
+    after: { link, hints, productId: payload?.product_id || null, runId, status: payload?.status || 'queued' }
   })
   return NextResponse.json({
     success: true,

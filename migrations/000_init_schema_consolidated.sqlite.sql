@@ -199,6 +199,11 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
       merchant_id TEXT,
       asin TEXT,
       brand TEXT,
+      product_model TEXT,
+      model_number TEXT,
+      product_type TEXT,
+      category TEXT,
+      category_slug TEXT,
       product_name TEXT,
       product_url TEXT,
       promo_link TEXT,
@@ -210,6 +215,7 @@ CREATE TABLE IF NOT EXISTS affiliate_products (
       review_count INTEGER,
       rating REAL,
       country_code TEXT,
+      youtube_match_terms_json TEXT,
       raw_payload TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -225,6 +231,10 @@ CREATE TABLE IF NOT EXISTS products (
       canonical_url TEXT,
       slug TEXT UNIQUE,
       brand TEXT,
+      product_model TEXT,
+      model_number TEXT,
+      product_type TEXT,
+      category_slug TEXT,
       product_name TEXT NOT NULL,
       category TEXT,
       description TEXT,
@@ -236,6 +246,7 @@ CREATE TABLE IF NOT EXISTS products (
       price_status TEXT,
       rating REAL,
       review_count INTEGER,
+      youtube_match_terms_json TEXT,
       specs_json TEXT,
       review_highlights_json TEXT,
       source_payload_json TEXT,
@@ -795,7 +806,11 @@ CREATE INDEX IF NOT EXISTS idx_admin_risk_alerts_status_severity ON admin_risk_a
 
 CREATE INDEX IF NOT EXISTS idx_prompt_regression_cases_prompt ON prompt_regression_cases (prompt_id, status);
 
+CREATE INDEX IF NOT EXISTS idx_affiliate_products_identity ON affiliate_products (platform, brand, product_model, model_number, category_slug);
+
 CREATE INDEX IF NOT EXISTS idx_products_hardcore_category_price ON products (category, current_price, avg_90d_price);
+
+CREATE INDEX IF NOT EXISTS idx_products_identity_video_match ON products (brand, product_model, model_number, category_slug);
 
 CREATE INDEX IF NOT EXISTS idx_products_offer_last_checked_at ON products (offer_last_checked_at, updated_at);
 

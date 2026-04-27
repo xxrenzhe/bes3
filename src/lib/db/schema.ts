@@ -219,6 +219,11 @@ const SQLITE_SCHEMA = [
       merchant_id TEXT,
       asin TEXT,
       brand TEXT,
+      product_model TEXT,
+      model_number TEXT,
+      product_type TEXT,
+      category TEXT,
+      category_slug TEXT,
       product_name TEXT,
       product_url TEXT,
       promo_link TEXT,
@@ -230,6 +235,7 @@ const SQLITE_SCHEMA = [
       review_count INTEGER,
       rating REAL,
       country_code TEXT,
+      youtube_match_terms_json TEXT,
       raw_payload TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -246,6 +252,10 @@ const SQLITE_SCHEMA = [
       canonical_url TEXT,
       slug TEXT UNIQUE,
       brand TEXT,
+      product_model TEXT,
+      model_number TEXT,
+      product_type TEXT,
+      category_slug TEXT,
       product_name TEXT NOT NULL,
       category TEXT,
       description TEXT,
@@ -257,6 +267,7 @@ const SQLITE_SCHEMA = [
       price_status TEXT,
       rating REAL,
       review_count INTEGER,
+      youtube_match_terms_json TEXT,
       specs_json TEXT,
       review_highlights_json TEXT,
       source_payload_json TEXT,
@@ -831,6 +842,7 @@ const POSTGRES_JSON_COLUMNS = [
   'meta_config_json',
   'raw_payload',
   'specs_json',
+  'youtube_match_terms_json',
   'review_highlights_json',
   'source_payload_json',
   'keywords_json',
@@ -1117,6 +1129,17 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'products', 'avg_90d_price', 'REAL')
   await ensureColumn(db, 'products', 'price_status', 'TEXT')
   await ensureColumn(db, 'products', 'asin', 'TEXT')
+  await ensureColumn(db, 'products', 'product_model', 'TEXT')
+  await ensureColumn(db, 'products', 'model_number', 'TEXT')
+  await ensureColumn(db, 'products', 'product_type', 'TEXT')
+  await ensureColumn(db, 'products', 'category_slug', 'TEXT')
+  await ensureColumn(db, 'products', 'youtube_match_terms_json', jsonType)
+  await ensureColumn(db, 'affiliate_products', 'product_model', 'TEXT')
+  await ensureColumn(db, 'affiliate_products', 'model_number', 'TEXT')
+  await ensureColumn(db, 'affiliate_products', 'product_type', 'TEXT')
+  await ensureColumn(db, 'affiliate_products', 'category', 'TEXT')
+  await ensureColumn(db, 'affiliate_products', 'category_slug', 'TEXT')
+  await ensureColumn(db, 'affiliate_products', 'youtube_match_terms_json', jsonType)
   await ensureColumn(db, 'review_videos', 'entity_match_json', jsonType)
   await ensureColumn(db, 'analysis_reports', 'context_snippet', 'TEXT')
   await ensureColumn(db, 'analysis_reports', 'quality_flags_json', jsonType)
@@ -1212,6 +1235,16 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   )
   await ensureIndex(
     db,
+    'idx_products_identity_video_match',
+    'CREATE INDEX idx_products_identity_video_match ON products (brand, product_model, model_number, category_slug)'
+  )
+  await ensureIndex(
+    db,
+    'idx_affiliate_products_identity',
+    'CREATE INDEX idx_affiliate_products_identity ON affiliate_products (platform, brand, product_model, model_number, category_slug)'
+  )
+  await ensureIndex(
+    db,
     'idx_affiliate_links_product_status',
     'CREATE INDEX idx_affiliate_links_product_status ON affiliate_links (product_id, status, last_verified)'
   )
@@ -1304,8 +1337,18 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
     )
     await ensureIndex(
       db,
+      'idx_products_youtube_terms_gin',
+      'CREATE INDEX idx_products_youtube_terms_gin ON products USING GIN (youtube_match_terms_json)'
+    )
+    await ensureIndex(
+      db,
       'idx_affiliate_products_raw_payload_gin',
       'CREATE INDEX idx_affiliate_products_raw_payload_gin ON affiliate_products USING GIN (raw_payload)'
+    )
+    await ensureIndex(
+      db,
+      'idx_affiliate_products_youtube_terms_gin',
+      'CREATE INDEX idx_affiliate_products_youtube_terms_gin ON affiliate_products USING GIN (youtube_match_terms_json)'
     )
     await ensureIndex(
       db,

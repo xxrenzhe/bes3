@@ -12,6 +12,54 @@ type SettingInput = {
   description?: unknown
 }
 
+function validateSettingInput(item: SettingInput): string | null {
+  const category = String(item.category || '')
+  const key = String(item.key || '')
+  const value = item.value === null ? '' : String(item.value || '')
+
+  if (category === 'proxy' && key === 'browserProxyUrlsJson') {
+    try {
+      const parsed = JSON.parse(value || '[]')
+      if (!Array.isArray(parsed)) return 'Proxy Pool JSON must be an array'
+      for (const [index, candidate] of parsed.entries()) {
+        const proxyUrl = typeof candidate === 'string'
+          ? candidate
+          : candidate && typeof candidate === 'object'
+            ? String((candidate as { url?: unknown }).url || '')
+            : ''
+        if (!proxyUrl.trim()) return `Proxy entry ${index + 1} is missing url`
+        if (!/^(https?|socks5):\/\//i.test(proxyUrl) && proxyUrl.split(':').length < 2) {
+          return `Proxy entry ${index + 1} must be a URL or host:port value`
+        }
+      }
+    } catch {
+      return 'Proxy Pool JSON is not valid JSON'
+    }
+  }
+
+  if (category === 'proxy' && key === 'defaultCountryCode' && value && !/^[A-Z]{2}$/i.test(value.trim())) {
+    return 'Default proxy country must be a two-letter country code'
+  }
+
+  if (category === 'ai' && key === 'geminiBaseUrl' && value) {
+    try {
+      const url = new URL(value)
+      if (!/^https?:$/.test(url.protocol)) return 'Gemini Base URL must use http or https'
+    } catch {
+      return 'Gemini Base URL is not valid'
+    }
+  }
+
+  if (category === 'affiliateSync' && ['amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'].includes(key)) {
+    const parsed = Number.parseInt(value, 10)
+    if (!Number.isFinite(parsed) || parsed < 1 || parsed > 500) {
+      return `${key} must be a number between 1 and 500`
+    }
+  }
+
+  return null
+}
+
 export async function GET() {
   await requireAdmin()
   return NextResponse.json({
@@ -24,6 +72,12 @@ export async function PUT(request: Request) {
   const actor = await requireAdminPermission('settings:write')
   const body = await request.json().catch(() => ({}))
   const items = Array.isArray(body.items) ? body.items : []
+  for (const item of items as SettingInput[]) {
+    const error = validateSettingInput(item)
+    if (error) {
+      return NextResponse.json({ error }, { status: 400 })
+    }
+  }
   const before = await listSettings()
   for (const item of items) {
     await saveSetting({

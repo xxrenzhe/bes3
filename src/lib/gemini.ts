@@ -98,6 +98,7 @@ async function getGeminiConfig(): Promise<{
   provider: string
   apiKey: string
   model: string
+  baseUrl: string
   timeoutMs: number
 }> {
   const provider = await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
@@ -105,6 +106,9 @@ async function getGeminiConfig(): Promise<{
   const model = normalizeGeminiModel(
     await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   )
+  const baseUrl = (
+    await getSettingValueOrEnv('ai', 'geminiBaseUrl', 'GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com')
+  ).replace(/\/+$/, '')
   const timeoutMs = Math.max(
     5000,
     Number.parseInt(
@@ -113,7 +117,7 @@ async function getGeminiConfig(): Promise<{
     ) || 30000
   )
 
-  return { provider, apiKey, model, timeoutMs }
+  return { provider, apiKey, model, baseUrl, timeoutMs }
 }
 
 export async function generateGeminiContent(params: GeminiGenerateParams): Promise<GeminiGenerateResult | null> {
@@ -134,7 +138,7 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
+        `${config.baseUrl}/v1beta/models/${model}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

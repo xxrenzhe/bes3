@@ -16,6 +16,11 @@ type AffiliateProduct = {
   platform: string
   product_name: string | null
   brand: string | null
+  product_model: string | null
+  model_number: string | null
+  product_type: string | null
+  category: string | null
+  category_slug: string | null
   promo_link: string | null
   product_url: string | null
   updated_at: string
@@ -25,6 +30,10 @@ type Product = {
   id: number
   product_name: string
   category: string | null
+  product_model: string | null
+  model_number: string | null
+  product_type: string | null
+  category_slug: string | null
   price_amount: number | null
   slug: string | null
   affiliate_product_id: number | null
@@ -39,6 +48,13 @@ export function ProductsConsole() {
   const [affiliateProducts, setAffiliateProducts] = useState<AffiliateProduct[]>([])
   const [products, setProducts] = useState<Product[]>([])
   const [importLink, setImportLink] = useState('')
+  const [importBrand, setImportBrand] = useState('')
+  const [importModel, setImportModel] = useState('')
+  const [importModelNumber, setImportModelNumber] = useState('')
+  const [importProductType, setImportProductType] = useState('')
+  const [importCategory, setImportCategory] = useState('')
+  const [importCategorySlug, setImportCategorySlug] = useState('')
+  const [importCountryCode, setImportCountryCode] = useState('US')
   const [selectedIds, setSelectedIds] = useState<number[]>([])
   const [syncAndQueueNew, setSyncAndQueueNew] = useState(true)
   const [isPending, startTransition] = useTransition()
@@ -160,18 +176,37 @@ export function ProductsConsole() {
         </div>
         <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Direct Import</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Paste an affiliate link and build content in one click.</h2>
-          <div className="mt-6 space-y-4">
-            <Input value={importLink} onChange={(event) => setImportLink(event.target.value)} placeholder="https://app.partnerboost.com/track/..." className="min-h-[52px] rounded-2xl" />
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Paste a link and seed exact product identity.</h2>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <div className="md:col-span-2">
+              <Input value={importLink} onChange={(event) => setImportLink(event.target.value)} placeholder="https://app.partnerboost.com/track/..." className="min-h-[52px] rounded-2xl" />
+            </div>
+            <Input value={importBrand} onChange={(event) => setImportBrand(event.target.value)} placeholder="Brand, e.g. Dolphin" className="min-h-[52px] rounded-2xl" />
+            <Input value={importModel} onChange={(event) => setImportModel(event.target.value)} placeholder="Model, e.g. Nautilus CC Plus" className="min-h-[52px] rounded-2xl" />
+            <Input value={importModelNumber} onChange={(event) => setImportModelNumber(event.target.value)} placeholder="Model number / SKU" className="min-h-[52px] rounded-2xl" />
+            <Input value={importProductType} onChange={(event) => setImportProductType(event.target.value)} placeholder="Product type, e.g. robotic pool cleaner" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCategory} onChange={(event) => setImportCategory(event.target.value)} placeholder="Category, e.g. Yard & Pool Automation" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCategorySlug} onChange={(event) => setImportCategorySlug(event.target.value)} placeholder="Category slug, e.g. yard-pool-automation" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCountryCode} onChange={(event) => setImportCountryCode(event.target.value.toUpperCase())} placeholder="Country, e.g. US" className="min-h-[52px] rounded-2xl" />
             <Button
               disabled={isPending || !importLink}
               onClick={() =>
                 trigger('/api/admin/products/import-from-link', {
-                  body: { link: importLink },
+                  body: {
+                    link: importLink,
+                    brandName: importBrand,
+                    productModel: importModel,
+                    modelNumber: importModelNumber,
+                    productType: importProductType,
+                    category: importCategory,
+                    categorySlug: importCategorySlug,
+                    countryCode: importCountryCode
+                  },
                   successMessage: 'Link imported and pipeline queued',
                   navigateToProduct: true
                 })
               }
+              className="md:col-span-2"
             >
               Import and Queue Pipeline
             </Button>
@@ -216,7 +251,9 @@ export function ProductsConsole() {
                     </td>
                     <td className="py-4 pr-3">
                       <div className="font-medium">{item.product_name || item.promo_link || item.product_url}</div>
-                      <div className="text-muted-foreground">{item.brand}</div>
+                      <div className="text-muted-foreground">
+                        {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || 'No identity hints'}
+                      </div>
                     </td>
                     <td className="py-4 pr-3">
                       <StatusBadge value={item.platform} />
@@ -268,7 +305,9 @@ export function ProductsConsole() {
                 </div>
                 <div>
                   <h3 className="font-[var(--font-display)] text-2xl font-semibold">{product.product_name}</h3>
-                  <p className="mt-2 text-sm text-muted-foreground">{product.category || 'uncategorized'}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">
+                    {[product.category || product.category_slug || 'uncategorized', product.product_model || product.model_number, product.product_type].filter(Boolean).join(' · ')}
+                  </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {product.last_run_status ? <StatusBadge value={product.last_run_status} /> : null}
                     {product.last_run_stage ? <StatusBadge value={product.last_run_stage} /> : null}
