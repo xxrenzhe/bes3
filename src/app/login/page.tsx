@@ -7,8 +7,8 @@ import { getRequestLocale } from '@/lib/request-locale'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Internal Login',
-    description: 'Internal-only Bes3 admin login for the team managing products, editorial pages, and operational settings.',
+    title: 'Bes3 Team Sign In',
+    description: 'Secure sign-in for the Bes3 team workspace.',
     path: '/login',
     locale: await getRequestLocale(),
     robots: {
@@ -23,7 +23,7 @@ export default async function LoginPage() {
     {
       eyebrow: 'Search',
       title: 'Return to the buyer guide',
-      description: 'Use product search if you were trying to narrow a real purchase decision instead of entering the internal admin area.',
+      description: 'Use product search if you were trying to narrow a real purchase decision instead of opening the team workspace.',
       href: '/search?scope=products',
       label: 'Open search'
     },
@@ -49,26 +49,26 @@ export default async function LoginPage() {
         <div className="bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.24),transparent_24%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-8 py-10 text-white lg:px-12 lg:py-14">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Link href="/" className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Public Site</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Buyer Guide</p>
               <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-white">{DEFAULT_SITE_NAME}</h2>
               <p className="text-sm text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
             </Link>
             <Link href="/" className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10">
-              Back to buyer site
+              Back to Bes3
             </Link>
           </div>
 
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Bes3 Internal Console</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Bes3 Team Workspace</p>
           <h1 className="mt-6 max-w-3xl font-[var(--font-display)] text-5xl font-black tracking-tight text-white sm:text-6xl">
-            Run the buying-guide operation behind the public site.
+            Sign in to manage the Bes3 publishing workspace.
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            Internal staff use this workspace to ingest products, generate buyer-facing pages, and control runtime systems. None of this messaging appears on the consumer site.
+            Team members use this workspace to manage products, editorial pages, and operational systems without exposing that workflow on the public site.
           </p>
           <div className="mt-8 rounded-[1.75rem] border border-emerald-200/15 bg-white/5 p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Boundary note</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Access note</p>
             <p className="mt-3 text-sm leading-7 text-slate-200">
-              If you are a shopper, this is the wrong page. The public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This login is only for the team running the admin console.
+              If you are here to research a purchase, the public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This sign-in is reserved for the Bes3 team workspace.
             </p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
@@ -109,10 +109,10 @@ export default async function LoginPage() {
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-white/80 px-4 py-3 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.35)]">
             <div>
               <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Internal Only</p>
-              <p className="mt-1 text-sm text-slate-600">Use Bes3 team credentials to enter the admin console.</p>
+              <p className="mt-1 text-sm text-slate-600">Use Bes3 team credentials to enter the workspace.</p>
             </div>
             <Link href="/" className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
-              Return to public site →
+              Return to Bes3 →
             </Link>
           </div>
           <LoginForm />
