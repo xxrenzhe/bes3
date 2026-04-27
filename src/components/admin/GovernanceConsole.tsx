@@ -90,7 +90,7 @@ export function GovernanceConsole() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Active Sessions</p>
             <UserCheck className="h-4 w-4 text-primary" />
@@ -98,7 +98,7 @@ export function GovernanceConsole() {
           <p className="mt-3 text-2xl font-semibold">{activeSessions}</p>
           <p className="mt-1 text-sm text-muted-foreground">{snapshot.sessions.length} recent sessions</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Failed Logins</p>
             <ShieldAlert className="h-4 w-4 text-primary" />
@@ -106,12 +106,12 @@ export function GovernanceConsole() {
           <p className="mt-3 text-2xl font-semibold">{failedLogins}</p>
           <p className="mt-1 text-sm text-muted-foreground">{snapshot.loginAttempts.length} attempts retained</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Security Events</p>
           <p className="mt-3 text-2xl font-semibold">{snapshot.securityEvents.length}</p>
           <p className="mt-1 text-sm text-muted-foreground">account and session signals</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Open Risks</p>
             <ShieldCheck className="h-4 w-4 text-primary" />
@@ -122,7 +122,7 @@ export function GovernanceConsole() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Recent sessions</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -150,7 +150,7 @@ export function GovernanceConsole() {
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Login attempts</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -180,7 +180,7 @@ export function GovernanceConsole() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
-        <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Security events</p>
           <div className="mt-4 space-y-3">
             {snapshot.securityEvents.slice(0, 10).map((event) => (
@@ -202,7 +202,7 @@ export function GovernanceConsole() {
           </div>
         </section>
 
-        <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Audit log</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -229,7 +229,7 @@ export function GovernanceConsole() {
         </section>
       </div>
 
-      <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
         <p className="font-semibold">Risk alerts</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {snapshot.riskAlerts.slice(0, 12).map((alert) => (

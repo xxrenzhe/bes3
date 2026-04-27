@@ -162,6 +162,25 @@ const PUBLIC_FAMILY_ALIASES: Array<{
 ]
 
 const PUBLIC_ROUTE_FAMILIES = ['/brands/', '/categories/', '/compare/', '/deals/', '/guides/', '/offers/', '/products/', '/reviews/']
+const RESERVED_DYNAMIC_SEGMENTS = new Set([
+  '_next',
+  'admin',
+  'api',
+  'brands',
+  'categories',
+  'compare',
+  'deals',
+  'go',
+  'guides',
+  'login',
+  'change-password',
+  'media',
+  'offers',
+  'products',
+  'reviews',
+  'tools',
+  'trust'
+])
 
 const MALICIOUS_SCAN_PATTERNS = [
   /^\/\.env(?:$|[./])/i,
@@ -186,9 +205,17 @@ function stripCommonPublicPathArtifacts(pathname: string) {
   )
 }
 
+function isDynamicPublicLanding(pathname: string): boolean {
+  const segments = pathname.split('/').filter(Boolean)
+  if (segments.length !== 2) return false
+  if (segments.some((segment) => segment.includes('.'))) return false
+  return !RESERVED_DYNAMIC_SEGMENTS.has(segments[0] || '')
+}
+
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.includes(pathname)) return true
   return (
+    isDynamicPublicLanding(pathname) ||
     pathname.startsWith('/brands/') ||
     pathname.startsWith('/biggest-discounts') ||
     pathname.startsWith('/categories/') ||

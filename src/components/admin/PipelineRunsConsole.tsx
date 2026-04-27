@@ -196,7 +196,7 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Worker</p>
             <ServerCog className="h-4 w-4 text-primary" />
@@ -204,7 +204,7 @@ export function PipelineRunsConsole() {
           <p className="mt-3 text-2xl font-semibold">{operations?.runtime.enabled ? 'Enabled' : 'Disabled'}</p>
           <p className="mt-1 text-sm text-muted-foreground">{operations?.workers.length || 0} heartbeat rows</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Concurrency</p>
             <Activity className="h-4 w-4 text-primary" />
@@ -212,12 +212,12 @@ export function PipelineRunsConsole() {
           <p className="mt-3 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
           <p className="mt-1 text-sm text-muted-foreground">poll {operations?.runtime.pollMs ?? '-'}ms</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stale Runs</p>
           <p className="mt-3 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
           <p className="mt-1 text-sm text-muted-foreground">heartbeat timeout</p>
         </div>
-        <div className="rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Expired Locks</p>
           <p className="mt-3 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
           <p className="mt-1 text-sm text-muted-foreground">recoverable on next tick</p>
@@ -225,7 +225,7 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
-        <div className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Queue policy</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
@@ -252,7 +252,7 @@ export function PipelineRunsConsole() {
             </table>
           </div>
         </div>
-        <div className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
           <p className="font-semibold">Worker heartbeats</p>
           <div className="mt-4 space-y-3">
             {(operations?.workers || []).slice(0, 5).map((worker) => (
@@ -277,7 +277,7 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
@@ -317,7 +317,7 @@ export function PipelineRunsConsole() {
           </div>
         </div>
 
-        <div className="rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           {selectedRun ? (
             <div className="space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
