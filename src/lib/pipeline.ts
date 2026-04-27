@@ -739,8 +739,8 @@ async function claimNextRun(workerId: string): Promise<QueuedRunRecord | null> {
   for (let index = 0; index < 5; index += 1) {
     const candidate = await db.queryOne<QueuedRunRecord>(
       `
-        SELECT id, product_id, affiliate_product_id, run_type, requested_action, source_link, status
-             , finished_at
+        SELECT r.id, r.product_id, r.affiliate_product_id, r.run_type, r.requested_action, r.source_link, r.status,
+          r.finished_at
         FROM content_pipeline_runs r
         LEFT JOIN pipeline_queue_config q ON q.task_type = r.run_type
         WHERE r.status = 'queued'

@@ -4,7 +4,7 @@ import { getDatabase } from '@/lib/db'
 import { buildProductIdentityEnrichment } from '@/lib/product-acquisition'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getSettingValueOrEnv } from '@/lib/settings'
-import { resolveAffiliateLink } from '@/lib/url-resolver'
+import { resolveAffiliateLinkWithOptions } from '@/lib/url-resolver'
 
 type DeepScrapeStatus = 'queued' | 'running' | 'completed' | 'failed' | 'fallback'
 
@@ -345,7 +345,9 @@ async function prepareBrowser(countryCode: string): Promise<{
       '--no-sandbox',
       '--disable-web-security',
       '--disable-features=IsolateOrigins,site-per-process',
-      '--disable-site-isolation-trials'
+      '--disable-site-isolation-trials',
+      '--disable-http2',
+      '--disable-quic'
     ]
   })
   const context = await browser.newContext({
@@ -518,9 +520,13 @@ function mergeBrowserSignals(scraped: ScrapedProduct, signals: BrowserSignals | 
   }
 }
 
-async function runFetchFallback(input: DeepProductScrapeInput, taskId: string): Promise<Omit<DeepProductScrapeResult, 'taskId' | 'scraped' | 'fallbackUsed'>> {
+async function runFetchFallback(
+  input: DeepProductScrapeInput,
+  taskId: string,
+  strictProxy: boolean
+): Promise<Omit<DeepProductScrapeResult, 'taskId' | 'scraped' | 'fallbackUsed'>> {
   await updateScrapeTask(taskId, { status: 'fallback', stage: 'resolveAffiliateLink', progress: 35 })
-  const resolved = await resolveAffiliateLink(input.sourceLink, input.countryCode)
+  const resolved = await resolveAffiliateLinkWithOptions(input.sourceLink, input.countryCode, { strictProxy })
   return {
     finalUrl: resolved.finalUrl,
     landingHtml: resolved.landingHtml,
@@ -567,7 +573,7 @@ export async function runDeepProductScrapeTask(input: DeepProductScrapeInput): P
       errorMessage: error?.message || String(error)
     })
     fallbackUsed = true
-    scrapeResult = await runFetchFallback({ ...input, countryCode }, taskId)
+    scrapeResult = await runFetchFallback({ ...input, countryCode }, taskId, Boolean(proxy))
   }
 
   const scraped = mergeBrowserSignals(scrapeProductPage(scrapeResult.finalUrl, scrapeResult.landingHtml), scrapeResult.browserSignals)
