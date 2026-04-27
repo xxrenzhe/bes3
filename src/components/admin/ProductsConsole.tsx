@@ -84,7 +84,6 @@ export function ProductsConsole() {
       void load()
     }, 4000)
     return () => window.clearInterval(intervalId)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasActiveRuns])
 
   const trigger = (path: string, options?: {
