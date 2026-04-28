@@ -186,18 +186,18 @@ export function SettingsConsole() {
   }
 
   return (
-    <div className="space-y-8 p-6 lg:p-10">
-      <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
-        <div className="rounded-[2.25rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-42px_rgba(15,23,42,0.32)] lg:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary">系统设置</p>
-          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-primary">系统设置</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-slate-950 sm:text-3xl">
             Bes3 内部控制层的运行时配置
           </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-600">
+          <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-600">
             统一管理 AI 凭据、联盟同步端点、代理池、媒体存储和 SEO 身份。这里保持内部运维属性，公开站点继续面向买家。
           </p>
 
-          <div className="mt-8 flex flex-wrap gap-3">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               disabled={isPending || !isDirty}
               onClick={() => {
@@ -205,7 +205,7 @@ export function SettingsConsole() {
                   await save()
                 })
               }}
-              className="rounded-full px-6"
+              className="rounded-full px-4"
             >
               保存设置
             </Button>
@@ -217,7 +217,7 @@ export function SettingsConsole() {
                   await load()
                 })
               }}
-              className="rounded-full border-slate-200 bg-white px-6"
+              className="rounded-full border-slate-200 bg-white px-4"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
               刷新
@@ -235,65 +235,65 @@ export function SettingsConsole() {
                   })
                 )
               }}
-              className="rounded-full px-6 text-slate-600"
+              className="rounded-full px-4 text-slate-600"
             >
               重置改动
             </Button>
             {isDirty ? (
-              <div className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
+              <div className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-amber-700">
                 有未保存改动
               </div>
             ) : (
-              <div className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
+              <div className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-700">
                 已同步
               </div>
             )}
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Health Snapshot</p>
-            <div className="mt-4 flex items-center justify-between">
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">健康快照</p>
+            <div className="mt-2 flex items-center justify-between">
               <div>
-                <p className="text-4xl font-black tracking-tight text-slate-950">{configuredCount}</p>
-                <p className="mt-2 text-sm text-slate-600">Fully configured integrations</p>
+                <p className="text-2xl font-black tracking-tight text-slate-950">{configuredCount}</p>
+                <p className="mt-1 text-xs text-slate-600">已完整配置的集成</p>
               </div>
               <StatusBadge value="configured" />
             </div>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Needs Attention</p>
-            <div className="mt-4 flex items-center justify-between">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">需要处理</p>
+            <div className="mt-2 flex items-center justify-between">
               <div>
-                <p className="text-4xl font-black tracking-tight text-slate-950">{partialCount + missingCount}</p>
-                <p className="mt-2 text-sm text-slate-600">Partial or missing connections</p>
+                <p className="text-2xl font-black tracking-tight text-slate-950">{partialCount + missingCount}</p>
+                <p className="mt-1 text-xs text-slate-600">部分配置或缺失连接</p>
               </div>
               <StatusBadge value={missingCount ? 'missing' : 'partial'} />
             </div>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-[linear-gradient(135deg,#0f172a,#1e293b)] p-6 text-white shadow-[0_26px_60px_-40px_rgba(15,23,42,0.52)]">
-            <div className="flex items-center gap-3">
-              <ServerCog className="h-5 w-5 text-emerald-300" />
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">Operational Note</p>
+          <div className="rounded-2xl border border-slate-200/70 bg-[linear-gradient(135deg,#0f172a,#1e293b)] p-4 text-white shadow-sm">
+            <div className="flex items-center gap-2">
+              <ServerCog className="h-4 w-4 text-emerald-300" />
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-300">运维提示</p>
             </div>
-            <p className="mt-4 text-sm leading-7 text-slate-200">
-              Secrets should stay centralized here. Public-facing copy must never expose internal credentials, provider names, or pipeline control language.
+            <p className="mt-2 text-xs leading-5 text-slate-200">
+              密钥集中管理在这里。公开文案不得暴露内部凭据、供应商名称或流水线控制语言。
             </p>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {diagnostics.map((item) => (
           <div
             key={item.id}
-            className={`rounded-[1.75rem] border p-5 shadow-[0_24px_50px_-42px_rgba(15,23,42,0.26)] ${getDiagnosticPanelTone(item.status)}`}
+            className={`rounded-2xl border p-4 shadow-sm ${getDiagnosticPanelTone(item.status)}`}
           >
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="font-semibold text-slate-950">{item.title}</p>
-                <p className="mt-2 text-sm leading-7 text-slate-600">{item.detail}</p>
+                <p className="mt-1 text-xs leading-5 text-slate-600">{item.detail}</p>
               </div>
               <StatusBadge value={item.status} />
             </div>
@@ -301,52 +301,52 @@ export function SettingsConsole() {
         ))}
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-2">
+      <section className="grid gap-4 xl:grid-cols-2">
         {categoryList.map((category) => {
           const categoryItems = grouped[category] || []
           if (categoryItems.length === 0) return null
 
           const categoryMeta = CATEGORY_META[category] || {
             title: category,
-            description: 'Runtime configuration for this internal system area.'
+            description: '此内部系统区域的运行时配置。'
           }
           const Icon = getCategoryIcon(category)
 
           return (
-            <div key={category} className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-42px_rgba(15,23,42,0.32)]">
-              <div className="flex items-start gap-4">
-                <div className="rounded-[1.25rem] bg-emerald-50 p-3 text-primary">
-                  <Icon className="h-5 w-5" />
+            <div key={category} className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+              <div className="flex items-start gap-3">
+                <div className="rounded-xl bg-emerald-50 p-2.5 text-primary">
+                  <Icon className="h-4 w-4" />
                 </div>
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">{categoryMeta.title}</p>
-                  <p className="mt-2 text-sm leading-7 text-slate-600">{categoryMeta.description}</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">{categoryMeta.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-slate-600">{categoryMeta.description}</p>
                 </div>
               </div>
 
-              <div className="mt-8 space-y-5">
+              <div className="mt-4 space-y-3">
                 {categoryItems.map((item) => {
                   const fieldKey = `${item.category}.${item.key}`
                   const fieldMeta = FIELD_META[fieldKey]
 
                   return (
-                    <label key={fieldKey} className="block rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
-                      <div className="flex items-center justify-between gap-4">
+                    <label key={fieldKey} className="block rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
+                      <div className="flex items-center justify-between gap-3">
                         <div>
                           <span className="text-sm font-semibold text-slate-950">{fieldMeta?.label || item.key}</span>
                           {item.isSensitive ? (
                             <span className="ml-3 inline-flex rounded-full bg-slate-900 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.2em] text-white">
-                              Secret
+                              密钥
                             </span>
                           ) : null}
                         </div>
                         <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-slate-500">{item.dataType}</span>
                       </div>
 
-                      <div className="mt-4">
+                      <div className="mt-3">
                         {item.dataType === 'boolean' ? (
-                          <div className="flex items-center justify-between rounded-[1.25rem] border border-slate-200 bg-white px-4 py-3">
-                            <div className="text-sm text-slate-600">{item.value === 'true' ? 'Enabled' : 'Disabled'}</div>
+                          <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2">
+                            <div className="text-sm text-slate-600">{item.value === 'true' ? '已启用' : '已停用'}</div>
                             <Switch
                               checked={item.value === 'true'}
                               onCheckedChange={(checked) => updateItem(item, checked ? 'true' : 'false')}
@@ -358,7 +358,7 @@ export function SettingsConsole() {
                             onChange={(event) => updateItem(item, event.target.value)}
                             placeholder={fieldMeta?.placeholder}
                             rows={fieldMeta?.rows || 5}
-                            className="rounded-[1.25rem] border-slate-200 bg-white px-4 py-3 shadow-none focus-visible:ring-2"
+                            className="rounded-xl border-slate-200 bg-white px-3 py-2 shadow-none focus-visible:ring-2"
                           />
                         ) : (
                           <Input
@@ -366,12 +366,12 @@ export function SettingsConsole() {
                             type={item.isSensitive ? 'password' : 'text'}
                             onChange={(event) => updateItem(item, event.target.value)}
                             placeholder={fieldMeta?.placeholder}
-                            className="min-h-[52px] rounded-[1.25rem] border-slate-200 bg-white px-4 shadow-none focus-visible:ring-2"
+                            className="min-h-10 rounded-xl border-slate-200 bg-white px-3 shadow-none focus-visible:ring-2"
                           />
                         )}
                       </div>
 
-                      {item.description ? <p className="mt-3 text-xs leading-6 text-slate-500">{item.description}</p> : null}
+                      {item.description ? <p className="mt-2 text-xs leading-5 text-slate-500">{item.description}</p> : null}
                     </label>
                   )
                 })}

@@ -175,11 +175,11 @@ export function PipelineRunsConsole() {
   }
 
   return (
-    <div className="space-y-6 p-6 lg:p-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">流水线</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">任务执行历史与 Job 级追踪</h1>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">流水线</p>
+          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">任务执行历史与 Job 级追踪</h1>
         </div>
         <Button
           variant="outline"
@@ -195,80 +195,80 @@ export function PipelineRunsConsole() {
         </Button>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-4">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
+      <div className="grid gap-3 lg:grid-cols-4">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Worker</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Worker</p>
             <ServerCog className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.enabled ? '已启用' : '已停用'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{operations?.workers.length || 0} 条心跳记录</p>
+          <p className="mt-1.5 text-2xl font-semibold">{operations?.runtime.enabled ? '已启用' : '已停用'}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{operations?.workers.length || 0} 条心跳记录</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">并发数</p>
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">并发数</p>
             <Activity className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">轮询 {operations?.runtime.pollMs ?? '-'}ms</p>
+          <p className="mt-1.5 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">轮询 {operations?.runtime.pollMs ?? '-'}ms</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">过期任务</p>
-          <p className="mt-3 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
-          <p className="mt-1 text-sm text-muted-foreground">心跳超时</p>
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">过期任务</p>
+          <p className="mt-1.5 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">心跳超时</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">过期锁</p>
-          <p className="mt-3 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
-          <p className="mt-1 text-sm text-muted-foreground">下次轮询可恢复</p>
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+          <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">过期锁</p>
+          <p className="mt-1.5 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">下次轮询可恢复</p>
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-2">
-        <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <div className="grid gap-4 xl:grid-cols-2">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <p className="font-semibold">队列策略</p>
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
+              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">类型</th>
-                  <th className="pb-3 pr-3">状态</th>
-                  <th className="pb-3 pr-3">排队</th>
-                  <th className="pb-3 pr-3">运行中</th>
-                  <th className="pb-3 pr-3">尝试次数</th>
+                  <th className="pb-2 pr-3">类型</th>
+                  <th className="pb-2 pr-3">状态</th>
+                  <th className="pb-2 pr-3">排队</th>
+                  <th className="pb-2 pr-3">运行中</th>
+                  <th className="pb-2 pr-3">尝试次数</th>
                 </tr>
               </thead>
               <tbody>
                 {(operations?.queues || []).map((queue) => (
                   <tr key={queue.task_type} className="border-b border-border/70">
-                    <td className="py-3 pr-3 font-medium">{queue.task_type}</td>
-                    <td className="py-3 pr-3"><StatusBadge value={queue.enabled ? 'enabled' : 'disabled'} /></td>
-                    <td className="py-3 pr-3 text-muted-foreground">{queue.queued}</td>
-                    <td className="py-3 pr-3 text-muted-foreground">{queue.running}</td>
-                    <td className="py-3 pr-3 text-muted-foreground">{queue.max_attempts}</td>
+                    <td className="py-2 pr-3 font-medium">{queue.task_type}</td>
+                    <td className="py-2 pr-3"><StatusBadge value={queue.enabled ? 'enabled' : 'disabled'} /></td>
+                    <td className="py-2 pr-3 text-muted-foreground">{queue.queued}</td>
+                    <td className="py-2 pr-3 text-muted-foreground">{queue.running}</td>
+                    <td className="py-2 pr-3 text-muted-foreground">{queue.max_attempts}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
         </div>
-        <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <p className="font-semibold">Worker 心跳</p>
-          <div className="mt-4 space-y-3">
+          <div className="mt-3 space-y-2">
             {(operations?.workers || []).slice(0, 5).map((worker) => (
-              <div key={worker.worker_id} className="rounded-2xl border border-border p-4">
+              <div key={worker.worker_id} className="rounded-xl border border-border p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{worker.worker_id}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{worker.hostname || '未知主机'} · pid {worker.pid || '暂无'}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">{worker.hostname || '未知主机'} · pid {worker.pid || '暂无'}</p>
                   </div>
                   <StatusBadge value={worker.status} />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">最后出现 {formatDate(worker.last_seen_at)}</p>
+                <p className="mt-1.5 text-xs text-muted-foreground">最后出现 {formatDate(worker.last_seen_at)}</p>
               </div>
             ))}
             {operations && operations.workers.length === 0 ? (
-              <div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
+              <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
                 暂无 Worker 心跳记录。
               </div>
             ) : null}
@@ -276,16 +276,16 @@ export function PipelineRunsConsole() {
         </div>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
+      <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">任务</th>
-                  <th className="pb-3 pr-3">阶段</th>
-                  <th className="pb-3 pr-3">状态</th>
-                  <th className="pb-3 pr-3">更新时间</th>
+                  <th className="pb-2 pr-3">任务</th>
+                  <th className="pb-2 pr-3">阶段</th>
+                  <th className="pb-2 pr-3">状态</th>
+                  <th className="pb-2 pr-3">更新时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -301,15 +301,15 @@ export function PipelineRunsConsole() {
                       void loadRunDetail(run.id)
                     }}
                   >
-                    <td className="py-4 pr-3">
+                    <td className="py-2.5 pr-3">
                       <div className="font-medium">{run.product_name || run.source_link}</div>
-                      <div className="text-muted-foreground">任务 #{run.id} · {run.run_type === 'workspaceAction' ? (run.requested_action || '工作台动作') : '完整流水线'}</div>
+                      <div className="text-xs text-muted-foreground">任务 #{run.id} · {run.run_type === 'workspaceAction' ? (run.requested_action || '工作台动作') : '完整流水线'}</div>
                     </td>
-                    <td className="py-4 pr-3 text-muted-foreground">{run.current_stage || '-'}</td>
-                    <td className="py-4 pr-3">
+                    <td className="py-2.5 pr-3 text-muted-foreground">{run.current_stage || '-'}</td>
+                    <td className="py-2.5 pr-3">
                       <StatusBadge value={run.status} />
                     </td>
-                    <td className="py-4 pr-3 text-muted-foreground">{formatDate(run.updated_at)}</td>
+                    <td className="py-2.5 pr-3 text-muted-foreground">{formatDate(run.updated_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -317,17 +317,17 @@ export function PipelineRunsConsole() {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
           {selectedRun ? (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">当前任务</p>
-                  <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">
+                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">当前任务</p>
+                  <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">
                     {selectedRun.product_name || `任务 #${selectedRun.id}`}
                   </h2>
-                  <p className="mt-2 text-sm text-muted-foreground">创建时间 {formatDate(selectedRun.created_at)}</p>
-                  <p className="mt-1 text-sm text-muted-foreground">
+                  <p className="mt-1.5 text-xs text-muted-foreground">创建时间 {formatDate(selectedRun.created_at)}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">
                     {selectedRun.run_type === 'workspaceAction'
                       ? `已排队工作台动作：${selectedRun.requested_action || '未知'}`
                       : '已排队完整流水线'}
@@ -339,7 +339,7 @@ export function PipelineRunsConsole() {
                 </div>
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {selectedRun.product_id ? (
                   <Link
                     href={`/admin/products/${selectedRun.product_id}`}
@@ -380,70 +380,70 @@ export function PipelineRunsConsole() {
               </div>
 
               {selectedRun.error_message ? (
-                <div className="rounded-[24px] border border-rose-200 bg-rose-50 p-5 text-sm text-rose-800">
+                <div className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                   {selectedRun.error_message}
                 </div>
               ) : null}
 
-              <div className="rounded-[24px] border border-border p-5">
-                <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Run Meta</p>
-                <div className="mt-4 space-y-3 text-sm">
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Updated</span>
+              <div className="rounded-xl border border-border p-4">
+                <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">任务元数据</p>
+                <div className="mt-3 space-y-2 text-sm">
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">更新时间</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.updated_at)}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Started</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">开始时间</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.started_at)}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Finished</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">结束时间</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.finished_at)}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Attempts</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">尝试次数</span>
                     <span className="text-right font-medium">{selectedRun.attempt_count}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
+                  <div className="flex items-start justify-between gap-3">
                     <span className="text-muted-foreground">Worker</span>
                     <span className="text-right font-medium">{selectedRun.locked_by || selectedRun.worker_id || 'N/A'}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Lock Expires</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">锁过期</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.lock_expires_at)}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Heartbeat</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">心跳</span>
                     <span className="text-right font-medium">{formatDate(selectedRun.last_heartbeat_at)}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Affiliate Product</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">联盟商品</span>
                     <span className="text-right font-medium">{selectedRun.affiliate_product_id || 'N/A'}</span>
                   </div>
-                  <div className="flex items-start justify-between gap-4">
-                    <span className="text-muted-foreground">Product Slug</span>
+                  <div className="flex items-start justify-between gap-3">
+                    <span className="text-muted-foreground">商品 Slug</span>
                     <span className="text-right font-medium">{selectedRun.slug || 'N/A'}</span>
                   </div>
                 </div>
               </div>
 
               <div>
-                <div className="mb-4 flex items-center gap-3">
-                  <TerminalSquare className="h-5 w-5 text-primary" />
-                  <p className="font-semibold">Job timeline</p>
+                <div className="mb-3 flex items-center gap-2">
+                  <TerminalSquare className="h-4 w-4 text-primary" />
+                  <p className="font-semibold">Job 时间线</p>
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-2">
                   {selectedRun.jobs.map((job) => (
-                    <div key={job.id} className="rounded-[24px] border border-border p-5">
+                    <div key={job.id} className="rounded-xl border border-border p-3">
                       <div className="flex flex-wrap items-start justify-between gap-3">
                         <div>
                           <p className="font-medium">{job.stage}</p>
-                          <p className="mt-1 text-sm text-muted-foreground">{job.message || 'No job note captured'}</p>
+                          <p className="mt-0.5 text-xs text-muted-foreground">{job.message || '暂无 Job 备注'}</p>
                         </div>
                         <StatusBadge value={job.status} />
                       </div>
-                      <p className="mt-3 text-xs text-muted-foreground">
-                        {formatDate(job.started_at)} to {formatDate(job.finished_at)}
+                      <p className="mt-2 text-xs text-muted-foreground">
+                        {formatDate(job.started_at)} 至 {formatDate(job.finished_at)}
                       </p>
                     </div>
                   ))}
@@ -451,8 +451,8 @@ export function PipelineRunsConsole() {
               </div>
             </div>
           ) : (
-            <div className="flex min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-border text-sm text-muted-foreground">
-              No pipeline run selected.
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+              未选择流水线任务。
             </div>
           )}
         </div>

@@ -64,12 +64,12 @@ export function UsersAccessConsole() {
   const summary = snapshot?.summary || {}
 
   return (
-    <div className="space-y-6 p-6 lg:p-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">用户权限</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">账号、会话与登录治理</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">用户权限</p>
+          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">账号、会话与登录治理</h1>
+          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">
             管理用户启停、账号解锁、会话撤销，并查看近期登录与安全事件。
           </p>
         </div>
@@ -79,48 +79,48 @@ export function UsersAccessConsole() {
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-4">
         {[
           ['用户数', summary.users],
           ['活跃用户', summary.active_users],
           ['锁定用户', summary.locked_users],
           ['活跃会话', summary.active_sessions]
         ].map(([label, count]) => (
-          <div key={String(label)} className="rounded-2xl border border-border bg-white p-5 shadow-panel">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
-            <p className="mt-3 text-3xl font-semibold">{Number(count || 0)}</p>
+          <div key={String(label)} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
+            <p className="mt-1.5 text-2xl font-semibold">{Number(count || 0)}</p>
           </div>
         ))}
       </div>
 
-      <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
         <p className="font-semibold">用户列表</p>
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
               <tr>
-                <th className="pb-3 pr-4">用户</th>
-                <th className="pb-3 pr-4">角色</th>
-                <th className="pb-3 pr-4">状态</th>
-                <th className="pb-3 pr-4">失败次数</th>
-                <th className="pb-3 pr-4">最近登录</th>
-                <th className="pb-3 pr-4">操作</th>
+                <th className="pb-2 pr-3">用户</th>
+                <th className="pb-2 pr-3">角色</th>
+                <th className="pb-2 pr-3">状态</th>
+                <th className="pb-2 pr-3">失败次数</th>
+                <th className="pb-2 pr-3">最近登录</th>
+                <th className="pb-2 pr-3">操作</th>
               </tr>
             </thead>
             <tbody>
               {(snapshot?.users || []).map((user) => (
                 <tr key={user.id} className="border-b border-border/70">
-                  <td className="py-3 pr-4">
+                  <td className="py-2 pr-3">
                     <div className="font-medium">{value(user.display_name || user.username)}</div>
                     <div className="text-xs text-muted-foreground">{value(user.email)}</div>
                   </td>
-                  <td className="py-3 pr-4"><StatusBadge value={value(user.role)} /></td>
-                  <td className="py-3 pr-4">
+                  <td className="py-2 pr-3"><StatusBadge value={value(user.role)} /></td>
+                  <td className="py-2 pr-3">
                     <StatusBadge value={Number(user.is_active) ? 'active' : 'disabled'} />
                   </td>
-                  <td className="py-3 pr-4 text-muted-foreground">{value(user.failed_login_count)}</td>
-                  <td className="py-3 pr-4 text-muted-foreground">{formatDate(user.last_login_at)}</td>
-                  <td className="py-3 pr-4">
+                  <td className="py-2 pr-3 text-muted-foreground">{value(user.failed_login_count)}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{formatDate(user.last_login_at)}</td>
+                  <td className="py-2 pr-3">
                     <div className="flex flex-wrap gap-2">
                       <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'unlockUser', userId: user.id }, '用户已解锁')}>
                         解锁
@@ -142,21 +142,21 @@ export function UsersAccessConsole() {
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-semibold">角色权限矩阵</p>
-            <p className="mt-1 text-sm text-muted-foreground">Planv2 运营角色及其可写入的系统范围。</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Planv2 运营角色及其可写入的系统范围。</p>
           </div>
           <StatusBadge value={`${snapshot?.rolePermissions.length || 0} grants`} />
         </div>
-        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-5">
           {['admin', 'evidence_ops', 'content_seo_editor', 'commerce_ops', 'viewer'].map((role) => {
             const permissions = (snapshot?.rolePermissions || []).filter((item) => item.role === role && Number(item.allowed))
             return (
-              <div key={role} className="rounded-2xl border border-border bg-slate-50 p-4">
+              <div key={role} className="rounded-xl border border-border bg-slate-50 p-3">
                 <p className="text-sm font-semibold capitalize text-slate-950">{role.replace(/_/g, ' ')}</p>
-                <div className="mt-3 flex flex-wrap gap-2">
+                <div className="mt-2 flex flex-wrap gap-1.5">
                   {permissions.map((item) => (
                     <StatusBadge key={`${role}-${item.permission}`} value={String(item.permission)} />
                   ))}
@@ -167,27 +167,27 @@ export function UsersAccessConsole() {
         </div>
       </section>
 
-      <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
+      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
         <p className="font-semibold">会话</p>
-        <div className="mt-4 overflow-x-auto">
+        <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
+            <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
               <tr>
-                <th className="pb-3 pr-4">用户</th>
-                <th className="pb-3 pr-4">IP</th>
-                <th className="pb-3 pr-4">状态</th>
-                <th className="pb-3 pr-4">最近活动</th>
-                <th className="pb-3 pr-4">操作</th>
+                <th className="pb-2 pr-3">用户</th>
+                <th className="pb-2 pr-3">IP</th>
+                <th className="pb-2 pr-3">状态</th>
+                <th className="pb-2 pr-3">最近活动</th>
+                <th className="pb-2 pr-3">操作</th>
               </tr>
             </thead>
             <tbody>
               {(snapshot?.sessions || []).slice(0, 40).map((session) => (
                 <tr key={session.id} className="border-b border-border/70">
-                  <td className="py-3 pr-4 font-medium">{value(session.username || `用户 #${session.user_id}`)}</td>
-                  <td className="py-3 pr-4 text-muted-foreground">{value(session.ip_address)}</td>
-                  <td className="py-3 pr-4"><StatusBadge value={session.revoked_at ? 'revoked' : 'active'} /></td>
-                  <td className="py-3 pr-4 text-muted-foreground">{formatDate(session.last_activity_at)}</td>
-                  <td className="py-3 pr-4">
+                  <td className="py-2 pr-3 font-medium">{value(session.username || `用户 #${session.user_id}`)}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">{value(session.ip_address)}</td>
+                  <td className="py-2 pr-3"><StatusBadge value={session.revoked_at ? 'revoked' : 'active'} /></td>
+                  <td className="py-2 pr-3 text-muted-foreground">{formatDate(session.last_activity_at)}</td>
+                  <td className="py-2 pr-3">
                     {!session.revoked_at ? (
                       <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'revokeSession', sessionId: session.id }, '会话已撤销')}>
                         撤销

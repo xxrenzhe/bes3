@@ -51,18 +51,18 @@ export function PromptsConsole() {
   }, [])
 
   return (
-    <div className="grid gap-6 p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
-      <section className="space-y-6">
+    <div className="grid gap-4 p-4 sm:p-5 lg:grid-cols-[0.9fr_1.1fr] lg:p-6">
+      <section className="space-y-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">提示词注册表</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">AI 提示词版本管理</h1>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">提示词注册表</p>
+          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">AI 提示词版本管理</h1>
         </div>
-        <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
-          <div className="space-y-4">
+        <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+          <div className="space-y-2">
             {groups.map((group) => (
               <button
                 key={group.promptId}
-                className="w-full rounded-[24px] border border-border px-5 py-4 text-left transition-colors hover:bg-[#f7f1e4]"
+                className="w-full rounded-xl border border-border px-3 py-2.5 text-left transition-colors hover:bg-[#f7f1e4]"
                 onClick={() => {
                   setSelectedPromptId(group.promptId)
                   void loadVersions(group.promptId)
@@ -80,18 +80,18 @@ export function PromptsConsole() {
           </div>
         </div>
       </section>
-      <section className="space-y-6">
-        <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">创建版本</p>
-          <div className="mt-4 grid gap-4 sm:grid-cols-2">
+      <section className="space-y-4">
+        <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">创建版本</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
             <Input placeholder="promptId" value={draft.promptId} onChange={(event) => setDraft((current) => ({ ...current, promptId: event.target.value }))} />
             <Input placeholder="category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))} />
             <Input placeholder="name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
             <Input placeholder="version" value={draft.version} onChange={(event) => setDraft((current) => ({ ...current, version: event.target.value }))} />
           </div>
-          <Textarea className="mt-4 min-h-[200px]" placeholder="提示词内容" value={draft.promptContent} onChange={(event) => setDraft((current) => ({ ...current, promptContent: event.target.value }))} />
+          <Textarea className="mt-3 min-h-[160px]" placeholder="提示词内容" value={draft.promptContent} onChange={(event) => setDraft((current) => ({ ...current, promptContent: event.target.value }))} />
           <Button
-            className="mt-4"
+            className="mt-3"
             disabled={isPending || !draft.promptId || !draft.version || !draft.promptContent}
             onClick={() => {
               startTransition(async () => {
@@ -114,12 +114,12 @@ export function PromptsConsole() {
             保存为未启用版本
           </Button>
         </div>
-        <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">{selectedPromptId ? `${selectedPromptId} 的版本` : '版本列表'}</p>
-          <div className="mt-4 space-y-4">
+        <div className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+          <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">{selectedPromptId ? `${selectedPromptId} 的版本` : '版本列表'}</p>
+          <div className="mt-3 space-y-2">
             {versions.map((version) => (
-              <div key={version.id} className="rounded-[24px] border border-border px-5 py-4">
-                <div className="flex items-start justify-between gap-4">
+              <div key={version.id} className="rounded-xl border border-border px-3 py-2.5">
+                <div className="flex items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{version.version}</p>
                     <p className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString()}</p>
@@ -186,7 +186,7 @@ export function PromptsConsole() {
                     ) : null}
                   </div>
                 </div>
-                <pre className="mt-4 overflow-x-auto rounded-2xl bg-[#f7f1e4] p-4 text-xs leading-6 text-slate-700">{version.promptContent}</pre>
+                <pre className="mt-3 max-h-64 overflow-x-auto rounded-xl bg-[#f7f1e4] p-3 text-xs leading-6 text-slate-700">{version.promptContent}</pre>
               </div>
             ))}
           </div>

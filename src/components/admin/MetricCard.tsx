@@ -8,11 +8,11 @@ export function MetricCard({
   description: string
 }) {
   return (
-    <div className="relative overflow-hidden rounded-[2rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_28px_60px_-36px_rgba(15,23,42,0.28)]">
-      <div className="absolute inset-x-0 top-0 h-1 bg-[linear-gradient(90deg,#059669,#7dd3fc)]" />
-      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-500">{label}</p>
-      <div className="mt-4 text-4xl font-black tracking-tight text-slate-950">{value.toLocaleString()}</div>
-      <p className="mt-3 text-sm leading-7 text-slate-600">{description}</p>
+    <div className="relative overflow-hidden rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+      <div className="absolute inset-x-0 top-0 h-0.5 bg-[linear-gradient(90deg,#059669,#7dd3fc)]" />
+      <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500">{label}</p>
+      <div className="mt-2 text-2xl font-black tracking-tight text-slate-950">{value.toLocaleString()}</div>
+      <p className="mt-1.5 line-clamp-2 text-xs leading-5 text-slate-600">{description}</p>
     </div>
   )
 }

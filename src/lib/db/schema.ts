@@ -973,11 +973,12 @@ async function ensureIndex(db: DatabaseAdapter, indexName: string, statement: st
 
 async function ensureAdminOpsSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
 
   await ensureColumn(db, 'users', 'failed_login_count', 'INTEGER NOT NULL DEFAULT 0')
-  await ensureColumn(db, 'users', 'locked_until', 'TEXT')
-  await ensureColumn(db, 'users', 'last_failed_login', 'TEXT')
-  await ensureColumn(db, 'users', 'last_login_at', 'TEXT')
+  await ensureColumn(db, 'users', 'locked_until', timestampType)
+  await ensureColumn(db, 'users', 'last_failed_login', timestampType)
+  await ensureColumn(db, 'users', 'last_login_at', timestampType)
   await ensureColumn(db, 'users', 'must_change_password', 'INTEGER NOT NULL DEFAULT 0')
 
   await ensureColumn(db, 'admin_login_attempts', 'request_id', 'TEXT')
@@ -1104,19 +1105,20 @@ async function ensureAdminOpsSchema(db: DatabaseAdapter): Promise<void> {
 
 async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
   await ensureColumn(db, 'content_pipeline_runs', 'run_type', "TEXT NOT NULL DEFAULT 'fullPipeline'")
   await ensureColumn(db, 'content_pipeline_runs', 'requested_action', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'worker_id', 'TEXT')
   await ensureColumn(db, 'content_pipeline_runs', 'priority', 'INTEGER NOT NULL DEFAULT 100')
-  await ensureColumn(db, 'content_pipeline_runs', 'scheduled_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'scheduled_at', timestampType)
   await ensureColumn(db, 'content_pipeline_runs', 'locked_by', 'TEXT')
-  await ensureColumn(db, 'content_pipeline_runs', 'lock_expires_at', 'TEXT')
-  await ensureColumn(db, 'content_pipeline_runs', 'last_heartbeat_at', 'TEXT')
-  await ensureColumn(db, 'content_pipeline_runs', 'cancel_requested_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'lock_expires_at', timestampType)
+  await ensureColumn(db, 'content_pipeline_runs', 'last_heartbeat_at', timestampType)
+  await ensureColumn(db, 'content_pipeline_runs', 'cancel_requested_at', timestampType)
   await ensureColumn(db, 'content_pipeline_runs', 'payload_json', jsonType)
-  await ensureColumn(db, 'content_pipeline_runs', 'locked_at', 'TEXT')
-  await ensureColumn(db, 'content_pipeline_runs', 'started_at', 'TEXT')
-  await ensureColumn(db, 'content_pipeline_runs', 'finished_at', 'TEXT')
+  await ensureColumn(db, 'content_pipeline_runs', 'locked_at', timestampType)
+  await ensureColumn(db, 'content_pipeline_runs', 'started_at', timestampType)
+  await ensureColumn(db, 'content_pipeline_runs', 'finished_at', timestampType)
   await ensureColumn(db, 'content_pipeline_runs', 'attempt_count', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'content_pipeline_jobs', 'payload_json', jsonType)
   await ensureIndex(
@@ -1156,6 +1158,8 @@ async function ensurePipelineRunSchema(db: DatabaseAdapter): Promise<void> {
 
 async function ensureProductScrapeTaskSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'product_scrape_tasks', 'affiliate_product_id', 'INTEGER')
   await ensureColumn(db, 'product_scrape_tasks', 'product_id', 'INTEGER')
   await ensureColumn(db, 'product_scrape_tasks', 'final_url', 'TEXT')
@@ -1173,9 +1177,9 @@ async function ensureProductScrapeTaskSchema(db: DatabaseAdapter): Promise<void>
   await ensureColumn(db, 'product_scrape_tasks', 'browser_signals_json', jsonType)
   await ensureColumn(db, 'product_scrape_tasks', 'result_json', jsonType)
   await ensureColumn(db, 'product_scrape_tasks', 'error_message', 'TEXT')
-  await ensureColumn(db, 'product_scrape_tasks', 'started_at', 'TEXT')
-  await ensureColumn(db, 'product_scrape_tasks', 'completed_at', 'TEXT')
-  await ensureColumn(db, 'product_scrape_tasks', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_scrape_tasks', 'started_at', timestampType)
+  await ensureColumn(db, 'product_scrape_tasks', 'completed_at', timestampType)
+  await ensureColumn(db, 'product_scrape_tasks', 'updated_at', timestampWithDefaultType)
   await ensureIndex(
     db,
     'idx_product_scrape_tasks_status_updated',
@@ -1208,8 +1212,10 @@ async function ensureProductScrapeTaskSchema(db: DatabaseAdapter): Promise<void>
 
 async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
-  await ensureColumn(db, 'products', 'price_last_checked_at', 'TEXT')
-  await ensureColumn(db, 'products', 'offer_last_checked_at', 'TEXT')
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
+  await ensureColumn(db, 'products', 'price_last_checked_at', timestampType)
+  await ensureColumn(db, 'products', 'offer_last_checked_at', timestampType)
   await ensureColumn(db, 'products', 'attribute_completeness_score', 'REAL NOT NULL DEFAULT 0')
   await ensureColumn(db, 'products', 'data_confidence_score', 'REAL NOT NULL DEFAULT 0')
   await ensureColumn(db, 'products', 'source_count', 'INTEGER NOT NULL DEFAULT 0')
@@ -1235,7 +1241,7 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
 
   await ensureColumn(db, 'merchants', 'website_url', 'TEXT')
   await ensureColumn(db, 'merchants', 'country_code', 'TEXT')
-  await ensureColumn(db, 'merchants', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'merchants', 'updated_at', timestampWithDefaultType)
 
   await ensureColumn(db, 'product_offers', 'merchant_sku', 'TEXT')
   await ensureColumn(db, 'product_offers', 'availability_status', 'TEXT')
@@ -1246,25 +1252,25 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'product_offers', 'reference_price_currency', 'TEXT')
   await ensureColumn(db, 'product_offers', 'reference_price_type', 'TEXT')
   await ensureColumn(db, 'product_offers', 'reference_price_source', 'TEXT')
-  await ensureColumn(db, 'product_offers', 'reference_price_last_checked_at', 'TEXT')
+  await ensureColumn(db, 'product_offers', 'reference_price_last_checked_at', timestampType)
   await ensureColumn(db, 'product_offers', 'condition_label', 'TEXT')
   await ensureColumn(db, 'product_offers', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
   await ensureColumn(db, 'product_offers', 'source_url', 'TEXT')
   await ensureColumn(db, 'product_offers', 'confidence_score', 'REAL NOT NULL DEFAULT 0.7')
   await ensureColumn(db, 'product_offers', 'raw_payload_json', jsonType)
-  await ensureColumn(db, 'product_offers', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'product_offers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_offers', 'last_checked_at', timestampWithDefaultType)
+  await ensureColumn(db, 'product_offers', 'updated_at', timestampWithDefaultType)
 
   await ensureColumn(db, 'product_price_history', 'product_offer_id', 'INTEGER')
   await ensureColumn(db, 'product_price_history', 'availability_status', 'TEXT')
-  await ensureColumn(db, 'product_price_history', 'captured_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_price_history', 'captured_at', timestampWithDefaultType)
 
   await ensureColumn(db, 'product_attribute_facts', 'source_url', 'TEXT')
   await ensureColumn(db, 'product_attribute_facts', 'source_type', "TEXT NOT NULL DEFAULT 'scrape'")
   await ensureColumn(db, 'product_attribute_facts', 'confidence_score', 'REAL NOT NULL DEFAULT 0.7')
   await ensureColumn(db, 'product_attribute_facts', 'is_verified', 'INTEGER NOT NULL DEFAULT 0')
-  await ensureColumn(db, 'product_attribute_facts', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'product_attribute_facts', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'product_attribute_facts', 'last_checked_at', timestampWithDefaultType)
+  await ensureColumn(db, 'product_attribute_facts', 'updated_at', timestampWithDefaultType)
 
   await ensureColumn(db, 'brand_policies', 'brand_name', 'TEXT')
   await ensureColumn(db, 'brand_policies', 'brand_slug', 'TEXT')
@@ -1276,8 +1282,8 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'brand_policies', 'source_url', 'TEXT')
   await ensureColumn(db, 'brand_policies', 'source_type', "TEXT NOT NULL DEFAULT 'editorial'")
   await ensureColumn(db, 'brand_policies', 'confidence_score', 'REAL NOT NULL DEFAULT 0.8')
-  await ensureColumn(db, 'brand_policies', 'last_verified_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'brand_policies', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'brand_policies', 'last_verified_at', timestampWithDefaultType)
+  await ensureColumn(db, 'brand_policies', 'updated_at', timestampWithDefaultType)
 
   await ensureColumn(db, 'compatibility_facts', 'brand_name', 'TEXT')
   await ensureColumn(db, 'compatibility_facts', 'brand_slug', 'TEXT')
@@ -1289,8 +1295,8 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'compatibility_facts', 'source_type', "TEXT NOT NULL DEFAULT 'editorial'")
   await ensureColumn(db, 'compatibility_facts', 'confidence_score', 'REAL NOT NULL DEFAULT 0.8')
   await ensureColumn(db, 'compatibility_facts', 'is_verified', 'INTEGER NOT NULL DEFAULT 0')
-  await ensureColumn(db, 'compatibility_facts', 'last_checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'compatibility_facts', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'compatibility_facts', 'last_checked_at', timestampWithDefaultType)
+  await ensureColumn(db, 'compatibility_facts', 'updated_at', timestampWithDefaultType)
 
   await ensureIndex(
     db,
@@ -1478,11 +1484,12 @@ async function ensureProductGraphSchema(db: DatabaseAdapter): Promise<void> {
 }
 
 async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<void> {
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'newsletter_subscribers', 'intent', "TEXT NOT NULL DEFAULT 'offers'")
   await ensureColumn(db, 'newsletter_subscribers', 'category_slug', 'TEXT')
   await ensureColumn(db, 'newsletter_subscribers', 'cadence', "TEXT NOT NULL DEFAULT 'weekly'")
   await ensureColumn(db, 'newsletter_subscribers', 'notes', 'TEXT')
-  await ensureColumn(db, 'newsletter_subscribers', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'newsletter_subscribers', 'updated_at', timestampWithDefaultType)
 
   if (db.type === 'postgres') {
     await db.exec("ALTER TABLE newsletter_subscribers ALTER COLUMN intent SET DEFAULT 'offers'")
@@ -1498,12 +1505,13 @@ async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<vo
 }
 
 async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'merchant_click_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
   await ensureColumn(db, 'merchant_click_events', 'target_url', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'referer', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'user_agent', 'TEXT')
-  await ensureColumn(db, 'merchant_click_events', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'merchant_click_events', 'created_at', timestampWithDefaultType)
   await ensureIndex(
     db,
     'idx_merchant_click_events_product_created_at',
@@ -1523,15 +1531,17 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
 
 async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'link_inspector_runs', 'status', "TEXT NOT NULL DEFAULT 'queued'")
   await ensureColumn(db, 'link_inspector_runs', 'total_checked', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'issues_found', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'broken_count', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'out_of_stock_count', 'INTEGER NOT NULL DEFAULT 0')
   await ensureColumn(db, 'link_inspector_runs', 'payload_json', jsonType)
-  await ensureColumn(db, 'link_inspector_runs', 'started_at', 'TEXT')
-  await ensureColumn(db, 'link_inspector_runs', 'finished_at', 'TEXT')
-  await ensureColumn(db, 'link_inspector_runs', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'link_inspector_runs', 'started_at', timestampType)
+  await ensureColumn(db, 'link_inspector_runs', 'finished_at', timestampType)
+  await ensureColumn(db, 'link_inspector_runs', 'created_at', timestampWithDefaultType)
   await ensureColumn(db, 'link_inspector_results', 'product_id', 'INTEGER')
   await ensureColumn(db, 'link_inspector_results', 'product_name', 'TEXT')
   await ensureColumn(db, 'link_inspector_results', 'source_url', 'TEXT')
@@ -1541,7 +1551,7 @@ async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'link_inspector_results', 'issue_type', 'TEXT')
   await ensureColumn(db, 'link_inspector_results', 'issue_detail', 'TEXT')
   await ensureColumn(db, 'link_inspector_results', 'response_snippet', 'TEXT')
-  await ensureColumn(db, 'link_inspector_results', 'checked_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'link_inspector_results', 'checked_at', timestampWithDefaultType)
   await ensureIndex(
     db,
     'idx_link_inspector_runs_created_at',
@@ -1574,6 +1584,7 @@ async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {
 
 async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'buyer_decision_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'event_type', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'product_id', 'INTEGER')
@@ -1581,7 +1592,7 @@ async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
   await ensureColumn(db, 'buyer_decision_events', 'metadata_json', jsonType)
   await ensureColumn(db, 'buyer_decision_events', 'referer', 'TEXT')
   await ensureColumn(db, 'buyer_decision_events', 'user_agent', 'TEXT')
-  await ensureColumn(db, 'buyer_decision_events', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'buyer_decision_events', 'created_at', timestampWithDefaultType)
   await ensureIndex(
     db,
     'idx_buyer_decision_events_event_created_at',
@@ -1609,6 +1620,8 @@ async function ensureDecisionEventSchema(db: DatabaseAdapter): Promise<void> {
 
 async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<void> {
   const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
+  const timestampType = db.type === 'postgres' ? 'TIMESTAMPTZ' : 'TEXT'
+  const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'price_alert_notifications', 'price_alert_id', 'INTEGER')
   await ensureColumn(db, 'price_alert_notifications', 'product_id', 'INTEGER')
   await ensureColumn(db, 'price_alert_notifications', 'email', 'TEXT')
@@ -1617,10 +1630,10 @@ async function ensurePriceAlertNotificationSchema(db: DatabaseAdapter): Promise<
   await ensureColumn(db, 'price_alert_notifications', 'dedupe_key', 'TEXT')
   await ensureColumn(db, 'price_alert_notifications', 'payload_json', jsonType)
   await ensureColumn(db, 'price_alert_notifications', 'error_message', 'TEXT')
-  await ensureColumn(db, 'price_alert_notifications', 'queued_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'price_alert_notifications', 'sent_at', 'TEXT')
-  await ensureColumn(db, 'price_alert_notifications', 'created_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
-  await ensureColumn(db, 'price_alert_notifications', 'updated_at', 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP')
+  await ensureColumn(db, 'price_alert_notifications', 'queued_at', timestampWithDefaultType)
+  await ensureColumn(db, 'price_alert_notifications', 'sent_at', timestampType)
+  await ensureColumn(db, 'price_alert_notifications', 'created_at', timestampWithDefaultType)
+  await ensureColumn(db, 'price_alert_notifications', 'updated_at', timestampWithDefaultType)
   await ensureIndex(
     db,
     'idx_price_alert_notifications_status',

@@ -170,12 +170,12 @@ export function ArticlesConsole() {
   }
 
   return (
-    <div className="space-y-6 p-6 lg:p-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">文章</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">带 SEO 校对的编辑工作台</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">文章</p>
+          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">带 SEO 校对的编辑工作台</h1>
+          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">
             审核生成内容，调整 slug 和 SEO 元数据，并在文章队列中完成发布或草稿保留。
           </p>
         </div>
@@ -193,23 +193,23 @@ export function ArticlesConsole() {
         </Button>
       </div>
 
-      <div className="grid gap-6 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
-          <div className="mb-6 flex items-start justify-between gap-4">
+      <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+          <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary">队列</p>
-              <p className="mt-2 text-sm text-muted-foreground">{articles.length} 篇生成文章待审核。</p>
+              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">队列</p>
+              <p className="mt-1 text-xs text-muted-foreground">{articles.length} 篇生成文章待审核。</p>
             </div>
             {selectedArticleListItem ? <StatusBadge value={selectedArticleListItem.status} /> : null}
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
+              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">标题</th>
-                  <th className="pb-3 pr-3">类型</th>
-                  <th className="pb-3 pr-3">状态</th>
-                  <th className="pb-3 pr-3">更新时间</th>
+                  <th className="pb-2 pr-3">标题</th>
+                  <th className="pb-2 pr-3">类型</th>
+                  <th className="pb-2 pr-3">状态</th>
+                  <th className="pb-2 pr-3">更新时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -224,13 +224,13 @@ export function ArticlesConsole() {
                       void selectArticle(article.id)
                     }}
                   >
-                    <td className="py-4 pr-3">
+                    <td className="py-2.5 pr-3">
                       <div className="font-medium">{article.title}</div>
-                      <div className="text-muted-foreground">{article.product_name}</div>
+                      <div className="text-xs text-muted-foreground">{article.product_name}</div>
                     </td>
-                    <td className="py-4 pr-3">{article.article_type}</td>
-                    <td className="py-4 pr-3"><StatusBadge value={article.status} /></td>
-                    <td className="py-4 pr-3 text-muted-foreground">{formatDate(article.updated_at)}</td>
+                    <td className="py-2.5 pr-3">{article.article_type}</td>
+                    <td className="py-2.5 pr-3"><StatusBadge value={article.status} /></td>
+                    <td className="py-2.5 pr-3 text-muted-foreground">{formatDate(article.updated_at)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -238,10 +238,10 @@ export function ArticlesConsole() {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel xl:max-h-[calc(100vh-8rem)] xl:overflow-y-auto">
+        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
           {selectedArticle && draft ? (
-            <div className="space-y-6">
-              <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-4">
+              <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge value={selectedArticle.article_type} />
@@ -252,15 +252,15 @@ export function ArticlesConsole() {
                       </span>
                     ) : null}
                   </div>
-                  <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">{selectedArticle.title}</h2>
-                  <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    {selectedArticle.summary || 'No article summary captured yet.'}
+                  <h2 className="mt-2 font-[var(--font-display)] text-2xl font-semibold tracking-tight">{selectedArticle.title}</h2>
+                  <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+                    {selectedArticle.summary || '暂无文章摘要。'}
                   </p>
                 </div>
-                <FileSearch className="h-6 w-6 text-primary" />
+                <FileSearch className="h-5 w-5 text-primary" />
               </div>
 
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-wrap gap-2">
                 {selectedArticle.status === 'published' ? (
                   <Link
                     href={getArticlePath(selectedArticle.article_type, selectedArticle.slug)}
@@ -347,33 +347,33 @@ export function ArticlesConsole() {
                 </Button>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
                 <label className="block space-y-2">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Title</span>
+                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">标题</span>
                   <Input
                     value={draft.title}
                     onChange={(event) => setDraft((current) => current ? { ...current, title: event.target.value } : current)}
-                    className="min-h-[48px] rounded-2xl"
+                    className="min-h-10 rounded-xl"
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Slug</span>
+                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">Slug</span>
                   <Input
                     value={draft.slug}
                     onChange={(event) => setDraft((current) => current ? { ...current, slug: event.target.value } : current)}
-                    className="min-h-[48px] rounded-2xl font-mono"
+                    className="min-h-10 rounded-xl font-mono"
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Keyword</span>
+                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">关键词</span>
                   <Input
                     value={draft.keyword}
                     onChange={(event) => setDraft((current) => current ? { ...current, keyword: event.target.value } : current)}
-                    className="min-h-[48px] rounded-2xl"
+                    className="min-h-10 rounded-xl"
                   />
                 </label>
                 <label className="block space-y-2">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Status</span>
+                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">状态</span>
                   <select
                     value={draft.status}
                     onChange={(event) =>
@@ -381,177 +381,177 @@ export function ArticlesConsole() {
                         current ? { ...current, status: event.target.value === 'draft' ? 'draft' : 'published' } : current
                       )
                     }
-                    className="flex min-h-[48px] w-full rounded-2xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                    className="flex min-h-10 w-full rounded-xl border border-input bg-background px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                   >
-                    <option value="published">Published</option>
-                    <option value="draft">Draft</option>
+                    <option value="published">已发布</option>
+                    <option value="draft">草稿</option>
                   </select>
                 </label>
                 <label className="block space-y-2 md:col-span-2">
-                  <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Hero Image URL</span>
+                  <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">主图 URL</span>
                   <Input
                     value={draft.hero_image_url}
                     onChange={(event) => setDraft((current) => current ? { ...current, hero_image_url: event.target.value } : current)}
-                    className="min-h-[48px] rounded-2xl"
+                    className="min-h-10 rounded-xl"
                   />
                 </label>
               </div>
 
-              <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-[24px] border border-border p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Product</p>
-                  <p className="mt-2 text-sm font-medium">{selectedArticle.product_name || 'No linked product'}</p>
+              <div className="grid gap-3 md:grid-cols-3">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">商品</p>
+                  <p className="mt-1 text-sm font-medium">{selectedArticle.product_name || '暂无关联商品'}</p>
                 </div>
-                <div className="rounded-[24px] border border-border p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Public Path</p>
-                  <p className="mt-2 break-all font-mono text-sm font-medium">{nextPublicPath || 'N/A'}</p>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">公开路径</p>
+                  <p className="mt-1 break-all font-mono text-sm font-medium">{nextPublicPath || '暂无'}</p>
                 </div>
-                <div className="rounded-[24px] border border-border p-5">
-                  <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Published</p>
-                  <p className="mt-2 text-sm font-medium">{formatDate(selectedArticle.published_at)}</p>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">发布时间</p>
+                  <p className="mt-1 text-sm font-medium">{formatDate(selectedArticle.published_at)}</p>
                 </div>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
                 <label className="block space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Summary</span>
-                    <span className="text-xs text-muted-foreground">{draft.summary.trim().length} chars</span>
+                    <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">摘要</span>
+                    <span className="text-xs text-muted-foreground">{draft.summary.trim().length} 字符</span>
                   </div>
                   <Textarea
                     value={draft.summary}
                     onChange={(event) => setDraft((current) => current ? { ...current, summary: event.target.value } : current)}
-                    rows={8}
-                    className="rounded-2xl"
+                    rows={5}
+                    className="rounded-xl"
                   />
                 </label>
 
-                <div className="rounded-[24px] border border-border p-5">
-                  <div className="flex items-start justify-between gap-4">
+                <div className="rounded-xl border border-border p-3">
+                  <div className="flex items-start justify-between gap-3">
                     <div>
-                      <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SEO Proofing</p>
-                      <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                        Keep title compact and description descriptive enough for search snippets.
+                      <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">SEO 校对</p>
+                      <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                        标题保持紧凑，描述覆盖搜索摘要需要的关键信息。
                       </p>
                     </div>
                   </div>
-                  <div className="mt-4 grid gap-4 md:grid-cols-2">
-                    <div className="rounded-[20px] bg-[#f7f1e4] p-4">
+                  <div className="mt-3 grid gap-3 md:grid-cols-2">
+                    <div className="rounded-xl bg-[#f7f1e4] p-3">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium">SEO title</span>
+                        <span className="text-sm font-medium">SEO 标题</span>
                         <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', seoTitleState.className)}>
                           {seoTitleState.label}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm text-muted-foreground">{draft.seo_title.trim().length} / 60 characters</p>
+                      <p className="mt-2 text-xs text-muted-foreground">{draft.seo_title.trim().length} / 60 字符</p>
                     </div>
-                    <div className="rounded-[20px] bg-[#f7f1e4] p-4">
+                    <div className="rounded-xl bg-[#f7f1e4] p-3">
                       <div className="flex items-center justify-between gap-3">
-                        <span className="text-sm font-medium">SEO description</span>
+                        <span className="text-sm font-medium">SEO 描述</span>
                         <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', seoDescriptionState.className)}>
                           {seoDescriptionState.label}
                         </span>
                       </div>
-                      <p className="mt-3 text-sm text-muted-foreground">{draft.seo_description.trim().length} / 160 characters</p>
+                      <p className="mt-2 text-xs text-muted-foreground">{draft.seo_description.trim().length} / 160 字符</p>
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="grid gap-5 md:grid-cols-2">
+              <div className="grid gap-3 md:grid-cols-2">
                 <label className="block space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SEO Title</span>
-                    <span className="text-xs text-muted-foreground">{draft.seo_title.trim().length} chars</span>
+                    <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">SEO 标题</span>
+                    <span className="text-xs text-muted-foreground">{draft.seo_title.trim().length} 字符</span>
                   </div>
                   <Input
                     value={draft.seo_title}
                     onChange={(event) => setDraft((current) => current ? { ...current, seo_title: event.target.value } : current)}
-                    className="min-h-[48px] rounded-2xl"
+                    className="min-h-10 rounded-xl"
                   />
                 </label>
                 <label className="block space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="text-xs uppercase tracking-[0.18em] text-muted-foreground">SEO Description</span>
-                    <span className="text-xs text-muted-foreground">{draft.seo_description.trim().length} chars</span>
+                    <span className="text-xs uppercase tracking-[0.16em] text-muted-foreground">SEO 描述</span>
+                    <span className="text-xs text-muted-foreground">{draft.seo_description.trim().length} 字符</span>
                   </div>
                   <Textarea
                     value={draft.seo_description}
                     onChange={(event) => setDraft((current) => current ? { ...current, seo_description: event.target.value } : current)}
                     rows={4}
-                    className="rounded-2xl"
+                    className="rounded-xl"
                   />
                 </label>
               </div>
 
-              <div className="rounded-[24px] border border-border p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Article Markdown</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                      Keep the editorial source aligned with any manual edits so regeneration context and audits stay readable.
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">文章 Markdown</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      手动编辑后保持源内容同步，便于后续重生成与审计。
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{draft.content_md.length} chars</span>
+                  <span className="text-xs text-muted-foreground">{draft.content_md.length} 字符</span>
                 </div>
                 <Textarea
                   value={draft.content_md}
                   onChange={(event) => setDraft((current) => current ? { ...current, content_md: event.target.value } : current)}
-                  rows={18}
-                  className="mt-4 rounded-2xl font-mono text-xs leading-6"
+                  rows={14}
+                  className="mt-3 rounded-xl font-mono text-xs leading-6"
                 />
               </div>
 
-              <div className="rounded-[24px] border border-border p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Rendered HTML Source</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                      Public article pages render this field directly. Update it when you make structural or phrasing corrections.
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">渲染 HTML 源码</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      前台文章直接渲染此字段，结构或措辞修正后需要同步更新。
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{draft.content_html.length} chars</span>
+                  <span className="text-xs text-muted-foreground">{draft.content_html.length} 字符</span>
                 </div>
                 <Textarea
                   value={draft.content_html}
                   onChange={(event) => setDraft((current) => current ? { ...current, content_html: event.target.value } : current)}
-                  rows={18}
-                  className="mt-4 rounded-2xl font-mono text-xs leading-6"
+                  rows={14}
+                  className="mt-3 rounded-xl font-mono text-xs leading-6"
                 />
               </div>
 
-              <div className="rounded-[24px] border border-border p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Structured Data JSON</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                      Optional, but when present it must stay valid JSON or the save will be rejected.
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">结构化数据 JSON</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      可选；一旦填写必须保持有效 JSON，否则保存会被拒绝。
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{draft.schema_json.trim().length} chars</span>
+                  <span className="text-xs text-muted-foreground">{draft.schema_json.trim().length} 字符</span>
                 </div>
                 <Textarea
                   value={draft.schema_json}
                   onChange={(event) => setDraft((current) => current ? { ...current, schema_json: event.target.value } : current)}
-                  rows={12}
-                  className="mt-4 rounded-2xl font-mono text-xs leading-6"
+                  rows={9}
+                  className="mt-3 rounded-xl font-mono text-xs leading-6"
                 />
               </div>
 
-              <div className="rounded-[24px] border border-border p-5">
-                <div className="flex items-start justify-between gap-4">
+              <div className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Linked SEO Pages</p>
-                    <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                      Saving this article updates the primary linked SEO page path and metadata.
+                    <p className="text-xs uppercase tracking-[0.16em] text-muted-foreground">关联 SEO 页面</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                      保存文章会同步更新主关联 SEO 页面的路径与元数据。
                     </p>
                   </div>
-                  <span className="text-xs text-muted-foreground">{selectedArticle.seo_pages.length} records</span>
+                  <span className="text-xs text-muted-foreground">{selectedArticle.seo_pages.length} 条</span>
                 </div>
-                <div className="mt-4 space-y-3">
+                <div className="mt-3 space-y-2">
                   {selectedArticle.seo_pages.length > 0 ? (
                     selectedArticle.seo_pages.map((page) => (
-                      <div key={page.id} className="rounded-[20px] bg-[#f7f1e4] p-4">
+                      <div key={page.id} className="rounded-xl bg-[#f7f1e4] p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="font-medium">{page.title}</p>
@@ -562,39 +562,39 @@ export function ArticlesConsole() {
                             <StatusBadge value={page.status} />
                           </div>
                         </div>
-                        <p className="mt-3 text-sm leading-7 text-muted-foreground">{page.meta_description}</p>
+                        <p className="mt-2 text-xs leading-5 text-muted-foreground">{page.meta_description}</p>
                       </div>
                     ))
                   ) : (
-                    <div className="rounded-[20px] border border-dashed border-border p-4 text-sm text-muted-foreground">
-                      No SEO page has been created for this article yet. Saving will create one automatically.
+                    <div className="rounded-xl border border-dashed border-border p-3 text-sm text-muted-foreground">
+                      这篇文章还没有关联 SEO 页面，保存后会自动创建。
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="rounded-[24px] border border-border p-5">
-                <div className="flex items-start justify-between gap-4 text-sm">
-                  <span className="text-muted-foreground">Updated</span>
+              <div className="rounded-xl border border-border p-3">
+                <div className="flex items-start justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">更新时间</span>
                   <span className="font-medium">{formatDate(selectedArticle.updated_at)}</span>
                 </div>
-                <div className="mt-3 flex items-start justify-between gap-4 text-sm">
-                  <span className="text-muted-foreground">Article ID</span>
+                <div className="mt-2 flex items-start justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">文章 ID</span>
                   <span className="font-medium">#{selectedArticle.id}</span>
                 </div>
-                <div className="mt-3 flex items-start justify-between gap-4 text-sm">
-                  <span className="text-muted-foreground">Category</span>
-                  <span className="font-medium">{selectedArticle.product_category || 'N/A'}</span>
+                <div className="mt-2 flex items-start justify-between gap-3 text-sm">
+                  <span className="text-muted-foreground">分类</span>
+                  <span className="font-medium">{selectedArticle.product_category || '暂无'}</span>
                 </div>
               </div>
             </div>
           ) : isLoadingArticle ? (
-            <div className="flex min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-border text-sm text-muted-foreground">
-              Loading article workspace...
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+              正在加载文章工作台...
             </div>
           ) : (
-            <div className="flex min-h-[320px] items-center justify-center rounded-[24px] border border-dashed border-border text-sm text-muted-foreground">
-              No article selected.
+            <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-dashed border-border text-sm text-muted-foreground">
+              未选择文章。
             </div>
           )}
         </div>

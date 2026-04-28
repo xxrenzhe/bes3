@@ -217,130 +217,130 @@ export function SeoOpsConsole() {
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        toast.error(payload.error || 'SEO automation failed')
+        toast.error(payload.error || 'SEO 自动化失败')
         return
       }
       setAutomationResult(payload.result as AutomationResult)
       await load()
-      toast.success(action === 'automationApply' ? 'SEO automation applied' : 'SEO automation preview completed')
+      toast.success(action === 'automationApply' ? 'SEO 自动化已应用' : 'SEO 自动化预览已完成')
     })
   }
 
   return (
-    <div className="space-y-8 p-6 lg:p-10">
-      <section className="grid gap-6 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-[2.25rem] bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_52%,#0f766e_100%)] p-8 text-white shadow-[0_35px_80px_-45px_rgba(15,23,42,0.8)] lg:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">SEO Ops</p>
-          <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight sm:text-5xl">
-            Indexing, syndication, and link health from one control surface.
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
+        <div className="rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_52%,#0f766e_100%)] p-4 text-white shadow-sm lg:p-5">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200/80">SEO 运营</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight sm:text-3xl">
+            统一管理索引、分发与链接健康。
           </h1>
-          <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-200">
-            Use this panel to re-run Google indexing, dispatch external syndication payloads, inspect merchant links, and confirm the locale footprint exposed to search engines.
+          <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-200">
+            重新运行 Google 索引、外部分发、商家链接巡检，并确认搜索引擎可见的多语言足迹。
           </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Button disabled={isPending} className="rounded-full bg-white text-slate-950 hover:bg-slate-100" onClick={() => triggerAction('linkInspector', 'Link inspector completed')}>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <Button disabled={isPending} className="rounded-full bg-white text-slate-950 hover:bg-slate-100" onClick={() => triggerAction('linkInspector', '链接巡检已完成')}>
               <Search className="mr-2 h-4 w-4" />
-              Run Link Inspector
+              运行链接巡检
             </Button>
-            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('reindex', 'Google indexing re-run finished')}>
+            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('reindex', 'Google 索引重跑完成')}>
               <Globe2 className="mr-2 h-4 w-4" />
-              Re-run Google Indexing
+              重跑 Google 索引
             </Button>
-            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('syndicate', 'Syndication dispatch finished')}>
+            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('syndicate', '外部分发完成')}>
               <Rss className="mr-2 h-4 w-4" />
-              Dispatch Syndication
+              分发 Syndication
             </Button>
           </div>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Locale Footprint</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.supportedLocales.length || 0}</p>
-            <p className="mt-2 text-sm text-slate-600">Public locale variants currently exposed through hreflang and sitemap.</p>
+        <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">语言足迹</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.supportedLocales.length || 0}</p>
+            <p className="mt-1 text-xs text-slate-600">通过 hreflang 和 sitemap 暴露的公开语言版本。</p>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Alignment Audit</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.seoAlignmentAudit.affectedPages || 0}</p>
-            <p className="mt-2 text-sm text-slate-600">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 对齐审计</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.seoAlignmentAudit.affectedPages || 0}</p>
+            <p className="mt-1 text-xs text-slate-600">
               {summary?.seoAlignmentAudit
-                ? `${summary.seoAlignmentAudit.issuesFound} issue(s) across ${summary.seoAlignmentAudit.scannedPages} published SEO pages.`
-                : 'No alignment audit snapshot yet.'}
+                ? `${summary.seoAlignmentAudit.scannedPages} 个已发布 SEO 页中有 ${summary.seoAlignmentAudit.issuesFound} 个问题。`
+                : '暂无对齐审计快照。'}
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Rendered Page Audit</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.seoRemediationQueue.length || 0}</p>
-            <p className="mt-2 text-sm text-slate-600">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">渲染页审计</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.seoRemediationQueue.length || 0}</p>
+            <p className="mt-1 text-xs text-slate-600">
               {summary?.seoRemediationQueue.length
-                ? 'Prioritized remediation items ready for fixing.'
-                : 'No active remediation items in the current queue.'}
+                ? '已有优先修复项待处理。'
+                : '当前队列没有活跃修复项。'}
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Trust Surface Audit</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.trustSurfaceAudit.affectedPages || 0}</p>
-            <p className="mt-2 text-sm text-slate-600">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">信任面审计</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.trustSurfaceAudit.affectedPages || 0}</p>
+            <p className="mt-1 text-xs text-slate-600">
               {summary?.trustSurfaceAudit
-                ? `${summary.trustSurfaceAudit.issuesFound} issue(s) across ${summary.trustSurfaceAudit.scannedPages} trust and machine-entry pages.`
-                : 'No trust-surface audit snapshot yet.'}
+                ? `${summary.trustSurfaceAudit.scannedPages} 个信任与机器入口页中有 ${summary.trustSurfaceAudit.issuesFound} 个问题。`
+                : '暂无信任面审计快照。'}
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Latest Link Run</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">{summary?.lastLinkInspectorRun?.totalChecked || 0}</p>
-            <p className="mt-2 text-sm text-slate-600">
-              {summary?.lastLinkInspectorRun ? `${summary.lastLinkInspectorRun.issuesFound} issue(s) found in the last run.` : 'No inspection run yet.'}
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">最近链接巡检</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.lastLinkInspectorRun?.totalChecked || 0}</p>
+            <p className="mt-1 text-xs text-slate-600">
+              {summary?.lastLinkInspectorRun ? `最近一次发现 ${summary.lastLinkInspectorRun.issuesFound} 个问题。` : '暂无巡检记录。'}
             </p>
           </div>
-          <div className="rounded-[1.75rem] border border-slate-200/70 bg-white/90 p-6 shadow-[0_26px_60px_-40px_rgba(15,23,42,0.26)]">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Recent SEO Events</p>
-            <p className="mt-4 text-4xl font-black tracking-tight text-slate-950">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">近期 SEO 事件</p>
+            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">
               {(summary?.recentIndexingEvents.length || 0) + (summary?.recentSyndicationEvents.length || 0)}
             </p>
-            <p className="mt-2 text-sm text-slate-600">Recent indexing and syndication dispatch records stored in the publish event log.</p>
+            <p className="mt-1 text-xs text-slate-600">发布事件日志中的索引与分发记录。</p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-        <div className="grid gap-8 xl:grid-cols-[0.95fr_1.05fr]">
+      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+        <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
           <div>
             <div className="flex items-center gap-3">
-              <span className="flex h-11 w-11 items-center justify-center rounded-md bg-slate-950 text-white">
-                <CalendarClock className="h-5 w-5" />
+              <span className="flex h-9 w-9 items-center justify-center rounded-md bg-slate-950 text-white">
+                <CalendarClock className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Automation</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Scheduled pSEO runbook</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 自动化</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">定时 pSEO 运行手册</h2>
               </div>
             </div>
-            <p className="mt-5 max-w-2xl text-sm leading-7 text-slate-600">
-              The same runner is used by this panel and by cron. Preview runs validation and path discovery only. Apply mode may import search signals, evolve taxonomy state, and optionally push pSEO URLs to indexing.
+            <p className="mt-3 max-w-2xl text-xs leading-5 text-slate-600">
+              面板和 cron 共用同一 runner。预览只做校验和路径发现；应用会导入搜索信号、更新分类状态，并可推送 pSEO URL 到索引。
             </p>
-            <div className="mt-6 grid gap-3 text-sm text-slate-700 sm:grid-cols-3">
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+            <div className="mt-4 grid gap-2 text-sm text-slate-700 sm:grid-cols-3">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <ShieldCheck className="h-4 w-4 text-emerald-700" />
-                <p className="mt-3 font-semibold text-slate-950">Preview first</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">No writes and no indexing calls.</p>
+                <p className="mt-2 font-semibold text-slate-950">先预览</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">不写入，不调用索引。</p>
               </div>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <Play className="h-4 w-4 text-primary" />
-                <p className="mt-3 font-semibold text-slate-950">Apply signals</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">Updates taxonomy and rescan work.</p>
+                <p className="mt-2 font-semibold text-slate-950">应用信号</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">更新分类和重扫任务。</p>
               </div>
-              <div className="rounded-md border border-slate-200 bg-slate-50 p-4">
+              <div className="rounded-md border border-slate-200 bg-slate-50 p-3">
                 <Rocket className="h-4 w-4 text-amber-700" />
-                <p className="mt-3 font-semibold text-slate-950">Push index</p>
-                <p className="mt-1 text-xs leading-5 text-slate-500">Requires Google credentials.</p>
+                <p className="mt-2 font-semibold text-slate-950">推送索引</p>
+                <p className="mt-1 text-xs leading-5 text-slate-500">需要 Google 凭据。</p>
               </div>
             </div>
           </div>
 
-          <div className="rounded-md border border-slate-200 bg-slate-50/70 p-5">
-            <div className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-md border border-slate-200 bg-slate-50/70 p-4">
+            <div className="grid gap-3 md:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="seo-automation-limit">Path limit</Label>
+                <Label htmlFor="seo-automation-limit">路径上限</Label>
                 <Input
                   id="seo-automation-limit"
                   type="number"
@@ -350,7 +350,7 @@ export function SeoOpsConsole() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="seo-automation-signal-days">Signal window days</Label>
+                <Label htmlFor="seo-automation-signal-days">信号窗口天数</Label>
                 <Input
                   id="seo-automation-signal-days"
                   type="number"
@@ -360,7 +360,7 @@ export function SeoOpsConsole() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="seo-automation-min-priority">Minimum priority</Label>
+                <Label htmlFor="seo-automation-min-priority">最低优先级</Label>
                 <Input
                   id="seo-automation-min-priority"
                   type="number"
@@ -371,7 +371,7 @@ export function SeoOpsConsole() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="seo-automation-signal-source">Signal source</Label>
+                <Label htmlFor="seo-automation-signal-source">信号来源</Label>
                 <Input
                   id="seo-automation-signal-source"
                   value={automationConfig.signalSource}
@@ -379,7 +379,7 @@ export function SeoOpsConsole() {
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="seo-automation-signal-file">Signal file path</Label>
+                <Label htmlFor="seo-automation-signal-file">信号文件路径</Label>
                 <Input
                   id="seo-automation-signal-file"
                   value={automationConfig.signalFile}
@@ -389,10 +389,10 @@ export function SeoOpsConsole() {
               </div>
             </div>
 
-            <div className="mt-5 flex flex-wrap items-center justify-between gap-4 rounded-md border border-slate-200 bg-white p-4">
+            <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-white p-3">
               <div>
-                <Label htmlFor="seo-automation-push-index">Push indexing after apply</Label>
-                <p className="mt-1 text-xs leading-5 text-slate-500">Uses the configured Google Indexing API credentials.</p>
+                <Label htmlFor="seo-automation-push-index">应用后推送索引</Label>
+                <p className="mt-1 text-xs leading-5 text-slate-500">使用已配置的 Google Indexing API 凭据。</p>
               </div>
               <Switch
                 id="seo-automation-push-index"
@@ -401,33 +401,33 @@ export function SeoOpsConsole() {
               />
             </div>
 
-            <div className="mt-5 flex flex-wrap gap-3">
+            <div className="mt-4 flex flex-wrap gap-2">
               <Button disabled={isPending} variant="secondary" onClick={() => triggerAutomation('automationPreview')}>
                 <ShieldCheck className="mr-2 h-4 w-4" />
-                Preview Run
+                预览运行
               </Button>
               <Button disabled={isPending} onClick={() => triggerAutomation('automationApply')}>
                 <Play className="mr-2 h-4 w-4" />
-                Apply Run
+                应用运行
               </Button>
             </div>
 
             {automationResult ? (
-              <div className="mt-5 rounded-md border border-slate-200 bg-white p-4">
+              <div className="mt-4 rounded-md border border-slate-200 bg-white p-3">
                 <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p className="font-semibold text-slate-950">Last automation result</p>
+                  <p className="font-semibold text-slate-950">最近自动化结果</p>
                   <StatusBadge value={automationResult.ok ? 'configured' : 'warning'} />
                 </div>
-                <div className="mt-4 grid gap-3 text-sm sm:grid-cols-3">
-                  <span>{automationResult.pseoPaths} paths</span>
-                  <span>{automationResult.updatedTags} updated tags</span>
-                  <span>{automationResult.promotedTags} promoted tags</span>
-                  <span>{automationResult.importedSignals} signals</span>
-                  <span>{automationResult.rescanJobs} rescan jobs</span>
+                <div className="mt-3 grid gap-2 text-sm sm:grid-cols-3">
+                  <span>{automationResult.pseoPaths} 条路径</span>
+                  <span>{automationResult.updatedTags} 个更新标签</span>
+                  <span>{automationResult.promotedTags} 个提升标签</span>
+                  <span>{automationResult.importedSignals} 条信号</span>
+                  <span>{automationResult.rescanJobs} 个重扫任务</span>
                   <span>{automationResult.indexing}</span>
                 </div>
-                <div className="mt-4 max-h-32 overflow-auto whitespace-pre-wrap rounded-md bg-slate-950 p-3 text-xs leading-6 text-slate-100">
-                  {automationResult.samplePaths.length ? automationResult.samplePaths.join('\n') : 'No sample paths returned'}
+                <div className="mt-3 max-h-28 overflow-auto whitespace-pre-wrap rounded-md bg-slate-950 p-3 text-xs leading-6 text-slate-100">
+                  {automationResult.samplePaths.length ? automationResult.samplePaths.join('\n') : '没有返回示例路径'}
                 </div>
               </div>
             ) : null}
@@ -435,239 +435,239 @@ export function SeoOpsConsole() {
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-        <div className="flex items-center justify-between gap-4">
+      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Remediation Queue</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Priority fixes from current SEO audits</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 修复队列</p>
+            <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">当前 SEO 审计的优先修复项</h2>
           </div>
           <StatusBadge value={summary?.seoRemediationQueue.length ? 'warning' : 'configured'} />
         </div>
-        <div className="mt-6 space-y-4">
+        <div className="mt-4 space-y-3">
           {summary?.seoRemediationQueue.length ? (
             summary.seoRemediationQueue.map((item, index) => (
-              <div key={`${item.pathname}-${item.issueType}-${index}`} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+              <div key={`${item.pathname}-${item.issueType}-${index}`} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-semibold text-slate-950">{item.title}</p>
-                    <p className="mt-2 break-all text-sm text-slate-500">{item.pathname}</p>
+                    <p className="mt-1 break-all text-xs text-slate-500">{item.pathname}</p>
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <StatusBadge value={item.severity} />
                     <StatusBadge value={item.issueType} />
                   </div>
                 </div>
-                <p className="mt-3 text-sm leading-7 text-slate-600">{item.issueDetail}</p>
-                <p className="mt-2 text-sm font-medium text-slate-800">{item.recommendedAction}</p>
-                <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                <p className="mt-2 text-xs leading-5 text-slate-600">{item.issueDetail}</p>
+                <p className="mt-1.5 text-sm font-medium text-slate-800">{item.recommendedAction}</p>
+                <div className="mt-3 flex flex-wrap gap-3 text-sm">
                   <Link href={item.publicHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
-                    Open public page →
+                    打开前台页
                   </Link>
                   {item.adminHref ? (
                     <Link href={item.adminHref} className="font-semibold text-primary transition-colors hover:text-primary/80">
-                      Open admin editor →
+                      打开后台编辑器
                     </Link>
                   ) : null}
                 </div>
               </div>
             ))
           ) : (
-            <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
-              No active remediation items. The current audits did not surface priority SEO fixes.
+            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+              暂无活跃修复项。当前审计未发现优先 SEO 问题。
             </div>
           )}
         </div>
       </section>
 
-      <section className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-        <div className="flex items-center justify-between gap-4">
+      <section className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+        <div className="flex items-center justify-between gap-3">
           <div>
-            <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Supported Locales</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Locale-aware indexing footprint</h2>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">支持语言</p>
+            <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">面向索引的多语言足迹</h2>
           </div>
           <StatusBadge value={summary?.supportedLocales.length ? 'configured' : 'missing'} />
         </div>
-        <div className="mt-6 flex flex-wrap gap-3">
+        <div className="mt-4 flex flex-wrap gap-2">
           {(summary?.supportedLocales || []).map((locale) => (
-            <span key={locale} className="rounded-full bg-slate-100 px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-slate-700">
+            <span key={locale} className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold uppercase tracking-[0.14em] text-slate-700">
               {locale}
             </span>
           ))}
         </div>
       </section>
 
-      <section className="grid gap-6 xl:grid-cols-[1fr_1fr_0.9fr]">
-        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-          <div className="flex items-center justify-between gap-4">
+      <section className="grid gap-4 xl:grid-cols-[1fr_1fr_0.9fr]">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">SEO Alignment Audit</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">URL, title, canonical, and heading-tree issues</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 对齐审计</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">URL、标题、canonical 与标题层级</h2>
             </div>
             <StatusBadge value={summary?.seoAlignmentAudit.issuesFound ? 'warning' : 'configured'} />
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-3">
             {summary?.seoAlignmentAudit.findings.length ? (
               summary.seoAlignmentAudit.findings.map((finding, index) => (
-                <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-950">{finding.title}</p>
-                      <p className="mt-2 break-all text-sm text-slate-500">{finding.pathname}</p>
+                      <p className="mt-1 break-all text-xs text-slate-500">{finding.pathname}</p>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       <StatusBadge value={finding.issueType} />
                       <StatusBadge value={finding.articleType || finding.pageType} />
                     </div>
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{finding.issueDetail}</p>
-                  <p className="mt-3 text-xs uppercase tracking-[0.18em] text-slate-500">
-                    Updated {formatDate(finding.updatedAt)}
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{finding.issueDetail}</p>
+                  <p className="mt-2 text-xs uppercase tracking-[0.14em] text-slate-500">
+                    更新于 {formatDate(finding.updatedAt)}
                   </p>
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
-                No current alignment issues found in the latest published SEO page snapshot.
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+                最新已发布 SEO 页面快照中没有发现对齐问题。
               </div>
             )}
           </div>
         </div>
 
-        <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-          <div className="flex items-center justify-between gap-4">
+        <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+          <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Link Inspector</p>
-              <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Broken and out-of-stock destinations</h2>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">链接巡检</p>
+              <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">失效或缺货目标页</h2>
             </div>
             <StatusBadge value={summary?.latestLinkIssues.length ? 'partial' : 'configured'} />
           </div>
 
-          <div className="mt-6 space-y-4">
+          <div className="mt-4 space-y-3">
             {summary?.latestLinkIssues.length ? (
               summary.latestLinkIssues.map((issue) => (
-                <div key={issue.id} className="rounded-[1.5rem] border border-slate-200/80 bg-slate-50/70 p-5">
+                <div key={issue.id} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-950">{issue.productName || issue.sourceUrl}</p>
-                      <p className="mt-2 break-all text-sm text-slate-500">{issue.sourceUrl}</p>
+                      <p className="mt-1 break-all text-xs text-slate-500">{issue.sourceUrl}</p>
                     </div>
                     <StatusBadge value={issue.issueType || 'warning'} />
                   </div>
-                  <p className="mt-3 text-sm leading-7 text-slate-600">{issue.issueDetail || 'Link inspector flagged this destination.'}</p>
-                  <div className="mt-4 flex flex-wrap gap-4 text-xs uppercase tracking-[0.18em] text-slate-500">
-                    <span>Checked {formatDate(issue.checkedAt)}</span>
+                  <p className="mt-2 text-xs leading-5 text-slate-600">{issue.issueDetail || '链接巡检标记了这个目标页。'}</p>
+                  <div className="mt-3 flex flex-wrap gap-3 text-xs uppercase tracking-[0.14em] text-slate-500">
+                    <span>检查于 {formatDate(issue.checkedAt)}</span>
                     <span>{issue.httpStatus ? `HTTP ${issue.httpStatus}` : 'No status'}</span>
                     {issue.finalUrl ? <span className="break-all">Final {issue.finalUrl}</span> : null}
                   </div>
                 </div>
               ))
             ) : (
-              <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
-                No current link issues. Run the inspector to refresh the health snapshot.
+              <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+                暂无链接问题。运行巡检可刷新健康快照。
               </div>
             )}
           </div>
         </div>
 
-        <div className="space-y-6">
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-            <div className="flex items-center justify-between gap-4">
+        <div className="space-y-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Rendered Page Audit</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Canonical, meta, OG, JSON-LD, and H1 checks</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">渲染页审计</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">Canonical、Meta、OG、JSON-LD 与 H1</h2>
               </div>
               <StatusBadge value={summary?.renderedPageAudit.issuesFound ? 'warning' : 'configured'} />
             </div>
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {summary?.renderedPageAudit.findings.length ? (
                 summary.renderedPageAudit.findings.map((finding, index) => (
-                  <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/70 p-4">
+                  <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-slate-950">{finding.title}</p>
                       <StatusBadge value={finding.issueType} />
                     </div>
-                    <p className="mt-2 break-all text-sm text-slate-500">{finding.pathname}</p>
-                    <p className="mt-2 text-sm text-slate-600">{finding.issueDetail}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(finding.checkedAt)}</p>
+                    <p className="mt-1 break-all text-xs text-slate-500">{finding.pathname}</p>
+                    <p className="mt-1.5 text-xs text-slate-600">{finding.issueDetail}</p>
+                    <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate-500">{formatDate(finding.checkedAt)}</p>
                   </div>
                 ))
               ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
-                  No current rendered-page SEO issues found in the latest public-page snapshot.
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+                  最新公开页面快照中没有发现渲染页 SEO 问题。
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-            <div className="flex items-center justify-between gap-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Trust Surface Audit</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">About, contact, policy pages, data docs, and llms.txt checks</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">信任面审计</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">关于、联系、政策、数据文档与 llms.txt</h2>
               </div>
               <StatusBadge value={summary?.trustSurfaceAudit.issuesFound ? 'warning' : 'configured'} />
             </div>
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {summary?.trustSurfaceAudit.findings.length ? (
                 summary.trustSurfaceAudit.findings.map((finding, index) => (
-                  <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/70 p-4">
+                  <div key={`${finding.pathname}-${finding.issueType}-${index}`} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                     <div className="flex items-center justify-between gap-3">
                       <p className="font-semibold text-slate-950">{finding.title}</p>
                       <StatusBadge value={finding.issueType} />
                     </div>
-                    <p className="mt-2 break-all text-sm text-slate-500">{finding.pathname}</p>
-                    <p className="mt-2 text-sm text-slate-600">{finding.issueDetail}</p>
-                    <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(finding.checkedAt)}</p>
+                    <p className="mt-1 break-all text-xs text-slate-500">{finding.pathname}</p>
+                    <p className="mt-1.5 text-xs text-slate-600">{finding.issueDetail}</p>
+                    <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate-500">{formatDate(finding.checkedAt)}</p>
                   </div>
                 ))
               ) : (
-                <div className="rounded-[1.5rem] border border-dashed border-slate-200 bg-slate-50/70 px-5 py-10 text-center text-sm text-slate-500">
-                  No current trust-surface issues found across trust and machine-entry pages.
+                <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/70 px-4 py-6 text-center text-sm text-slate-500">
+                  信任与机器入口页面中暂无当前问题。
                 </div>
               )}
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-            <div className="flex items-center justify-between gap-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Google Indexing</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Recent indexing events</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">Google 索引</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">近期索引事件</h2>
               </div>
               <StatusBadge value={summary?.recentIndexingEvents.length ? 'configured' : 'missing'} />
             </div>
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {(summary?.recentIndexingEvents || []).map((event) => (
-                <div key={event.id} className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/70 p-4">
+                <div key={event.id} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-slate-950">Event #{event.id}</p>
+                    <p className="font-semibold text-slate-950">事件 #{event.id}</p>
                     <StatusBadge value={event.status} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">{summarizePayload(event.payloadJson)}</p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(event.createdAt)}</p>
+                  <p className="mt-1.5 text-xs text-slate-600">{summarizePayload(event.payloadJson)}</p>
+                  <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate-500">{formatDate(event.createdAt)}</p>
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="rounded-[2rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-40px_rgba(15,23,42,0.32)]">
-            <div className="flex items-center justify-between gap-4">
+          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm lg:p-5">
+            <div className="flex items-center justify-between gap-3">
               <div>
-                <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-primary">Syndication</p>
-                <h2 className="mt-3 text-2xl font-black tracking-tight text-slate-950">Recent external dispatches</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">外部分发</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">近期外部分发</h2>
               </div>
               <StatusBadge value={summary?.recentSyndicationEvents.length ? 'configured' : 'missing'} />
             </div>
-            <div className="mt-6 space-y-3">
+            <div className="mt-4 space-y-2">
               {(summary?.recentSyndicationEvents || []).map((event) => (
-                <div key={event.id} className="rounded-[1.25rem] border border-slate-200/80 bg-slate-50/70 p-4">
+                <div key={event.id} className="rounded-xl border border-slate-200/80 bg-slate-50/70 p-3">
                   <div className="flex items-center justify-between gap-3">
-                    <p className="font-semibold text-slate-950">Event #{event.id}</p>
+                    <p className="font-semibold text-slate-950">事件 #{event.id}</p>
                     <StatusBadge value={event.status} />
                   </div>
-                  <p className="mt-2 text-sm text-slate-600">{summarizePayload(event.payloadJson)}</p>
-                  <p className="mt-2 text-xs uppercase tracking-[0.18em] text-slate-500">{formatDate(event.createdAt)}</p>
+                  <p className="mt-1.5 text-xs text-slate-600">{summarizePayload(event.payloadJson)}</p>
+                  <p className="mt-1.5 text-xs uppercase tracking-[0.14em] text-slate-500">{formatDate(event.createdAt)}</p>
                 </div>
               ))}
             </div>

@@ -117,11 +117,11 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
   }
 
   return (
-    <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+    <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="font-semibold">{section.title}</p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-0.5 text-xs text-muted-foreground">
             显示 {filteredRows.length} 条 · 共 {rows.length} 条 · 已选 {selectedKeys.size} 条
           </p>
         </div>
@@ -131,7 +131,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="筛选当前表格"
-            className="min-h-11 w-full sm:w-56"
+            className="min-h-10 w-full sm:w-52"
           />
           {selectedKeys.size > 0 ? (
             <Button type="button" variant="outline" onClick={() => setSelectedKeys(new Set())}>
@@ -140,19 +140,19 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
           ) : null}
         </div>
       </div>
-      <div className="mt-4 overflow-x-auto">
+      <div className="mt-3 overflow-x-auto">
         <table className="min-w-full text-left text-sm">
           <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
             <tr>
-              <th className="pb-3 pr-4">
+              <th className="pb-2 pr-3">
                 <span className="sr-only">选择行</span>
               </th>
               {section.columns.map((column) => (
-                <th key={column.key} className="pb-3 pr-4">
+                <th key={column.key} className="pb-2 pr-3">
                   <button
                     type="button"
                     onClick={() => toggleSort(column.key)}
-                    className="inline-flex min-h-11 items-center rounded-md px-1 text-left font-semibold uppercase tracking-[0.16em] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="inline-flex min-h-9 items-center rounded-md px-1 text-left font-semibold uppercase tracking-[0.14em] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {column.label}
                     {sortKey === column.key ? <span className="ml-2">{sortDirection === 'asc' ? '升序' : '降序'}</span> : null}
@@ -167,19 +167,19 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
                 const rowKey = getRowKey(section.key, row, (safePage - 1) * pageSize + index)
                 return (
                   <tr key={rowKey} className="border-b border-border/70">
-                    <td className="py-3 pr-4 align-top">
+                    <td className="py-2 pr-3 align-top">
                       <input
                         type="checkbox"
                         aria-label={`选择${section.title}第 ${index + 1} 行`}
                         checked={selectedKeys.has(rowKey)}
                         onChange={(event) => toggleRow(rowKey, event.target.checked)}
-                        className="h-5 w-5 rounded border-border"
+                        className="h-4 w-4 rounded border-border"
                       />
                     </td>
                     {section.columns.map((column) => {
                       const value = readPath(row, column.key)
                       return (
-                        <td key={column.key} className="max-w-[360px] py-3 pr-4 align-top">
+                        <td key={column.key} className="max-w-[320px] py-2 pr-3 align-top">
                           {column.badge ? (
                             <StatusBadge value={formatValue(value)} />
                           ) : (
@@ -203,8 +203,8 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
           </tbody>
         </table>
       </div>
-      <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
-        <p className="text-sm text-muted-foreground">
+      <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+        <p className="text-xs text-muted-foreground">
           第 {safePage} / {totalPages} 页
         </p>
         <div className="flex w-full gap-2 sm:w-auto">
@@ -273,12 +273,12 @@ export function OperationsConsole({
   }
 
   return (
-    <div className="space-y-6 p-6 lg:p-10">
-      <div className="flex flex-wrap items-end justify-between gap-4">
+    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+      <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">{eyebrow}</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">{description}</p>
+          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
+          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">{title}</h1>
+          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">{description}</p>
         </div>
         <Button
           variant="outline"
@@ -294,17 +294,17 @@ export function OperationsConsole({
         </Button>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
-          <div key={metric.key} className="rounded-2xl border border-border bg-white p-5 shadow-panel">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{metric.label}</p>
-            <p className="mt-3 text-3xl font-semibold">{formatValue(metric.value)}</p>
+          <div key={metric.key} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{metric.label}</p>
+            <p className="mt-1.5 text-2xl font-semibold">{formatValue(metric.value)}</p>
           </div>
         ))}
       </div>
 
       {actions.length ? (
-        <div className="flex flex-wrap gap-3 rounded-[24px] border border-border bg-white p-5 shadow-panel">
+        <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-white p-4 shadow-sm">
           {actions.map((action) => (
             <Button key={action.label} variant={action.variant || 'default'} disabled={isPending} onClick={() => triggerAction(action)}>
               {action.label}
@@ -313,7 +313,7 @@ export function OperationsConsole({
         </div>
       ) : null}
 
-      <div className="grid gap-6">
+      <div className="grid gap-4">
         {sections.map((section) => {
           const rows = asRows(snapshot ? readPath(snapshot, section.key) : [])
           return <OperationTable key={section.key} section={section} rows={rows} />
