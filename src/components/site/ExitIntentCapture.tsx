@@ -143,7 +143,7 @@ export function ExitIntentCapture({
         setOpen(nextOpen)
       }}
     >
-      <DialogContent className="max-w-2xl overflow-hidden rounded-[2rem] border-none bg-[linear-gradient(135deg,#fffef8_0%,#f4fbff_48%,#eefaf5_100%)] p-0 shadow-[0_40px_90px_-40px_rgba(15,23,42,0.55)]">
+      <DialogContent className="max-h-[calc(100dvh-1rem)] w-[calc(100vw-1rem)] max-w-none overflow-y-auto overflow-x-hidden rounded-[2rem] border-none bg-[linear-gradient(135deg,#fffef8_0%,#f4fbff_48%,#eefaf5_100%)] p-0 shadow-[0_40px_90px_-40px_rgba(15,23,42,0.55)] sm:w-[calc(100vw-3rem)] sm:max-w-2xl md:max-w-4xl lg:max-w-5xl">
         <div className="grid gap-0 md:grid-cols-[0.95fr_1.05fr]">
           <div className="bg-[linear-gradient(180deg,#0f172a_0%,#134e4a_100%)] p-8 text-white md:p-10">
             <div className="inline-flex h-14 w-14 items-center justify-center rounded-2xl bg-white/12 text-emerald-200">

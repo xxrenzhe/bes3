@@ -6,6 +6,15 @@ function convertPlaceholders(sql: string): string {
   return sql.replace(/\?/g, () => `$${index++}`)
 }
 
+function handlePostgresNotice(notice: { code?: string; message?: string; severity?: string }): void {
+  if (notice.code === '42P07' && notice.message?.includes('already exists, skipping')) {
+    return
+  }
+
+  const severity = notice.severity || 'NOTICE'
+  console.warn(`[postgres:${severity.toLowerCase()}] ${notice.message || 'notice'}`)
+}
+
 export class PostgresAdapter implements DatabaseAdapter {
   type = 'postgres' as const
   private client: postgres.Sql<Record<string, unknown>>
@@ -14,7 +23,8 @@ export class PostgresAdapter implements DatabaseAdapter {
     this.client = postgres(connectionString, {
       max: 10,
       idle_timeout: 30,
-      connect_timeout: 10
+      connect_timeout: 10,
+      onnotice: handlePostgresNotice
     })
   }
 

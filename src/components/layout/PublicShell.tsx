@@ -73,7 +73,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
             <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Buyer-First Reviews</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black">{DEFAULT_SITE_NAME}</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-white drop-shadow-sm">{DEFAULT_SITE_NAME}</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
           </div>
           <nav aria-label="Explore" className="flex flex-col gap-3 text-sm text-slate-300">
