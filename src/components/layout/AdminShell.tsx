@@ -6,14 +6,12 @@ import { useState } from 'react'
 import {
   ChevronDown,
   Database,
-  ExternalLink,
   FileText,
   GitBranch,
   Globe2,
   LayoutDashboard,
   LogOut,
   Menu,
-  Search,
   Settings,
   ShieldAlert,
   ShieldCheck,
@@ -114,31 +112,15 @@ export function AdminShell({
   const currentSection = NAV_ITEMS.find((item) => isActive(pathname, item.href))?.label || '工作台'
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-950">
-      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200/70 bg-white/85 px-4 backdrop-blur-xl lg:px-5">
+    <div className="min-h-screen bg-slate-50/50 pb-16 text-slate-950 lg:pb-0">
+      <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/85 px-4 backdrop-blur-xl lg:hidden">
         <div className="flex items-center gap-3">
-          <Link href="/admin" className="text-xl font-black tracking-tight text-slate-950">
-            Bes3 管理后台
+          <Link href="/admin" className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold tracking-tight text-transparent">
+            Bes3
           </Link>
-          <span className="hidden rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700 sm:inline-flex">内部门户</span>
+          <span className="rounded-full bg-blue-50 px-3 py-1 text-xs font-semibold text-blue-700">后台</span>
         </div>
         <div className="flex items-center gap-2">
-          <Link
-            href="/"
-            target="_blank"
-            className="hidden min-h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-medium text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-700 sm:inline-flex"
-          >
-            打开前台
-            <ExternalLink className="h-4 w-4" aria-hidden="true" />
-          </Link>
-          <button
-            type="button"
-            onClick={() => setSidebarOpen((value) => !value)}
-            className="hidden h-10 w-10 items-center justify-center rounded-full text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:inline-flex"
-            aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
-          >
-            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
           <details className="relative lg:hidden">
             <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">
               菜单
@@ -172,30 +154,69 @@ export function AdminShell({
         </div>
       </header>
 
+      <header className="sticky top-0 z-50 hidden h-16 items-center justify-between border-b border-slate-200 bg-white/80 px-4 backdrop-blur-xl lg:flex">
+        <div className="flex items-center gap-4">
+          {!sidebarOpen ? (
+            <Link href="/admin" className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold text-transparent">
+              Bes3
+            </Link>
+          ) : null}
+        </div>
+        <div className="flex items-center gap-3">
+          {!sidebarOpen ? (
+            <div className="flex items-center gap-2 rounded-lg p-2">
+              <div className="flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white">
+                <User className="h-4 w-4" />
+              </div>
+              <span className="text-sm text-slate-700">{DEFAULT_ADMIN_USERNAME}</span>
+            </div>
+          ) : null}
+          <button
+            type="button"
+            onClick={() => setSidebarOpen((value) => !value)}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-lg text-slate-400 transition-colors hover:bg-slate-50 hover:text-slate-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+            aria-label={sidebarOpen ? '收起侧边栏' : '展开侧边栏'}
+          >
+            {sidebarOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
+        </div>
+      </header>
+
       <aside
         className={cn(
-          'fixed left-0 top-16 z-40 hidden h-[calc(100vh-4rem)] flex-col border-r border-slate-200/70 bg-white/85 backdrop-blur-xl transition-all duration-300 lg:flex',
-          sidebarOpen ? 'w-60' : 'w-20'
+          'fixed left-0 top-0 z-40 hidden h-full flex-col border-r border-slate-200/60 bg-white/80 shadow-sm backdrop-blur-xl transition-all duration-300 lg:flex',
+          sidebarOpen ? 'w-56' : 'w-20'
         )}
       >
-        <div className="px-3 py-4">
-          <div className={cn('flex items-center gap-3 rounded-2xl border border-slate-100 bg-slate-50 p-3', !sidebarOpen && 'justify-center')}>
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 text-white shadow-lg shadow-blue-200">
+        <div className="mb-2 flex h-16 items-center justify-between px-4">
+          {sidebarOpen ? (
+            <Link href="/admin" className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-2xl font-bold tracking-tight text-transparent">
+              Bes3
+            </Link>
+          ) : null}
+        </div>
+
+        <div className="mb-6 px-3">
+          <div className={cn('flex w-full items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-2 transition-all duration-200 hover:bg-slate-100', !sidebarOpen && 'justify-center border-transparent bg-transparent hover:bg-slate-50')}>
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 text-white shadow-md shadow-blue-200">
               <User className="h-5 w-5" aria-hidden="true" />
             </div>
             {sidebarOpen ? (
-              <div className="min-w-0">
+              <>
+              <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-slate-950">{DEFAULT_ADMIN_USERNAME}</p>
                 <p className="mt-0.5 flex items-center gap-1.5 text-xs font-medium text-slate-500">
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
                   运营管理员
                 </p>
               </div>
+              <ChevronDown className="h-4 w-4 text-slate-400" />
+              </>
             ) : null}
           </div>
         </div>
 
-        <nav aria-label="后台导航" className="flex-1 space-y-5 overflow-y-auto px-3 pb-4">
+        <nav aria-label="后台导航" className="flex-1 space-y-1 overflow-y-auto px-3 pb-4">
           {NAV_GROUPS.map((group) => (
             <div key={group.label}>
               {sidebarOpen ? (
@@ -212,7 +233,7 @@ export function AdminShell({
           ))}
         </nav>
 
-        <div className="border-t border-slate-100 bg-slate-50/70 p-3">
+        <div className="border-t border-slate-100 bg-slate-50/50 p-3">
           <form action="/api/auth/logout" method="post">
             <button
               className={cn(
@@ -228,29 +249,7 @@ export function AdminShell({
         </div>
       </aside>
 
-      <main className={cn('min-h-[calc(100vh-4rem)] transition-all duration-300 lg:pt-0', sidebarOpen ? 'lg:ml-60' : 'lg:ml-20')}>
-        <div className="border-b border-slate-200/70 bg-white/70 px-4 py-4 backdrop-blur-xl sm:px-6 lg:px-10">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <p className="text-xs font-semibold text-slate-500">当前模块</p>
-              <h1 className="mt-1 text-2xl font-black tracking-tight text-slate-950">{currentSection}</h1>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="hidden min-h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm text-slate-500 xl:flex">
-                <Search className="h-4 w-4" aria-hidden="true" />
-                <span>全局搜索规划中</span>
-              </div>
-              <span className="inline-flex min-h-10 items-center rounded-full bg-emerald-50 px-4 text-xs font-bold text-emerald-700">系统正常</span>
-              <Link
-                href="/admin/settings"
-                aria-label="打开系统设置"
-                className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-slate-200 bg-white text-slate-600 transition-colors hover:border-blue-200 hover:text-blue-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
-              >
-                <Settings className="h-4 w-4" aria-hidden="true" />
-              </Link>
-            </div>
-          </div>
-        </div>
+      <main className={cn('min-h-screen pt-16 transition-all duration-300 lg:pt-0', sidebarOpen ? 'lg:ml-56' : 'lg:ml-20')}>
         {children}
       </main>
     </div>

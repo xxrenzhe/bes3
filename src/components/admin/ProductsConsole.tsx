@@ -129,20 +129,25 @@ export function ProductsConsole() {
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div>
+        <h1 className="page-title">商品管理</h1>
+        <p className="page-subtitle">同步联盟库存、导入单品，并将商品送入 Bes3 内容流水线</p>
+      </div>
+
       <section className="grid gap-4 xl:grid-cols-[1.05fr_0.95fr]">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">联盟同步</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">导入商品并启动完整 Bes3 工作流。</h1>
-          <div className="mt-3 flex items-start gap-3 rounded-xl border border-border/70 bg-[#f7f1e4] p-3">
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
+          <p className="text-overline font-semibold text-primary">联盟同步</p>
+          <h2 className="card-title mt-1">导入商品并启动完整 Bes3 工作流</h2>
+          <div className="mt-3 flex items-start gap-3 rounded-md border bg-muted/40 p-3">
             <Checkbox
               checked={syncAndQueueNew}
               onCheckedChange={(value) => setSyncAndQueueNew(Boolean(value))}
               aria-label="自动排队新同步商品"
             />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">自动排队新同步商品</p>
-              <p className="text-xs text-muted-foreground">
+              <p className="label-text">自动排队新同步商品</p>
+              <p className="helper-text">
                 开启后，本次同步中新导入的商品会自动进入完整 Bes3 流水线。
               </p>
             </div>
@@ -173,9 +178,9 @@ export function ProductsConsole() {
             </Button>
           </div>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">直接导入</p>
-          <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">粘贴链接并补充准确的商品身份。</h2>
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
+          <p className="text-overline font-semibold text-primary">直接导入</p>
+          <h2 className="card-title mt-1">粘贴链接并补充准确的商品身份</h2>
           <div className="mt-4 grid gap-3 md:grid-cols-2">
             <div className="md:col-span-2">
               <Input value={importLink} onChange={(event) => setImportLink(event.target.value)} placeholder="https://app.partnerboost.com/track/..." className="min-h-10 rounded-xl" />
@@ -213,11 +218,11 @@ export function ProductsConsole() {
         </div>
       </section>
 
-      <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+      <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">联盟商品</p>
-            <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">已同步库存</h2>
+            <p className="text-overline font-semibold text-primary">联盟商品</p>
+            <h2 className="card-title mt-1">已同步库存</h2>
           </div>
           <Button
             disabled={selectedIds.length === 0 || isPending}
@@ -231,7 +236,7 @@ export function ProductsConsole() {
             const checked = selectedIds.includes(item.id)
             const linkedProductId = productIdByAffiliateId.get(item.id)
             return (
-              <article key={item.id} className="rounded-xl border border-border bg-[#f7f1e4] p-3">
+              <article key={item.id} className="rounded-md border bg-muted/40 p-3">
                 <div className="flex items-start gap-3">
                   <Checkbox
                     checked={checked}
@@ -276,15 +281,15 @@ export function ProductsConsole() {
             )
           })}
         </div>
-        <div className="mt-4 hidden overflow-x-auto md:block">
+        <div className="mt-4 hidden overflow-x-auto rounded-md border md:block">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <thead className="border-b bg-white text-xs text-muted-foreground">
               <tr>
-                <th className="pb-2 pr-3"></th>
-                <th className="pb-2 pr-3">商品</th>
-                <th className="pb-2 pr-3">平台</th>
-                <th className="pb-2 pr-3">更新时间</th>
-                <th className="pb-2 pr-3">操作</th>
+                <th className="px-3 py-2"></th>
+                <th className="px-3 py-2">商品</th>
+                <th className="px-3 py-2">平台</th>
+                <th className="px-3 py-2">更新时间</th>
+                <th className="px-3 py-2">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -292,23 +297,23 @@ export function ProductsConsole() {
                 const checked = selectedIds.includes(item.id)
                 const linkedProductId = productIdByAffiliateId.get(item.id)
                 return (
-                  <tr key={item.id} className="border-b border-border/70">
-                    <td className="py-2.5 pr-3">
+                  <tr key={item.id} className="border-b border-border/70 hover:bg-muted/30">
+                    <td className="px-3 py-2">
                       <Checkbox checked={checked} onCheckedChange={(value) => {
                         setSelectedIds((current) => value ? [...current, item.id] : current.filter((id) => id !== item.id))
                       }} />
                     </td>
-                    <td className="py-2.5 pr-3">
+                    <td className="px-3 py-2">
                       <div className="break-words font-medium">{item.product_name || item.promo_link || item.product_url}</div>
                       <div className="break-words text-xs text-muted-foreground">
                         {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || '暂无身份线索'}
                       </div>
                     </td>
-                    <td className="py-2.5 pr-3">
+                    <td className="px-3 py-2">
                       <StatusBadge value={item.platform} />
                     </td>
-                    <td className="py-2.5 pr-3 text-muted-foreground">{new Date(item.updated_at).toLocaleString()}</td>
-                    <td className="py-2.5 pr-3">
+                    <td className="px-3 py-2 text-muted-foreground">{new Date(item.updated_at).toLocaleString()}</td>
+                    <td className="px-3 py-2">
                       <div className="flex flex-wrap gap-2">
                         {linkedProductId ? (
                           <Link
@@ -340,12 +345,12 @@ export function ProductsConsole() {
         </div>
       </section>
 
-      <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-        <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">商品库</p>
-        <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">标准化商品数据库</h2>
+      <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
+        <p className="text-overline font-semibold text-primary">商品库</p>
+        <h2 className="card-title mt-1">标准化商品数据库</h2>
         <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
           {products.map((product) => (
-            <div key={product.id} className="rounded-xl border border-border bg-[#f7f1e4] p-3">
+            <div key={product.id} className="rounded-md border bg-muted/40 p-3">
               <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                 <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white">
                   {product.hero_image_url ? (

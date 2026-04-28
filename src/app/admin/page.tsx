@@ -126,43 +126,50 @@ export default async function AdminDashboardPage() {
   ]
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
-      <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        <div className="grid gap-3 p-5 lg:grid-cols-[1.25fr_0.75fr] lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="page-title">运营总览</h1>
+          <p className="page-subtitle">集中查看商品、内容、SEO 和流水线的关键状态</p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/admin/products" className="inline-flex min-h-10 items-center gap-2 rounded-md bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+            导入商品
+            <ArrowRight className="h-4 w-4" aria-hidden="true" />
+          </Link>
+          <Link href="/admin/seo-ops" className="inline-flex min-h-10 items-center gap-2 rounded-md border border-input bg-background px-4 text-sm font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground">
+            查看 SEO
+          </Link>
+        </div>
+      </div>
+
+      <section className="overflow-hidden rounded-lg border bg-card text-card-foreground shadow-sm">
+        <div className="grid gap-3 p-4 lg:grid-cols-[1.25fr_0.75fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-blue-600">运营总览</p>
-            <h2 className="mt-3 text-xl font-black tracking-tight text-slate-950 sm:text-3xl">
+            <p className="text-overline font-semibold text-primary">工作台摘要</p>
+            <h2 className="mt-2 text-xl font-semibold tracking-tight text-slate-950">
               用一个后台管理商品、内容、SEO 和运行状态。
             </h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-600">
+            <p className="mt-2 max-w-2xl text-body-sm text-muted-foreground">
               首页只保留需要立即判断的指标和入口：先看任务是否正常，再处理商品质量、内容老化和 SEO 风险。
             </p>
-            <div className="mt-3 flex flex-wrap gap-2">
-              <Link href="/admin/products" className="inline-flex min-h-10 items-center gap-2 rounded-full bg-slate-950 px-4 text-sm font-semibold text-white transition-colors hover:bg-slate-800">
-                开始处理商品
-                <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
-              <Link href="/admin/seo-ops" className="inline-flex min-h-10 items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700 transition-colors hover:border-blue-200 hover:text-blue-700">
-                查看 SEO 队列
-              </Link>
-            </div>
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
+            <div className="rounded-md border bg-muted/40 p-3">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-xs font-semibold text-slate-500">流水线并发</p>
-                  <p className="mt-1.5 text-2xl font-black text-slate-950">{workerConfig.concurrency}</p>
+                  <p className="text-sm font-medium text-muted-foreground">流水线并发</p>
+                  <p className="mt-1 text-2xl font-bold text-slate-950">{workerConfig.concurrency}</p>
                 </div>
                 <StatusBadge value={workerConfig.enabled ? 'configured' : 'missing'} />
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-600">每 {workerConfig.pollMs}ms 轮询一次，避免编辑操作被生成任务阻塞。</p>
+              <p className="mt-2 text-xs text-muted-foreground">每 {workerConfig.pollMs}ms 轮询一次，避免编辑被生成任务阻塞。</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-              <p className="text-xs font-semibold text-slate-500">助手转化</p>
-              <p className="mt-1.5 text-2xl font-black text-slate-950">{formatPercent(assistantFunnel.sessionToAcceptRate)}</p>
-              <p className="mt-2 text-xs leading-5 text-slate-600">访客从助手会话进入接受推荐动作的比例。</p>
+            <div className="rounded-md border bg-muted/40 p-3">
+              <p className="text-sm font-medium text-muted-foreground">助手转化</p>
+              <p className="mt-1 text-2xl font-bold text-slate-950">{formatPercent(assistantFunnel.sessionToAcceptRate)}</p>
+              <p className="mt-2 text-xs text-muted-foreground">从助手会话进入接受推荐动作的比例。</p>
             </div>
           </div>
         </div>
@@ -175,10 +182,10 @@ export default async function AdminDashboardPage() {
             <Link
               key={action.href}
               href={action.href}
-              className="group rounded-xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md"
+              className="group rounded-lg border bg-card p-3 shadow-sm transition-all hover:border-blue-200 hover:shadow-md"
             >
               <div className="flex items-start justify-between gap-3">
-                <div className={`flex h-9 w-9 items-center justify-center rounded-xl ${action.tone}`}>
+                <div className={`flex h-9 w-9 items-center justify-center rounded-lg ${action.tone}`}>
                   <Icon className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <ArrowRight className="h-4 w-4 text-slate-300 transition-transform group-hover:translate-x-1 group-hover:text-blue-500" aria-hidden="true" />
@@ -191,60 +198,60 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <MetricCard label="联盟商品" value={summary.totals.affiliateProducts} description="来自 PartnerBoost 或手动导入的原始库存。" />
-        <MetricCard label="标准商品" value={summary.totals.products} description="已归一化并进入 Bes3 数据库的商品。" />
-        <MetricCard label="内容文章" value={summary.totals.articles} description="由流水线生成或编辑维护的评测与对比页。" />
-        <MetricCard label="流水线任务" value={summary.totals.runs} description="完整内容工作流累计运行记录。" />
+        <MetricCard label="联盟商品" value={summary.totals.affiliateProducts} description="来自 PartnerBoost 或手动导入的原始库存。" tone="blue" />
+        <MetricCard label="标准商品" value={summary.totals.products} description="已归一化并进入 Bes3 数据库的商品。" tone="green" />
+        <MetricCard label="内容文章" value={summary.totals.articles} description="流水线生成或编辑维护的评测与对比页。" tone="amber" />
+        <MetricCard label="流水线任务" value={summary.totals.runs} description="完整内容工作流累计运行记录。" tone="slate" />
       </section>
 
       <section className="grid gap-3 xl:grid-cols-[1fr_0.9fr]">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-600">买家漏斗</p>
-              <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">从收藏到商家跳转</h2>
+              <p className="text-overline font-semibold text-primary">买家漏斗</p>
+              <h2 className="card-title mt-1">从收藏到商家跳转</h2>
             </div>
             <StatusBadge value={decisionFunnel.shortlistVisitors ? 'configured' : 'partial'} />
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {funnelCards.map((card) => (
-              <div key={card.label} className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                <p className="text-xs font-semibold text-slate-500">{card.label}</p>
-                <p className="mt-1.5 text-xl font-black text-slate-950">{card.value}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+              <div key={card.label} className="rounded-md border bg-muted/40 p-3">
+                <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
+                <p className="mt-1 text-xl font-bold text-slate-950">{card.value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{card.description}</p>
               </div>
             ))}
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
-            <div className="rounded-xl bg-slate-950 p-4 text-white">
+            <div className="rounded-md bg-slate-950 p-3 text-white">
               <p className="text-xs font-semibold text-blue-200">收藏到对比</p>
-              <p className="mt-1.5 text-xl font-black">{formatPercent(decisionFunnel.shortlistToCompareRate)}</p>
+              <p className="mt-1 text-xl font-bold">{formatPercent(decisionFunnel.shortlistToCompareRate)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="rounded-md border bg-white p-3">
               <p className="text-xs font-semibold text-slate-500">对比到跳转</p>
-              <p className="mt-1.5 text-xl font-black text-slate-950">{formatPercent(decisionFunnel.compareToVerifiedMerchantRate)}</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">{formatPercent(decisionFunnel.compareToVerifiedMerchantRate)}</p>
             </div>
-            <div className="rounded-xl border border-slate-200 bg-white p-4">
+            <div className="rounded-md border bg-white p-3">
               <p className="text-xs font-semibold text-slate-500">助手影响对比</p>
-              <p className="mt-1.5 text-xl font-black text-slate-950">{formatPercent(decisionFunnel.coachInfluencedCompareRate)}</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">{formatPercent(decisionFunnel.coachInfluencedCompareRate)}</p>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-blue-600">内容健康</p>
-              <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">优先修复会影响信任的缺口</h2>
+              <p className="text-overline font-semibold text-primary">内容健康</p>
+              <h2 className="card-title mt-1">优先修复会影响信任的缺口</h2>
             </div>
             <StatusBadge value={summary.contentHealth.staleArticleCount === 0 && summary.contentHealth.articlesMissingVisual === 0 ? 'configured' : 'partial'} />
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
             {healthCards.map((card) => (
-              <div key={card.label} className={`rounded-xl border p-4 ${getHealthTone(card.value)}`}>
-                <p className="text-xs font-semibold text-slate-500">{card.label}</p>
-                <p className="mt-1.5 text-xl font-black text-slate-950">{card.value}</p>
-                <p className="mt-2 text-sm leading-6 text-slate-600">{card.description}</p>
+              <div key={card.label} className={`rounded-md border p-3 ${getHealthTone(card.value)}`}>
+                <p className="text-sm font-medium text-slate-500">{card.label}</p>
+                <p className="mt-1 text-xl font-bold text-slate-950">{card.value}</p>
+                <p className="mt-1 text-xs text-slate-600">{card.description}</p>
               </div>
             ))}
           </div>
@@ -252,7 +259,7 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-3 xl:grid-cols-[0.95fr_1.05fr]">
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-blue-600">待处理文章</p>
@@ -272,7 +279,7 @@ export default async function AdminDashboardPage() {
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <p className="font-semibold text-slate-950">{article.title}</p>
-                      <p className="mt-1 text-sm text-slate-500">{article.type} · 上次复查 {article.lastReviewedAt ? new Date(article.lastReviewedAt).toLocaleDateString() : '未知'}</p>
+                      <p className="mt-1 text-xs text-muted-foreground">{article.type} · 上次复查 {article.lastReviewedAt ? new Date(article.lastReviewedAt).toLocaleDateString() : '未知'}</p>
                     </div>
                     <span className="shrink-0 rounded-full bg-white px-2.5 py-1 text-xs font-semibold text-slate-600">{article.ageDays} 天</span>
                   </div>
@@ -286,7 +293,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm lg:p-6">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div>
               <p className="text-xs font-bold uppercase tracking-widest text-blue-600">商品优先级</p>
@@ -338,7 +345,7 @@ export default async function AdminDashboardPage() {
       </section>
 
       <section className="grid gap-3 xl:grid-cols-3">
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <Search className="h-4 w-4 text-blue-600" aria-hidden="true" />
             <h2 className="text-lg font-black text-slate-950">商业数据质量</h2>
@@ -351,7 +358,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <Wand2 className="h-4 w-4 text-blue-600" aria-hidden="true" />
             <h2 className="text-lg font-black text-slate-950">助手就绪度</h2>
@@ -364,7 +371,7 @@ export default async function AdminDashboardPage() {
           </div>
         </div>
 
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="rounded-lg border bg-card p-4 shadow-sm">
           <div className="flex items-center gap-3">
             <ShieldAlert className="h-4 w-4 text-blue-600" aria-hidden="true" />
             <h2 className="text-lg font-black text-slate-950">品牌知识层</h2>

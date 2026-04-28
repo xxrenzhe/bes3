@@ -163,7 +163,10 @@ async function getGeminiConfig(): Promise<{
     process.env.AI_PROVIDER ||
     process.env.GEMINI_PROVIDER ||
     await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
-  const apiKey = process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const normalizedProvider = String(provider || 'gemini').trim()
+  const apiKey = normalizedProvider === 'relay'
+    ? process.env.GEMINI_RELAY_API_KEY || await getSettingValueOrEnv('ai', 'geminiRelayApiKey', 'GEMINI_RELAY_API_KEY')
+    : process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
   const model = normalizeGeminiModel(
     process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   )
@@ -179,7 +182,7 @@ async function getGeminiConfig(): Promise<{
     ) || 30000
   )
 
-  return { provider, apiKey, model, baseUrl, timeoutMs }
+  return { provider: normalizedProvider, apiKey, model, baseUrl, timeoutMs }
 }
 
 export async function generateGeminiContent(params: GeminiGenerateParams): Promise<GeminiGenerateResult | null> {

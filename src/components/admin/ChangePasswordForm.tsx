@@ -19,7 +19,7 @@ export function ChangePasswordForm() {
       onSubmit={(event) => {
         event.preventDefault()
         if (nextPassword !== confirmPassword) {
-          toast.error('New passwords do not match.')
+          toast.error('两次输入的新密码不一致')
           return
         }
         startTransition(async () => {
@@ -30,23 +30,23 @@ export function ChangePasswordForm() {
           })
           const body = await response.json().catch(() => ({}))
           if (!response.ok) {
-            toast.error(body.error || 'Password change failed')
+            toast.error(body.error || '修改密码失败')
             return
           }
-          toast.success('Password updated')
+          toast.success('密码已更新')
           router.push('/admin')
           router.refresh()
         })
       }}
     >
       <div className="space-y-2">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">Security Required</p>
-        <h1 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-slate-950">Change your admin password</h1>
-        <p className="text-sm leading-7 text-slate-600">Use at least 12 characters with uppercase, lowercase, number, and symbol characters.</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-primary">安全要求</p>
+        <h1 className="font-[var(--font-display)] text-3xl font-black tracking-tight text-slate-950">修改后台密码</h1>
+        <p className="text-sm leading-7 text-slate-600">请使用至少 12 位字符，并包含大小写字母、数字和符号。</p>
       </div>
 
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Current password</span>
+        <span className="text-sm font-semibold text-slate-700">当前密码</span>
         <Input
           name="current-password"
           value={currentPassword}
@@ -58,7 +58,7 @@ export function ChangePasswordForm() {
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">New password</span>
+        <span className="text-sm font-semibold text-slate-700">新密码</span>
         <Input
           name="new-password"
           value={nextPassword}
@@ -70,7 +70,7 @@ export function ChangePasswordForm() {
       </label>
 
       <label className="block space-y-2">
-        <span className="text-sm font-semibold text-slate-700">Confirm new password</span>
+        <span className="text-sm font-semibold text-slate-700">确认新密码</span>
         <Input
           name="confirm-password"
           value={confirmPassword}
@@ -82,7 +82,7 @@ export function ChangePasswordForm() {
       </label>
 
       <Button type="submit" disabled={isPending} className="min-h-[48px] w-full rounded-full">
-        {isPending ? 'Updating…' : 'Update password'}
+        {isPending ? '更新中...' : '更新密码'}
       </Button>
     </form>
   )

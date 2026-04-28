@@ -117,7 +117,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
   }
 
   return (
-    <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+    <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <div className="min-w-0">
           <p className="font-semibold">{section.title}</p>
@@ -142,7 +142,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
       </div>
       <div className="mt-3 overflow-x-auto">
         <table className="min-w-full text-left text-sm">
-          <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
+          <thead className="border-b bg-white text-xs text-muted-foreground">
             <tr>
               <th className="pb-2 pr-3">
                 <span className="sr-only">选择行</span>
@@ -152,7 +152,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
                   <button
                     type="button"
                     onClick={() => toggleSort(column.key)}
-                    className="inline-flex min-h-9 items-center rounded-md px-1 text-left font-semibold uppercase tracking-[0.14em] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    className="inline-flex min-h-9 items-center rounded-md px-1 text-left font-semibold hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {column.label}
                     {sortKey === column.key ? <span className="ml-2">{sortDirection === 'asc' ? '升序' : '降序'}</span> : null}
@@ -166,7 +166,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
               pageRows.map((row, index) => {
                 const rowKey = getRowKey(section.key, row, (safePage - 1) * pageSize + index)
                 return (
-                  <tr key={rowKey} className="border-b border-border/70">
+                  <tr key={rowKey} className="border-b border-border/70 hover:bg-muted/30">
                     <td className="py-2 pr-3 align-top">
                       <input
                         type="checkbox"
@@ -222,7 +222,6 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
 
 export function OperationsConsole({
   title,
-  eyebrow,
   description,
   endpoint,
   metricKeys,
@@ -273,12 +272,11 @@ export function OperationsConsole({
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">{eyebrow}</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">{title}</h1>
-          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">{description}</p>
+          <h1 className="page-title">{title}</h1>
+          <p className="page-subtitle">{description}</p>
         </div>
         <Button
           variant="outline"
@@ -296,15 +294,15 @@ export function OperationsConsole({
 
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         {metrics.map((metric) => (
-          <div key={metric.key} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{metric.label}</p>
-            <p className="mt-1.5 text-2xl font-semibold">{formatValue(metric.value)}</p>
+          <div key={metric.key} className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">{metric.label}</p>
+            <p className="mt-1 text-2xl font-bold">{formatValue(metric.value)}</p>
           </div>
         ))}
       </div>
 
       {actions.length ? (
-        <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="flex flex-wrap gap-2 rounded-lg border bg-card p-4 shadow-sm">
           {actions.map((action) => (
             <Button key={action.label} variant={action.variant || 'default'} disabled={isPending} onClick={() => triggerAction(action)}>
               {action.label}

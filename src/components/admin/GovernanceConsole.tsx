@@ -69,11 +69,11 @@ export function GovernanceConsole() {
   const openRisks = countOpenRisks(snapshot)
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">安全治理</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">会话、审计、安全与风险</h1>
+          <h1 className="page-title">安全治理</h1>
+          <p className="page-subtitle">查看会话、审计、安全事件与风险提醒</p>
         </div>
         <Button
           variant="outline"
@@ -90,43 +90,43 @@ export function GovernanceConsole() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-4">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">活跃会话</p>
+            <p className="text-sm font-medium text-muted-foreground">活跃会话</p>
             <UserCheck className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold">{activeSessions}</p>
+          <p className="mt-1 text-2xl font-bold">{activeSessions}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">保留 {snapshot.sessions.length} 条近期会话</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">失败登录</p>
+            <p className="text-sm font-medium text-muted-foreground">失败登录</p>
             <ShieldAlert className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold">{failedLogins}</p>
+          <p className="mt-1 text-2xl font-bold">{failedLogins}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">保留 {snapshot.loginAttempts.length} 次尝试</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
-          <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">安全事件</p>
-          <p className="mt-1.5 text-2xl font-semibold">{snapshot.securityEvents.length}</p>
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
+          <p className="text-sm font-medium text-muted-foreground">安全事件</p>
+          <p className="mt-1 text-2xl font-bold">{snapshot.securityEvents.length}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">账号与会话信号</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">未处理风险</p>
+            <p className="text-sm font-medium text-muted-foreground">未处理风险</p>
             <ShieldCheck className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-1.5 text-2xl font-semibold">{openRisks}</p>
+          <p className="mt-1 text-2xl font-bold">{openRisks}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">近期 {snapshot.riskAlerts.length} 条风险记录</p>
         </div>
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <p className="font-semibold">近期会话</p>
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">用户</th>
                   <th className="pb-2 pr-3">状态</th>
@@ -136,7 +136,7 @@ export function GovernanceConsole() {
               </thead>
               <tbody>
                 {snapshot.sessions.slice(0, 12).map((session) => (
-                  <tr key={session.id} className="border-b border-border/70">
+                  <tr key={session.id} className="border-b border-border/70 hover:bg-muted/30">
                     <td className="py-2 pr-3 font-medium">{text(session.username, `用户 #${session.user_id}`)}</td>
                     <td className="py-2 pr-3">
                       <StatusBadge value={session.revoked_at ? 'revoked' : 'active'} />
@@ -150,11 +150,11 @@ export function GovernanceConsole() {
           </div>
         </section>
 
-        <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <p className="font-semibold">登录尝试</p>
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">身份</th>
                   <th className="pb-2 pr-3">结果</th>
@@ -164,7 +164,7 @@ export function GovernanceConsole() {
               </thead>
               <tbody>
                 {snapshot.loginAttempts.slice(0, 12).map((attempt) => (
-                  <tr key={attempt.id} className="border-b border-border/70">
+                  <tr key={attempt.id} className="border-b border-border/70 hover:bg-muted/30">
                     <td className="py-2 pr-3 font-medium">{text(attempt.username_or_email)}</td>
                     <td className="py-2 pr-3">
                       <StatusBadge value={Number(attempt.success) ? 'success' : text(attempt.failure_reason, 'failed')} />
@@ -180,11 +180,11 @@ export function GovernanceConsole() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.95fr_1.05fr]">
-        <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <p className="font-semibold">安全事件</p>
           <div className="mt-3 space-y-2">
             {snapshot.securityEvents.slice(0, 10).map((event) => (
-              <div key={event.id} className="rounded-xl border border-border p-3">
+              <div key={event.id} className="rounded-md border p-3">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{text(event.event_type)}</p>
@@ -195,18 +195,18 @@ export function GovernanceConsole() {
               </div>
             ))}
             {snapshot.securityEvents.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+              <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
                 暂无安全事件。
               </div>
             ) : null}
           </div>
         </section>
 
-        <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <p className="font-semibold">审计日志</p>
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">动作</th>
                   <th className="pb-2 pr-3">实体</th>
@@ -216,7 +216,7 @@ export function GovernanceConsole() {
               </thead>
               <tbody>
                 {snapshot.auditLogs.slice(0, 14).map((entry) => (
-                  <tr key={entry.id} className="border-b border-border/70">
+                  <tr key={entry.id} className="border-b border-border/70 hover:bg-muted/30">
                     <td className="py-2 pr-3 font-medium">{text(entry.action)}</td>
                     <td className="py-2 pr-3 text-muted-foreground">{text(entry.entity_type)} {entry.entity_id ? `#${entry.entity_id}` : ''}</td>
                     <td className="py-2 pr-3 text-muted-foreground">{text(entry.actor_role)} #{text(entry.actor_id)}</td>
@@ -229,11 +229,11 @@ export function GovernanceConsole() {
         </section>
       </div>
 
-      <section className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
         <p className="font-semibold">风险提醒</p>
         <div className="mt-3 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
           {snapshot.riskAlerts.slice(0, 12).map((alert) => (
-            <div key={alert.id} className="rounded-xl border border-border p-3">
+            <div key={alert.id} className="rounded-md border p-3">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <p className="font-medium">{text(alert.title)}</p>
                 <StatusBadge value={text(alert.severity, 'warning')} />
@@ -243,7 +243,7 @@ export function GovernanceConsole() {
             </div>
           ))}
           {snapshot.riskAlerts.length === 0 ? (
-            <div className="rounded-xl border border-dashed border-border p-4 text-sm text-muted-foreground">
+            <div className="rounded-md border border-dashed p-4 text-sm text-muted-foreground">
               暂无风险提醒。
             </div>
           ) : null}

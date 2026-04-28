@@ -64,12 +64,11 @@ export function UsersAccessConsole() {
   const summary = snapshot?.summary || {}
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">用户权限</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">账号、会话与登录治理</h1>
-          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">
+          <h1 className="page-title">用户权限</h1>
+          <p className="page-subtitle">
             管理用户启停、账号解锁、会话撤销，并查看近期登录与安全事件。
           </p>
         </div>
@@ -86,18 +85,18 @@ export function UsersAccessConsole() {
           ['锁定用户', summary.locked_users],
           ['活跃会话', summary.active_sessions]
         ].map(([label, count]) => (
-          <div key={String(label)} className="rounded-2xl border border-border bg-white p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">{label}</p>
-            <p className="mt-1.5 text-2xl font-semibold">{Number(count || 0)}</p>
+          <div key={String(label)} className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">{label}</p>
+            <p className="mt-1 text-2xl font-bold">{Number(count || 0)}</p>
           </div>
         ))}
       </div>
 
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
         <p className="font-semibold">用户列表</p>
         <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <thead className="border-b bg-white text-xs text-muted-foreground">
               <tr>
                 <th className="pb-2 pr-3">用户</th>
                 <th className="pb-2 pr-3">角色</th>
@@ -109,7 +108,7 @@ export function UsersAccessConsole() {
             </thead>
             <tbody>
               {(snapshot?.users || []).map((user) => (
-                <tr key={user.id} className="border-b border-border/70">
+                <tr key={user.id} className="border-b border-border/70 hover:bg-muted/30">
                   <td className="py-2 pr-3">
                     <div className="font-medium">{value(user.display_name || user.username)}</div>
                     <div className="text-xs text-muted-foreground">{value(user.email)}</div>
@@ -142,7 +141,7 @@ export function UsersAccessConsole() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="font-semibold">角色权限矩阵</p>
@@ -154,7 +153,7 @@ export function UsersAccessConsole() {
           {['admin', 'evidence_ops', 'content_seo_editor', 'commerce_ops', 'viewer'].map((role) => {
             const permissions = (snapshot?.rolePermissions || []).filter((item) => item.role === role && Number(item.allowed))
             return (
-              <div key={role} className="rounded-xl border border-border bg-slate-50 p-3">
+              <div key={role} className="rounded-md border bg-muted/40 p-3">
                 <p className="text-sm font-semibold capitalize text-slate-950">{role.replace(/_/g, ' ')}</p>
                 <div className="mt-2 flex flex-wrap gap-1.5">
                   {permissions.map((item) => (
@@ -167,11 +166,11 @@ export function UsersAccessConsole() {
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm">
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
         <p className="font-semibold">会话</p>
         <div className="mt-3 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
-            <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+            <thead className="border-b bg-white text-xs text-muted-foreground">
               <tr>
                 <th className="pb-2 pr-3">用户</th>
                 <th className="pb-2 pr-3">IP</th>
@@ -182,7 +181,7 @@ export function UsersAccessConsole() {
             </thead>
             <tbody>
               {(snapshot?.sessions || []).slice(0, 40).map((session) => (
-                <tr key={session.id} className="border-b border-border/70">
+                <tr key={session.id} className="border-b border-border/70 hover:bg-muted/30">
                   <td className="py-2 pr-3 font-medium">{value(session.username || `用户 #${session.user_id}`)}</td>
                   <td className="py-2 pr-3 text-muted-foreground">{value(session.ip_address)}</td>
                   <td className="py-2 pr-3"><StatusBadge value={session.revoked_at ? 'revoked' : 'active'} /></td>

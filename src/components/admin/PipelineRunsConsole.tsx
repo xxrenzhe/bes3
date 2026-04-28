@@ -175,11 +175,11 @@ export function PipelineRunsConsole() {
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">流水线</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">任务执行历史与 Job 级追踪</h1>
+          <h1 className="page-title">流水线</h1>
+          <p className="page-subtitle">查看任务执行历史、Worker 状态和 Job 级追踪</p>
         </div>
         <Button
           variant="outline"
@@ -196,7 +196,7 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-3 lg:grid-cols-4">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">Worker</p>
             <ServerCog className="h-4 w-4 text-primary" />
@@ -204,7 +204,7 @@ export function PipelineRunsConsole() {
           <p className="mt-1.5 text-2xl font-semibold">{operations?.runtime.enabled ? '已启用' : '已停用'}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">{operations?.workers.length || 0} 条心跳记录</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <div className="flex items-center justify-between gap-3">
             <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">并发数</p>
             <Activity className="h-4 w-4 text-primary" />
@@ -212,12 +212,12 @@ export function PipelineRunsConsole() {
           <p className="mt-1.5 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">轮询 {operations?.runtime.pollMs ?? '-'}ms</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">过期任务</p>
           <p className="mt-1.5 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">心跳超时</p>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">过期锁</p>
           <p className="mt-1.5 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
           <p className="mt-0.5 text-xs text-muted-foreground">下次轮询可恢复</p>
@@ -225,11 +225,11 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-2">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <p className="font-semibold">队列策略</p>
           <div className="mt-3 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">类型</th>
                   <th className="pb-2 pr-3">状态</th>
@@ -252,7 +252,7 @@ export function PipelineRunsConsole() {
             </table>
           </div>
         </div>
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-3 shadow-sm">
           <p className="font-semibold">Worker 心跳</p>
           <div className="mt-3 space-y-2">
             {(operations?.workers || []).slice(0, 5).map((worker) => (
@@ -277,10 +277,10 @@ export function PipelineRunsConsole() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[1.08fr_0.92fr]">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">任务</th>
                   <th className="pb-2 pr-3">阶段</th>
@@ -293,8 +293,8 @@ export function PipelineRunsConsole() {
                   <tr
                     key={run.id}
                     className={cn(
-                      'cursor-pointer border-b border-border/70 transition-colors hover:bg-[#f7f1e4]',
-                      selectedRunId === run.id ? 'bg-[#f7f1e4]' : ''
+                      'cursor-pointer border-b border-border/70 transition-colors hover:bg-muted/40',
+                      selectedRunId === run.id ? 'bg-muted/40' : ''
                     )}
                     onClick={() => {
                       setSelectedRunId(run.id)
@@ -317,12 +317,12 @@ export function PipelineRunsConsole() {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm">
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           {selectedRun ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">当前任务</p>
+                  <p className="text-overline font-semibold text-primary">当前任务</p>
                   <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">
                     {selectedRun.product_name || `任务 #${selectedRun.id}`}
                   </h2>

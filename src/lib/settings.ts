@@ -171,7 +171,9 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
 
   const aiProvider = read('ai', 'provider', undefined, 'gemini')
   const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
-  const aiKey = read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+  const aiKey = aiProvider === 'relay'
+    ? read('ai', 'geminiRelayApiKey', 'GEMINI_RELAY_API_KEY')
+    : read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
   const aiTimeoutMs = read('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000')
   const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')
   const deepScrapeEnabled = read('deepScrape', 'enabled', 'DEEP_PRODUCT_SCRAPE_ENABLED', 'true') !== 'false'

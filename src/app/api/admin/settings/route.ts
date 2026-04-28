@@ -74,8 +74,13 @@ function validateSettingInput(item: SettingInput): string | null {
 
 export async function GET() {
   await requireAdmin()
+  const items = await listSettings()
   return NextResponse.json({
-    items: await listSettings(),
+    items: items.map((item) => ({
+      ...item,
+      hasValue: item.isSensitive ? Boolean(item.value && item.value.trim()) : Boolean(item.value),
+      value: item.isSensitive ? null : item.value
+    })),
     diagnostics: await listSettingDiagnostics()
   })
 }
@@ -92,10 +97,14 @@ export async function PUT(request: Request) {
   }
   const before = redactSensitiveSettings(await listSettings())
   for (const item of items) {
+    const rawValue = item.value === null ? null : String(item.value || '')
+    if (Boolean(item.isSensitive) && rawValue === null) {
+      continue
+    }
     await saveSetting({
       category: String(item.category || ''),
       key: String(item.key || ''),
-      value: item.value === null ? null : String(item.value || ''),
+      value: rawValue,
       dataType: item.dataType || 'string',
       isSensitive: Boolean(item.isSensitive),
       description: item.description || null

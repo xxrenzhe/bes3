@@ -7,8 +7,8 @@ import { getRequestLocale } from '@/lib/request-locale'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Bes3 Team Sign In',
-    description: 'Secure sign-in for the Bes3 team workspace.',
+    title: 'Bes3 后台登录',
+    description: 'Bes3 团队工作台安全登录入口。',
     path: '/login',
     locale: await getRequestLocale(),
     robots: {
@@ -21,25 +21,25 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function LoginPage() {
   const publicRoutes = [
     {
-      eyebrow: 'Search',
-      title: 'Return to the buyer guide',
-      description: 'Use product search if you were trying to narrow a real purchase decision instead of opening the team workspace.',
+      eyebrow: '搜索',
+      title: '返回买家导购',
+      description: '如果你是来做购买决策，请使用公开商品搜索，而不是进入团队工作台。',
       href: '/search?scope=products',
-      label: 'Open search'
+      label: '打开搜索'
     },
     {
-      eyebrow: 'Trust',
-      title: 'Read how Bes3 works',
-      description: 'Use the public methodology page if you want to understand the buyer-first logic behind the site.',
+      eyebrow: '方法',
+      title: '了解 Bes3 如何工作',
+      description: '如果你想了解本站的买家优先逻辑，请阅读公开的方法页。',
       href: '/about',
-      label: 'Open About'
+      label: '打开关于页'
     },
     {
-      eyebrow: 'Support',
-      title: 'Contact the team',
-      description: 'Use contact if you need help with a public page, correction, or partnership request instead of admin access.',
+      eyebrow: '支持',
+      title: '联系团队',
+      description: '如果你需要页面修正、合作或公开内容支持，请使用联系入口。',
       href: '/contact',
-      label: 'Open Contact'
+      label: '打开联系页'
     }
   ]
 
@@ -49,45 +49,45 @@ export default async function LoginPage() {
         <div className="bg-[radial-gradient(circle_at_top_left,rgba(16,185,129,0.24),transparent_24%),linear-gradient(180deg,#0f172a_0%,#111827_100%)] px-8 py-10 text-white lg:px-12 lg:py-14">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <Link href="/" className="space-y-1">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Buyer Guide</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">买家导购</p>
               <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight text-white">{DEFAULT_SITE_NAME}</h2>
               <p className="text-sm text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
             </Link>
             <Link href="/" className="rounded-full border border-white/15 bg-white/5 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-white/10">
-              Back to Bes3
+              返回 Bes3
             </Link>
           </div>
 
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Bes3 Team Workspace</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-emerald-200/80">Bes3 团队工作台</p>
           <h1 className="mt-6 max-w-3xl font-[var(--font-display)] text-5xl font-black tracking-tight text-white sm:text-6xl">
-            Sign in to manage the Bes3 publishing workspace.
+            登录并管理 Bes3 后台工作台。
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-            Team members use this workspace to manage products, editorial pages, and operational systems without exposing that workflow on the public site.
+            团队成员在这里管理商品、内容页面和运营系统，避免把内部流程暴露到公开站点。
           </p>
           <div className="mt-8 rounded-[1.75rem] border border-emerald-200/15 bg-white/5 p-5">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Access note</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">访问说明</p>
             <p className="mt-3 text-sm leading-7 text-slate-200">
-              If you are here to research a purchase, the public Bes3 experience lives in search, shortlist, reviews, comparisons, and price watches. This sign-in is reserved for the Bes3 team workspace.
+              如果你是来研究购买决策，公开 Bes3 体验位于搜索、收藏清单、评测、对比和价格提醒。此登录入口仅用于 Bes3 团队工作台。
             </p>
           </div>
           <div className="mt-10 grid gap-4 md:grid-cols-3">
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">Inventory</p>
-              <p className="mt-3 text-sm leading-7 text-slate-200">Affiliate imports and manual product entries land here first.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">商品</p>
+              <p className="mt-3 text-sm leading-7 text-slate-200">联盟导入和手动商品会先进入这里。</p>
             </div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">Editorial</p>
-              <p className="mt-3 text-sm leading-7 text-slate-200">Reviews, comparisons, and guides stay aligned with the Bes3 design system.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">内容</p>
+              <p className="mt-3 text-sm leading-7 text-slate-200">评测、对比和导购内容保持统一的 Bes3 设计体系。</p>
             </div>
             <div className="rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
-              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">Runtime</p>
-              <p className="mt-3 text-sm leading-7 text-slate-200">AI, proxy, media, and SEO settings remain auditable and centralized.</p>
+              <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-slate-300">运行时</p>
+              <p className="mt-3 text-sm leading-7 text-slate-200">AI、代理、媒体和 SEO 配置集中管理并可审计。</p>
             </div>
           </div>
 
           <div className="mt-10">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">Not looking for admin?</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-emerald-200">不是要进入后台？</p>
             <div className="mt-4 grid gap-4 md:grid-cols-3">
               {publicRoutes.map((route) => (
                 <Link
@@ -108,25 +108,25 @@ export default async function LoginPage() {
         <div className="flex flex-col justify-between gap-6 bg-[linear-gradient(180deg,rgba(255,255,255,0.72),rgba(239,244,255,0.94))] p-6 lg:p-10">
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-white/80 px-4 py-3 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.35)]">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Internal Only</p>
-              <p className="mt-1 text-sm text-slate-600">Use Bes3 team credentials to enter the workspace.</p>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">内部使用</p>
+              <p className="mt-1 text-sm text-slate-600">使用 Bes3 团队凭据进入工作台。</p>
             </div>
             <Link href="/" className="text-sm font-semibold text-primary transition-colors hover:text-emerald-700">
-              Return to Bes3 →
+              返回 Bes3 →
             </Link>
           </div>
           <LoginForm />
           <div className="rounded-[1.5rem] bg-white/85 p-5 shadow-[0_20px_40px_-32px_rgba(15,23,42,0.35)]">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">Quick exits</p>
+            <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-primary">快速返回公开站点</p>
             <div className="mt-3 flex flex-wrap gap-2">
               <Link href="/search?scope=products" className="rounded-full border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                Search
+                搜索
               </Link>
               <Link href="/about" className="rounded-full border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                How We Test
+                测试方法
               </Link>
               <Link href="/contact" className="rounded-full border border-border bg-white px-3 py-2 text-sm font-semibold text-foreground transition-colors hover:bg-muted">
-                Contact
+                联系
               </Link>
             </div>
           </div>

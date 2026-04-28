@@ -70,7 +70,7 @@ export function ProductWorkspaceConsole({
       title: '重建内容包',
       description: '复用当前商品事实和媒体素材，重新生成关键词机会、评测页与对比页，不重新抓取落地页。',
       badge: `${workspace.keywords.length} 个关键词 · ${workspace.articles.length} 篇文章`,
-      accentClassName: 'bg-[#f7f1e4] text-primary',
+      accentClassName: 'bg-muted/40 text-primary',
       cta: '排队内容包',
       successMessage: '内容包已排队，工作台已刷新',
       icon: Wand2,
@@ -166,8 +166,8 @@ export function ProductWorkspaceConsole({
   }, [hasActiveRuns, workspace.product.id])
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div className="max-w-3xl">
             <Link
@@ -182,11 +182,11 @@ export function ProductWorkspaceConsole({
               {workspace.affiliateSource ? <StatusBadge value={workspace.affiliateSource.platform} /> : null}
               {workspace.product.category ? <StatusBadge value={workspace.product.category} /> : null}
             </div>
-            <p className="mt-3 font-mono text-[10px] uppercase tracking-[0.22em] text-primary">商品工作台</p>
-            <h1 className="mt-1.5 font-[var(--font-display)] text-2xl font-semibold tracking-tight text-foreground sm:text-3xl">
+            <p className="mt-3 text-overline font-semibold text-primary">商品工作台</p>
+            <h1 className="page-title mt-1">
               {workspace.product.productName}
             </h1>
-            <p className="mt-1.5 max-w-2xl text-xs leading-5 text-muted-foreground">
+            <p className="page-subtitle max-w-2xl">
               {workspace.product.description || '暂未采集到商品描述。确认联盟来源链接后可重新运行流水线。'}
             </p>
           </div>
@@ -240,38 +240,38 @@ export function ProductWorkspaceConsole({
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-          <div className="rounded-xl border border-border bg-[#f7f1e4] p-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">价格</p>
-            <p className="mt-1 text-xl font-semibold">{formatMoney(workspace.product.priceAmount, workspace.product.priceCurrency)}</p>
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-sm font-medium text-muted-foreground">价格</p>
+            <p className="mt-1 text-xl font-bold">{formatMoney(workspace.product.priceAmount, workspace.product.priceCurrency)}</p>
           </div>
-          <div className="rounded-xl border border-border bg-[#f7f1e4] p-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">评分</p>
-            <p className="mt-1 text-xl font-semibold">{workspace.product.rating ? `${workspace.product.rating.toFixed(1)} / 5` : '暂无'}</p>
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-sm font-medium text-muted-foreground">评分</p>
+            <p className="mt-1 text-xl font-bold">{workspace.product.rating ? `${workspace.product.rating.toFixed(1)} / 5` : '暂无'}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{workspace.product.reviewCount ? `${workspace.product.reviewCount.toLocaleString()} 条评价` : '暂无评价数'}</p>
           </div>
-          <div className="rounded-xl border border-border bg-[#f7f1e4] p-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">素材</p>
-            <p className="mt-1 text-xl font-semibold">{workspace.mediaAssets.length}</p>
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-sm font-medium text-muted-foreground">素材</p>
+            <p className="mt-1 text-xl font-bold">{workspace.mediaAssets.length}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{reviewMedia.length} 张评价图</p>
           </div>
-          <div className="rounded-xl border border-border bg-[#f7f1e4] p-3">
-            <p className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">内容产出</p>
-            <p className="mt-1 text-xl font-semibold">{workspace.articles.length}</p>
+          <div className="rounded-lg border bg-muted/40 p-3">
+            <p className="text-sm font-medium text-muted-foreground">内容产出</p>
+            <p className="mt-1 text-xl font-bold">{workspace.articles.length}</p>
             <p className="mt-0.5 text-xs text-muted-foreground">{workspace.keywords.length} 个关键词机会</p>
           </div>
         </div>
       </section>
 
-      <section className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="max-w-3xl">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">工作流控制</p>
-            <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">按阶段推进内容漏斗</h2>
-            <p className="mt-1.5 text-xs leading-5 text-muted-foreground">
+            <p className="text-overline font-semibold text-primary">工作流控制</p>
+            <h2 className="card-title mt-1">按阶段推进内容漏斗</h2>
+            <p className="helper-text">
               仅重跑关键词、内容或 SEO 时使用已存商品事实；落地页变化时再运行完整流水线。
             </p>
           </div>
-          <div className="rounded-xl border border-border bg-[#f7f1e4] px-3 py-2 text-xs text-muted-foreground">
+          <div className="rounded-md border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">
             完整流水线仍在上方，用于链接解析和新抓取。
           </div>
         </div>
@@ -283,8 +283,8 @@ export function ProductWorkspaceConsole({
               <div
                 key={action.id}
                 className={cn(
-                  'rounded-xl border border-border p-3',
-                  action.id === 'contentPack' ? 'bg-[#f7f1e4]' : 'bg-white',
+                  'rounded-md border p-3',
+                  action.id === 'contentPack' ? 'bg-muted/40' : 'bg-white',
                   action.spanClassName
                 )}
               >
@@ -320,10 +320,10 @@ export function ProductWorkspaceConsole({
 
       <section className="grid gap-4 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
             <div className="flex items-start justify-between gap-3">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">商品事实</p>
+                <p className="text-overline font-semibold text-primary">商品事实</p>
                 <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">标准化记录</h2>
               </div>
               {workspace.product.resolvedUrl ? (
@@ -399,7 +399,7 @@ export function ProductWorkspaceConsole({
                 <div className="mt-3 flex flex-wrap gap-2">
                   {workspace.product.reviewHighlights.length > 0 ? (
                     workspace.product.reviewHighlights.map((item) => (
-                      <span key={item} className="rounded-full bg-[#f7f1e4] px-3 py-1.5 text-sm text-slate-700">
+                      <span key={item} className="rounded-full bg-muted px-3 py-1.5 text-sm text-slate-700">
                         {item}
                       </span>
                     ))
@@ -411,12 +411,12 @@ export function ProductWorkspaceConsole({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">关键词挖掘</p>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <p className="text-overline font-semibold text-primary">关键词挖掘</p>
             <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">高意图机会</h2>
             <div className="mt-4 overflow-x-auto">
               <table className="min-w-full text-left text-sm">
-                <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+                <thead className="border-b bg-white text-xs text-muted-foreground">
                   <tr>
                     <th className="pb-2 pr-3">关键词</th>
                     <th className="pb-2 pr-3">分数</th>
@@ -446,8 +446,8 @@ export function ProductWorkspaceConsole({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">流水线详情</p>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <p className="text-overline font-semibold text-primary">流水线详情</p>
             <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">最近 Job</h2>
             <div className="mt-4 space-y-2">
               {workspace.latestRunJobs.length > 0 ? (
@@ -473,12 +473,12 @@ export function ProductWorkspaceConsole({
         </div>
 
         <div className="space-y-4">
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">媒体素材</p>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <p className="text-overline font-semibold text-primary">媒体素材</p>
             <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">主图、图库与评价图</h2>
 
             {heroMedia ? (
-              <div className="mt-4 rounded-xl border border-border bg-[#f7f1e4] p-3">
+              <div className="mt-4 rounded-md border bg-muted/40 p-3">
                 <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
                   <Image
                     src={heroMedia.publicUrl}
@@ -501,7 +501,7 @@ export function ProductWorkspaceConsole({
             <div className="mt-4 grid gap-3 sm:grid-cols-2">
               {galleryMedia.map((asset) => (
                 <div key={asset.id} className="rounded-xl border border-border p-2">
-                  <div className="relative aspect-[4/3] overflow-hidden rounded-xl bg-[#f7f1e4]">
+                  <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted/40">
                     <Image src={asset.publicUrl} alt={`${workspace.product.productName} gallery`} fill sizes="(max-width: 1280px) 50vw, 20vw" className="object-cover" />
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3">
@@ -520,7 +520,7 @@ export function ProductWorkspaceConsole({
               <div className="grid gap-3 grid-cols-2 sm:grid-cols-3">
                 {reviewMedia.length > 0 ? (
                   reviewMedia.map((asset) => (
-                    <div key={asset.id} className="relative aspect-square overflow-hidden rounded-xl border border-border bg-[#f7f1e4]">
+                    <div key={asset.id} className="relative aspect-square overflow-hidden rounded-md border bg-muted/40">
                       <Image src={asset.publicUrl} alt={`${workspace.product.productName} review`} fill sizes="(max-width: 1280px) 33vw, 12vw" className="object-cover" />
                     </div>
                   ))
@@ -531,8 +531,8 @@ export function ProductWorkspaceConsole({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">生成内容</p>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <p className="text-overline font-semibold text-primary">生成内容</p>
             <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">文章与 SEO 页面</h2>
             <div className="mt-4 space-y-2">
               {workspace.articles.length > 0 ? (
@@ -608,8 +608,8 @@ export function ProductWorkspaceConsole({
             </div>
           </div>
 
-          <div className="rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
-            <p className="font-mono text-[10px] uppercase tracking-[0.2em] text-primary">近期运行</p>
+          <div className="rounded-lg border bg-card p-4 shadow-sm">
+            <p className="text-overline font-semibold text-primary">近期运行</p>
             <h2 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">执行历史</h2>
             <div className="mt-4 space-y-2">
               {workspace.recentRuns.length > 0 ? (

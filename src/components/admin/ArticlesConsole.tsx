@@ -170,12 +170,11 @@ export function ArticlesConsole() {
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <p className="font-mono text-[10px] uppercase tracking-[0.22em] text-primary">文章</p>
-          <h1 className="mt-1 font-[var(--font-display)] text-2xl font-semibold tracking-tight">带 SEO 校对的编辑工作台</h1>
-          <p className="mt-1.5 max-w-3xl text-xs leading-5 text-muted-foreground">
+          <h1 className="page-title">文章管理</h1>
+          <p className="page-subtitle">
             审核生成内容，调整 slug 和 SEO 元数据，并在文章队列中完成发布或草稿保留。
           </p>
         </div>
@@ -194,17 +193,17 @@ export function ArticlesConsole() {
       </div>
 
       <div className="grid gap-4 xl:grid-cols-[0.92fr_1.08fr]">
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5">
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm">
           <div className="mb-4 flex items-start justify-between gap-3">
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-primary">队列</p>
+              <p className="text-overline font-semibold text-primary">队列</p>
               <p className="mt-1 text-xs text-muted-foreground">{articles.length} 篇生成文章待审核。</p>
             </div>
             {selectedArticleListItem ? <StatusBadge value={selectedArticleListItem.status} /> : null}
           </div>
           <div className="overflow-x-auto">
             <table className="min-w-full text-left text-sm">
-              <thead className="border-b border-border text-xs uppercase tracking-[0.14em] text-muted-foreground">
+              <thead className="border-b bg-white text-xs text-muted-foreground">
                 <tr>
                   <th className="pb-2 pr-3">标题</th>
                   <th className="pb-2 pr-3">类型</th>
@@ -217,8 +216,8 @@ export function ArticlesConsole() {
                   <tr
                     key={article.id}
                     className={cn(
-                      'cursor-pointer border-b border-border/70 transition-colors hover:bg-[#f7f1e4]',
-                      selectedArticleId === article.id ? 'bg-[#f7f1e4]' : ''
+                      'cursor-pointer border-b border-border/70 transition-colors hover:bg-muted/40',
+                      selectedArticleId === article.id ? 'bg-muted/40' : ''
                     )}
                     onClick={() => {
                       void selectArticle(article.id)
@@ -238,7 +237,7 @@ export function ArticlesConsole() {
           </div>
         </div>
 
-        <div className="min-w-0 rounded-2xl border border-border bg-white p-4 shadow-sm lg:p-5 xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
+        <div className="min-w-0 rounded-lg border bg-card p-4 shadow-sm xl:max-h-[calc(100vh-6rem)] xl:overflow-y-auto">
           {selectedArticle && draft ? (
             <div className="space-y-4">
               <div className="flex flex-wrap items-start justify-between gap-3">
@@ -436,7 +435,7 @@ export function ArticlesConsole() {
                     </div>
                   </div>
                   <div className="mt-3 grid gap-3 md:grid-cols-2">
-                    <div className="rounded-xl bg-[#f7f1e4] p-3">
+                    <div className="rounded-md bg-muted/40 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-medium">SEO 标题</span>
                         <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', seoTitleState.className)}>
@@ -445,7 +444,7 @@ export function ArticlesConsole() {
                       </div>
                       <p className="mt-2 text-xs text-muted-foreground">{draft.seo_title.trim().length} / 60 字符</p>
                     </div>
-                    <div className="rounded-xl bg-[#f7f1e4] p-3">
+                    <div className="rounded-md bg-muted/40 p-3">
                       <div className="flex items-center justify-between gap-3">
                         <span className="text-sm font-medium">SEO 描述</span>
                         <span className={cn('inline-flex rounded-full px-3 py-1 text-xs font-semibold', seoDescriptionState.className)}>
@@ -551,7 +550,7 @@ export function ArticlesConsole() {
                 <div className="mt-3 space-y-2">
                   {selectedArticle.seo_pages.length > 0 ? (
                     selectedArticle.seo_pages.map((page) => (
-                      <div key={page.id} className="rounded-xl bg-[#f7f1e4] p-3">
+                      <div key={page.id} className="rounded-md bg-muted/40 p-3">
                         <div className="flex flex-wrap items-start justify-between gap-3">
                           <div>
                             <p className="font-medium">{page.title}</p>

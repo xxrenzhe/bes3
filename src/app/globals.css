@@ -74,6 +74,66 @@
 }
 
 @layer utilities {
+  .text-h1 {
+    @apply text-3xl font-bold tracking-tight;
+  }
+
+  .text-h2 {
+    @apply text-2xl font-semibold tracking-tight;
+  }
+
+  .text-h3 {
+    @apply text-xl font-semibold;
+  }
+
+  .text-h4 {
+    @apply text-lg font-medium;
+  }
+
+  .text-body-lg {
+    @apply text-lg;
+  }
+
+  .text-body {
+    @apply text-base;
+  }
+
+  .text-body-sm {
+    @apply text-sm;
+  }
+
+  .text-caption {
+    @apply text-xs;
+  }
+
+  .text-overline {
+    @apply text-[10px] uppercase tracking-wider;
+  }
+
+  .page-title {
+    @apply mb-2 text-h1 text-foreground;
+  }
+
+  .page-subtitle {
+    @apply text-body text-muted-foreground;
+  }
+
+  .section-title {
+    @apply mb-4 text-h2 text-foreground;
+  }
+
+  .card-title {
+    @apply mb-2 text-h3 text-foreground;
+  }
+
+  .label-text {
+    @apply text-body-sm font-medium text-foreground;
+  }
+
+  .helper-text {
+    @apply text-caption text-muted-foreground;
+  }
+
   .bg-grid {
     background-image:
       linear-gradient(to right, rgba(15, 23, 42, 0.05) 1px, transparent 1px),

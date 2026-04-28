@@ -20,6 +20,7 @@ const DEFAULT_SETTINGS = [
   ['ai', 'geminiModel', GEMINI_ACTIVE_MODEL, 'string', 0, 'Gemini model'],
   ['ai', 'geminiBaseUrl', process.env.GEMINI_BASE_URL || 'https://generativelanguage.googleapis.com', 'string', 0, 'Gemini API base URL'],
   ['ai', 'geminiApiKey', '', 'secret', 1, 'Gemini API key used for keyword and article generation'],
+  ['ai', 'geminiRelayApiKey', '', 'secret', 1, 'Relay API key used when AI provider is relay'],
   ['ai', 'geminiTimeoutMs', '30000', 'string', 0, 'Gemini request timeout in milliseconds'],
   ['proxy', 'browserProxyUrlsJson', '[]', 'json', 0, 'Proxy pool list'],
   ['proxy', 'defaultCountryCode', process.env.PROXY_DEFAULT_COUNTRY || 'US', 'string', 0, 'Default country used when a scrape task has no explicit market'],

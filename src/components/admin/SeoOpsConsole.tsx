@@ -227,26 +227,23 @@ export function SeoOpsConsole() {
   }
 
   return (
-    <div className="space-y-4 p-4 sm:p-5 lg:p-6">
+    <div className="mx-auto max-w-7xl space-y-6 px-4 py-6 sm:px-6 lg:px-8">
       <section className="grid gap-4 xl:grid-cols-[1.1fr_0.9fr]">
-        <div className="rounded-2xl bg-[linear-gradient(135deg,#0f172a_0%,#1d4ed8_52%,#0f766e_100%)] p-4 text-white shadow-sm lg:p-5">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-emerald-200/80">SEO 运营</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight sm:text-3xl">
-            统一管理索引、分发与链接健康。
-          </h1>
-          <p className="mt-2 max-w-3xl text-xs leading-5 text-slate-200">
-            重新运行 Google 索引、外部分发、商家链接巡检，并确认搜索引擎可见的多语言足迹。
+        <div>
+          <h1 className="page-title">SEO 运营</h1>
+          <p className="page-subtitle max-w-3xl">
+            统一管理索引、外部分发、商家链接巡检，并确认搜索引擎可见的多语言足迹。
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
-            <Button disabled={isPending} className="rounded-full bg-white text-slate-950 hover:bg-slate-100" onClick={() => triggerAction('linkInspector', '链接巡检已完成')}>
+            <Button disabled={isPending} onClick={() => triggerAction('linkInspector', '链接巡检已完成')}>
               <Search className="mr-2 h-4 w-4" />
               运行链接巡检
             </Button>
-            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('reindex', 'Google 索引重跑完成')}>
+            <Button disabled={isPending} variant="secondary" onClick={() => triggerAction('reindex', 'Google 索引重跑完成')}>
               <Globe2 className="mr-2 h-4 w-4" />
               重跑 Google 索引
             </Button>
-            <Button disabled={isPending} variant="secondary" className="rounded-full border border-white/15 bg-white/10 text-white hover:bg-white/15" onClick={() => triggerAction('syndicate', '外部分发完成')}>
+            <Button disabled={isPending} variant="secondary" onClick={() => triggerAction('syndicate', '外部分发完成')}>
               <Rss className="mr-2 h-4 w-4" />
               分发 Syndication
             </Button>
@@ -254,48 +251,48 @@ export function SeoOpsConsole() {
         </div>
 
         <div className="grid gap-3 md:grid-cols-3 xl:grid-cols-1">
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">语言足迹</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.supportedLocales.length || 0}</p>
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">语言足迹</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{summary?.supportedLocales.length || 0}</p>
             <p className="mt-1 text-xs text-slate-600">通过 hreflang 和 sitemap 暴露的公开语言版本。</p>
           </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 对齐审计</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.seoAlignmentAudit.affectedPages || 0}</p>
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">SEO 对齐审计</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{summary?.seoAlignmentAudit.affectedPages || 0}</p>
             <p className="mt-1 text-xs text-slate-600">
               {summary?.seoAlignmentAudit
                 ? `${summary.seoAlignmentAudit.scannedPages} 个已发布 SEO 页中有 ${summary.seoAlignmentAudit.issuesFound} 个问题。`
                 : '暂无对齐审计快照。'}
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">渲染页审计</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.seoRemediationQueue.length || 0}</p>
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">渲染页审计</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{summary?.seoRemediationQueue.length || 0}</p>
             <p className="mt-1 text-xs text-slate-600">
               {summary?.seoRemediationQueue.length
                 ? '已有优先修复项待处理。'
                 : '当前队列没有活跃修复项。'}
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">信任面审计</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.trustSurfaceAudit.affectedPages || 0}</p>
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">信任面审计</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{summary?.trustSurfaceAudit.affectedPages || 0}</p>
             <p className="mt-1 text-xs text-slate-600">
               {summary?.trustSurfaceAudit
                 ? `${summary.trustSurfaceAudit.scannedPages} 个信任与机器入口页中有 ${summary.trustSurfaceAudit.issuesFound} 个问题。`
                 : '暂无信任面审计快照。'}
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">最近链接巡检</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">{summary?.lastLinkInspectorRun?.totalChecked || 0}</p>
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">最近链接巡检</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">{summary?.lastLinkInspectorRun?.totalChecked || 0}</p>
             <p className="mt-1 text-xs text-slate-600">
               {summary?.lastLinkInspectorRun ? `最近一次发现 ${summary.lastLinkInspectorRun.issuesFound} 个问题。` : '暂无巡检记录。'}
             </p>
           </div>
-          <div className="rounded-2xl border border-slate-200/70 bg-white/90 p-4 shadow-sm">
-            <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">近期 SEO 事件</p>
-            <p className="mt-1.5 text-2xl font-black tracking-tight text-slate-950">
+          <div className="rounded-lg border bg-card p-3 shadow-sm">
+            <p className="text-sm font-medium text-muted-foreground">近期 SEO 事件</p>
+            <p className="mt-1 text-2xl font-bold tracking-tight text-slate-950">
               {(summary?.recentIndexingEvents.length || 0) + (summary?.recentSyndicationEvents.length || 0)}
             </p>
             <p className="mt-1 text-xs text-slate-600">发布事件日志中的索引与分发记录。</p>
