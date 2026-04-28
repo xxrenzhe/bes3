@@ -3,6 +3,8 @@ import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
 import { listSettingDiagnostics, listSettings, redactSensitiveSettings, saveSetting } from '@/lib/settings'
 
+const DEFAULT_PARTNERBOOST_BASE_URL = 'https://app.partnerboost.com'
+
 type SettingInput = {
   category?: unknown
   key?: unknown
@@ -17,7 +19,7 @@ function validateSettingInput(item: SettingInput): string | null {
   const key = String(item.key || '')
   const value = item.value === null ? '' : String(item.value || '')
 
-  if (category === 'proxy' && key === 'browserProxyUrlsJson') {
+  if (category === 'proxy' && key === 'urls') {
     try {
       const parsed = JSON.parse(value || '[]')
       if (!Array.isArray(parsed)) return 'Proxy Pool JSON must be an array'
@@ -41,7 +43,7 @@ function validateSettingInput(item: SettingInput): string | null {
     return 'Default proxy country must be a two-letter country code'
   }
 
-  if (category === 'ai' && key === 'geminiBaseUrl' && value) {
+  if (category === 'ai' && key === 'gemini_endpoint' && value) {
     try {
       const url = new URL(value)
       if (!/^https?:$/.test(url.protocol)) return 'Gemini Base URL must use http or https'
@@ -50,15 +52,19 @@ function validateSettingInput(item: SettingInput): string | null {
     }
   }
 
-  if (category === 'ai' && key === 'provider' && value && !['gemini', 'relay'].includes(value.trim())) {
-    return 'AI provider must be gemini or relay'
+  if (category === 'ai' && key === 'gemini_provider' && value && !['official', 'relay'].includes(value.trim())) {
+    return 'AI provider must be official or relay'
   }
 
-  if (category === 'affiliateSync' && ['amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'].includes(key)) {
+  if (category === 'affiliate_sync' && ['amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'].includes(key)) {
     const parsed = Number.parseInt(value, 10)
     if (!Number.isFinite(parsed) || parsed < 1 || parsed > 500) {
       return `${key} must be a number between 1 and 500`
     }
+  }
+
+  if (category === 'affiliate_sync' && key === 'partnerboost_base_url' && value && value.trim() !== DEFAULT_PARTNERBOOST_BASE_URL) {
+    return `partnerboost_base_url must remain ${DEFAULT_PARTNERBOOST_BASE_URL}`
   }
 
   if (category === 'deepScrape' && ['timeoutMs', 'waitAfterLoadMs', 'maxAttempts'].includes(key)) {

@@ -23,7 +23,7 @@ export const PIPELINE_STAGES: PipelineStage[] = [
 export const SETTINGS_CATEGORIES = [
   'ai',
   'proxy',
-  'affiliateSync',
+  'affiliate_sync',
   'media',
   'seo',
   'system'

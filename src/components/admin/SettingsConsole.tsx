@@ -10,6 +10,7 @@ import {
   Globe,
   Info,
   Key,
+  Plus,
   Settings as SettingsIcon,
   SlidersHorizontal,
   Trash2,
@@ -52,13 +53,31 @@ type FieldMeta = {
   options?: Array<{ value: string; label: string }>
 }
 
+type ProxyUrlConfig = {
+  country: string
+  url: string
+  error?: string
+}
+
 const GEMINI_OFFICIAL_MODEL = 'gemini-3-flash-preview'
 const RELAY_GPT_MODEL = 'gpt-5.2'
 const OFFICIAL_GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com'
 const RELAY_GEMINI_ENDPOINT = 'https://aicode.cat/v1/messages'
+const DEFAULT_PARTNERBOOST_BASE_URL = 'https://app.partnerboost.com'
 const SENSITIVE_PLACEHOLDER = '············'
+const VALIDATABLE_CATEGORIES = ['ai', 'proxy', 'affiliate_sync'] as const
+const SUPPORTED_PROXY_COUNTRIES = [
+  { code: 'US', label: 'United States' },
+  { code: 'GB', label: 'United Kingdom' },
+  { code: 'CA', label: 'Canada' },
+  { code: 'AU', label: 'Australia' },
+  { code: 'DE', label: 'Germany' },
+  { code: 'FR', label: 'France' },
+  { code: 'ROW', label: 'Rest of World' }
+] as const
 
-const CATEGORY_ORDER = ['ai', 'proxy', 'deepScrape', 'affiliateSync', 'media', 'seo'] as const
+const CATEGORY_ORDER = ['ai', 'proxy', 'deepScrape', 'affiliate_sync', 'media', 'seo'] as const
+const AFFILIATE_SYNC_DELETABLE_KEYS = ['partnerboost_token', 'amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'] as const
 
 const CATEGORY_META: Record<string, { title: string; description: string; color: string }> = {
   ai: {
@@ -76,9 +95,9 @@ const CATEGORY_META: Record<string, { title: string; description: string; color:
     description: '控制商品采集时的浏览器抓取、等待策略、代理要求和重试次数。',
     color: 'text-blue-600'
   },
-  affiliateSync: {
+  affiliate_sync: {
     title: '联盟同步',
-    description: '配置 PartnerBoost 端点和令牌，保证库存同步稳定。',
+    description: '按 autobb 的字段语义配置 PartnerBoost 凭证和同步策略。',
     color: 'text-amber-600'
   },
   media: {
@@ -94,16 +113,16 @@ const CATEGORY_META: Record<string, { title: string; description: string; color:
 }
 
 const FIELD_META: Record<string, FieldMeta> = {
-  'ai.provider': {
+  'ai.gemini_provider': {
     label: '服务商',
     description: '第 1 步：先选择服务商。官方适合海外网络；第三方中转适合国内网络。',
-    defaultValue: 'gemini',
+    defaultValue: 'official',
     options: [
-      { value: 'gemini', label: 'Gemini 官方' },
+      { value: 'official', label: 'Gemini 官方' },
       { value: 'relay', label: '第三方中转' }
     ]
   },
-  'ai.geminiModel': {
+  'ai.gemini_model': {
     label: 'AI 模型',
     description: '第 2 步：服务商确定后，再选择该服务商支持的模型。',
     defaultValue: GEMINI_OFFICIAL_MODEL,
@@ -112,19 +131,19 @@ const FIELD_META: Record<string, FieldMeta> = {
       { value: RELAY_GPT_MODEL, label: 'GPT-5.2（第三方中转专用）' }
     ]
   },
-  'ai.geminiBaseUrl': {
+  'ai.gemini_endpoint': {
     label: 'API 端点',
-    description: '第 3 步：根据当前服务商自动计算，通常无需手动修改。',
+    description: '第 3 步：根据当前服务商和模型自动计算，不可手动修改。',
     placeholder: OFFICIAL_GEMINI_ENDPOINT,
     defaultValue: OFFICIAL_GEMINI_ENDPOINT
   },
-  'ai.geminiApiKey': {
+  'ai.gemini_api_key': {
     label: 'Gemini 官方 API Key',
     description: '第 4 步：当前服务商为官方时，仅此 Key 会生效。',
     placeholder: '输入官方 API Key',
     helpLink: 'https://aistudio.google.com/app/api-keys'
   },
-  'ai.geminiRelayApiKey': {
+  'ai.gemini_relay_api_key': {
     label: '第三方中转 API Key',
     description: '第 4 步：当前服务商为第三方中转时，仅此 Key 会生效。',
     placeholder: '输入中转服务 API Key',
@@ -136,7 +155,7 @@ const FIELD_META: Record<string, FieldMeta> = {
     placeholder: '30000',
     defaultValue: '30000'
   },
-  'proxy.browserProxyUrlsJson': {
+  'proxy.urls': {
     label: '代理池 JSON',
     description: '配置浏览器抓取使用的代理池，支持字符串 URL 数组或带 url 字段的对象数组。',
     placeholder: '["http://user:pass@proxy:port"]',
@@ -183,39 +202,30 @@ const FIELD_META: Record<string, FieldMeta> = {
       { value: 'false', label: '禁用' }
     ]
   },
-  'affiliateSync.partnerboostAmazonBaseUrl': {
-    label: 'Amazon Base URL',
-    description: 'PartnerBoost Amazon API 地址。',
-    placeholder: 'https://app.partnerboost.com'
+  'affiliate_sync.partnerboost_base_url': {
+    label: 'PartnerBoost Base URL',
+    description: 'PartnerBoost API 地址，按 autobb 固定使用默认值，不支持修改。',
+    placeholder: DEFAULT_PARTNERBOOST_BASE_URL,
+    defaultValue: DEFAULT_PARTNERBOOST_BASE_URL
   },
-  'affiliateSync.partnerboostAmazonToken': {
-    label: 'Amazon Token',
-    description: 'PartnerBoost Amazon 同步令牌。',
-    placeholder: '输入 Amazon Token'
+  'affiliate_sync.partnerboost_token': {
+    label: 'PartnerBoost Token',
+    description: 'PartnerBoost 联盟同步令牌。',
+    placeholder: '输入 PartnerBoost Token'
   },
-  'affiliateSync.partnerboostDtcBaseUrl': {
-    label: 'DTC Base URL',
-    description: 'PartnerBoost DTC API 地址。',
-    placeholder: 'https://app.partnerboost.com'
-  },
-  'affiliateSync.partnerboostDtcToken': {
-    label: 'DTC Token',
-    description: 'PartnerBoost DTC 同步令牌。',
-    placeholder: '输入 DTC Token'
-  },
-  'affiliateSync.amazonPageSize': {
+  'affiliate_sync.amazonPageSize': {
     label: 'Amazon 每页数量',
     description: '单页同步的 Amazon 商品数量。',
     placeholder: '20',
     defaultValue: '20'
   },
-  'affiliateSync.dtcPageSize': {
+  'affiliate_sync.dtcPageSize': {
     label: 'DTC 每页数量',
     description: '单页同步的 DTC 商品数量。',
     placeholder: '20',
     defaultValue: '20'
   },
-  'affiliateSync.maxPagesPerSync': {
+  'affiliate_sync.maxPagesPerSync': {
     label: '单次最大页数',
     description: '单次同步最多拉取的分页数。',
     placeholder: '5',
@@ -350,15 +360,15 @@ const FIELD_META: Record<string, FieldMeta> = {
 
 const CATEGORY_FIELDS: Record<string, Array<Omit<SettingItem, 'value' | 'description'> & { description?: string | null }>> = {
   ai: [
-    { category: 'ai', key: 'provider', dataType: 'string', isSensitive: false },
-    { category: 'ai', key: 'geminiModel', dataType: 'string', isSensitive: false },
-    { category: 'ai', key: 'geminiBaseUrl', dataType: 'string', isSensitive: false },
-    { category: 'ai', key: 'geminiApiKey', dataType: 'string', isSensitive: true },
-    { category: 'ai', key: 'geminiRelayApiKey', dataType: 'string', isSensitive: true },
+    { category: 'ai', key: 'gemini_provider', dataType: 'string', isSensitive: false },
+    { category: 'ai', key: 'gemini_model', dataType: 'string', isSensitive: false },
+    { category: 'ai', key: 'gemini_endpoint', dataType: 'string', isSensitive: false },
+    { category: 'ai', key: 'gemini_api_key', dataType: 'string', isSensitive: true },
+    { category: 'ai', key: 'gemini_relay_api_key', dataType: 'string', isSensitive: true },
     { category: 'ai', key: 'geminiTimeoutMs', dataType: 'number', isSensitive: false }
   ],
   proxy: [
-    { category: 'proxy', key: 'browserProxyUrlsJson', dataType: 'json', isSensitive: false },
+    { category: 'proxy', key: 'urls', dataType: 'json', isSensitive: false },
     { category: 'proxy', key: 'defaultCountryCode', dataType: 'string', isSensitive: false }
   ],
   deepScrape: [
@@ -368,14 +378,12 @@ const CATEGORY_FIELDS: Record<string, Array<Omit<SettingItem, 'value' | 'descrip
     { category: 'deepScrape', key: 'maxAttempts', dataType: 'number', isSensitive: false },
     { category: 'deepScrape', key: 'requireProxy', dataType: 'boolean', isSensitive: false }
   ],
-  affiliateSync: [
-    { category: 'affiliateSync', key: 'partnerboostAmazonBaseUrl', dataType: 'string', isSensitive: false },
-    { category: 'affiliateSync', key: 'partnerboostAmazonToken', dataType: 'string', isSensitive: true },
-    { category: 'affiliateSync', key: 'partnerboostDtcBaseUrl', dataType: 'string', isSensitive: false },
-    { category: 'affiliateSync', key: 'partnerboostDtcToken', dataType: 'string', isSensitive: true },
-    { category: 'affiliateSync', key: 'amazonPageSize', dataType: 'number', isSensitive: false },
-    { category: 'affiliateSync', key: 'dtcPageSize', dataType: 'number', isSensitive: false },
-    { category: 'affiliateSync', key: 'maxPagesPerSync', dataType: 'number', isSensitive: false }
+  affiliate_sync: [
+    { category: 'affiliate_sync', key: 'partnerboost_base_url', dataType: 'string', isSensitive: false },
+    { category: 'affiliate_sync', key: 'partnerboost_token', dataType: 'string', isSensitive: true },
+    { category: 'affiliate_sync', key: 'amazonPageSize', dataType: 'number', isSensitive: false },
+    { category: 'affiliate_sync', key: 'dtcPageSize', dataType: 'number', isSensitive: false },
+    { category: 'affiliate_sync', key: 'maxPagesPerSync', dataType: 'number', isSensitive: false }
   ],
   media: [
     { category: 'media', key: 'driver', dataType: 'string', isSensitive: false },
@@ -412,7 +420,7 @@ function getCategoryIcon(category: string) {
   if (category === 'deepScrape') return Bot
   if (category === 'media') return Database
   if (category === 'seo') return Wand2
-  if (category === 'affiliateSync') return Key
+  if (category === 'affiliate_sync') return Key
   return SettingsIcon
 }
 
@@ -436,16 +444,65 @@ function getAiModel(provider: string, model: string) {
 }
 
 function shouldShowAiField(provider: string, key: string) {
-  if (key === 'geminiApiKey') return provider !== 'relay'
-  if (key === 'geminiRelayApiKey') return provider === 'relay'
+  if (key === 'gemini_api_key') return provider !== 'relay'
+  if (key === 'gemini_relay_api_key') return provider === 'relay'
   return true
 }
 
 function isRequiredField(category: string, key: string, provider: string) {
   if (category !== 'ai') return false
-  if (key === 'provider' || key === 'geminiModel') return true
-  if (provider === 'relay') return key === 'geminiRelayApiKey'
-  return key === 'geminiApiKey'
+  if (key === 'gemini_provider' || key === 'gemini_model') return true
+  if (provider === 'relay') return key === 'gemini_relay_api_key'
+  return key === 'gemini_api_key'
+}
+
+function validateProxyUrlFormat(url: string): string | null {
+  const trimmed = String(url || '').trim()
+  if (!trimmed) return null
+  if (/^(https?|socks5):\/\//i.test(trimmed)) return null
+  if (trimmed.split(':').length >= 2) return null
+  return '代理 URL 必须是完整 URL 或 host:port[:username:password] 格式'
+}
+
+function normalizeComparableRecord(items: SettingItem[]): Record<string, string> {
+  return items.reduce<Record<string, string>>((accumulator, item) => {
+    accumulator[`${item.category}.${item.key}`] = String(item.value || '')
+    return accumulator
+  }, {})
+}
+
+function normalizeComparableProxyUrls(items: ProxyUrlConfig[]): Array<{ country: string; url: string }> {
+  return items.map((item) => ({
+    country: String(item.country || ''),
+    url: String(item.url || '')
+  }))
+}
+
+function buildComparableCategoryRecord(category: string, sourceItems: SettingItem[]): Record<string, string> {
+  const currentMap = new Map(sourceItems.filter((item) => item.category === category).map((item) => [item.key, item]))
+  const defined = CATEGORY_FIELDS[category] || []
+  const merged = defined.map((definition) => {
+    const existing = currentMap.get(definition.key)
+    const fieldMeta = getFieldMeta(definition)
+    return {
+      category,
+      key: definition.key,
+      value: existing?.value ?? fieldMeta?.defaultValue ?? null
+    }
+  })
+  const extra = sourceItems
+    .filter((item) => item.category === category)
+    .filter((item) => !defined.some((definition) => definition.key === item.key))
+    .map((item) => ({ category, key: item.key, value: item.value }))
+
+  return normalizeComparableRecord([...merged, ...extra].map((item) => ({
+    category,
+    key: item.key,
+    value: item.value,
+    dataType: 'string',
+    isSensitive: false,
+    description: null
+  })))
 }
 
 export function SettingsConsole() {
@@ -453,6 +510,10 @@ export function SettingsConsole() {
   const [diagnostics, setDiagnostics] = useState<SettingDiagnostic[]>([])
   const [editingField, setEditingField] = useState<string | null>(null)
   const [sensitiveDrafts, setSensitiveDrafts] = useState<Record<string, string>>({})
+  const [proxyUrls, setProxyUrls] = useState<ProxyUrlConfig[]>([])
+  const [savedProxyUrls, setSavedProxyUrls] = useState<ProxyUrlConfig[]>([])
+  const [savedCategoryRecords, setSavedCategoryRecords] = useState<Record<string, Record<string, string>>>({})
+  const [validatingCategory, setValidatingCategory] = useState<string | null>(null)
   const [isPending, startTransition] = useTransition()
 
   const load = async () => {
@@ -463,6 +524,32 @@ export function SettingsConsole() {
     setItems(nextItems)
     setDiagnostics(body.diagnostics || [])
     setSensitiveDrafts({})
+    const categories = Array.from(new Set([...CATEGORY_ORDER, ...nextItems.map((item: SettingItem) => item.category)]))
+    setSavedCategoryRecords(
+      categories.reduce<Record<string, Record<string, string>>>((accumulator, category) => {
+        accumulator[category] = buildComparableCategoryRecord(category, nextItems)
+        return accumulator
+      }, {})
+    )
+    const proxySetting = nextItems.find((item: SettingItem) => item.category === 'proxy' && item.key === 'urls')
+    try {
+      const parsed = JSON.parse(String(proxySetting?.value || '[]'))
+      const normalized = Array.isArray(parsed)
+        ? parsed
+            .map((item) => {
+              if (!item || typeof item !== 'object') return null
+              const country = String((item as { country?: unknown }).country || '').trim().toUpperCase()
+              const url = String((item as { url?: unknown }).url || '').trim()
+              return country && url ? { country, url, error: validateProxyUrlFormat(url) || undefined } : null
+            })
+            .filter(Boolean) as ProxyUrlConfig[]
+        : []
+      setProxyUrls(normalized)
+      setSavedProxyUrls(normalized)
+    } catch {
+      setProxyUrls([])
+      setSavedProxyUrls([])
+    }
   }
 
   useEffect(() => {
@@ -519,18 +606,18 @@ export function SettingsConsole() {
   }
 
   const handleInputChange = (item: SettingItem, nextValue: string) => {
-    if (item.category === 'ai' && item.key === 'provider') {
-      const normalizedModel = getAiModel(nextValue, getDefaultedValue({ category: 'ai', key: 'geminiModel', value: grouped.ai?.find((entry) => entry.key === 'geminiModel')?.value ?? null }))
+    if (item.category === 'ai' && item.key === 'gemini_provider') {
+      const normalizedModel = getAiModel(nextValue, getDefaultedValue({ category: 'ai', key: 'gemini_model', value: grouped.ai?.find((entry) => entry.key === 'gemini_model')?.value ?? null }))
       updateItem(item, nextValue)
-      updateItem({ category: 'ai', key: 'geminiModel', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'geminiModel' })?.description || null }, normalizedModel)
-      updateItem({ category: 'ai', key: 'geminiBaseUrl', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'geminiBaseUrl' })?.description || null }, getAiEndpoint(nextValue))
+      updateItem({ category: 'ai', key: 'gemini_model', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'gemini_model' })?.description || null }, normalizedModel)
+      updateItem({ category: 'ai', key: 'gemini_endpoint', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'gemini_endpoint' })?.description || null }, getAiEndpoint(nextValue))
       return
     }
 
-    if (item.category === 'ai' && item.key === 'geminiModel') {
-      const provider = getDefaultedValue({ category: 'ai', key: 'provider', value: grouped.ai?.find((entry) => entry.key === 'provider')?.value ?? null }) || 'gemini'
+    if (item.category === 'ai' && item.key === 'gemini_model') {
+      const provider = getDefaultedValue({ category: 'ai', key: 'gemini_provider', value: grouped.ai?.find((entry) => entry.key === 'gemini_provider')?.value ?? null }) || 'official'
       updateItem(item, getAiModel(provider, nextValue))
-      updateItem({ category: 'ai', key: 'geminiBaseUrl', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'geminiBaseUrl' })?.description || null }, getAiEndpoint(provider))
+      updateItem({ category: 'ai', key: 'gemini_endpoint', value: null, dataType: 'string', isSensitive: false, description: getFieldMeta({ category: 'ai', key: 'gemini_endpoint' })?.description || null }, getAiEndpoint(provider))
       return
     }
 
@@ -539,21 +626,23 @@ export function SettingsConsole() {
 
   const validateCategoryItems = (category: string, categoryItems: SettingItem[]): string | null => {
     if (category === 'ai') {
-      const provider = getDefaultedValue(categoryItems.find((item) => item.key === 'provider') || { category: 'ai', key: 'provider', value: 'gemini' })
-      const model = getDefaultedValue(categoryItems.find((item) => item.key === 'geminiModel') || { category: 'ai', key: 'geminiModel', value: GEMINI_OFFICIAL_MODEL })
-      const apiKeyItem = categoryItems.find((item) => item.key === (provider === 'relay' ? 'geminiRelayApiKey' : 'geminiApiKey'))
-      if (!['gemini', 'relay'].includes(provider)) return 'AI 服务商只能是 Gemini 官方或第三方中转'
+      const provider = getDefaultedValue(categoryItems.find((item) => item.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
+      const model = getDefaultedValue(categoryItems.find((item) => item.key === 'gemini_model') || { category: 'ai', key: 'gemini_model', value: GEMINI_OFFICIAL_MODEL })
+      const apiKeyItem = categoryItems.find((item) => item.key === (provider === 'relay' ? 'gemini_relay_api_key' : 'gemini_api_key'))
+      if (!['official', 'relay'].includes(provider)) return 'AI 服务商只能是 Gemini 官方或第三方中转'
       if (!model.trim()) return '请先选择 AI 模型'
       if (!apiKeyItem?.hasValue && !apiKeyItem?.value?.trim()) return provider === 'relay' ? '请填写第三方中转 API Key' : '请填写 Gemini 官方 API Key'
     }
 
     if (category === 'proxy') {
-      const proxyPool = categoryItems.find((item) => item.key === 'browserProxyUrlsJson')?.value || '[]'
-      try {
-        const parsed = JSON.parse(proxyPool || '[]')
-        if (!Array.isArray(parsed)) return '代理池 JSON 必须是数组'
-      } catch {
-        return '代理池 JSON 格式不正确'
+      const validProxyUrls = proxyUrls.filter((item) => item.country.trim() && item.url.trim())
+      if (validProxyUrls.length === 0) return '至少需要配置一个代理 URL'
+      const duplicateCountries = new Set<string>()
+      for (const item of validProxyUrls) {
+        if (duplicateCountries.has(item.country)) return `国家 ${item.country} 重复配置`
+        duplicateCountries.add(item.country)
+        const error = validateProxyUrlFormat(item.url)
+        if (error) return error
       }
     }
 
@@ -587,11 +676,88 @@ export function SettingsConsole() {
     toast.success(successMessage)
   }
 
-  const saveCategory = (category: string) => {
+  const buildValidationConfig = (category: string, categoryItems: SettingItem[]): Record<string, string> => {
+    if (category === 'proxy') {
+      const sanitizedProxyUrls = proxyUrls
+        .filter((item) => item.country.trim() && item.url.trim())
+        .map((item) => ({ country: item.country.trim().toUpperCase(), url: item.url.trim() }))
+      return {
+        urls: JSON.stringify(sanitizedProxyUrls)
+      }
+    }
+
+    return categoryItems.reduce<Record<string, string>>((accumulator, item) => {
+      accumulator[item.key] = String(item.value || '')
+      return accumulator
+    }, {})
+  }
+
+  const validateCategory = async (category: string) => {
+    const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
     const categoryItems = getCategoryItems(category).filter((item) => {
-      const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'provider') || { category: 'ai', key: 'provider', value: 'gemini' })
+      if (category === 'proxy' && (item.key === 'urls' || item.key === 'defaultCountryCode')) return false
       return item.category !== 'ai' || shouldShowAiField(provider, item.key)
     })
+    const error = validateCategoryItems(category, categoryItems)
+    if (error) {
+      toast.error(error)
+      return
+    }
+
+    if (!(VALIDATABLE_CATEGORIES as readonly string[]).includes(category)) {
+      toast.success(`${CATEGORY_META[category]?.title || category} 配置格式通过`)
+      return
+    }
+
+    setValidatingCategory(category)
+    try {
+      const response = await fetch('/api/admin/settings/validate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          category,
+          config: buildValidationConfig(category, categoryItems)
+        })
+      })
+      const body = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        toast.error(body.error || '配置验证失败')
+        return
+      }
+
+      if (body.valid) {
+        toast.success(body.message || `${CATEGORY_META[category]?.title || category} 配置验证成功`)
+        return
+      }
+
+      toast.error(body.message || `${CATEGORY_META[category]?.title || category} 配置验证失败`)
+    } finally {
+      setValidatingCategory(null)
+    }
+  }
+
+  const saveCategory = (category: string) => {
+    let categoryItems = getCategoryItems(category).filter((item) => {
+      const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
+      return item.category !== 'ai' || shouldShowAiField(provider, item.key)
+    })
+    if (category === 'proxy') {
+      const sanitizedProxyUrls = proxyUrls
+        .filter((item) => item.country.trim() && item.url.trim())
+        .map((item) => ({ country: item.country.trim().toUpperCase(), url: item.url.trim() }))
+      categoryItems = categoryItems
+        .filter((item) => item.key !== 'urls')
+        .concat({
+          category: 'proxy',
+          key: 'urls',
+          value: JSON.stringify(sanitizedProxyUrls),
+          hasValue: sanitizedProxyUrls.length > 0,
+          dataType: 'json',
+          isSensitive: false,
+          description: getFieldMeta({ category: 'proxy', key: 'urls' })?.description || null
+        })
+    }
     const error = validateCategoryItems(category, categoryItems)
     if (error) {
       toast.error(error)
@@ -602,15 +768,84 @@ export function SettingsConsole() {
     })
   }
 
+  const hasUnsavedChanges = (category: string) => {
+    if (category === 'proxy') {
+      return JSON.stringify(normalizeComparableProxyUrls(proxyUrls)) !== JSON.stringify(normalizeComparableProxyUrls(savedProxyUrls))
+    }
+
+    const currentItems = getCategoryItems(category).filter((item) => {
+      if (category !== 'ai') return true
+      const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
+      return shouldShowAiField(provider, item.key)
+    })
+    const currentRecord = normalizeComparableRecord(currentItems)
+    const savedRecord = savedCategoryRecords[category] || {}
+    const comparableSavedRecord = Object.keys(currentRecord).reduce<Record<string, string>>((accumulator, key) => {
+      accumulator[key] = String(savedRecord[key] || '')
+      return accumulator
+    }, {})
+    return JSON.stringify(currentRecord) !== JSON.stringify(comparableSavedRecord)
+  }
+
+  const getValidateDisabledReason = (category: string): string | null => {
+    if (isPending) return '正在保存中'
+    if (hasUnsavedChanges(category)) return '有未保存的修改，请先保存配置'
+    return null
+  }
+
+  const isReadOnlySetting = (category: string, key: string) => {
+    if (category === 'ai' && key === 'gemini_endpoint') return true
+    return category === 'affiliate_sync' && key === 'partnerboost_base_url'
+  }
+
   const deleteAiCurrentKey = () => {
     const aiItems = getCategoryItems('ai')
-    const provider = getDefaultedValue(aiItems.find((item) => item.key === 'provider') || { category: 'ai', key: 'provider', value: 'gemini' })
-    const key = provider === 'relay' ? 'geminiRelayApiKey' : 'geminiApiKey'
+    const provider = getDefaultedValue(aiItems.find((item) => item.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
+    const key = provider === 'relay' ? 'gemini_relay_api_key' : 'gemini_api_key'
     if (!window.confirm(provider === 'relay' ? '确认删除第三方中转 API Key？' : '确认删除 Gemini 官方 API Key？')) return
     const nextItems = aiItems.map((item) => (item.key === key ? { ...item, value: '', hasValue: false } : item))
     startTransition(async () => {
       await persistItems(nextItems, 'AI Key 已删除')
     })
+  }
+
+  const addProxyUrl = () => {
+    const usedCountries = new Set(proxyUrls.map((item) => item.country))
+    const available = SUPPORTED_PROXY_COUNTRIES.find((item) => !usedCountries.has(item.code))
+    if (!available) {
+      toast.error('所有支持的国家都已配置代理 URL，无法继续添加')
+      return
+    }
+    setProxyUrls((current) => [...current, { country: available.code, url: '' }])
+  }
+
+  const removeProxyUrl = (index: number) => {
+    setProxyUrls((current) => current.filter((_, itemIndex) => itemIndex !== index))
+  }
+
+  const updateProxyUrl = (index: number, field: 'country' | 'url', value: string) => {
+    if (field === 'country') {
+      const nextCountry = value.toUpperCase()
+      const isDuplicate = proxyUrls.some((item, itemIndex) => itemIndex !== index && item.country === nextCountry)
+      if (isDuplicate) {
+        toast.error(`国家 ${nextCountry} 已经配置过代理 URL`)
+        return
+      }
+    }
+
+    setProxyUrls((current) =>
+      current.map((item, itemIndex) => {
+        if (itemIndex !== index) return item
+        const nextItem = {
+          ...item,
+          [field]: field === 'country' ? value.toUpperCase() : value
+        }
+        return {
+          ...nextItem,
+          error: validateProxyUrlFormat(nextItem.url) || undefined
+        }
+      })
+    )
   }
 
   const renderInput = (item: SettingItem) => {
@@ -625,9 +860,9 @@ export function SettingsConsole() {
 
     if (options) {
       const filteredOptions =
-        item.category === 'ai' && item.key === 'geminiModel'
+        item.category === 'ai' && item.key === 'gemini_model'
           ? options.filter((option) => {
-              const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'provider') || { category: 'ai', key: 'provider', value: 'gemini' })
+              const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
               return provider === 'relay' ? option.value === RELAY_GPT_MODEL : option.value !== RELAY_GPT_MODEL
             })
           : options
@@ -642,6 +877,18 @@ export function SettingsConsole() {
             ))}
           </SelectContent>
         </Select>
+      )
+    }
+
+    if (isReadOnlySetting(item.category, item.key)) {
+      return (
+        <Input
+          value={value}
+          readOnly
+          disabled
+          placeholder={fieldMeta?.placeholder}
+          className="rounded-lg border-slate-200 bg-slate-100 text-slate-500"
+        />
       )
     }
 
@@ -757,8 +1004,23 @@ export function SettingsConsole() {
             color: 'text-slate-600'
           }
           const Icon = getCategoryIcon(category)
-          const provider = getDefaultedValue(getCategoryItems('ai').find((item) => item.key === 'provider') || { category: 'ai', key: 'provider', value: 'gemini' })
-          const visibleItems = categoryItems.filter((item) => item.category !== 'ai' || shouldShowAiField(provider, item.key))
+          const provider = getDefaultedValue(getCategoryItems('ai').find((item) => item.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
+          const hasAffiliateSyncConfigToDelete = category === 'affiliate_sync'
+            ? AFFILIATE_SYNC_DELETABLE_KEYS.some((key) => {
+                const target = categoryItems.find((item) => item.key === key)
+                if (!target) return false
+                if (target.isSensitive) return Boolean(target.hasValue)
+                const value = String(getDefaultedValue(target)).trim()
+                if (key === 'amazonPageSize' || key === 'dtcPageSize') return value !== '20'
+                if (key === 'maxPagesPerSync') return value !== '5'
+                return Boolean(value)
+              })
+            : false
+          const visibleItems = categoryItems.filter((item) => {
+            if (category === 'proxy' && (item.key === 'urls' || item.key === 'defaultCountryCode')) return false
+            return item.category !== 'ai' || shouldShowAiField(provider, item.key)
+          })
+          const isValidating = validatingCategory === category
 
           return (
             <Card key={category} className="p-6">
@@ -772,12 +1034,6 @@ export function SettingsConsole() {
                     <p className="mt-1 text-body-sm text-muted-foreground">{categoryMeta.description}</p>
                   </div>
                 </div>
-                {category === 'ai' ? (
-                  <Button type="button" variant="destructive" size="sm" disabled={isPending} onClick={deleteAiCurrentKey}>
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    删除当前 Key
-                  </Button>
-                ) : null}
               </div>
 
               {category === 'ai' ? (
@@ -793,6 +1049,104 @@ export function SettingsConsole() {
                 </div>
               ) : null}
 
+              {category === 'proxy' ? (
+                <div className="mb-6 space-y-4 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+                  <div>
+                    <p className="font-semibold text-body-sm text-emerald-800">代理 URL 配置</p>
+                    <p className="mt-1 text-body-sm text-emerald-700">按 autobb 的后台方式管理国家代理列表。第一个配置的代理仍会作为默认兜底。</p>
+                    <p className="mt-2 rounded border border-amber-400 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                      当前已支持 IPRocket、Oxylabs、Kookeey、Cliproxy 四种代理格式。
+                    </p>
+                    <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-4">
+                      <p className="mb-3 flex items-center gap-1 text-caption font-semibold text-slate-700">
+                        <Info className="h-4 w-4" />
+                        代理 URL 格式说明
+                      </p>
+                      <div className="grid gap-3 md:grid-cols-2">
+                        <div className="rounded border border-blue-200 bg-white p-3">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700">IPRocket</span>
+                            <span className="text-xs text-slate-600">API 格式</span>
+                          </div>
+                          <div className="break-all rounded bg-slate-100 p-2 font-mono text-xs text-slate-700">
+                            https://api.iprocket.io/api?username=...&password=...&cc=...&ips=1&proxyType=http&responseType=txt
+                          </div>
+                        </div>
+                        <div className="rounded border border-green-200 bg-white p-3">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded bg-green-100 px-2 py-0.5 text-xs font-medium text-green-700">Oxylabs</span>
+                            <span className="text-xs text-slate-600">直连格式</span>
+                          </div>
+                          <div className="break-all rounded bg-slate-100 p-2 font-mono text-xs text-slate-700">
+                            https://username:password@pr.oxylabs.io:port
+                          </div>
+                        </div>
+                        <div className="rounded border border-violet-200 bg-white p-3 md:col-span-2">
+                          <div className="mb-2 flex items-center gap-2">
+                            <span className="rounded bg-violet-100 px-2 py-0.5 text-xs font-medium text-violet-700">Kookeey / Cliproxy</span>
+                            <span className="text-xs text-slate-600">直连格式</span>
+                          </div>
+                          <div className="break-all rounded bg-slate-100 p-2 font-mono text-xs text-slate-700">
+                            host:port:username:password
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  {proxyUrls.length === 0 ? (
+                    <div className="rounded-lg border border-dashed border-emerald-300 bg-white p-6 text-center">
+                      <p className="text-sm text-muted-foreground">暂未配置代理 URL</p>
+                      <Button type="button" variant="outline" size="sm" className="mt-3" onClick={addProxyUrl}>
+                        <Plus className="mr-1 h-4 w-4" />
+                        添加代理 URL
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      {proxyUrls.map((item, index) => (
+                        <div key={`${item.country}-${index}`} className="grid gap-3 rounded-lg border bg-white p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto]">
+                          <div>
+                            <Label className="mb-1.5 block text-caption text-muted-foreground">国家/地区</Label>
+                            <Select value={item.country} onValueChange={(nextValue) => updateProxyUrl(index, 'country', nextValue)}>
+                              {SUPPORTED_PROXY_COUNTRIES.map((country) => (
+                                <SelectItem key={country.code} value={country.code}>
+                                  {country.label}
+                                </SelectItem>
+                              ))}
+                            </Select>
+                          </div>
+                          <div>
+                            <Label className="mb-1.5 block text-caption text-muted-foreground">代理 URL</Label>
+                            <Input
+                              value={item.url}
+                              onChange={(event) => updateProxyUrl(index, 'url', event.target.value)}
+                              placeholder="https://user:pass@proxy:port 或 host:port:username:password"
+                              className={item.error ? 'border-rose-400' : undefined}
+                            />
+                            {item.error ? <p className="mt-1 text-xs text-rose-600">{item.error}</p> : null}
+                          </div>
+                          <div className="pt-6">
+                            <Button type="button" variant="ghost" size="sm" className="text-rose-600 hover:bg-rose-50 hover:text-rose-700" onClick={() => removeProxyUrl(index)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                      <Button type="button" variant="outline" size="sm" onClick={addProxyUrl}>
+                        <Plus className="mr-1 h-4 w-4" />
+                        添加更多代理 URL
+                      </Button>
+                    </div>
+                  )}
+                  {proxyUrls.length > 0 ? (
+                    <p className="flex items-center gap-1 text-caption text-amber-600">
+                      <Info className="h-3 w-3" />
+                      提示：第一个配置的代理 URL 会作为默认兜底，当请求国家没有专属代理时优先使用它。
+                    </p>
+                  ) : null}
+                </div>
+              ) : null}
+
               <div className="grid grid-cols-1 gap-x-8 gap-y-5 lg:grid-cols-2">
                 {visibleItems.map((item) => {
                   const fieldMeta = getFieldMeta(item)
@@ -803,6 +1157,9 @@ export function SettingsConsole() {
                         <Label className="label-text flex items-center gap-2">
                           {fieldMeta?.label || item.key}
                           {required ? <span className="text-caption text-red-500">*必填</span> : null}
+                          {category === 'affiliate_sync' && isReadOnlySetting(category, item.key) ? (
+                            <Badge variant="outline" className="border-slate-300 bg-slate-100 text-slate-600">固定默认</Badge>
+                          ) : null}
                           {item.isSensitive ? <Badge className="bg-slate-900 text-white">密钥</Badge> : null}
                         </Label>
                         {fieldMeta?.helpLink ? (
@@ -834,19 +1191,58 @@ export function SettingsConsole() {
                 <Button
                   type="button"
                   variant="outline"
-                  disabled={isPending}
-                  onClick={() => {
-                    const error = validateCategoryItems(category, visibleItems)
-                    if (error) {
-                      toast.error(error)
-                      return
-                    }
-                    toast.success(`${categoryMeta.title} 配置格式通过`)
-                  }}
+                  disabled={Boolean(getValidateDisabledReason(category)) || isValidating}
+                  onClick={() => void validateCategory(category)}
                 >
-                  验证配置
+                  {isValidating ? '验证中...' : '验证配置'}
                 </Button>
+                {category === 'ai' ? (
+                  <Button type="button" variant="destructive" disabled={isPending} onClick={deleteAiCurrentKey}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    删除配置
+                  </Button>
+                ) : null}
+                {category === 'affiliate_sync' ? (
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    disabled={isPending || !hasAffiliateSyncConfigToDelete}
+                    onClick={() => {
+                      if (!window.confirm('确认删除当前联盟同步配置？这会清空 Token，并将分页参数恢复为默认值。')) return
+                      const nextItems = categoryItems.map((item) => {
+                        if (item.key === 'partnerboost_token') {
+                          return { ...item, value: '', hasValue: false }
+                        }
+                        if (item.key === 'partnerboost_base_url') {
+                          return { ...item, value: DEFAULT_PARTNERBOOST_BASE_URL }
+                        }
+                        if (item.key === 'amazonPageSize') {
+                          return { ...item, value: '20' }
+                        }
+                        if (item.key === 'dtcPageSize') {
+                          return { ...item, value: '20' }
+                        }
+                        if (item.key === 'maxPagesPerSync') {
+                          return { ...item, value: '5' }
+                        }
+                        return item
+                      })
+                      startTransition(async () => {
+                        await persistItems(nextItems, '联盟同步配置已删除')
+                      })
+                    }}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    删除配置
+                  </Button>
+                ) : null}
               </div>
+              {VALIDATABLE_CATEGORIES.includes(category as typeof VALIDATABLE_CATEGORIES[number]) && getValidateDisabledReason(category)?.includes('未保存') ? (
+                <p className="mt-2 flex items-center gap-1 text-caption text-amber-600">
+                  <Info className="h-3 w-3" />
+                  {getValidateDisabledReason(category)}
+                </p>
+              ) : null}
             </Card>
           )
         })}

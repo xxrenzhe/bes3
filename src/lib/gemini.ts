@@ -162,17 +162,17 @@ async function getGeminiConfig(): Promise<{
   const provider =
     process.env.AI_PROVIDER ||
     process.env.GEMINI_PROVIDER ||
-    await getSettingValueOrEnv('ai', 'provider', undefined, 'gemini')
-  const normalizedProvider = String(provider || 'gemini').trim()
+    await getSettingValueOrEnv('ai', 'gemini_provider', undefined, 'official')
+  const normalizedProvider = String(provider || 'official').trim() === 'gemini' ? 'official' : String(provider || 'official').trim()
   const apiKey = normalizedProvider === 'relay'
-    ? process.env.GEMINI_RELAY_API_KEY || await getSettingValueOrEnv('ai', 'geminiRelayApiKey', 'GEMINI_RELAY_API_KEY')
-    : process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+    ? process.env.GEMINI_RELAY_API_KEY || await getSettingValueOrEnv('ai', 'gemini_relay_api_key', 'GEMINI_RELAY_API_KEY')
+    : process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'gemini_api_key', 'GEMINI_API_KEY')
   const model = normalizeGeminiModel(
-    process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
+    process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'gemini_model', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   )
   const baseUrl = (
     process.env.GEMINI_BASE_URL ||
-    await getSettingValueOrEnv('ai', 'geminiBaseUrl', 'GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com')
+    await getSettingValueOrEnv('ai', 'gemini_endpoint', 'GEMINI_BASE_URL', 'https://generativelanguage.googleapis.com')
   ).replace(/\/+$/, '')
   const timeoutMs = Math.max(
     5000,
@@ -187,9 +187,9 @@ async function getGeminiConfig(): Promise<{
 
 export async function generateGeminiContent(params: GeminiGenerateParams): Promise<GeminiGenerateResult | null> {
   const config = await getGeminiConfig()
-  const provider = String(params.provider || config.provider || 'gemini').trim() || 'gemini'
+  const provider = (String(params.provider || config.provider || 'official').trim() || 'official').replace(/^gemini$/, 'official')
   const apiKey = String(params.apiKey || config.apiKey || '').trim()
-  if (provider !== 'gemini' && provider !== 'relay') return null
+  if (provider !== 'official' && provider !== 'relay') return null
   if (!apiKey) return null
 
   const model = normalizeGeminiModel(params.model || config.model)

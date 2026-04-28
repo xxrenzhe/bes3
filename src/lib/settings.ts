@@ -9,6 +9,85 @@ import {
 } from '@/lib/runtime-secrets'
 import type { SettingDataType } from '@/lib/types'
 
+type SettingIdentity = {
+  category: string
+  key: string
+}
+
+const CATEGORY_ALIASES: Readonly<Record<string, string>> = {
+  affiliateSync: 'affiliate_sync'
+}
+
+const CANONICAL_SETTING_ALIASES: Readonly<Record<string, SettingIdentity[]>> = {
+  'ai.gemini_provider': [{ category: 'ai', key: 'provider' }],
+  'ai.gemini_model': [{ category: 'ai', key: 'geminiModel' }],
+  'ai.gemini_endpoint': [{ category: 'ai', key: 'geminiBaseUrl' }],
+  'ai.gemini_api_key': [{ category: 'ai', key: 'geminiApiKey' }],
+  'ai.gemini_relay_api_key': [{ category: 'ai', key: 'geminiRelayApiKey' }],
+  'proxy.urls': [{ category: 'proxy', key: 'browserProxyUrlsJson' }],
+  'affiliate_sync.partnerboost_token': [
+    { category: 'affiliateSync', key: 'partnerboostAmazonToken' },
+    { category: 'affiliateSync', key: 'partnerboostDtcToken' }
+  ],
+  'affiliate_sync.partnerboost_base_url': [
+    { category: 'affiliateSync', key: 'partnerboostAmazonBaseUrl' },
+    { category: 'affiliateSync', key: 'partnerboostDtcBaseUrl' }
+  ]
+}
+
+function normalizeSettingCategory(category: string): string {
+  return CATEGORY_ALIASES[category] || category
+}
+
+function normalizeProviderValue(value: string | null): string | null {
+  if (value == null) return value
+  const normalized = String(value).trim()
+  if (!normalized) return normalized
+  return normalized === 'gemini' ? 'official' : normalized
+}
+
+function canonicalizeSettingIdentity(input: SettingIdentity): SettingIdentity {
+  const normalizedCategory = normalizeSettingCategory(input.category)
+  const normalizedKey = `${normalizedCategory}.${input.key}`
+
+  switch (normalizedKey) {
+    case 'ai.provider':
+      return { category: 'ai', key: 'gemini_provider' }
+    case 'ai.geminiModel':
+      return { category: 'ai', key: 'gemini_model' }
+    case 'ai.geminiBaseUrl':
+      return { category: 'ai', key: 'gemini_endpoint' }
+    case 'ai.geminiApiKey':
+      return { category: 'ai', key: 'gemini_api_key' }
+    case 'ai.geminiRelayApiKey':
+      return { category: 'ai', key: 'gemini_relay_api_key' }
+    case 'proxy.browserProxyUrlsJson':
+      return { category: 'proxy', key: 'urls' }
+    case 'affiliate_sync.partnerboostAmazonToken':
+    case 'affiliate_sync.partnerboostDtcToken':
+      return { category: 'affiliate_sync', key: 'partnerboost_token' }
+    case 'affiliate_sync.partnerboostAmazonBaseUrl':
+    case 'affiliate_sync.partnerboostDtcBaseUrl':
+      return { category: 'affiliate_sync', key: 'partnerboost_base_url' }
+    default:
+      return { category: normalizedCategory, key: input.key }
+  }
+}
+
+function normalizeSettingValue(identity: SettingIdentity, value: string | null): string | null {
+  if (identity.category === 'ai' && identity.key === 'gemini_provider') {
+    return normalizeProviderValue(value)
+  }
+  return value
+}
+
+function buildSettingLookupCandidates(category: string, key: string): SettingIdentity[] {
+  const canonical = canonicalizeSettingIdentity({ category, key })
+  const aliasKey = `${canonical.category}.${canonical.key}`
+  const aliases = CANONICAL_SETTING_ALIASES[aliasKey] || []
+  return [canonical, ...aliases]
+}
+
 export interface SettingRecord {
   category: string
   key: string
@@ -35,14 +114,18 @@ function mapSetting(row: {
   description: string | null
 }): SettingRecord {
   const isSensitive = row.is_sensitive === true || row.is_sensitive === 1
+  const canonical = canonicalizeSettingIdentity({ category: row.category, key: row.key })
   return {
-    category: row.category,
-    key: row.key,
-    value: resolveStoredSettingValue({
+    category: canonical.category,
+    key: canonical.key,
+    value: normalizeSettingValue(
+      canonical,
+      resolveStoredSettingValue({
       value: row.value,
       encryptedValue: row.encrypted_value,
       isSensitive
-    }),
+      })
+    ),
     dataType: row.data_type,
     isSensitive,
     description: row.description
@@ -84,25 +167,59 @@ export async function listSettings(): Promise<SettingRecord[]> {
     is_sensitive: number | boolean
     description: string | null
   }>('SELECT category, key, value, encrypted_value, data_type, is_sensitive, description FROM system_settings ORDER BY category, key')
-  return rows.map(mapSetting)
+  const records = rows.map((row) => ({
+    rawCategory: row.category,
+    rawKey: row.key,
+    canonical: canonicalizeSettingIdentity({ category: row.category, key: row.key }),
+    record: mapSetting(row)
+  }))
+  const deduped = new Map<string, { rawCategory: string; rawKey: string; record: SettingRecord }>()
+
+  for (const entry of records) {
+    const lookupKey = `${entry.canonical.category}.${entry.canonical.key}`
+    const current = deduped.get(lookupKey)
+    const isCanonicalRow = entry.rawCategory === entry.canonical.category && entry.rawKey === entry.canonical.key
+    const currentIsCanonical =
+      current?.rawCategory === entry.canonical.category && current?.rawKey === entry.canonical.key
+
+    if (!current || (isCanonicalRow && !currentIsCanonical)) {
+      deduped.set(lookupKey, {
+        rawCategory: entry.rawCategory,
+        rawKey: entry.rawKey,
+        record: entry.record
+      })
+    }
+  }
+
+  return Array.from(deduped.values()).map((entry) => entry.record)
 }
 
 export async function getSettingValue(category: string, key: string): Promise<string | null> {
   const db = await getDatabase()
-  const row = await db.queryOne<{
-    value: string | null
-    encrypted_value: string | null
-    is_sensitive: number | boolean
-  }>(
-    'SELECT value, encrypted_value, is_sensitive FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
-    [category, key]
-  )
-  if (!row) return null
-  return resolveStoredSettingValue({
-    value: row.value,
-    encryptedValue: row.encrypted_value,
-    isSensitive: row.is_sensitive === true || row.is_sensitive === 1
-  })
+  const candidates = buildSettingLookupCandidates(category, key)
+
+  for (const candidate of candidates) {
+    const row = await db.queryOne<{
+      value: string | null
+      encrypted_value: string | null
+      is_sensitive: number | boolean
+    }>(
+      'SELECT value, encrypted_value, is_sensitive FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
+      [candidate.category, candidate.key]
+    )
+    if (!row) continue
+
+    return normalizeSettingValue(
+      canonicalizeSettingIdentity({ category, key }),
+      resolveStoredSettingValue({
+        value: row.value,
+        encryptedValue: row.encrypted_value,
+        isSensitive: row.is_sensitive === true || row.is_sensitive === 1
+      })
+    )
+  }
+
+  return null
 }
 
 export async function getSettingValueOrEnv(
@@ -169,18 +286,17 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
     return fallback
   }
 
-  const aiProvider = read('ai', 'provider', undefined, 'gemini')
-  const aiModel = read('ai', 'geminiModel', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
+  const aiProvider = read('ai', 'gemini_provider', undefined, 'official')
+  const aiModel = read('ai', 'gemini_model', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
   const aiKey = aiProvider === 'relay'
-    ? read('ai', 'geminiRelayApiKey', 'GEMINI_RELAY_API_KEY')
-    : read('ai', 'geminiApiKey', 'GEMINI_API_KEY')
+    ? read('ai', 'gemini_relay_api_key', 'GEMINI_RELAY_API_KEY')
+    : read('ai', 'gemini_api_key', 'GEMINI_API_KEY')
   const aiTimeoutMs = read('ai', 'geminiTimeoutMs', 'GEMINI_TIMEOUT_MS', '30000')
-  const proxyPool = read('proxy', 'browserProxyUrlsJson', undefined, '[]')
+  const proxyPool = read('proxy', 'urls', undefined, '[]')
   const deepScrapeEnabled = read('deepScrape', 'enabled', 'DEEP_PRODUCT_SCRAPE_ENABLED', 'true') !== 'false'
   const deepScrapeTimeoutMs = read('deepScrape', 'timeoutMs', 'DEEP_PRODUCT_SCRAPE_TIMEOUT_MS', '60000')
   const deepScrapeRequireProxy = read('deepScrape', 'requireProxy', 'DEEP_PRODUCT_SCRAPE_REQUIRE_PROXY', 'false') === 'true'
-  const amazonToken = read('affiliateSync', 'partnerboostAmazonToken', 'PARTNERBOOST_AMAZON_TOKEN')
-  const dtcToken = read('affiliateSync', 'partnerboostDtcToken', 'PARTNERBOOST_DTC_TOKEN')
+  const partnerboostToken = read('affiliate_sync', 'partnerboost_token', 'PARTNERBOOST_AMAZON_TOKEN') || process.env.PARTNERBOOST_DTC_TOKEN || ''
   const mediaDriver = read('media', 'driver', 'MEDIA_DRIVER', 'local')
   const mediaLocalRoot = read('media', 'localRoot', 'MEDIA_LOCAL_ROOT', 'storage/media')
   const mediaS3Endpoint = read('media', 's3Endpoint', 'S3_ENDPOINT')
@@ -255,14 +371,8 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
     {
       id: 'affiliate-amazon',
       title: 'PartnerBoost Amazon',
-      status: getDiagnosticStatus([Boolean(amazonToken)]),
-      detail: amazonToken ? 'Amazon sync token configured' : 'Missing Amazon sync token'
-    },
-    {
-      id: 'affiliate-dtc',
-      title: 'PartnerBoost DTC',
-      status: getDiagnosticStatus([Boolean(dtcToken)]),
-      detail: dtcToken ? 'DTC sync token configured' : 'Missing DTC sync token'
+      status: getDiagnosticStatus([Boolean(partnerboostToken)]),
+      detail: partnerboostToken ? 'PartnerBoost sync token configured' : 'Missing PartnerBoost sync token'
     },
     {
       id: 'media',
@@ -326,11 +436,12 @@ export async function saveSetting(input: {
   description?: string | null
 }): Promise<void> {
   const db = await getDatabase()
+  const canonical = canonicalizeSettingIdentity({ category: input.category, key: input.key })
   const isSensitive = Boolean(input.isSensitive)
-  const stored = prepareStoredSettingValue(input.value, isSensitive)
+  const stored = prepareStoredSettingValue(normalizeSettingValue(canonical, input.value), isSensitive)
   const existing = await db.queryOne<{ id: number }>(
     'SELECT id FROM system_settings WHERE category = ? AND key = ? LIMIT 1',
-    [input.category, input.key]
+    [canonical.category, canonical.key]
   )
 
   if (existing?.id) {
@@ -350,6 +461,6 @@ export async function saveSetting(input: {
       INSERT INTO system_settings (category, key, value, encrypted_value, data_type, is_sensitive, description)
       VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
-    [input.category, input.key, stored.value, stored.encryptedValue, input.dataType || 'string', isSensitive ? 1 : 0, input.description || null]
+    [canonical.category, canonical.key, stored.value, stored.encryptedValue, input.dataType || 'string', isSensitive ? 1 : 0, input.description || null]
   )
 }

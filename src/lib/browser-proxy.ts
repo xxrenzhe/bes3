@@ -94,7 +94,7 @@ function parseProxyEndpoint(proxyUrl: string): ParsedProxyEndpoint | null {
 }
 
 async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
-  const raw = await getSettingValueOrEnv('proxy', 'browserProxyUrlsJson', 'BROWSER_PROXY_URLS_JSON', '[]')
+  const raw = await getSettingValueOrEnv('proxy', 'urls', 'BROWSER_PROXY_URLS_JSON', '[]')
   try {
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []

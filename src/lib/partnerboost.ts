@@ -155,28 +155,27 @@ function resolveAmazonPromoLinks(input: {
 }
 
 async function getAffiliateConfig() {
-  const amazonToken =
-    (await getSettingValue('affiliateSync', 'partnerboostAmazonToken')) ||
+  const sharedToken =
+    (await getSettingValue('affiliate_sync', 'partnerboost_token')) ||
     process.env.PARTNERBOOST_AMAZON_TOKEN ||
-    ''
-  const dtcToken =
-    (await getSettingValue('affiliateSync', 'partnerboostDtcToken')) ||
     process.env.PARTNERBOOST_DTC_TOKEN ||
     ''
-  const amazonBaseUrl =
-    (await getSettingValue('affiliateSync', 'partnerboostAmazonBaseUrl')) ||
+  const sharedBaseUrl =
+    (await getSettingValue('affiliate_sync', 'partnerboost_base_url')) ||
     process.env.PARTNERBOOST_AMAZON_BASE_URL ||
-    'https://app.partnerboost.com'
-  const dtcBaseUrl =
-    (await getSettingValue('affiliateSync', 'partnerboostDtcBaseUrl')) ||
     process.env.PARTNERBOOST_DTC_BASE_URL ||
     'https://app.partnerboost.com'
+
+  const amazonToken = sharedToken || process.env.PARTNERBOOST_AMAZON_TOKEN || ''
+  const dtcToken = sharedToken || process.env.PARTNERBOOST_DTC_TOKEN || ''
+  const amazonBaseUrl = sharedBaseUrl || process.env.PARTNERBOOST_AMAZON_BASE_URL || 'https://app.partnerboost.com'
+  const dtcBaseUrl = sharedBaseUrl || process.env.PARTNERBOOST_DTC_BASE_URL || 'https://app.partnerboost.com'
 
   return { amazonToken, dtcToken, amazonBaseUrl, dtcBaseUrl }
 }
 
 async function getNumericAffiliateSetting(key: string, fallback: number): Promise<number> {
-  const raw = await getSettingValue('affiliateSync', key)
+  const raw = await getSettingValue('affiliate_sync', key)
   const parsed = Number.parseInt(String(raw || ''), 10)
   return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback
 }
