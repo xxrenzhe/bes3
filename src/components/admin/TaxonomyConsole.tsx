@@ -5,62 +5,62 @@ import { OperationsConsole } from '@/components/admin/OperationsConsole'
 export function TaxonomyConsole() {
   return (
     <OperationsConsole
-      title="Taxonomy Lab"
-      eyebrow="Taxonomy Ops"
-      description="Manage intent sources, pending tags, active taxonomy, pSEO signals, and rescan work triggered by tag evolution."
+      title="分类实验室"
+      eyebrow="分类运维"
+      description="管理意图来源、待审核标签、活跃分类、pSEO 信号，以及分类演进触发的重扫任务。"
       endpoint="/api/admin/taxonomy"
       metricKeys={[
-        { label: 'Active Tags', key: 'active_tags' },
-        { label: 'Pending Tags', key: 'pending_tags' },
-        { label: 'Active Rescans', key: 'active_rescans' },
-        { label: 'New Intents', key: 'new_intents' }
+        { label: '活跃标签', key: 'active_tags' },
+        { label: '待审核标签', key: 'pending_tags' },
+        { label: '重扫任务', key: 'active_rescans' },
+        { label: '新增意图', key: 'new_intents' }
       ]}
       actions={[
-        { label: 'Promote Pending Tags', body: { action: 'promotePending', limit: 50, minPriorityScore: 0.5 }, success: 'Pending tags promoted' }
+        { label: '提升待审核标签', body: { action: 'promotePending', limit: 50, minPriorityScore: 0.5 }, success: '待审核标签已提升' }
       ]}
       sections={[
         {
-          title: 'Taxonomy Tags',
+          title: '分类标签',
           key: 'tags',
           columns: [
-            { label: 'Name', key: 'canonical_name' },
-            { label: 'Category', key: 'category_slug' },
-            { label: 'Status', key: 'status', badge: true },
-            { label: 'Volume', key: 'search_volume' },
-            { label: 'Evidence', key: 'evidence_count' }
+            { label: '名称', key: 'canonical_name' },
+            { label: '分类', key: 'category_slug' },
+            { label: '状态', key: 'status', badge: true },
+            { label: '搜索量', key: 'search_volume' },
+            { label: '证据', key: 'evidence_count' }
           ]
         },
         {
-          title: 'Pending Tags',
+          title: '待审核标签',
           key: 'pendingTags',
           columns: [
-            { label: 'Name', key: 'canonical_name' },
-            { label: 'Trigger', key: 'trigger_query' },
-            { label: 'Source', key: 'source', badge: true },
-            { label: 'Priority', key: 'priority_score' },
-            { label: 'Status', key: 'status', badge: true }
+            { label: '名称', key: 'canonical_name' },
+            { label: '触发词', key: 'trigger_query' },
+            { label: '来源', key: 'source', badge: true },
+            { label: '优先级', key: 'priority_score' },
+            { label: '状态', key: 'status', badge: true }
           ]
         },
         {
-          title: 'Intent Sources',
+          title: '意图来源',
           key: 'intentSources',
           columns: [
-            { label: 'Query', key: 'raw_query' },
-            { label: 'Category', key: 'category_slug' },
-            { label: 'Source', key: 'source_type', badge: true },
-            { label: 'Volume', key: 'search_volume' },
-            { label: 'Status', key: 'status', badge: true }
+            { label: '查询词', key: 'raw_query' },
+            { label: '分类', key: 'category_slug' },
+            { label: '来源', key: 'source_type', badge: true },
+            { label: '搜索量', key: 'search_volume' },
+            { label: '状态', key: 'status', badge: true }
           ]
         },
         {
-          title: 'Rescan Queue',
+          title: '重扫队列',
           key: 'rescanQueue',
           columns: [
-            { label: 'Category', key: 'category_slug' },
-            { label: 'Tag', key: 'tag_slug' },
-            { label: 'Reason', key: 'reason' },
-            { label: 'Status', key: 'status', badge: true },
-            { label: 'Updated', key: 'updated_at', date: true }
+            { label: '分类', key: 'category_slug' },
+            { label: '标签', key: 'tag_slug' },
+            { label: '原因', key: 'reason' },
+            { label: '状态', key: 'status', badge: true },
+            { label: '更新时间', key: 'updated_at', date: true }
           ]
         }
       ]}

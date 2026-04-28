@@ -67,53 +67,53 @@ export function ProductWorkspaceConsole({
   }> = [
     {
       id: 'contentPack',
-      title: 'Rebuild Content Pack',
-      description: 'Reuse the current product facts and media to regenerate keyword opportunities, the review page, and the comparison page without re-scraping the landing page.',
-      badge: `${workspace.keywords.length} keywords · ${workspace.articles.length} articles`,
+      title: '重建内容包',
+      description: '复用当前商品事实和媒体素材，重新生成关键词机会、评测页与对比页，不重新抓取落地页。',
+      badge: `${workspace.keywords.length} 个关键词 · ${workspace.articles.length} 篇文章`,
       accentClassName: 'bg-[#f7f1e4] text-primary',
-      cta: 'Queue Content Pack',
-      successMessage: 'Content pack queued and workspace refreshed',
+      cta: '排队内容包',
+      successMessage: '内容包已排队，工作台已刷新',
       icon: Wand2,
       spanClassName: 'lg:col-span-2'
     },
     {
       id: 'mineKeywords',
-      title: 'Mine Keywords',
-      description: 'Refresh high-intent long-tail opportunities from the normalized product facts currently stored in the database.',
-      badge: workspace.keywords.length > 0 ? `${workspace.keywords.length} saved` : 'Not generated',
+      title: '挖掘关键词',
+      description: '基于数据库中的标准化商品事实刷新高意图长尾机会。',
+      badge: workspace.keywords.length > 0 ? `已保存 ${workspace.keywords.length} 个` : '尚未生成',
       accentClassName: 'bg-sky-100 text-sky-800',
-      cta: 'Queue Keyword Mining',
-      successMessage: 'Keyword mining queued and workspace refreshed',
+      cta: '排队关键词挖掘',
+      successMessage: '关键词挖掘已排队，工作台已刷新',
       icon: Search
     },
     {
       id: 'generateReview',
-      title: 'Generate Review',
-      description: 'Rebuild the product review article, regenerate its SEO payload, and republish the public review path.',
-      badge: reviewArticle ? `Updated ${formatDate(reviewArticle.updatedAt)}` : 'Not generated',
+      title: '生成评测',
+      description: '重建商品评测文章，重新生成 SEO 载荷，并发布公开评测路径。',
+      badge: reviewArticle ? `更新于 ${formatDate(reviewArticle.updatedAt)}` : '尚未生成',
       accentClassName: 'bg-rose-100 text-rose-800',
-      cta: 'Queue Review',
-      successMessage: 'Review article queued and workspace refreshed',
+      cta: '排队评测',
+      successMessage: '评测文章已排队，工作台已刷新',
       icon: FileText
     },
     {
       id: 'generateComparison',
-      title: 'Generate Comparison',
-      description: 'Rebuild the alternatives article from the current product database and republish the comparison page.',
-      badge: comparisonArticle ? `Updated ${formatDate(comparisonArticle.updatedAt)}` : 'Not generated',
+      title: '生成对比',
+      description: '基于当前商品数据库重建替代品文章，并重新发布对比页面。',
+      badge: comparisonArticle ? `更新于 ${formatDate(comparisonArticle.updatedAt)}` : '尚未生成',
       accentClassName: 'bg-indigo-100 text-indigo-800',
-      cta: 'Queue Comparison',
-      successMessage: 'Comparison article queued and workspace refreshed',
+      cta: '排队对比',
+      successMessage: '对比文章已排队，工作台已刷新',
       icon: FileText
     },
     {
       id: 'refreshSeo',
-      title: 'Refresh SEO',
-      description: 'Recompute SEO title, meta description, and schema for all current product articles, then sync the linked SEO pages.',
-      badge: workspace.seoPages.length > 0 ? `${workspace.seoPages.length} SEO pages` : 'No SEO pages yet',
+      title: '刷新 SEO',
+      description: '重新计算当前商品文章的 SEO 标题、描述和 schema，并同步关联 SEO 页面。',
+      badge: workspace.seoPages.length > 0 ? `${workspace.seoPages.length} 个 SEO 页面` : '暂无 SEO 页面',
       accentClassName: 'bg-emerald-100 text-emerald-800',
-      cta: 'Queue SEO Refresh',
-      successMessage: 'SEO refresh queued and workspace synchronized',
+      cta: '排队 SEO 刷新',
+      successMessage: 'SEO 刷新已排队，工作台已同步',
       icon: RefreshCw
     }
   ]
@@ -122,7 +122,7 @@ export function ProductWorkspaceConsole({
     const response = await fetch(`/api/admin/products/${workspace.product.id}`)
     if (!response.ok) {
       const payload = await response.json().catch(() => ({}))
-      throw new Error(payload.error || 'Failed to refresh workspace')
+      throw new Error(payload.error || '刷新工作台失败')
     }
     setWorkspace((await response.json()) as AdminProductWorkspace)
   }
@@ -140,7 +140,7 @@ export function ProductWorkspaceConsole({
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        toast.error(payload.error || 'Action failed')
+        toast.error(payload.error || '操作失败')
         return
       }
       await refreshWorkspace()
@@ -175,19 +175,19 @@ export function ProductWorkspaceConsole({
               className={cn(buttonVariants({ variant: 'ghost', size: 'sm' }), 'mb-5 rounded-full px-0 text-muted-foreground hover:bg-transparent')}
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Products
+              返回商品列表
             </Link>
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge value={workspace.product.sourcePlatform} />
               {workspace.affiliateSource ? <StatusBadge value={workspace.affiliateSource.platform} /> : null}
               {workspace.product.category ? <StatusBadge value={workspace.product.category} /> : null}
             </div>
-            <p className="mt-4 font-mono text-xs uppercase tracking-[0.28em] text-primary">Product Workspace</p>
+            <p className="mt-4 font-mono text-xs uppercase tracking-[0.28em] text-primary">商品工作台</p>
             <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-tight text-foreground">
               {workspace.product.productName}
             </h1>
             <p className="mt-3 max-w-2xl text-sm leading-7 text-muted-foreground">
-              {workspace.product.description || 'No product description has been captured yet. Re-run the pipeline after confirming the affiliate source link.'}
+              {workspace.product.description || '暂未采集到商品描述。确认联盟来源链接后可重新运行流水线。'}
             </p>
           </div>
           <div className="flex flex-wrap justify-end gap-3">
@@ -197,12 +197,12 @@ export function ProductWorkspaceConsole({
                 onClick={() =>
                   triggerAction({
                     path: `/api/admin/products/${workspace.affiliateSource?.id}/run-pipeline`,
-                    successMessage: 'Pipeline queued and workspace refreshed'
+                    successMessage: '流水线已排队，工作台已刷新'
                   })
                 }
               >
                 <Wand2 className="mr-2 h-4 w-4" />
-                Queue Full Pipeline
+                排队完整流水线
               </Button>
             ) : null}
             <Button
@@ -211,12 +211,12 @@ export function ProductWorkspaceConsole({
               onClick={() =>
                 triggerAction({
                   path: `/api/admin/products/${workspace.product.id}/rescrape-media`,
-                  successMessage: 'Media rescraped and workspace refreshed'
+                  successMessage: '媒体已重新抓取，工作台已刷新'
                 })
               }
             >
               <Scan className="mr-2 h-4 w-4" />
-              Rescrape Media
+              重新抓取媒体
             </Button>
             <Button
               disabled={isPending}
@@ -226,15 +226,15 @@ export function ProductWorkspaceConsole({
                   try {
                     await refreshWorkspace()
                     router.refresh()
-                    toast.success('Workspace refreshed')
+                    toast.success('工作台已刷新')
                   } catch (error) {
-                    toast.error(error instanceof Error ? error.message : 'Refresh failed')
+                    toast.error(error instanceof Error ? error.message : '刷新失败')
                   }
                 })
               }}
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              刷新
             </Button>
           </div>
         </div>

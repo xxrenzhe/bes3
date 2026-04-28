@@ -29,28 +29,28 @@ const CATEGORY_ORDER = ['ai', 'proxy', 'deepScrape', 'affiliateSync', 'media', '
 
 const CATEGORY_META: Record<string, { title: string; description: string }> = {
   ai: {
-    title: 'AI Engine',
-    description: 'Choose the active provider, model, and credentials used during keyword mining and editorial generation.'
+    title: 'AI 引擎',
+    description: '配置关键词挖掘和内容生成使用的服务商、模型与凭据。'
   },
   proxy: {
-    title: 'Proxy Settings',
-    description: 'Define browser proxy pools and routing defaults used by scraping or anti-bot workflows.'
+    title: '代理设置',
+    description: '配置抓取和反爬工作流使用的浏览器代理池与默认路由。'
   },
   deepScrape: {
-    title: 'Deep Scraping',
-    description: 'Control Playwright browser scraping, wait strategy, proxy requirements, and retry budget for product acquisition.'
+    title: '深度抓取',
+    description: '控制商品采集时的浏览器抓取、等待策略、代理要求和重试次数。'
   },
   affiliateSync: {
-    title: 'Affiliate Sync',
-    description: 'Configure PartnerBoost endpoints and tokens so inventory sync stays reliable across programs.'
+    title: '联盟同步',
+    description: '配置 PartnerBoost 端点和令牌，保证不同项目的库存同步稳定。'
   },
   media: {
-    title: 'Media Storage',
-    description: 'Control where assets are written and how media URLs are resolved in the public Bes3 pages.'
+    title: '媒体存储',
+    description: '控制素材写入位置，以及公开页面如何解析媒体 URL。'
   },
   seo: {
-    title: 'SEO Runtime',
-    description: 'Set the public site identity, canonical base URL, and notification behavior for indexing workflows.'
+    title: 'SEO 运行时',
+    description: '配置公开站点身份、canonical 基础 URL 和索引通知行为。'
   }
 }
 
@@ -177,24 +177,24 @@ export function SettingsConsole() {
     })
 
     if (!response.ok) {
-      toast.error('Failed to save settings')
+      toast.error('保存设置失败')
       return
     }
 
     await load()
-    toast.success('Settings saved')
+    toast.success('设置已保存')
   }
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
       <section className="grid gap-6 xl:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-[2.25rem] border border-slate-200/70 bg-white/90 p-8 shadow-[0_32px_70px_-42px_rgba(15,23,42,0.32)] lg:p-10">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary">Settings</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary">系统设置</p>
           <h1 className="mt-4 font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950 sm:text-5xl">
-            Runtime configuration for the internal Bes3 control layer
+            Bes3 内部控制层的运行时配置
           </h1>
           <p className="mt-4 max-w-3xl text-sm leading-8 text-slate-600">
-            Keep AI credentials, affiliate sync endpoints, proxy pools, media storage, and SEO identity aligned. This page stays operational and internal while the public site remains purely buyer-facing.
+            统一管理 AI 凭据、联盟同步端点、代理池、媒体存储和 SEO 身份。这里保持内部运维属性，公开站点继续面向买家。
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -207,7 +207,7 @@ export function SettingsConsole() {
               }}
               className="rounded-full px-6"
             >
-              Save Settings
+              保存设置
             </Button>
             <Button
               variant="outline"
@@ -220,7 +220,7 @@ export function SettingsConsole() {
               className="rounded-full border-slate-200 bg-white px-6"
             >
               <RefreshCw className="mr-2 h-4 w-4" />
-              Refresh
+              刷新
             </Button>
             <Button
               variant="ghost"
@@ -237,15 +237,15 @@ export function SettingsConsole() {
               }}
               className="rounded-full px-6 text-slate-600"
             >
-              Reset Changes
+              重置改动
             </Button>
             {isDirty ? (
               <div className="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-700">
-                Unsaved Changes
+                有未保存改动
               </div>
             ) : (
               <div className="inline-flex items-center rounded-full border border-emerald-200 bg-emerald-50 px-4 py-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-700">
-                Synced
+                已同步
               </div>
             )}
           </div>

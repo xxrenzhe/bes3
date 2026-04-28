@@ -23,13 +23,13 @@ const EMPTY_SNAPSHOT: GovernanceSnapshot = {
 }
 
 function formatDate(value: unknown) {
-  if (!value) return 'N/A'
+  if (!value) return '暂无'
   const date = new Date(String(value))
   if (Number.isNaN(date.getTime())) return String(value)
   return date.toLocaleString()
 }
 
-function text(value: unknown, fallback = 'N/A') {
+function text(value: unknown, fallback = '暂无') {
   if (value == null || value === '') return fallback
   return String(value)
 }
@@ -54,7 +54,7 @@ export function GovernanceConsole() {
     const response = await fetch('/api/admin/governance')
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
-      toast.error(body.error || 'Governance snapshot failed')
+      toast.error(body.error || '加载治理快照失败')
       return
     }
     setSnapshot(body as GovernanceSnapshot)
@@ -72,8 +72,8 @@ export function GovernanceConsole() {
     <div className="space-y-6 p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Governance</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Sessions, audit, security, and risk</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">安全治理</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">会话、审计、安全与风险</h1>
         </div>
         <Button
           variant="outline"
@@ -85,59 +85,59 @@ export function GovernanceConsole() {
           }}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
+          刷新
         </Button>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-4">
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Active Sessions</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">活跃会话</p>
             <UserCheck className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-3 text-2xl font-semibold">{activeSessions}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{snapshot.sessions.length} recent sessions</p>
+          <p className="mt-1 text-sm text-muted-foreground">保留 {snapshot.sessions.length} 条近期会话</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Failed Logins</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">失败登录</p>
             <ShieldAlert className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-3 text-2xl font-semibold">{failedLogins}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{snapshot.loginAttempts.length} attempts retained</p>
+          <p className="mt-1 text-sm text-muted-foreground">保留 {snapshot.loginAttempts.length} 次尝试</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Security Events</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">安全事件</p>
           <p className="mt-3 text-2xl font-semibold">{snapshot.securityEvents.length}</p>
-          <p className="mt-1 text-sm text-muted-foreground">account and session signals</p>
+          <p className="mt-1 text-sm text-muted-foreground">账号与会话信号</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Open Risks</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">未处理风险</p>
             <ShieldCheck className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-3 text-2xl font-semibold">{openRisks}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{snapshot.riskAlerts.length} recent risk rows</p>
+          <p className="mt-1 text-sm text-muted-foreground">近期 {snapshot.riskAlerts.length} 条风险记录</p>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Recent sessions</p>
+          <p className="font-semibold">近期会话</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">User</th>
-                  <th className="pb-3 pr-3">Status</th>
+                  <th className="pb-3 pr-3">用户</th>
+                  <th className="pb-3 pr-3">状态</th>
                   <th className="pb-3 pr-3">IP</th>
-                  <th className="pb-3 pr-3">Last Activity</th>
+                  <th className="pb-3 pr-3">最近活动</th>
                 </tr>
               </thead>
               <tbody>
                 {snapshot.sessions.slice(0, 12).map((session) => (
                   <tr key={session.id} className="border-b border-border/70">
-                    <td className="py-3 pr-3 font-medium">{text(session.username, `User #${session.user_id}`)}</td>
+                    <td className="py-3 pr-3 font-medium">{text(session.username, `用户 #${session.user_id}`)}</td>
                     <td className="py-3 pr-3">
                       <StatusBadge value={session.revoked_at ? 'revoked' : 'active'} />
                     </td>
@@ -151,15 +151,15 @@ export function GovernanceConsole() {
         </section>
 
         <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Login attempts</p>
+          <p className="font-semibold">登录尝试</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Identity</th>
-                  <th className="pb-3 pr-3">Result</th>
+                  <th className="pb-3 pr-3">身份</th>
+                  <th className="pb-3 pr-3">结果</th>
                   <th className="pb-3 pr-3">IP</th>
-                  <th className="pb-3 pr-3">Attempted</th>
+                  <th className="pb-3 pr-3">尝试时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -181,7 +181,7 @@ export function GovernanceConsole() {
 
       <div className="grid gap-6 xl:grid-cols-[0.95fr_1.05fr]">
         <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Security events</p>
+          <p className="font-semibold">安全事件</p>
           <div className="mt-4 space-y-3">
             {snapshot.securityEvents.slice(0, 10).map((event) => (
               <div key={event.id} className="rounded-2xl border border-border p-4">
@@ -196,22 +196,22 @@ export function GovernanceConsole() {
             ))}
             {snapshot.securityEvents.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
-                No security events recorded.
+                暂无安全事件。
               </div>
             ) : null}
           </div>
         </section>
 
         <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Audit log</p>
+          <p className="font-semibold">审计日志</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Action</th>
-                  <th className="pb-3 pr-3">Entity</th>
-                  <th className="pb-3 pr-3">Actor</th>
-                  <th className="pb-3 pr-3">Created</th>
+                  <th className="pb-3 pr-3">动作</th>
+                  <th className="pb-3 pr-3">实体</th>
+                  <th className="pb-3 pr-3">操作者</th>
+                  <th className="pb-3 pr-3">创建时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -230,7 +230,7 @@ export function GovernanceConsole() {
       </div>
 
       <section className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-        <p className="font-semibold">Risk alerts</p>
+        <p className="font-semibold">风险提醒</p>
         <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
           {snapshot.riskAlerts.slice(0, 12).map((alert) => (
             <div key={alert.id} className="rounded-2xl border border-border p-4">
@@ -239,12 +239,12 @@ export function GovernanceConsole() {
                 <StatusBadge value={text(alert.severity, 'warning')} />
               </div>
               <p className="mt-2 text-sm text-muted-foreground">{text(alert.risk_type)} · {text(alert.entity_type)} {alert.entity_id ? `#${alert.entity_id}` : ''}</p>
-              <p className="mt-2 text-xs text-muted-foreground">Detected {formatDate(alert.detected_at)}</p>
+              <p className="mt-2 text-xs text-muted-foreground">发现时间 {formatDate(alert.detected_at)}</p>
             </div>
           ))}
           {snapshot.riskAlerts.length === 0 ? (
             <div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
-              No risk alerts recorded.
+              暂无风险提醒。
             </div>
           ) : null}
         </div>

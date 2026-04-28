@@ -54,8 +54,8 @@ export function PromptsConsole() {
     <div className="grid gap-6 p-6 lg:grid-cols-[0.9fr_1.1fr] lg:p-10">
       <section className="space-y-6">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Prompt Registry</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Versioned AI prompts</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">提示词注册表</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">AI 提示词版本管理</h1>
         </div>
         <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
           <div className="space-y-4">
@@ -82,14 +82,14 @@ export function PromptsConsole() {
       </section>
       <section className="space-y-6">
         <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Create Version</p>
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">创建版本</p>
           <div className="mt-4 grid gap-4 sm:grid-cols-2">
             <Input placeholder="promptId" value={draft.promptId} onChange={(event) => setDraft((current) => ({ ...current, promptId: event.target.value }))} />
             <Input placeholder="category" value={draft.category} onChange={(event) => setDraft((current) => ({ ...current, category: event.target.value }))} />
             <Input placeholder="name" value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
             <Input placeholder="version" value={draft.version} onChange={(event) => setDraft((current) => ({ ...current, version: event.target.value }))} />
           </div>
-          <Textarea className="mt-4 min-h-[200px]" placeholder="Prompt content" value={draft.promptContent} onChange={(event) => setDraft((current) => ({ ...current, promptContent: event.target.value }))} />
+          <Textarea className="mt-4 min-h-[200px]" placeholder="提示词内容" value={draft.promptContent} onChange={(event) => setDraft((current) => ({ ...current, promptContent: event.target.value }))} />
           <Button
             className="mt-4"
             disabled={isPending || !draft.promptId || !draft.version || !draft.promptContent}
@@ -101,21 +101,21 @@ export function PromptsConsole() {
                   body: JSON.stringify({ ...draft, activate: false })
                 })
                 if (!response.ok) {
-                  toast.error('Failed to create prompt version')
+                  toast.error('创建提示词版本失败')
                   return
                 }
-                toast.success('Prompt version saved')
+                toast.success('提示词版本已保存')
                 setDraft({ promptId: '', category: '', name: '', version: '', promptContent: '' })
                 await loadGroups()
                 if (selectedPromptId) await loadVersions(selectedPromptId)
               })
             }}
           >
-            Save Inactive Version
+            保存为未启用版本
           </Button>
         </div>
         <div className="rounded-[32px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Versions {selectedPromptId ? `for ${selectedPromptId}` : ''}</p>
+          <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">{selectedPromptId ? `${selectedPromptId} 的版本` : '版本列表'}</p>
           <div className="mt-4 space-y-4">
             {versions.map((version) => (
               <div key={version.id} className="rounded-[24px] border border-border px-5 py-4">
@@ -124,7 +124,7 @@ export function PromptsConsole() {
                     <p className="font-medium">{version.version}</p>
                     <p className="text-xs text-muted-foreground">{new Date(version.createdAt).toLocaleString()}</p>
                     <p className="mt-2 text-xs text-muted-foreground">
-                      Regression cases: {version.regressionSummary.activeCases} active · {version.regressionSummary.invalidCases} invalid
+                      回归用例：{version.regressionSummary.activeCases} 个活跃 · {version.regressionSummary.invalidCases} 个无效
                     </p>
                   </div>
                   <div className="flex flex-wrap justify-end gap-2">
@@ -144,16 +144,16 @@ export function PromptsConsole() {
                           })
                           const body = await response.json().catch(() => ({}))
                           if (!response.ok) {
-                            toast.error(body.error || 'Failed to activate version')
+                            toast.error(body.error || '启用版本失败')
                             return
                           }
-                          toast.success('Prompt version activated')
+                          toast.success('提示词版本已启用')
                           await loadVersions(promptId)
                           await loadGroups()
                         })
                       }}
                     >
-                      {version.isActive ? 'Active' : 'Activate'}
+                      {version.isActive ? '已启用' : '启用'}
                     </Button>
                     {!version.isActive && !version.regressionSummary.ready ? (
                       <Button
@@ -172,16 +172,16 @@ export function PromptsConsole() {
                             })
                             const body = await response.json().catch(() => ({}))
                             if (!response.ok) {
-                              toast.error(body.error || 'Failed to force activate version')
+                              toast.error(body.error || '强制启用版本失败')
                               return
                             }
-                            toast.success('Prompt version force activated')
+                            toast.success('提示词版本已强制启用')
                             await loadVersions(promptId)
                             await loadGroups()
                           })
                         }}
                       >
-                        Force Activate
+                        强制启用
                       </Button>
                     ) : null}
                   </div>

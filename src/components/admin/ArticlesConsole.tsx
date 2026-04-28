@@ -173,10 +173,10 @@ export function ArticlesConsole() {
     <div className="space-y-6 p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Articles</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Editorial workspace with SEO proofreading</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">文章</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">带 SEO 校对的编辑工作台</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Review generated copy, adjust slug and SEO metadata, then publish or hold pages as draft without leaving the article queue.
+            审核生成内容，调整 slug 和 SEO 元数据，并在文章队列中完成发布或草稿保留。
           </p>
         </div>
         <Button
@@ -189,7 +189,7 @@ export function ArticlesConsole() {
           }}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
+          刷新
         </Button>
       </div>
 
@@ -197,8 +197,8 @@ export function ArticlesConsole() {
         <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
           <div className="mb-6 flex items-start justify-between gap-4">
             <div>
-              <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary">Queue</p>
-              <p className="mt-2 text-sm text-muted-foreground">{articles.length} generated articles ready for review.</p>
+              <p className="font-mono text-xs uppercase tracking-[0.22em] text-primary">队列</p>
+              <p className="mt-2 text-sm text-muted-foreground">{articles.length} 篇生成文章待审核。</p>
             </div>
             {selectedArticleListItem ? <StatusBadge value={selectedArticleListItem.status} /> : null}
           </div>
@@ -206,10 +206,10 @@ export function ArticlesConsole() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Title</th>
-                  <th className="pb-3 pr-3">Type</th>
-                  <th className="pb-3 pr-3">Status</th>
-                  <th className="pb-3 pr-3">Updated</th>
+                  <th className="pb-3 pr-3">标题</th>
+                  <th className="pb-3 pr-3">类型</th>
+                  <th className="pb-3 pr-3">状态</th>
+                  <th className="pb-3 pr-3">更新时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -248,7 +248,7 @@ export function ArticlesConsole() {
                     <StatusBadge value={selectedArticle.status} />
                     {draftIsDirty ? (
                       <span className="inline-flex rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-800">
-                        Unsaved edits
+                        未保存改动
                       </span>
                     ) : null}
                   </div>
@@ -268,7 +268,7 @@ export function ArticlesConsole() {
                     className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                   >
                     <ArrowUpRight className="mr-2 h-4 w-4" />
-                    Open Public Page
+                    打开前台页
                   </Link>
                 ) : null}
                 {selectedArticle.product_id ? (
@@ -276,7 +276,7 @@ export function ArticlesConsole() {
                     href={`/admin/products/${selectedArticle.product_id}`}
                     className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'rounded-full')}
                   >
-                    Open Workspace
+                    打开工作台
                   </Link>
                 ) : null}
                 <Button
@@ -287,15 +287,15 @@ export function ArticlesConsole() {
                       const response = await fetch(`/api/admin/articles/${selectedArticle.id}/regenerate`, { method: 'POST' })
                       if (!response.ok) {
                         const body = await response.json().catch(() => ({}))
-                        toast.error(body.error || 'Regeneration failed')
+                        toast.error(body.error || '重新生成失败')
                         return
                       }
                       await load(selectedArticle.id)
-                      toast.success('Regeneration queued')
+                      toast.success('重新生成已排队')
                     })
                   }}
                 >
-                  Queue Regeneration
+                  排队重新生成
                 </Button>
                 <Button
                   size="sm"
@@ -304,7 +304,7 @@ export function ArticlesConsole() {
                   onClick={() => setDraft(createDraft(selectedArticle))}
                 >
                   <RotateCcw className="mr-2 h-4 w-4" />
-                  Reset
+                  重置
                 </Button>
                 <Button
                   size="sm"
@@ -331,19 +331,19 @@ export function ArticlesConsole() {
 
                       const body = await response.json().catch(() => ({}))
                       if (!response.ok) {
-                        toast.error(body.error || 'Failed to save article')
+                        toast.error(body.error || '保存文章失败')
                         return
                       }
                       const updated = body as ArticleDetail
                       setSelectedArticle(updated)
                       setDraft(createDraft(updated))
                       await load(updated.id)
-                      toast.success('Article saved')
+                      toast.success('文章已保存')
                     })
                   }}
                 >
                   <Save className="mr-2 h-4 w-4" />
-                  Save Changes
+                  保存改动
                 </Button>
               </div>
 

@@ -118,32 +118,32 @@ export function ProductsConsole() {
     const created = Number(payload?.created || 0)
     const updated = Number(payload?.updated || 0)
     const queued = Number(payload?.queued || 0)
-    const summary = `${label} sync completed · ${created} new / ${updated} updated`
+    const summary = `${label} 同步完成 · 新增 ${created} 个 / 更新 ${updated} 个`
     if (!payload?.queuePipeline) {
       return summary
     }
     if (queued > 0) {
-      return `${summary} · queued ${queued} new pipeline${queued === 1 ? '' : 's'}`
+      return `${summary} · 已排队 ${queued} 个新流水线任务`
     }
-    return `${summary} · no new products to queue`
+    return `${summary} · 没有需要排队的新商品`
   }
 
   return (
     <div className="space-y-8 p-6 lg:p-10">
       <section className="grid gap-6 xl:grid-cols-[1.05fr_0.95fr]">
         <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Affiliate Sync</p>
-          <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Import and launch the full Bes3 workflow.</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">联盟同步</p>
+          <h1 className="mt-3 font-[var(--font-display)] text-4xl font-semibold tracking-tight">导入商品并启动完整 Bes3 工作流。</h1>
           <div className="mt-5 flex items-start gap-3 rounded-[24px] border border-border/70 bg-[#f7f1e4] p-4">
             <Checkbox
               checked={syncAndQueueNew}
               onCheckedChange={(value) => setSyncAndQueueNew(Boolean(value))}
-              aria-label="Auto queue newly synced products"
+              aria-label="自动排队新同步商品"
             />
             <div className="space-y-1">
-              <p className="text-sm font-medium text-foreground">Auto queue newly synced products</p>
+              <p className="text-sm font-medium text-foreground">自动排队新同步商品</p>
               <p className="text-sm text-muted-foreground">
-                When enabled, this sync also enqueues the full Bes3 pipeline for products newly imported in this batch.
+                开启后，本次同步中新导入的商品会自动进入完整 Bes3 流水线。
               </p>
             </div>
           </div>
@@ -157,7 +157,7 @@ export function ProductsConsole() {
                 })
               }
             >
-              Sync PartnerBoost Amazon
+              同步 PartnerBoost Amazon
             </Button>
             <Button
               disabled={isPending}
@@ -169,24 +169,24 @@ export function ProductsConsole() {
                 })
               }
             >
-              Sync PartnerBoost DTC
+              同步 PartnerBoost DTC
             </Button>
           </div>
         </div>
         <div className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Direct Import</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Paste a link and seed exact product identity.</h2>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">直接导入</p>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-semibold tracking-tight">粘贴链接并补充准确的商品身份。</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             <div className="md:col-span-2">
               <Input value={importLink} onChange={(event) => setImportLink(event.target.value)} placeholder="https://app.partnerboost.com/track/..." className="min-h-[52px] rounded-2xl" />
             </div>
-            <Input value={importBrand} onChange={(event) => setImportBrand(event.target.value)} placeholder="Brand, e.g. Dolphin" className="min-h-[52px] rounded-2xl" />
-            <Input value={importModel} onChange={(event) => setImportModel(event.target.value)} placeholder="Model, e.g. Nautilus CC Plus" className="min-h-[52px] rounded-2xl" />
-            <Input value={importModelNumber} onChange={(event) => setImportModelNumber(event.target.value)} placeholder="Model number / SKU" className="min-h-[52px] rounded-2xl" />
-            <Input value={importProductType} onChange={(event) => setImportProductType(event.target.value)} placeholder="Product type, e.g. robotic pool cleaner" className="min-h-[52px] rounded-2xl" />
-            <Input value={importCategory} onChange={(event) => setImportCategory(event.target.value)} placeholder="Category, e.g. Yard & Pool Automation" className="min-h-[52px] rounded-2xl" />
-            <Input value={importCategorySlug} onChange={(event) => setImportCategorySlug(event.target.value)} placeholder="Category slug, e.g. yard-pool-automation" className="min-h-[52px] rounded-2xl" />
-            <Input value={importCountryCode} onChange={(event) => setImportCountryCode(event.target.value.toUpperCase())} placeholder="Country, e.g. US" className="min-h-[52px] rounded-2xl" />
+            <Input value={importBrand} onChange={(event) => setImportBrand(event.target.value)} placeholder="品牌，例如 Dolphin" className="min-h-[52px] rounded-2xl" />
+            <Input value={importModel} onChange={(event) => setImportModel(event.target.value)} placeholder="型号，例如 Nautilus CC Plus" className="min-h-[52px] rounded-2xl" />
+            <Input value={importModelNumber} onChange={(event) => setImportModelNumber(event.target.value)} placeholder="型号编号 / SKU" className="min-h-[52px] rounded-2xl" />
+            <Input value={importProductType} onChange={(event) => setImportProductType(event.target.value)} placeholder="商品类型，例如 robotic pool cleaner" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCategory} onChange={(event) => setImportCategory(event.target.value)} placeholder="分类，例如 Yard & Pool Automation" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCategorySlug} onChange={(event) => setImportCategorySlug(event.target.value)} placeholder="分类 slug，例如 yard-pool-automation" className="min-h-[52px] rounded-2xl" />
+            <Input value={importCountryCode} onChange={(event) => setImportCountryCode(event.target.value.toUpperCase())} placeholder="国家，例如 US" className="min-h-[52px] rounded-2xl" />
             <Button
               disabled={isPending || !importLink}
               onClick={() =>
@@ -201,13 +201,13 @@ export function ProductsConsole() {
                     categorySlug: importCategorySlug,
                     countryCode: importCountryCode
                   },
-                  successMessage: 'Link imported and pipeline queued',
+                  successMessage: '链接已导入并排队流水线',
                   navigateToProduct: true
                 })
               }
               className="md:col-span-2"
             >
-              Import and Queue Pipeline
+              导入并排队流水线
             </Button>
           </div>
         </div>
@@ -216,14 +216,14 @@ export function ProductsConsole() {
       <section className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Affiliate Products</p>
-            <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Synced inventory</h2>
+            <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">联盟商品</p>
+            <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">已同步库存</h2>
           </div>
           <Button
             disabled={selectedIds.length === 0 || isPending}
-            onClick={() => trigger('/api/admin/products/batch-run-pipeline', { body: { ids: selectedIds }, successMessage: 'Batch pipeline queued' })}
+            onClick={() => trigger('/api/admin/products/batch-run-pipeline', { body: { ids: selectedIds }, successMessage: '批量流水线已排队' })}
           >
-            Batch Queue Pipeline
+            批量排队流水线
           </Button>
         </div>
         <div className="mt-6 grid grid-cols-1 gap-4 md:hidden">
@@ -242,7 +242,7 @@ export function ProductsConsole() {
                   <div className="min-w-0 flex-1">
                     <div className="break-words font-medium">{item.product_name || item.promo_link || item.product_url}</div>
                     <div className="mt-2 break-words text-sm text-muted-foreground">
-                      {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || 'No identity hints'}
+                      {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || '暂无身份线索'}
                     </div>
                     <div className="mt-3 flex flex-wrap gap-2">
                       <StatusBadge value={item.platform} />
@@ -254,7 +254,7 @@ export function ProductsConsole() {
                           href={`/admin/products/${linkedProductId}`}
                           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                         >
-                          Open Workspace
+                          打开工作台
                         </Link>
                       ) : null}
                       <Button
@@ -262,12 +262,12 @@ export function ProductsConsole() {
                         size="sm"
                         onClick={() =>
                           trigger(`/api/admin/products/${item.id}/run-pipeline`, {
-                            successMessage: 'Pipeline queued',
+                            successMessage: '流水线已排队',
                             navigateToProduct: true
                           })
                         }
                       >
-                        Queue Pipeline
+                        排队流水线
                       </Button>
                     </div>
                   </div>
@@ -281,10 +281,10 @@ export function ProductsConsole() {
             <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
               <tr>
                 <th className="pb-3 pr-3"></th>
-                <th className="pb-3 pr-3">Product</th>
-                <th className="pb-3 pr-3">Platform</th>
-                <th className="pb-3 pr-3">Updated</th>
-                <th className="pb-3 pr-3">Action</th>
+                <th className="pb-3 pr-3">商品</th>
+                <th className="pb-3 pr-3">平台</th>
+                <th className="pb-3 pr-3">更新时间</th>
+                <th className="pb-3 pr-3">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -301,7 +301,7 @@ export function ProductsConsole() {
                     <td className="py-4 pr-3">
                       <div className="break-words font-medium">{item.product_name || item.promo_link || item.product_url}</div>
                       <div className="break-words text-muted-foreground">
-                        {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || 'No identity hints'}
+                        {[item.brand, item.product_model || item.model_number, item.category || item.category_slug].filter(Boolean).join(' · ') || '暂无身份线索'}
                       </div>
                     </td>
                     <td className="py-4 pr-3">
@@ -315,7 +315,7 @@ export function ProductsConsole() {
                             href={`/admin/products/${linkedProductId}`}
                             className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                           >
-                            Open Workspace
+                            打开工作台
                           </Link>
                         ) : null}
                         <Button
@@ -323,12 +323,12 @@ export function ProductsConsole() {
                           size="sm"
                           onClick={() =>
                             trigger(`/api/admin/products/${item.id}/run-pipeline`, {
-                              successMessage: 'Pipeline queued',
+                              successMessage: '流水线已排队',
                               navigateToProduct: true
                             })
                           }
                         >
-                          Queue Pipeline
+                          排队流水线
                         </Button>
                       </div>
                     </td>
@@ -341,8 +341,8 @@ export function ProductsConsole() {
       </section>
 
       <section className="min-w-0 rounded-[32px] border border-border bg-white p-8 shadow-panel">
-        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Products</p>
-        <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">Normalized product database</h2>
+        <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">商品库</p>
+        <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">标准化商品数据库</h2>
         <div className="mt-6 grid grid-cols-1 gap-5 lg:grid-cols-2">
           {products.map((product) => (
             <div key={product.id} className="rounded-[28px] border border-border bg-[#f7f1e4] p-5">
@@ -355,7 +355,7 @@ export function ProductsConsole() {
                 <div className="min-w-0 flex-1">
                   <h3 className="break-words font-[var(--font-display)] text-2xl font-semibold">{product.product_name}</h3>
                   <p className="mt-2 break-words text-sm text-muted-foreground">
-                    {[product.category || product.category_slug || 'uncategorized', product.product_model || product.model_number, product.product_type].filter(Boolean).join(' · ')}
+                    {[product.category || product.category_slug || '未分类', product.product_model || product.model_number, product.product_type].filter(Boolean).join(' · ')}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     {product.last_run_status ? <StatusBadge value={product.last_run_status} /> : null}
@@ -363,8 +363,8 @@ export function ProductsConsole() {
                   </div>
                 </div>
                 <div className="text-sm text-muted-foreground sm:ml-auto sm:text-right">
-                  <div>{product.price_amount ? `$${product.price_amount.toFixed(2)}` : 'N/A'}</div>
-                  <div className="break-words">{product.slug || 'draft slug'}</div>
+                  <div>{product.price_amount ? `$${product.price_amount.toFixed(2)}` : '暂无价格'}</div>
+                  <div className="break-words">{product.slug || '草稿 slug'}</div>
                 </div>
               </div>
               <div className="mt-5 flex flex-wrap gap-3">
@@ -372,18 +372,18 @@ export function ProductsConsole() {
                   href={`/admin/products/${product.id}`}
                   className={cn(buttonVariants({ variant: 'outline' }), 'rounded-full')}
                 >
-                  Open Workspace
+                  打开工作台
                 </Link>
                 <Button
                   disabled={isPending}
                   variant="secondary"
                   onClick={() =>
                     trigger(`/api/admin/products/${product.id}/rescrape-media`, {
-                      successMessage: 'Media rescraped'
+                      successMessage: '媒体已重新抓取'
                     })
                   }
                 >
-                  Rescrape Media
+                  重新抓取媒体
                 </Button>
               </div>
             </div>

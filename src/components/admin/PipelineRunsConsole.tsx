@@ -178,8 +178,8 @@ export function PipelineRunsConsole() {
     <div className="space-y-6 p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Pipeline Runs</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Execution history with job-level trace</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">流水线</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">任务执行历史与 Job 级追踪</h1>
         </div>
         <Button
           variant="outline"
@@ -191,7 +191,7 @@ export function PipelineRunsConsole() {
           }}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh Runs
+          刷新任务
         </Button>
       </div>
 
@@ -201,41 +201,41 @@ export function PipelineRunsConsole() {
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Worker</p>
             <ServerCog className="h-4 w-4 text-primary" />
           </div>
-          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.enabled ? 'Enabled' : 'Disabled'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{operations?.workers.length || 0} heartbeat rows</p>
+          <p className="mt-3 text-2xl font-semibold">{operations?.runtime.enabled ? '已启用' : '已停用'}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{operations?.workers.length || 0} 条心跳记录</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Concurrency</p>
+            <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">并发数</p>
             <Activity className="h-4 w-4 text-primary" />
           </div>
           <p className="mt-3 text-2xl font-semibold">{operations?.runtime.concurrency ?? '-'}</p>
-          <p className="mt-1 text-sm text-muted-foreground">poll {operations?.runtime.pollMs ?? '-'}ms</p>
+          <p className="mt-1 text-sm text-muted-foreground">轮询 {operations?.runtime.pollMs ?? '-'}ms</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Stale Runs</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">过期任务</p>
           <p className="mt-3 text-2xl font-semibold">{operations?.staleRunningCount ?? 0}</p>
-          <p className="mt-1 text-sm text-muted-foreground">heartbeat timeout</p>
+          <p className="mt-1 text-sm text-muted-foreground">心跳超时</p>
         </div>
         <div className="min-w-0 rounded-2xl border border-border bg-white p-5 shadow-panel">
-          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">Expired Locks</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">过期锁</p>
           <p className="mt-3 text-2xl font-semibold">{operations?.expiredLockCount ?? 0}</p>
-          <p className="mt-1 text-sm text-muted-foreground">recoverable on next tick</p>
+          <p className="mt-1 text-sm text-muted-foreground">下次轮询可恢复</p>
         </div>
       </div>
 
       <div className="grid gap-6 xl:grid-cols-2">
         <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Queue policy</p>
+          <p className="font-semibold">队列策略</p>
           <div className="mt-4 overflow-x-auto">
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Type</th>
-                  <th className="pb-3 pr-3">State</th>
-                  <th className="pb-3 pr-3">Queued</th>
-                  <th className="pb-3 pr-3">Running</th>
-                  <th className="pb-3 pr-3">Attempts</th>
+                  <th className="pb-3 pr-3">类型</th>
+                  <th className="pb-3 pr-3">状态</th>
+                  <th className="pb-3 pr-3">排队</th>
+                  <th className="pb-3 pr-3">运行中</th>
+                  <th className="pb-3 pr-3">尝试次数</th>
                 </tr>
               </thead>
               <tbody>
@@ -253,23 +253,23 @@ export function PipelineRunsConsole() {
           </div>
         </div>
         <div className="min-w-0 rounded-[24px] border border-border bg-white p-6 shadow-panel">
-          <p className="font-semibold">Worker heartbeats</p>
+          <p className="font-semibold">Worker 心跳</p>
           <div className="mt-4 space-y-3">
             {(operations?.workers || []).slice(0, 5).map((worker) => (
               <div key={worker.worker_id} className="rounded-2xl border border-border p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <p className="font-medium">{worker.worker_id}</p>
-                    <p className="mt-1 text-sm text-muted-foreground">{worker.hostname || 'unknown host'} · pid {worker.pid || 'N/A'}</p>
+                    <p className="mt-1 text-sm text-muted-foreground">{worker.hostname || '未知主机'} · pid {worker.pid || '暂无'}</p>
                   </div>
                   <StatusBadge value={worker.status} />
                 </div>
-                <p className="mt-2 text-xs text-muted-foreground">Last seen {formatDate(worker.last_seen_at)}</p>
+                <p className="mt-2 text-xs text-muted-foreground">最后出现 {formatDate(worker.last_seen_at)}</p>
               </div>
             ))}
             {operations && operations.workers.length === 0 ? (
               <div className="rounded-2xl border border-dashed border-border p-5 text-sm text-muted-foreground">
-                No worker heartbeat has been recorded yet.
+                暂无 Worker 心跳记录。
               </div>
             ) : null}
           </div>
@@ -282,10 +282,10 @@ export function PipelineRunsConsole() {
             <table className="min-w-full text-left text-sm">
               <thead className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <tr>
-                  <th className="pb-3 pr-3">Run</th>
-                  <th className="pb-3 pr-3">Stage</th>
-                  <th className="pb-3 pr-3">Status</th>
-                  <th className="pb-3 pr-3">Updated</th>
+                  <th className="pb-3 pr-3">任务</th>
+                  <th className="pb-3 pr-3">阶段</th>
+                  <th className="pb-3 pr-3">状态</th>
+                  <th className="pb-3 pr-3">更新时间</th>
                 </tr>
               </thead>
               <tbody>
@@ -303,7 +303,7 @@ export function PipelineRunsConsole() {
                   >
                     <td className="py-4 pr-3">
                       <div className="font-medium">{run.product_name || run.source_link}</div>
-                      <div className="text-muted-foreground">Run #{run.id} · {run.run_type === 'workspaceAction' ? (run.requested_action || 'workspace action') : 'full pipeline'}</div>
+                      <div className="text-muted-foreground">任务 #{run.id} · {run.run_type === 'workspaceAction' ? (run.requested_action || '工作台动作') : '完整流水线'}</div>
                     </td>
                     <td className="py-4 pr-3 text-muted-foreground">{run.current_stage || '-'}</td>
                     <td className="py-4 pr-3">
@@ -322,15 +322,15 @@ export function PipelineRunsConsole() {
             <div className="space-y-6">
               <div className="flex flex-wrap items-start justify-between gap-4">
                 <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">Selected Run</p>
+                  <p className="font-mono text-xs uppercase tracking-[0.24em] text-primary">当前任务</p>
                   <h2 className="mt-2 font-[var(--font-display)] text-3xl font-semibold tracking-tight">
-                    {selectedRun.product_name || `Run #${selectedRun.id}`}
+                    {selectedRun.product_name || `任务 #${selectedRun.id}`}
                   </h2>
-                  <p className="mt-2 text-sm text-muted-foreground">Created {formatDate(selectedRun.created_at)}</p>
+                  <p className="mt-2 text-sm text-muted-foreground">创建时间 {formatDate(selectedRun.created_at)}</p>
                   <p className="mt-1 text-sm text-muted-foreground">
                     {selectedRun.run_type === 'workspaceAction'
-                      ? `Queued workspace action: ${selectedRun.requested_action || 'unknown'}`
-                      : 'Queued full pipeline run'}
+                      ? `已排队工作台动作：${selectedRun.requested_action || '未知'}`
+                      : '已排队完整流水线'}
                   </p>
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -345,7 +345,7 @@ export function PipelineRunsConsole() {
                     href={`/admin/products/${selectedRun.product_id}`}
                     className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                   >
-                    Open Workspace
+                    打开工作台
                   </Link>
                 ) : null}
                 <Link
@@ -354,27 +354,27 @@ export function PipelineRunsConsole() {
                   className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'rounded-full')}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  Open Source Link
+                  打开来源链接
                 </Link>
                 {canCancel ? (
                   <Button
                     size="sm"
                     variant="outline"
                     disabled={isPending}
-                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/cancel`, 'Pipeline cancellation requested')}
+                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/cancel`, '已请求取消流水线')}
                   >
                     <XCircle className="mr-2 h-4 w-4" />
-                    Cancel Run
+                    取消任务
                   </Button>
                 ) : null}
                 {canRetry ? (
                   <Button
                     size="sm"
                     disabled={isPending}
-                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/retry`, 'Pipeline retry queued')}
+                    onClick={() => triggerRunAction(`/api/admin/pipeline-runs/${selectedRun.id}/retry`, '流水线重试已排队')}
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
-                    Retry Run
+                    重试任务
                   </Button>
                 ) : null}
               </div>

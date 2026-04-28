@@ -44,13 +44,13 @@ function readPath(source: Record<string, any>, path: string): unknown {
 }
 
 function formatDate(value: unknown) {
-  if (!value) return 'N/A'
+  if (!value) return '暂无'
   const date = new Date(String(value))
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString()
 }
 
 function formatValue(value: unknown) {
-  if (value == null || value === '') return 'N/A'
+  if (value == null || value === '') return '暂无'
   if (typeof value === 'number') return Number.isInteger(value) ? String(value) : value.toFixed(3)
   return String(value)
 }
@@ -122,20 +122,20 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
         <div className="min-w-0">
           <p className="font-semibold">{section.title}</p>
           <p className="mt-1 text-sm text-muted-foreground">
-            {filteredRows.length} visible · {rows.length} total · {selectedKeys.size} selected
+            显示 {filteredRows.length} 条 · 共 {rows.length} 条 · 已选 {selectedKeys.size} 条
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:flex-wrap sm:items-center">
           <Input
-            aria-label={`Filter ${section.title}`}
+            aria-label={`筛选${section.title}`}
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="Filter rows"
+            placeholder="筛选当前表格"
             className="min-h-11 w-full sm:w-56"
           />
           {selectedKeys.size > 0 ? (
             <Button type="button" variant="outline" onClick={() => setSelectedKeys(new Set())}>
-              Clear selection
+              清空选择
             </Button>
           ) : null}
         </div>
@@ -145,7 +145,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
           <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
             <tr>
               <th className="pb-3 pr-4">
-                <span className="sr-only">Select row</span>
+                <span className="sr-only">选择行</span>
               </th>
               {section.columns.map((column) => (
                 <th key={column.key} className="pb-3 pr-4">
@@ -155,7 +155,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
                     className="inline-flex min-h-11 items-center rounded-md px-1 text-left font-semibold uppercase tracking-[0.16em] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     {column.label}
-                    {sortKey === column.key ? <span className="ml-2">{sortDirection === 'asc' ? 'Asc' : 'Desc'}</span> : null}
+                    {sortKey === column.key ? <span className="ml-2">{sortDirection === 'asc' ? '升序' : '降序'}</span> : null}
                   </button>
                 </th>
               ))}
@@ -170,7 +170,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
                     <td className="py-3 pr-4 align-top">
                       <input
                         type="checkbox"
-                        aria-label={`Select ${section.title} row ${index + 1}`}
+                        aria-label={`选择${section.title}第 ${index + 1} 行`}
                         checked={selectedKeys.has(rowKey)}
                         onChange={(event) => toggleRow(rowKey, event.target.checked)}
                         className="h-5 w-5 rounded border-border"
@@ -196,7 +196,7 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
             ) : (
               <tr>
                 <td colSpan={section.columns.length + 1} className="py-8 text-center text-sm text-muted-foreground">
-                  No rows match the current filter.
+                  当前筛选条件下没有匹配数据。
                 </td>
               </tr>
             )}
@@ -205,14 +205,14 @@ function OperationTable({ section, rows }: { section: OperationSection; rows: Ar
       </div>
       <div className="mt-4 flex flex-wrap items-center justify-between gap-3">
         <p className="text-sm text-muted-foreground">
-          Page {safePage} of {totalPages}
+          第 {safePage} / {totalPages} 页
         </p>
         <div className="flex w-full gap-2 sm:w-auto">
           <Button type="button" variant="outline" disabled={safePage <= 1} onClick={() => setPage((current) => Math.max(1, current - 1))}>
-            Previous
+            上一页
           </Button>
           <Button type="button" variant="outline" disabled={safePage >= totalPages} onClick={() => setPage((current) => Math.min(totalPages, current + 1))}>
-            Next
+            下一页
           </Button>
         </div>
       </div>
@@ -236,7 +236,7 @@ export function OperationsConsole({
     const response = await fetch(endpoint)
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
-      toast.error(body.error || 'Failed to load operation snapshot')
+      toast.error(body.error || '加载运营快照失败')
       return
     }
     setSnapshot(body as Record<string, any>)
@@ -264,7 +264,7 @@ export function OperationsConsole({
       })
       const body = await response.json().catch(() => ({}))
       if (!response.ok) {
-        toast.error(body.error || 'Action failed')
+        toast.error(body.error || '操作失败')
         return
       }
       await load()
@@ -290,7 +290,7 @@ export function OperationsConsole({
           }}
         >
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
+          刷新
         </Button>
       </div>
 

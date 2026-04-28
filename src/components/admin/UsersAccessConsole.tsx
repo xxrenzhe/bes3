@@ -16,13 +16,13 @@ type Snapshot = {
 }
 
 function formatDate(value: unknown) {
-  if (!value) return 'N/A'
+  if (!value) return '暂无'
   const date = new Date(String(value))
   return Number.isNaN(date.getTime()) ? String(value) : date.toLocaleString()
 }
 
 function value(value: unknown) {
-  if (value == null || value === '') return 'N/A'
+  if (value == null || value === '') return '暂无'
   return String(value)
 }
 
@@ -34,7 +34,7 @@ export function UsersAccessConsole() {
     const response = await fetch('/api/admin/users')
     const body = await response.json().catch(() => ({}))
     if (!response.ok) {
-      toast.error(body.error || 'Failed to load users')
+      toast.error(body.error || '加载用户失败')
       return
     }
     setSnapshot(body as Snapshot)
@@ -53,7 +53,7 @@ export function UsersAccessConsole() {
       })
       const payload = await response.json().catch(() => ({}))
       if (!response.ok) {
-        toast.error(payload.error || 'Action failed')
+        toast.error(payload.error || '操作失败')
         return
       }
       await load()
@@ -67,24 +67,24 @@ export function UsersAccessConsole() {
     <div className="space-y-6 p-6 lg:p-10">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">Users & Access</p>
-          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">Accounts, sessions, and login governance</h1>
+          <p className="font-mono text-xs uppercase tracking-[0.28em] text-primary">用户权限</p>
+          <h1 className="mt-2 font-[var(--font-display)] text-4xl font-semibold tracking-tight">账号、会话与登录治理</h1>
           <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Manage active users, unlock accounts, disable access, revoke sessions, and inspect recent login and security events.
+            管理用户启停、账号解锁、会话撤销，并查看近期登录与安全事件。
           </p>
         </div>
         <Button variant="outline" disabled={isPending} onClick={() => startTransition(load)}>
           <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
+          刷新
         </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
         {[
-          ['Users', summary.users],
-          ['Active Users', summary.active_users],
-          ['Locked Users', summary.locked_users],
-          ['Active Sessions', summary.active_sessions]
+          ['用户数', summary.users],
+          ['活跃用户', summary.active_users],
+          ['锁定用户', summary.locked_users],
+          ['活跃会话', summary.active_sessions]
         ].map(([label, count]) => (
           <div key={String(label)} className="rounded-2xl border border-border bg-white p-5 shadow-panel">
             <p className="text-xs uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
@@ -94,17 +94,17 @@ export function UsersAccessConsole() {
       </div>
 
       <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
-        <p className="font-semibold">Users</p>
+        <p className="font-semibold">用户列表</p>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
               <tr>
-                <th className="pb-3 pr-4">User</th>
-                <th className="pb-3 pr-4">Role</th>
-                <th className="pb-3 pr-4">Status</th>
-                <th className="pb-3 pr-4">Failed</th>
-                <th className="pb-3 pr-4">Last Login</th>
-                <th className="pb-3 pr-4">Actions</th>
+                <th className="pb-3 pr-4">用户</th>
+                <th className="pb-3 pr-4">角色</th>
+                <th className="pb-3 pr-4">状态</th>
+                <th className="pb-3 pr-4">失败次数</th>
+                <th className="pb-3 pr-4">最近登录</th>
+                <th className="pb-3 pr-4">操作</th>
               </tr>
             </thead>
             <tbody>
@@ -122,16 +122,16 @@ export function UsersAccessConsole() {
                   <td className="py-3 pr-4 text-muted-foreground">{formatDate(user.last_login_at)}</td>
                   <td className="py-3 pr-4">
                     <div className="flex flex-wrap gap-2">
-                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'unlockUser', userId: user.id }, 'User unlocked')}>
-                        Unlock
+                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'unlockUser', userId: user.id }, '用户已解锁')}>
+                        解锁
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
                         disabled={isPending}
-                        onClick={() => runAction({ action: 'setUserActive', userId: user.id, active: !Number(user.is_active) }, 'User access updated')}
+                        onClick={() => runAction({ action: 'setUserActive', userId: user.id, active: !Number(user.is_active) }, '用户权限已更新')}
                       >
-                        {Number(user.is_active) ? 'Disable' : 'Enable'}
+                        {Number(user.is_active) ? '停用' : '启用'}
                       </Button>
                     </div>
                   </td>
@@ -145,8 +145,8 @@ export function UsersAccessConsole() {
       <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
-            <p className="font-semibold">Role Permission Matrix</p>
-            <p className="mt-1 text-sm text-muted-foreground">Planv2 operating roles and the write surfaces each role may own.</p>
+            <p className="font-semibold">角色权限矩阵</p>
+            <p className="mt-1 text-sm text-muted-foreground">Planv2 运营角色及其可写入的系统范围。</p>
           </div>
           <StatusBadge value={`${snapshot?.rolePermissions.length || 0} grants`} />
         </div>
@@ -168,29 +168,29 @@ export function UsersAccessConsole() {
       </section>
 
       <section className="rounded-[24px] border border-border bg-white p-6 shadow-panel">
-        <p className="font-semibold">Sessions</p>
+        <p className="font-semibold">会话</p>
         <div className="mt-4 overflow-x-auto">
           <table className="min-w-full text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-[0.16em] text-muted-foreground">
               <tr>
-                <th className="pb-3 pr-4">User</th>
+                <th className="pb-3 pr-4">用户</th>
                 <th className="pb-3 pr-4">IP</th>
-                <th className="pb-3 pr-4">State</th>
-                <th className="pb-3 pr-4">Last Activity</th>
-                <th className="pb-3 pr-4">Action</th>
+                <th className="pb-3 pr-4">状态</th>
+                <th className="pb-3 pr-4">最近活动</th>
+                <th className="pb-3 pr-4">操作</th>
               </tr>
             </thead>
             <tbody>
               {(snapshot?.sessions || []).slice(0, 40).map((session) => (
                 <tr key={session.id} className="border-b border-border/70">
-                  <td className="py-3 pr-4 font-medium">{value(session.username || `User #${session.user_id}`)}</td>
+                  <td className="py-3 pr-4 font-medium">{value(session.username || `用户 #${session.user_id}`)}</td>
                   <td className="py-3 pr-4 text-muted-foreground">{value(session.ip_address)}</td>
                   <td className="py-3 pr-4"><StatusBadge value={session.revoked_at ? 'revoked' : 'active'} /></td>
                   <td className="py-3 pr-4 text-muted-foreground">{formatDate(session.last_activity_at)}</td>
                   <td className="py-3 pr-4">
                     {!session.revoked_at ? (
-                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'revokeSession', sessionId: session.id }, 'Session revoked')}>
-                        Revoke
+                      <Button size="sm" variant="outline" disabled={isPending} onClick={() => runAction({ action: 'revokeSession', sessionId: session.id }, '会话已撤销')}>
+                        撤销
                       </Button>
                     ) : null}
                   </td>

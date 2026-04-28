@@ -6,11 +6,10 @@ import { useRouter } from 'next/navigation'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 
 export function LoginForm() {
   const router = useRouter()
-  const [username, setUsername] = useState(DEFAULT_ADMIN_USERNAME)
+  const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [isPending, startTransition] = useTransition()
 
@@ -40,7 +39,7 @@ export function LoginForm() {
         <p className="text-[11px] font-semibold uppercase tracking-[0.32em] text-primary">Admin Login</p>
         <h1 className="font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950">Sign in to Bes3.</h1>
         <p className="text-sm leading-7 text-slate-600">
-          Internal access only. Default admin username is <span className="font-semibold text-slate-950">{DEFAULT_ADMIN_USERNAME}</span>.
+          Internal access only. Use the team-issued username and password for your workspace account.
         </p>
         <p className="text-sm leading-7 text-slate-600">Password bootstrap is managed outside the repository through local `.env` files in development and injected environment variables in production.</p>
         <p className="text-sm leading-7 text-slate-600">

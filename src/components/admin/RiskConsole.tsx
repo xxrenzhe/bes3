@@ -5,58 +5,58 @@ import { OperationsConsole } from '@/components/admin/OperationsConsole'
 export function RiskConsole() {
   return (
     <OperationsConsole
-      title="Risk Center"
-      eyebrow="Risk Ops"
-      description="Aggregate evidence, link, SEO, price, and governance risks that can block public recommendations."
+      title="风险中心"
+      eyebrow="风险运维"
+      description="聚合证据、链接、SEO、价格和治理风险，优先处理会阻碍公开推荐的问题。"
       endpoint="/api/admin/risk"
       metricKeys={[
-        { label: 'Open Risks', key: 'open_risks' },
-        { label: 'Link Issues', key: 'link_issues' },
-        { label: 'Evidence Risks', key: 'evidence_risks' },
-        { label: 'Price Risks', key: 'price_risks' }
+        { label: '未处理风险', key: 'open_risks' },
+        { label: '链接问题', key: 'link_issues' },
+        { label: '证据风险', key: 'evidence_risks' },
+        { label: '价格风险', key: 'price_risks' }
       ]}
       sections={[
         {
-          title: 'Risk Alerts',
+          title: '风险提醒',
           key: 'riskAlerts',
           columns: [
-            { label: 'Title', key: 'title' },
-            { label: 'Type', key: 'risk_type', badge: true },
-            { label: 'Severity', key: 'severity', badge: true },
-            { label: 'Status', key: 'status', badge: true },
-            { label: 'Detected', key: 'detected_at', date: true }
+            { label: '标题', key: 'title' },
+            { label: '类型', key: 'risk_type', badge: true },
+            { label: '严重度', key: 'severity', badge: true },
+            { label: '状态', key: 'status', badge: true },
+            { label: '发现时间', key: 'detected_at', date: true }
           ]
         },
         {
-          title: 'Link Issues',
+          title: '链接问题',
           key: 'linkIssues',
           columns: [
-            { label: 'Product', key: 'product_name' },
-            { label: 'Issue', key: 'issue_type', badge: true },
+            { label: '商品', key: 'product_name' },
+            { label: '问题', key: 'issue_type', badge: true },
             { label: 'HTTP', key: 'http_status' },
-            { label: 'Detail', key: 'issue_detail' },
-            { label: 'Checked', key: 'checked_at', date: true }
+            { label: '详情', key: 'issue_detail' },
+            { label: '检查时间', key: 'checked_at', date: true }
           ]
         },
         {
-          title: 'Evidence Risks',
+          title: '证据风险',
           key: 'evidenceRisks',
           columns: [
-            { label: 'Product', key: 'product_name' },
-            { label: 'Channel', key: 'channel_name' },
-            { label: 'Rating', key: 'rating', badge: true },
-            { label: 'Confidence', key: 'evidence_confidence' },
-            { label: 'Quote', key: 'evidence_quote' }
+            { label: '商品', key: 'product_name' },
+            { label: '频道', key: 'channel_name' },
+            { label: '评级', key: 'rating', badge: true },
+            { label: '置信度', key: 'evidence_confidence' },
+            { label: '摘录', key: 'evidence_quote' }
           ]
         },
         {
-          title: 'SEO Risks',
+          title: 'SEO 风险',
           key: 'seoRisks',
           columns: [
-            { label: 'Path', key: 'pathname' },
-            { label: 'Status', key: 'status', badge: true },
-            { label: 'Indexing', key: 'indexing_status', badge: true },
-            { label: 'Updated', key: 'updated_at', date: true }
+            { label: '路径', key: 'pathname' },
+            { label: '状态', key: 'status', badge: true },
+            { label: '索引', key: 'indexing_status', badge: true },
+            { label: '更新时间', key: 'updated_at', date: true }
           ]
         }
       ]}
