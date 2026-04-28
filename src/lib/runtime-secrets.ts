@@ -1,8 +1,12 @@
 export type RuntimeSecretSource = 'env' | 'missing'
+export type RuntimeSecretIssue = 'missing' | 'placeholder' | 'too_short' | 'invalid_format'
 
 export interface RuntimeSecretState {
   value: string
   source: RuntimeSecretSource
+  issue?: RuntimeSecretIssue
+  length: number
+  minLength?: number
 }
 
 export const ADMIN_PASSWORD_PLACEHOLDERS = new Set([
@@ -34,6 +38,17 @@ function isUsableSecret(value: string, placeholders: Set<string>, minLength: num
   return Boolean(value) && !placeholders.has(value) && value.length >= minLength
 }
 
+function unusableSecretIssue(
+  value: string,
+  placeholders: Set<string>,
+  minLength: number
+): RuntimeSecretIssue {
+  if (!value) return 'missing'
+  if (placeholders.has(value)) return 'placeholder'
+  if (value.length < minLength) return 'too_short'
+  return 'invalid_format'
+}
+
 function resolveRuntimeSecret(options: {
   envKey: string
   placeholders: Set<string>
@@ -41,9 +56,15 @@ function resolveRuntimeSecret(options: {
 }): RuntimeSecretState {
   const envValue = normalizeSecretValue(process.env[options.envKey])
   if (isUsableSecret(envValue, options.placeholders, options.minLength)) {
-    return { value: envValue, source: 'env' }
+    return { value: envValue, source: 'env', length: envValue.length, minLength: options.minLength }
   }
-  return { value: '', source: 'missing' }
+  return {
+    value: '',
+    source: 'missing',
+    issue: unusableSecretIssue(envValue, options.placeholders, options.minLength),
+    length: envValue.length,
+    minLength: options.minLength
+  }
 }
 
 export function getRuntimeAdminPasswordState(): RuntimeSecretState {
@@ -69,7 +90,13 @@ export function getRuntimeEncryptionKeyState(): RuntimeSecretState {
     !ENCRYPTION_KEY_PLACEHOLDERS.has(envValue) &&
     /^[0-9a-fA-F]{64}$/.test(envValue)
   ) {
-    return { value: envValue, source: 'env' }
+    return { value: envValue, source: 'env', length: envValue.length }
   }
-  return { value: '', source: 'missing' }
+  return {
+    value: '',
+    source: 'missing',
+    issue: unusableSecretIssue(envValue, ENCRYPTION_KEY_PLACEHOLDERS, 64),
+    length: envValue.length,
+    minLength: 64
+  }
 }

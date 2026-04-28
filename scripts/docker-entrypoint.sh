@@ -65,6 +65,10 @@ log_step_start "prepare runtime directories"
 mkdir -p /app/data /app/storage/media /var/log/supervisor
 log_step_end "prepare runtime directories"
 
+log_step_start "runtime configuration validation"
+run_with_signal_forward node /app/scripts/check-runtime-env.js
+log_step_end "runtime configuration validation"
+
 log_step_start "database and application bootstrap"
 run_with_signal_forward ./node_modules/.bin/tsx /app/scripts/db-init.ts
 log_step_end "database and application bootstrap"

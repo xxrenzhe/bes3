@@ -4,7 +4,7 @@ import { hashPassword } from '@/lib/crypto'
 import { getDatabase } from '@/lib/db'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
 import { HARDCORE_CATEGORIES } from '@/lib/hardcore-catalog'
-import { getRuntimeAdminPasswordState } from '@/lib/runtime-secrets'
+import { getRuntimeAdminPasswordState, type RuntimeSecretState } from '@/lib/runtime-secrets'
 import { saveSetting } from '@/lib/settings'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { slugify } from '@/lib/slug'
@@ -181,12 +181,25 @@ async function ignoreUniqueViolation(operation: () => Promise<unknown>): Promise
   }
 }
 
+function describeAdminPasswordConfigurationError(state: RuntimeSecretState): string {
+  switch (state.issue) {
+    case 'placeholder':
+      return 'DEFAULT_ADMIN_PASSWORD is still set to a placeholder value and must be replaced.'
+    case 'too_short':
+      return `DEFAULT_ADMIN_PASSWORD was provided but is too short (length=${state.length}, required>=${state.minLength ?? 16}).`
+    case 'invalid_format':
+      return 'DEFAULT_ADMIN_PASSWORD was provided but does not satisfy runtime secret policy.'
+    default:
+      return 'DEFAULT_ADMIN_PASSWORD is missing from the runtime environment.'
+  }
+}
+
 async function ensureDefaultAdmin(): Promise<void> {
   const db = await getDatabase()
   const adminPasswordState = getRuntimeAdminPasswordState()
   if (!adminPasswordState.value) {
     throw new Error(
-      'DEFAULT_ADMIN_PASSWORD is required. Use a local .env file in development and injected environment variables in production.'
+      `${describeAdminPasswordConfigurationError(adminPasswordState)} Use a local .env file in development and injected environment variables in production.`
     )
   }
   const passwordHash = await hashPassword(adminPasswordState.value)

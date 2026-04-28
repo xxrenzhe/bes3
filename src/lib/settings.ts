@@ -1,7 +1,12 @@
 import { getDatabase } from '@/lib/db'
 import { decryptSecret, encryptSecret } from '@/lib/crypto'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
-import { getRuntimeAdminPasswordState, getRuntimeEncryptionKeyState, getRuntimeJwtSecretState } from '@/lib/runtime-secrets'
+import {
+  getRuntimeAdminPasswordState,
+  getRuntimeEncryptionKeyState,
+  getRuntimeJwtSecretState,
+  type RuntimeSecretState
+} from '@/lib/runtime-secrets'
 import type { SettingDataType } from '@/lib/types'
 
 export interface SettingRecord {
@@ -122,10 +127,16 @@ function getDiagnosticStatus(flags: boolean[]): SettingDiagnostic['status'] {
   return 'partial'
 }
 
-function describeSecretSource(label: string, source: 'env' | 'missing'): string {
-  switch (source) {
-    case 'env':
-      return `${label} via environment`
+function describeSecretState(label: string, state: RuntimeSecretState): string {
+  if (state.source === 'env') return `${label} via environment`
+
+  switch (state.issue) {
+    case 'placeholder':
+      return `${label} placeholder`
+    case 'too_short':
+      return `${label} too short`
+    case 'invalid_format':
+      return `${label} invalid`
     default:
       return `${label} missing`
   }
@@ -215,7 +226,7 @@ export async function listSettingDiagnostics(): Promise<SettingDiagnostic[]> {
       id: 'runtime-security',
       title: 'Runtime Security',
       status: getDiagnosticStatus([isJwtStrong, isAdminPasswordRotated, isEncryptionKeyReady]),
-      detail: `${describeSecretSource('JWT secret', jwtSecretState.source)} · ${describeSecretSource('Admin password', adminPasswordState.source)} · ${describeSecretSource('Encryption key', encryptionKeyState.source)} · port ${runtimePort}`
+      detail: `${describeSecretState('JWT secret', jwtSecretState)} · ${describeSecretState('Admin password', adminPasswordState)} · ${describeSecretState('Encryption key', encryptionKeyState)} · port ${runtimePort}`
     },
     {
       id: 'ai',
