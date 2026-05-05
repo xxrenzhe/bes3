@@ -220,9 +220,9 @@ function mapEvidenceRow(row: EvidenceRow): EvidenceReport | null {
   const evidenceConfidence = Math.max(0.1, Number(row.evidence_confidence || 1) + usefulBoost - feedbackPenalty)
 
   return {
-    id: row.id,
-    productId: row.product_id,
-    tagId: row.tag_id,
+    id: Number(row.id),
+    productId: Number(row.product_id),
+    tagId: row.tag_id == null ? null : Number(row.tag_id),
     tagName: row.tag_name || 'Unmapped scenario',
     tagSlug: row.tag_slug || 'unmapped-scenario',
     rating,
@@ -524,7 +524,7 @@ function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceRepo
   })
 
   return {
-    id: row.id,
+    id: Number(row.id),
     slug: row.slug,
     brand: row.brand,
     name: row.product_name,

@@ -267,6 +267,44 @@ type GeneratedArticleDraft = {
   contentHtml: string
 }
 
+function normalizeStoredProductRow(row: any): StoredProductRecord {
+  const productName = String(row.productName || row.productname || row.product_name || '').trim()
+  if (!productName || productName.toLowerCase() === 'undefined') {
+    throw new Error('Product name is required before generating buyer-facing content')
+  }
+
+  return {
+    id: row.id,
+    slug: row.slug,
+    affiliateProductId: row.affiliateProductId ?? row.affiliateproductid ?? row.affiliate_product_id ?? null,
+    brand: row.brand,
+    productModel: row.productModel ?? row.productmodel ?? row.product_model ?? null,
+    modelNumber: row.modelNumber ?? row.modelnumber ?? row.model_number ?? null,
+    productType: row.productType ?? row.producttype ?? row.product_type ?? null,
+    categorySlug: row.categorySlug ?? row.categoryslug ?? row.category_slug ?? null,
+    youtubeMatchTerms: row.youtubeMatchTerms ?? row.youtubematchterms ?? row.youtube_match_terms ?? [],
+    productName,
+    category: row.category,
+    description: row.description,
+    heroImageUrl: row.heroImageUrl ?? row.heroimageurl ?? row.hero_image_url ?? null,
+    priceAmount: row.priceAmount ?? row.priceamount ?? row.price_amount ?? null,
+    priceCurrency: row.priceCurrency ?? row.pricecurrency ?? row.price_currency ?? null,
+    rating: row.rating,
+    reviewCount: row.reviewCount ?? row.reviewcount ?? row.review_count ?? null,
+    specs: row.specs_json ? JSON.parse(row.specs_json) : row.specs || {},
+    reviewHighlights: row.review_highlights_json ? JSON.parse(row.review_highlights_json) : row.reviewHighlights || row.reviewhighlights || [],
+    resolvedUrl: row.resolvedUrl ?? row.resolvedurl ?? row.resolved_url ?? null,
+    priceLastCheckedAt: row.priceLastCheckedAt ?? row.pricelastcheckedat ?? row.price_last_checked_at ?? null,
+    offerLastCheckedAt: row.offerLastCheckedAt ?? row.offerlastcheckedat ?? row.offer_last_checked_at ?? null,
+    attributeCompletenessScore: Number(row.attributeCompletenessScore ?? row.attributecompletenessscore ?? row.attribute_completeness_score ?? 0),
+    dataConfidenceScore: Number(row.dataConfidenceScore ?? row.dataconfidencescore ?? row.data_confidence_score ?? 0),
+    sourceCount: Number(row.sourceCount ?? row.sourcecount ?? row.source_count ?? 0),
+    publishedAt: row.publishedAt ?? row.publishedat ?? row.published_at ?? null,
+    updatedAt: row.updatedAt ?? row.updatedat ?? row.updated_at ?? null,
+    sourceAffiliateLink: row.sourceAffiliateLink ?? row.sourceaffiliatelink ?? row.source_affiliate_link ?? row.resolvedUrl ?? row.resolvedurl ?? row.resolved_url ?? '',
+  }
+}
+
 type QueuedRunRecord = {
   id: number
   product_id: number | null
@@ -1483,11 +1521,7 @@ async function loadStoredProductRecord(productId: number): Promise<StoredProduct
     throw new Error('Product not found')
   }
 
-  return {
-    ...product,
-    specs: product.specs_json ? JSON.parse(product.specs_json) : {},
-    reviewHighlights: product.review_highlights_json ? JSON.parse(product.review_highlights_json) : []
-  }
+  return normalizeStoredProductRow(product)
 }
 
 async function loadStoredKeywordIdeas(productId: number): Promise<StoredKeywordIdea[]> {
@@ -2223,13 +2257,12 @@ async function executeFullPipelineRun(
       [productId]
     )
     if (!product) throw new Error('Normalized product not found')
-    product.specs = product.specs_json ? JSON.parse(product.specs_json) : {}
-    product.reviewHighlights = product.review_highlights_json ? JSON.parse(product.review_highlights_json) : []
+    const normalizedProduct = normalizeStoredProductRow(product)
 
     await assertRunNotCancelled(runId)
     const keywordsJob = await createJob(runId, 'mineKeywords')
     await markRun(runId, 'running', 'mineKeywords')
-    const keywordIdeas = await generateKeywordIdeas(product)
+    const keywordIdeas = await generateKeywordIdeas(normalizedProduct)
     await assertRunNotCancelled(runId)
     await saveKeywords(productId, keywordIdeas)
     await finishJob(keywordsJob, 'completed', 'Keyword opportunities generated', { total: keywordIdeas.length })
@@ -2237,16 +2270,16 @@ async function executeFullPipelineRun(
     await assertRunNotCancelled(runId)
     const reviewJob = await createJob(runId, 'generateReviewArticle')
     await markRun(runId, 'running', 'generateReviewArticle')
-    const reviewCopy = await generateReviewCopy(product)
-    const reviewSeo = await generateSeoPayload(`${product.productName} Review`, reviewCopy.summary)
+    const reviewCopy = await generateReviewCopy(normalizedProduct)
+    const reviewSeo = await generateSeoPayload(`${normalizedProduct.productName} Review`, reviewCopy.summary)
     await assertRunNotCancelled(runId)
     const reviewArticleId = await upsertArticle({
       productId,
       articleType: 'review',
-      title: `${product.productName} Review`,
-      slug: slugify(`${product.productName} review`),
+      title: `${normalizedProduct.productName} Review`,
+      slug: slugify(`${normalizedProduct.productName} review`),
       summary: reviewCopy.summary,
-      keyword: keywordIdeas[0]?.keyword || `${product.productName} review`,
+      keyword: keywordIdeas[0]?.keyword || `${normalizedProduct.productName} review`,
       heroImageUrl: persistedMediaUrls[0] || null,
       contentMd: reviewCopy.markdown,
       contentHtml: reviewCopy.html,
@@ -2264,21 +2297,17 @@ async function executeFullPipelineRun(
       'SELECT id, slug, brand, product_name AS productName, category, description, price_amount AS priceAmount, price_currency AS priceCurrency, rating, review_count AS reviewCount, specs_json, review_highlights_json, resolved_url AS resolvedUrl, price_last_checked_at AS priceLastCheckedAt, offer_last_checked_at AS offerLastCheckedAt, attribute_completeness_score AS attributeCompletenessScore, data_confidence_score AS dataConfidenceScore, source_count AS sourceCount FROM products WHERE id <> ? ORDER BY updated_at DESC LIMIT 2',
       [productId]
     )
-    const alternatives = allProducts.map((item) => ({
-      ...item,
-      specs: item.specs_json ? JSON.parse(item.specs_json) : {},
-      reviewHighlights: item.review_highlights_json ? JSON.parse(item.review_highlights_json) : []
-    }))
-    const comparisonCopy = await generateComparisonCopy(product, alternatives)
-    const comparisonSeo = await generateSeoPayload(`${product.productName} Alternatives`, comparisonCopy.summary)
+    const alternatives = allProducts.map((item) => normalizeStoredProductRow(item))
+    const comparisonCopy = await generateComparisonCopy(normalizedProduct, alternatives)
+    const comparisonSeo = await generateSeoPayload(`${normalizedProduct.productName} Alternatives`, comparisonCopy.summary)
     await assertRunNotCancelled(runId)
     const comparisonArticleId = await upsertArticle({
       productId,
       articleType: 'comparison',
-      title: `${product.productName} Alternatives`,
-      slug: slugify(`${product.productName} alternatives`),
+      title: `${normalizedProduct.productName} Alternatives`,
+      slug: slugify(`${normalizedProduct.productName} alternatives`),
       summary: comparisonCopy.summary,
-      keyword: keywordIdeas[1]?.keyword || `${product.productName} alternatives`,
+      keyword: keywordIdeas[1]?.keyword || `${normalizedProduct.productName} alternatives`,
       heroImageUrl: persistedMediaUrls[0] || null,
       contentMd: comparisonCopy.markdown,
       contentHtml: comparisonCopy.html,
@@ -2298,8 +2327,8 @@ async function executeFullPipelineRun(
     await assertRunNotCancelled(runId)
     const publishJob = await createJob(runId, 'publishPages')
     await markRun(runId, 'running', 'publishPages')
-    const reviewPath = `/reviews/${slugify(`${product.productName} review`)}`
-    const comparisonPath = `/compare/${slugify(`${product.productName} alternatives`)}`
+    const reviewPath = `/reviews/${slugify(`${normalizedProduct.productName} review`)}`
+    const comparisonPath = `/compare/${slugify(`${normalizedProduct.productName} alternatives`)}`
     const reviewSeoPageId = await publishSeoPage(
       reviewArticleId,
       'review',
