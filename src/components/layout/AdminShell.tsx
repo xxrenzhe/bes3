@@ -113,6 +113,12 @@ export function AdminShell({
 
   return (
     <div className="min-h-screen bg-slate-50/50 pb-16 text-slate-950 lg:pb-0">
+      <a
+        href="#admin-main-content"
+        className="absolute left-4 top-4 z-[70] -translate-y-20 rounded-md bg-slate-950 px-4 py-2 text-sm font-semibold text-white transition-transform focus:translate-y-0 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+      >
+        跳转到主内容
+      </a>
       <header className="sticky top-0 z-50 flex h-16 items-center justify-between border-b border-slate-200 bg-white/85 px-4 backdrop-blur-xl lg:hidden">
         <div className="flex items-center gap-3">
           <Link href="/admin" className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-xl font-bold tracking-tight text-transparent">
@@ -122,7 +128,11 @@ export function AdminShell({
         </div>
         <div className="flex items-center gap-2">
           <details className="relative lg:hidden">
-            <summary className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700">
+            <summary
+              role="button"
+              aria-label="打开后台导航菜单"
+              className="flex min-h-10 cursor-pointer list-none items-center gap-2 rounded-full border border-slate-200 bg-white px-4 text-sm font-semibold text-slate-700"
+            >
               菜单
               <ChevronDown className="h-4 w-4" aria-hidden="true" />
             </summary>
@@ -144,7 +154,7 @@ export function AdminShell({
                 ))}
               </nav>
               <form action="/api/auth/logout" method="post" className="mt-3 border-t border-slate-100 pt-3">
-                <button className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100">
+                <button type="submit" className="flex min-h-11 w-full items-center justify-center gap-2 rounded-full bg-rose-50 px-4 text-sm font-semibold text-rose-700 transition-colors hover:bg-rose-100">
                   <LogOut className="h-4 w-4" aria-hidden="true" />
                   退出登录
                 </button>
@@ -236,6 +246,7 @@ export function AdminShell({
         <div className="border-t border-slate-100 bg-slate-50/50 p-3">
           <form action="/api/auth/logout" method="post">
             <button
+              type="submit"
               className={cn(
                 'flex min-h-11 w-full items-center gap-3 rounded-xl px-3 text-sm font-medium text-slate-500 transition-colors hover:bg-rose-50 hover:text-rose-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 focus-visible:ring-offset-2',
                 !sidebarOpen && 'justify-center'
@@ -249,7 +260,7 @@ export function AdminShell({
         </div>
       </aside>
 
-      <main className={cn('min-h-screen pt-16 transition-all duration-300 lg:pt-0', sidebarOpen ? 'lg:ml-56' : 'lg:ml-20')}>
+      <main id="admin-main-content" className={cn('min-h-screen pt-16 transition-all duration-300 lg:pt-0', sidebarOpen ? 'lg:ml-56' : 'lg:ml-20')}>
         {children}
       </main>
     </div>

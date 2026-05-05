@@ -351,6 +351,7 @@ export function PipelineRunsConsole() {
                 <Link
                   href={selectedRun.source_link}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: 'secondary', size: 'sm' }), 'rounded-full')}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />

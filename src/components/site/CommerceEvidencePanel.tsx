@@ -268,6 +268,7 @@ export function CommerceEvidencePanel({
                     <Link
                       href={offerHref}
                       target="_blank"
+                      rel="noopener noreferrer"
                       prefetch={false}
                       onClick={() => {
                         trackDecisionEvent({

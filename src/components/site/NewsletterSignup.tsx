@@ -206,19 +206,24 @@ export function NewsletterSignup({
             <p className="text-sm leading-7 text-muted-foreground">{selectedIntent.description} The goal is to help you pick back up later without restarting from zero.</p>
           </div>
 
-          <div className="grid gap-3 sm:grid-cols-3">
+          <div className="grid gap-3 sm:grid-cols-3" role="radiogroup" aria-label="Update type">
             {INTENT_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 type="button"
+                role="radio"
+                aria-checked={intent === option.id}
                 onClick={() => setIntent(option.id)}
                 className={cn(
-                  'rounded-[1.25rem] border px-4 py-4 text-left transition-colors',
+                  'min-h-[116px] rounded-[1.25rem] border px-4 py-4 text-left transition-[border-color,background-color,box-shadow,transform] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
                   intent === option.id
-                    ? 'border-primary bg-emerald-50 text-foreground'
+                    ? 'border-primary bg-emerald-50 text-foreground shadow-[0_20px_45px_-35px_rgba(0,80,55,0.7)]'
                     : 'border-border bg-muted/40 text-muted-foreground hover:bg-muted'
                 )}
               >
+                <span className={cn('mb-3 inline-flex h-5 w-5 items-center justify-center rounded-full border text-[10px]', intent === option.id ? 'border-primary bg-primary text-primary-foreground' : 'border-border bg-white text-transparent')}>
+                  ✓
+                </span>
                 <p className="text-sm font-semibold text-foreground">{option.label}</p>
                 <p className="mt-2 text-xs leading-6">{option.description}</p>
               </button>
@@ -228,6 +233,8 @@ export function NewsletterSignup({
           <div className="grid gap-4 sm:grid-cols-[1fr_220px]">
             <Input
               type="email"
+              aria-label="Email address for updates"
+              autoComplete="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               placeholder="name@company.com"
@@ -239,7 +246,7 @@ export function NewsletterSignup({
               <select
                 value={categorySlug}
                 onChange={(event) => setCategorySlug(event.target.value)}
-                className="w-full border-none bg-transparent text-sm text-foreground outline-none"
+                className="min-h-11 w-full border-none bg-transparent text-sm text-foreground outline-none focus-visible:ring-0"
               >
                 <option value="">Any category</option>
                 {resolvedCategoryOptions.map((category) => (
@@ -251,15 +258,17 @@ export function NewsletterSignup({
             </label>
           </div>
 
-          <div className="flex flex-wrap gap-3">
+          <div className="flex flex-wrap gap-3" role="radiogroup" aria-label="Update cadence">
             {CADENCE_OPTIONS.map((option) => (
               <button
                 key={option.id}
                 type="button"
+                role="radio"
+                aria-checked={cadence === option.id}
                 onClick={() => setCadence(option.id)}
                 className={cn(
-                  'rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-colors',
-                  cadence === option.id ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  'min-h-11 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-[0.2em] transition-[background-color,color,box-shadow,transform] hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+                  cadence === option.id ? 'bg-primary text-primary-foreground shadow-lg shadow-emerald-950/10' : 'bg-muted text-muted-foreground'
                 )}
               >
                 {option.label}

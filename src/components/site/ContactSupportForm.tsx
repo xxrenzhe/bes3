@@ -53,7 +53,9 @@ export function ContactSupportForm({
   const [isPending, startTransition] = useTransition()
 
   const selectedIntent = INQUIRY_OPTIONS.find((option) => option.id === intent) || INQUIRY_OPTIONS[0]
-  const isValid = email.includes('@') && subject.trim().length >= 6 && message.trim().length >= 20
+  const subjectRemaining = Math.max(0, 6 - subject.trim().length)
+  const messageRemaining = Math.max(0, 20 - message.trim().length)
+  const isValid = email.includes('@') && subjectRemaining === 0 && messageRemaining === 0
 
   return (
     <form
@@ -95,6 +97,7 @@ export function ContactSupportForm({
           <span className="text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Email</span>
           <Input
             type="email"
+            autoComplete="email"
             value={email}
             onChange={(event) => setEmail(event.target.value)}
             className="min-h-[56px] rounded-2xl border-none bg-muted px-5"
@@ -126,7 +129,11 @@ export function ContactSupportForm({
           onChange={(event) => setSubject(event.target.value)}
           className="min-h-[56px] rounded-2xl border-none bg-muted px-5"
           placeholder="What do you need help with?"
+          aria-describedby="contact-subject-helper"
         />
+        <span id="contact-subject-helper" className="block text-xs leading-6 text-muted-foreground">
+          {subjectRemaining > 0 ? `${subjectRemaining} more character${subjectRemaining === 1 ? '' : 's'} needed.` : 'Subject length looks good.'}
+        </span>
       </label>
 
       <label className="mt-6 block space-y-2">
@@ -136,7 +143,11 @@ export function ContactSupportForm({
           onChange={(event) => setMessage(event.target.value)}
           className="min-h-[200px] w-full rounded-2xl border-none bg-muted px-5 py-4 text-sm text-foreground outline-none placeholder:text-muted-foreground"
           placeholder="Include the product, category, or page involved, plus what still feels unclear."
+          aria-describedby="contact-message-helper"
         />
+        <span id="contact-message-helper" className="block text-xs leading-6 text-muted-foreground">
+          {messageRemaining > 0 ? `${messageRemaining} more character${messageRemaining === 1 ? '' : 's'} needed.` : 'Message length looks good.'}
+        </span>
       </label>
 
       <div className="mt-6 rounded-[1.5rem] bg-[linear-gradient(135deg,#f8fbff,#eefaf5)] p-5">

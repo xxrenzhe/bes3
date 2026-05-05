@@ -71,6 +71,22 @@
     background: rgba(104, 219, 169, 0.35);
     color: rgb(0 33 20);
   }
+
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
 }
 
 @layer utilities {
@@ -173,5 +189,9 @@
 
   .tonal-surface {
     @apply bg-[linear-gradient(180deg,rgba(255,255,255,0.55),rgba(239,244,255,0.72))];
+  }
+
+  .tap-target {
+    @apply min-h-11 touch-manipulation;
   }
 }

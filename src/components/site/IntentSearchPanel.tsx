@@ -125,7 +125,7 @@ export function IntentSearchPanel({
             <Link
               key={preset.label}
               href={buildPresetHref(action, preset)}
-              className="rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-colors hover:bg-slate-200"
+              className="inline-flex min-h-11 touch-manipulation items-center rounded-full bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground transition-[background-color,color,transform] hover:-translate-y-0.5 hover:bg-slate-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             >
               {preset.label}
             </Link>
@@ -142,8 +142,9 @@ export function IntentSearchPanel({
             rows={compact ? 3 : 4}
             className="min-h-[124px] w-full rounded-[1.5rem] border border-slate-200 bg-slate-50 px-5 py-4 text-sm text-foreground outline-none"
             placeholder="Example: I need a quiet 4K monitor for long work sessions under $500, and I want to avoid dim panels or bad ports."
+            aria-describedby="intent-helper"
           />
-          <span className="block text-xs leading-6 text-muted-foreground">
+          <span id="intent-helper" className="block text-xs leading-6 text-muted-foreground">
             Start with this sentence shape: “I need a <span className="font-semibold text-foreground">product</span> for <span className="font-semibold text-foreground">situation</span>, around <span className="font-semibold text-foreground">budget</span>, and I want to avoid <span className="font-semibold text-foreground">deal-breakers</span>.”
           </span>
         </label>
@@ -223,7 +224,7 @@ export function IntentSearchPanel({
 
           <button
             type="submit"
-            className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground"
+            className="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-[box-shadow,transform] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
             Build my shortlist
           </button>

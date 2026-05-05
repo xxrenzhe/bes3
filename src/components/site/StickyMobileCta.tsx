@@ -13,7 +13,7 @@ export function StickyMobileCta({
   trackingSource = 'site',
   triggerOffset = 520,
   eyebrow = 'Ready to buy?',
-  trustBadge = '✅ Hand-tested by Alex | Ad-free independent review'
+  trustBadge = 'Hand-tested by Alex | Ad-free independent review'
 }: {
   href?: string | null
   label?: string
@@ -88,6 +88,7 @@ export function StickyMobileCta({
         <Link
           href={resolvedHref}
           target="_blank"
+          rel="noopener noreferrer"
           prefetch={false}
           onClick={() => {
             if (!productId) return

@@ -330,6 +330,7 @@ export function ProductWorkspaceConsole({
                 <Link
                   href={workspace.product.resolvedUrl}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
@@ -557,6 +558,7 @@ export function ProductWorkspaceConsole({
                         <Link
                           href={getArticlePath(article.articleType, article.slug)}
                           target="_blank"
+                          rel="noopener noreferrer"
                           className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                         >
                           <ExternalLink className="mr-2 h-4 w-4" />

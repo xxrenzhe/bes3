@@ -46,11 +46,17 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
             ))}
             <LocaleSwitcher currentLocale={locale} currentPath={displayPath} />
           </nav>
-          <details className="relative md:hidden">
-            <summary className="flex min-h-11 cursor-pointer list-none items-center rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+          <details className="group relative md:hidden">
+            <summary
+              role="button"
+              aria-label="Open primary navigation menu"
+              className="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold shadow-sm transition-[border-color,box-shadow] hover:border-primary/30 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            >
               Menu
+              <span aria-hidden="true" className="text-xs transition-transform group-open:rotate-180">⌄</span>
             </summary>
-            <div className="absolute right-0 mt-3 w-64 rounded-md border border-border bg-white p-3 shadow-panel">
+            <div className="absolute right-0 mt-3 w-[min(88vw,20rem)] rounded-[1.5rem] border border-border bg-white p-3 shadow-panel">
+              <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Navigate Bes3</p>
               <nav aria-label="Mobile navigation" className="flex flex-col gap-1">
                 {navItems.map((item) => (
                   <Link
@@ -62,6 +68,10 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
                   </Link>
                 ))}
               </nav>
+              <div className="mt-3 border-t border-border pt-3">
+                <p className="px-3 pb-2 text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Language</p>
+                <LocaleSwitcher currentLocale={locale} currentPath={displayPath} />
+              </div>
             </div>
           </details>
         </div>

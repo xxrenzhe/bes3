@@ -62,7 +62,96 @@ export function HardcoreEvidenceMatrix({
             Real-world evidence, price timing, and the current winner in one table.
           </h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="grid gap-4 md:hidden">
+          {products.map((product) => {
+            const timestampUrl = youtubeTimestampUrl(product)
+            const report = product.consensus.bestQuote || product.evidence[0]
+            const alternative = product.affiliateStatus === 'out_of_stock' ? findAlternativeProduct(products, product) : null
+            return (
+              <article key={product.id} className="rounded-[1.5rem] border border-border/70 bg-white p-4 shadow-sm">
+                <div className="flex flex-wrap items-start justify-between gap-3">
+                  <div>
+                    <Link href={`/products/${product.slug}`} className="text-lg font-black text-foreground hover:text-primary">
+                      {product.brand ? `${product.brand} ` : ''}
+                      {product.name}
+                    </Link>
+                    <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{product.categoryName}</p>
+                  </div>
+                  <div className="rounded-2xl bg-slate-950 px-3 py-2 text-right text-white">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">Consensus</p>
+                    <p className="font-mono text-lg font-black">{formatScore(product.consensus.score10)}</p>
+                  </div>
+                </div>
+
+                <div className="mt-4 grid gap-3">
+                  <div className="rounded-2xl bg-muted/60 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Evidence</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">
+                      {product.consensus.evidenceCount} reports · {product.consensus.sourceCount} creator sources
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-muted/60 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Price / Value</p>
+                    <div className="mt-2">
+                      <PriceValueBadge price={product.price} />
+                    </div>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Low {formatHardcorePrice(product.price.histLowPrice, product.price.currency)} | 90d avg{' '}
+                      {formatHardcorePrice(product.price.avg90dPrice, product.price.currency)}
+                    </p>
+                  </div>
+                  <div className="rounded-2xl bg-muted/60 p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Hardcore Proof</p>
+                    {report ? (
+                      <blockquote className="mt-2 border-l-2 border-primary pl-3 text-xs leading-6 text-muted-foreground">
+                        {report.evidenceQuote}
+                        <span className="mt-2 block font-semibold text-foreground">
+                          {timestampUrl ? (
+                            <a href={timestampUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline">
+                              Review by {report.channelName}
+                            </a>
+                          ) : (
+                            `Review by ${report.channelName}`
+                          )}
+                        </span>
+                      </blockquote>
+                    ) : (
+                      <p className="mt-2 text-xs leading-6 text-muted-foreground">No verified quote yet. Product stays out of winner claims.</p>
+                    )}
+                  </div>
+                </div>
+
+                <div className="mt-4">
+                  {product.affiliateUrl && canBuy(product.affiliateStatus) ? (
+                    <a
+                      href={`/go/${product.id}`}
+                      className="inline-flex min-h-11 w-full touch-manipulation items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
+                    >
+                      Check price
+                    </a>
+                  ) : product.affiliateStatus === 'out_of_stock' ? (
+                    <div className="space-y-2">
+                      <span className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-amber-300 bg-amber-50 px-4 text-sm font-semibold text-amber-900">
+                        Currently Out of Stock
+                      </span>
+                      {alternative ? (
+                        <Link href={`/products/${alternative.slug}`} className="block text-center text-xs font-semibold text-primary hover:underline">
+                          Check alternatives: {alternative.name}
+                        </Link>
+                      ) : null}
+                    </div>
+                  ) : (
+                    <span className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-border px-4 text-sm font-semibold text-muted-foreground">
+                      Link pending
+                    </span>
+                  )}
+                </div>
+              </article>
+            )
+          })}
+        </div>
+
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full min-w-[860px] border-collapse text-left text-sm">
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">

@@ -1413,6 +1413,7 @@ export function ShortlistWorkspace({
                           <Link
                             href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
                             target="_blank"
+                            rel="noopener noreferrer"
                             prefetch={false}
                             onClick={() =>
                               trackDecisionEvent({

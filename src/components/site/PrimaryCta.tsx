@@ -10,7 +10,7 @@ export function PrimaryCta({
   note,
   productId,
   trackingSource = 'site',
-  trustBadge = '✅ Hand-tested by Alex | Ad-free independent review'
+  trustBadge = 'Hand-tested by Alex | Ad-free independent review'
 }: {
   href?: string | null
   label?: string
@@ -41,6 +41,7 @@ export function PrimaryCta({
         <Link
           href={resolvedHref}
           target="_blank"
+          rel="noopener noreferrer"
           prefetch={false}
           onClick={() => {
             if (!productId) return

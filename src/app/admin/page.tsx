@@ -274,6 +274,7 @@ export default async function AdminDashboardPage() {
                   key={article.id}
                   href={getArticlePath(article.type, article.slug)}
                   target="_blank"
+                  rel="noopener noreferrer"
                   className="block rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 transition-colors hover:border-blue-200 hover:bg-blue-50/50"
                 >
                   <div className="flex items-start justify-between gap-3">
@@ -328,7 +329,7 @@ export default async function AdminDashboardPage() {
                       打开商品工作台
                     </Link>
                     {product.slug ? (
-                      <Link href={`/products/${product.slug}`} target="_blank" className="inline-flex rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-50">
+                      <Link href={`/products/${product.slug}`} target="_blank" rel="noopener noreferrer" className="inline-flex rounded-full bg-white px-3 py-1.5 text-sm font-semibold text-slate-700 ring-1 ring-slate-200 transition-colors hover:bg-slate-50">
                         查看前台页
                       </Link>
                     ) : null}

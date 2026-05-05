@@ -264,6 +264,7 @@ export function ArticlesConsole() {
                   <Link
                     href={getArticlePath(selectedArticle.article_type, selectedArticle.slug)}
                     target="_blank"
+                    rel="noopener noreferrer"
                     className={cn(buttonVariants({ variant: 'outline', size: 'sm' }), 'rounded-full')}
                   >
                     <ArrowUpRight className="mr-2 h-4 w-4" />
