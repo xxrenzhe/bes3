@@ -379,6 +379,54 @@ export async function updateRiskAlertStatus(input: {
   return { success: true }
 }
 
+export async function ensureQaRiskAlert(input: {
+  actor: AuthPayload
+}) {
+  const db = await getDatabase()
+  const title = 'Production E2E risk status test'
+  const existing = await db.queryOne<{ id: number }>(
+    `
+      SELECT id
+      FROM admin_risk_alerts
+      WHERE risk_type = 'production_e2e'
+        AND entity_type = 'qa'
+        AND title = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `,
+    [title]
+  )
+
+  if (existing?.id) {
+    await db.exec(
+      `
+        UPDATE admin_risk_alerts
+        SET status = 'open',
+            resolved_at = NULL,
+            resolved_by = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [existing.id]
+    )
+    return { success: true, alertId: existing.id, reused: true }
+  }
+
+  const result = await db.exec(
+    `
+      INSERT INTO admin_risk_alerts (
+        risk_type, severity, entity_type, entity_id, title, message, status, details_json
+      ) VALUES ('production_e2e', 'warning', 'qa', 'production-e2e', ?, ?, 'open', ?)
+    `,
+    [
+      title,
+      'QA-owned risk record used to verify production risk status transitions.',
+      JSON.stringify({ source: 'production-e2e', actorId: input.actor.userId })
+    ]
+  )
+  return { success: true, alertId: Number(result.lastInsertRowid || 0), reused: false }
+}
+
 export async function getUsersAccessSnapshot() {
   const db = await getDatabase()
   const [summary, users, sessions, loginAttempts, securityEvents, rolePermissions] = await Promise.all([

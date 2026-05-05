@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
-import { getRiskOperationsSnapshot, updateRiskAlertStatus } from '@/lib/admin-blueprint'
+import { ensureQaRiskAlert, getRiskOperationsSnapshot, updateRiskAlertStatus } from '@/lib/admin-blueprint'
 
 export async function GET() {
   await requireAdmin()
@@ -11,6 +11,19 @@ export async function GET() {
 export async function POST(request: Request) {
   const actor = await requireAdminPermission('risk:write')
   const body = await request.json().catch(() => ({}))
+  if (String(body.action || '') === 'ensureQaAlert') {
+    const result = await ensureQaRiskAlert({ actor })
+    await logAdminAudit({
+      actor,
+      request,
+      action: 'risk_qa_alert_ensured',
+      entityType: 'admin_risk_alerts',
+      entityId: result.alertId,
+      after: result
+    })
+    return NextResponse.json(result)
+  }
+
   const status = String(body.status || 'resolved') === 'open' ? 'open' : 'resolved'
   const result = await updateRiskAlertStatus({
     actor,

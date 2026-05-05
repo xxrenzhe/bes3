@@ -12,6 +12,38 @@ import { cn } from '@/lib/utils'
 import { buttonVariants, Button } from '@/components/ui/button'
 import { StatusBadge } from '@/components/admin/StatusBadge'
 
+function MediaAssetImage({
+  src,
+  alt,
+  sizes
+}: {
+  src: string
+  alt: string
+  sizes: string
+}) {
+  const [failed, setFailed] = useState(false)
+
+  if (failed) {
+    return (
+      <div className="flex h-full min-h-24 items-center justify-center bg-muted/60 px-3 text-center text-xs text-muted-foreground">
+        媒体文件暂不可用
+      </div>
+    )
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill
+      sizes={sizes}
+      className="object-cover"
+      unoptimized
+      onError={() => setFailed(true)}
+    />
+  )
+}
+
 function formatMoney(amount: number | null, currency: string | null) {
   if (amount == null) return 'N/A'
   return new Intl.NumberFormat('en-US', {
@@ -481,12 +513,10 @@ export function ProductWorkspaceConsole({
             {heroMedia ? (
               <div className="mt-4 rounded-md border bg-muted/40 p-3">
                 <div className="relative aspect-[16/10] overflow-hidden rounded-xl">
-                  <Image
+                  <MediaAssetImage
                     src={heroMedia.publicUrl}
                     alt={workspace.product.productName}
-                    fill
                     sizes="(max-width: 1280px) 100vw, 40vw"
-                    className="object-cover"
                   />
                 </div>
                 <div className="mt-2 flex items-center justify-between gap-3">
@@ -503,7 +533,7 @@ export function ProductWorkspaceConsole({
               {galleryMedia.map((asset) => (
                 <div key={asset.id} className="rounded-xl border border-border p-2">
                   <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-muted/40">
-                    <Image src={asset.publicUrl} alt={`${workspace.product.productName} gallery`} fill sizes="(max-width: 1280px) 50vw, 20vw" className="object-cover" />
+                    <MediaAssetImage src={asset.publicUrl} alt={`${workspace.product.productName} gallery`} sizes="(max-width: 1280px) 50vw, 20vw" />
                   </div>
                   <div className="mt-3 flex items-center justify-between gap-3">
                     <span className="text-sm font-medium">图库</span>
@@ -522,7 +552,7 @@ export function ProductWorkspaceConsole({
                 {reviewMedia.length > 0 ? (
                   reviewMedia.map((asset) => (
                     <div key={asset.id} className="relative aspect-square overflow-hidden rounded-md border bg-muted/40">
-                      <Image src={asset.publicUrl} alt={`${workspace.product.productName} review`} fill sizes="(max-width: 1280px) 33vw, 12vw" className="object-cover" />
+                      <MediaAssetImage src={asset.publicUrl} alt={`${workspace.product.productName} review`} sizes="(max-width: 1280px) 33vw, 12vw" />
                     </div>
                   ))
                 ) : (
