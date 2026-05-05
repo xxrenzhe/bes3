@@ -27,6 +27,7 @@ node_modules/
 dist/
 build/
 coverage/
+qa-results/
 !src/app/api/open/coverage/
 !src/app/api/open/coverage/route.ts
 .cache/

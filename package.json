@@ -24,6 +24,7 @@
     "ops:health-check": "bash ./scripts/health-check.sh",
     "ops:smoke-e2e": "tsx scripts/smoke-planv2-e2e.ts",
     "ops:browser-e2e": "tsx scripts/browser-planv2-e2e.ts",
+    "ops:production-e2e": "tsx scripts/production-e2e.ts",
     "ai:test-gemini": "tsx scripts/test-gemini.ts",
     "seo:index": "tsx scripts/google-indexing.ts",
     "seo:inspect-links": "tsx scripts/link-inspector.ts",

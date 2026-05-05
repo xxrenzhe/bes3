@@ -780,7 +780,17 @@ export function ProductsConsole() {
                       />
                       <div className="relative h-16 w-16 shrink-0 overflow-hidden rounded-xl border bg-white">
                         {heroImage ? (
-                          <Image src={heroImage} alt={item.product_name || item.external_id} fill sizes="64px" className="object-cover" />
+                          <Image
+                            src={heroImage}
+                            alt={item.product_name || item.external_id}
+                            fill
+                            sizes="64px"
+                            className="object-cover"
+                            unoptimized
+                            onError={(event) => {
+                              event.currentTarget.style.display = 'none'
+                            }}
+                          />
                         ) : null}
                       </div>
                       <div className="min-w-0 flex-1">
@@ -885,7 +895,17 @@ export function ProductsConsole() {
                           <div className="flex items-start gap-3">
                             <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border bg-white">
                               {heroImage ? (
-                                <Image src={heroImage} alt={item.product_name || item.external_id} fill sizes="56px" className="object-cover" />
+                                <Image
+                                  src={heroImage}
+                                  alt={item.product_name || item.external_id}
+                                  fill
+                                  sizes="56px"
+                                  className="object-cover"
+                                  unoptimized
+                                  onError={(event) => {
+                                    event.currentTarget.style.display = 'none'
+                                  }}
+                                />
                               ) : null}
                             </div>
                             <div className="min-w-0">
@@ -1065,7 +1085,17 @@ export function ProductsConsole() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white">
                     {product.hero_image_url ? (
-                      <Image src={product.hero_image_url} alt={product.product_name} fill sizes="96px" className="object-cover" />
+                      <Image
+                        src={product.hero_image_url}
+                        alt={product.product_name}
+                        fill
+                        sizes="96px"
+                        className="object-cover"
+                        unoptimized
+                        onError={(event) => {
+                          event.currentTarget.style.display = 'none'
+                        }}
+                      />
                     ) : null}
                   </div>
                   <div className="min-w-0 flex-1">
