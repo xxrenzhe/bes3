@@ -1,10 +1,10 @@
-import { GEMINI_ACTIVE_MODEL, normalizeGeminiModel } from '@/lib/gemini-models'
+import { GEMINI_ACTIVE_MODEL, getSupportedModelsForProvider, normalizeModelForProvider } from '@/lib/gemini-models'
+import { buildProxyUrl, parseProxyEndpoint } from '@/lib/proxy-url-parser'
 
 const GEMINI_OFFICIAL_ENDPOINT = 'https://generativelanguage.googleapis.com'
 const GEMINI_RELAY_ENDPOINT = 'https://aicode.cat/v1/messages'
 const SENSITIVE_VALUE_PLACEHOLDER = '············'
 const VALIDATION_TIMEOUT_MS = 10_000
-const RELAY_SUPPORTED_MODELS = ['gpt-5.2'] as const
 
 type GeminiProvider = 'official' | 'relay'
 
@@ -19,10 +19,6 @@ export function normalizeSensitiveValue(value: string | null | undefined): strin
 
 function normalizeGeminiProvider(provider?: string | null): GeminiProvider {
   return String(provider || 'official').trim() === 'relay' ? 'relay' : 'official'
-}
-
-function getSupportedModelsForProvider(provider: GeminiProvider): readonly string[] {
-  return provider === 'relay' ? RELAY_SUPPORTED_MODELS : [GEMINI_ACTIVE_MODEL]
 }
 
 function getGeminiValidationErrorMessage(error: any): string {
@@ -84,9 +80,7 @@ export async function validateGeminiConfig(
   provider?: string | null
 ): Promise<{ valid: boolean; message: string }> {
   const normalizedProvider = normalizeGeminiProvider(provider)
-  const normalizedModel = normalizedProvider === 'relay'
-    ? trimValue(model) || RELAY_SUPPORTED_MODELS[0]
-    : normalizeGeminiModel(model)
+  const normalizedModel = normalizeModelForProvider(model, normalizedProvider)
   const supportedModels = getSupportedModelsForProvider(normalizedProvider)
   const normalizedApiKey = trimValue(apiKey)
 
@@ -183,66 +177,9 @@ type ProxyUrlConfig = {
   url: string
 }
 
-type ParsedProxyEndpoint = {
-  host: string
-  port: number
-  username?: string
-  password?: string
-  protocol: 'http' | 'https'
-}
-
-function parseProxyEndpoint(proxyUrl: string): ParsedProxyEndpoint | null {
-  const trimmed = trimValue(proxyUrl)
-  if (!trimmed) return null
-
-  const direct = trimmed.replace(/^https?:\/\//, '')
-  const directParts = direct.split(':')
-  if (directParts.length >= 4) {
-    const port = Number.parseInt(directParts[1], 10)
-    if (Number.isFinite(port)) {
-      return {
-        host: directParts[0],
-        port,
-        username: directParts[2] || undefined,
-        password: directParts.slice(3).join(':') || undefined,
-        protocol: 'http'
-      }
-    }
-  }
-
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    try {
-      const url = new URL(trimmed)
-      return {
-        host: url.hostname,
-        port: url.port ? Number.parseInt(url.port, 10) : url.protocol === 'https:' ? 443 : 80,
-        username: url.username || undefined,
-        password: url.password || undefined,
-        protocol: url.protocol === 'https:' ? 'https' : 'http'
-      }
-    } catch {
-      return null
-    }
-  }
-
-  const parts = trimmed.split(':')
-  if (parts.length === 2) {
-    const port = Number.parseInt(parts[1], 10)
-    if (Number.isFinite(port)) {
-      return {
-        host: parts[0],
-        port,
-        protocol: 'http'
-      }
-    }
-  }
-
-  return null
-}
-
 async function validateSingleProxy(config: ProxyUrlConfig): Promise<{ valid: boolean; message: string }> {
   const parsed = parseProxyEndpoint(config.url)
-  if (!parsed) {
+  if (!parsed || parsed.protocol === 'socks5') {
     return {
       valid: false,
       message: `${config.country} 代理格式错误，请使用 https://user:pass@host:port 或 host:port:username:password`
@@ -251,10 +188,7 @@ async function validateSingleProxy(config: ProxyUrlConfig): Promise<{ valid: boo
 
   try {
     const { ProxyAgent } = await import('undici')
-    const auth = parsed.username || parsed.password
-      ? `${encodeURIComponent(parsed.username || '')}:${encodeURIComponent(parsed.password || '')}@`
-      : ''
-    const dispatcher = new ProxyAgent(`${parsed.protocol}://${auth}${parsed.host}:${parsed.port}`)
+    const dispatcher = new ProxyAgent(buildProxyUrl(parsed))
     const response = await fetch('https://api.ipify.org?format=json', {
       cache: 'no-store',
       signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS),

@@ -1,5 +1,5 @@
 import { getSettingValueOrEnv } from '@/lib/settings'
-import { GEMINI_ACTIVE_MODEL, normalizeGeminiModel } from '@/lib/gemini-models'
+import { GEMINI_ACTIVE_MODEL, normalizeModelForProvider } from '@/lib/gemini-models'
 
 export type GeminiResponseSchema = {
   type?: 'STRING' | 'NUMBER' | 'INTEGER' | 'BOOLEAN' | 'ARRAY' | 'OBJECT'
@@ -167,8 +167,9 @@ async function getGeminiConfig(): Promise<{
   const apiKey = normalizedProvider === 'relay'
     ? process.env.GEMINI_RELAY_API_KEY || await getSettingValueOrEnv('ai', 'gemini_relay_api_key', 'GEMINI_RELAY_API_KEY')
     : process.env.GEMINI_API_KEY || await getSettingValueOrEnv('ai', 'gemini_api_key', 'GEMINI_API_KEY')
-  const model = normalizeGeminiModel(
-    process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'gemini_model', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL)
+  const model = normalizeModelForProvider(
+    process.env.GEMINI_MODEL || await getSettingValueOrEnv('ai', 'gemini_model', 'GEMINI_MODEL', GEMINI_ACTIVE_MODEL),
+    normalizedProvider
   )
   const baseUrl = (
     process.env.GEMINI_BASE_URL ||
@@ -192,7 +193,7 @@ export async function generateGeminiContent(params: GeminiGenerateParams): Promi
   if (provider !== 'official' && provider !== 'relay') return null
   if (!apiKey) return null
 
-  const model = normalizeGeminiModel(params.model || config.model)
+  const model = normalizeModelForProvider(params.model || config.model, provider)
   const timeoutMs = Math.max(5000, params.timeoutMs || config.timeoutMs)
   const maxRetries = Math.max(0, params.maxRetries ?? 2)
 

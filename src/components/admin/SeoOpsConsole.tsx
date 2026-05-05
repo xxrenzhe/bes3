@@ -308,8 +308,8 @@ export function SeoOpsConsole() {
                 <CalendarClock className="h-4 w-4" />
               </span>
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO 自动化</p>
-                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">定时 pSEO 运行手册</h2>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-primary">SEO Automation</p>
+                <h2 className="mt-1 text-xl font-black tracking-tight text-slate-950">Scheduled pSEO runbook</h2>
               </div>
             </div>
             <p className="mt-3 max-w-2xl text-xs leading-5 text-slate-600">
@@ -388,7 +388,7 @@ export function SeoOpsConsole() {
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 rounded-md border border-slate-200 bg-white p-3">
               <div>
-                <Label htmlFor="seo-automation-push-index">应用后推送索引</Label>
+                <Label htmlFor="seo-automation-push-index">Push indexing after apply</Label>
                 <p className="mt-1 text-xs leading-5 text-slate-500">使用已配置的 Google Indexing API 凭据。</p>
               </div>
               <Switch
@@ -401,11 +401,11 @@ export function SeoOpsConsole() {
             <div className="mt-4 flex flex-wrap gap-2">
               <Button disabled={isPending} variant="secondary" onClick={() => triggerAutomation('automationPreview')}>
                 <ShieldCheck className="mr-2 h-4 w-4" />
-                预览运行
+                Preview Run
               </Button>
               <Button disabled={isPending} onClick={() => triggerAutomation('automationApply')}>
                 <Play className="mr-2 h-4 w-4" />
-                应用运行
+                Apply Run
               </Button>
             </div>
 

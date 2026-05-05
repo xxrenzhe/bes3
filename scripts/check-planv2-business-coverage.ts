@@ -1,0 +1,226 @@
+#!/usr/bin/env tsx
+
+import fs from 'node:fs'
+import path from 'node:path'
+
+type ArtifactCheck = {
+  label: string
+  filePath: string
+  required?: string[]
+}
+
+type PlanDocCheck = {
+  doc: string
+  requirement: string
+  artifacts: ArtifactCheck[]
+}
+
+const root = process.cwd()
+
+function exists(filePath: string) {
+  return fs.existsSync(path.join(root, filePath))
+}
+
+function read(filePath: string) {
+  return fs.readFileSync(path.join(root, filePath), 'utf8')
+}
+
+function checkArtifact(artifact: ArtifactCheck) {
+  const absolutePath = path.join(root, artifact.filePath)
+  if (!fs.existsSync(absolutePath)) return [`${artifact.label}: missing ${artifact.filePath}`]
+  const content = fs.readFileSync(absolutePath, 'utf8')
+  return (artifact.required || [])
+    .filter((needle) => !content.includes(needle))
+    .map((needle) => `${artifact.label}: missing "${needle}" in ${artifact.filePath}`)
+}
+
+const checks: PlanDocCheck[] = [
+  {
+    doc: '1. Master PRD',
+    requirement: 'Hardcore category scope, monetization, compliance, UX, AI/data pipeline, and growth surfaces are present.',
+    artifacts: [
+      { label: 'Hardcore category roster', filePath: 'src/lib/hardcore-catalog.ts', required: ['HARDCORE_CATEGORIES', 'yard-pool-automation'] },
+      { label: 'Public evidence homepage', filePath: 'src/app/page.tsx', required: ['HardcoreEvidenceMatrix', 'real buyer concerns'] },
+      { label: 'Commercial loop monetization', filePath: 'src/lib/commercial-loop.ts', required: ['listAffiliateReviewCandidates', 'rel="nofollow sponsored"', '/go/${product.id}?source=evidence-review'] },
+      { label: 'FTC and cookie shell', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
+    ]
+  },
+  {
+    doc: '2. Taxonomy and data fusion',
+    requirement: 'Intent ingestion, keyword import, pending tag promotion, site-search feedback, and rescan workflows are implemented.',
+    artifacts: [
+      { label: 'Amazon/Reddit intent collection', filePath: 'scripts/collect-hardcore-intents.ts', required: ['amazon', 'reddit', 'promote-pending'] },
+      { label: 'Keyword Planner import', filePath: 'scripts/import-keyword-planner-intents.ts', required: ['keyword', 'category'] },
+      { label: 'Taxonomy evolution', filePath: 'scripts/evolve-hardcore-taxonomy.ts', required: ['promotePendingTags', 'exportTaxonomyRescanJobs'] },
+      { label: 'Search intake API', filePath: 'src/app/api/open/evidence/search-intake/route.ts', required: ['recordSearchIntent', 'pendingTag'] },
+      { label: 'Taxonomy admin API', filePath: 'src/app/api/admin/taxonomy/route.ts', required: ['getTaxonomyOperationsSnapshot', 'runTaxonomyAction'] },
+      { label: 'Taxonomy persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['site_search_logs', 'taxonomy_rescan_queue'] }
+    ]
+  },
+  {
+    doc: '3. Abstract database ERD',
+    requirement: 'Core product, affiliate, taxonomy, video, evidence, search, and evolution tables exist in the schema.',
+    artifacts: [
+      { label: 'Runtime schema', filePath: 'src/lib/db/schema.ts', required: ['affiliate_products', 'products', 'affiliate_links', 'taxonomy_tags', 'review_videos', 'analysis_reports', 'site_search_logs'] },
+      { label: 'Schema definition SSOT', filePath: 'src/lib/db/schema-definition.ts', required: ['introspectSchemaDefinition', 'renderSqliteBaseline', 'renderPostgresBaseline'] },
+      { label: 'Generated dictionary', filePath: 'docs/planv2/database-dictionary.generated.md', required: ['## affiliate_products', '## analysis_reports', '## pseo_page_signals'] }
+    ]
+  },
+  {
+    doc: '4. Meta-prompting and AI engineering',
+    requirement: 'Prompt templates, evidence parsing, shorts import, regression cases, and runtime AI provider configuration are available.',
+    artifacts: [
+      { label: 'Evidence prompt guards', filePath: 'src/lib/hardcore-prompts.ts', required: ['buildVideoEvidencePrompt', 'parseVideoEvidenceWithRetry', 'shouldKeepPositiveEvidence'] },
+      { label: 'Prompt lab persistence', filePath: 'src/lib/prompts.ts', required: ['prompt_versions', 'prompt_regression_cases'] },
+      { label: 'Shorts evidence import', filePath: 'scripts/import-shorts-evidence.ts', required: ['shorts', 'analysis_reports'] },
+      { label: 'AI runtime settings', filePath: 'src/lib/settings.ts', required: ['gemini_provider', 'GEMINI_RELAY_API_KEY', 'GEMINI_API_KEY'] }
+    ]
+  },
+  {
+    doc: '5. GEO and SEO growth',
+    requirement: 'Crawler policy, llms.txt, scenario pSEO, value pSEO, schema, FAQ, and open coverage manifest are implemented.',
+    artifacts: [
+      { label: 'Robots policy', filePath: 'src/app/robots.ts', required: ['/llms.txt', '/api/open/', '/admin'] },
+      { label: 'LLM text route', filePath: 'src/app/llms.txt/route.ts', required: ['Bes3', '/api/open/evidence'] },
+      { label: 'Scenario pSEO route', filePath: 'src/app/[category]/[landing]/page.tsx', required: ['BLUF:', 'SeoFaqSection', 'buildProductAggregateSchema'] },
+      { label: 'Value pSEO route', filePath: 'src/app/deals/[slug]/page.tsx', required: ['buildValuePseoPath', 'Price Drop Alert'] },
+      { label: 'Open coverage manifest', filePath: 'src/app/api/open/coverage/route.ts', required: ['coverage-manifest-v1', '/trust'] }
+    ]
+  },
+  {
+    doc: '6. Entity resolution and risk management',
+    requirement: 'SKU matching, proxy-aware scraping, transcript-only YouTube collection, affiliate link inspection, graceful degradation, and compliance are covered.',
+    artifacts: [
+      { label: 'Entity resolution core', filePath: 'src/lib/entity-resolution.ts', required: ['matchVideoEntity', 'confidence'] },
+      { label: 'Entity resolution CLI', filePath: 'scripts/resolve-video-entities.ts', required: ['dry-run', 'limit'] },
+      { label: 'Browser proxy runtime', filePath: 'src/lib/browser-proxy.ts', required: ['resolveBrowserProxy', 'getBrowserProxyUrl', 'BROWSER_PROXY_URLS_JSON'] },
+      { label: 'Transcript command', filePath: 'scripts/youtube-transcript-command.ts', required: ['--skip-download', '--write-auto-sub', '--proxy'] },
+      { label: 'Affiliate link inspector', filePath: 'scripts/inspect-hardcore-affiliate-links.ts', required: ['affiliate_links', 'dry-run'] },
+      { label: 'Public shell compliance', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
+    ]
+  },
+  {
+    doc: '7. Weighted consensus and scoring',
+    requirement: 'Weighted evidence scoring, shill/ad feedback, conflict handling, and public matrix display exist.',
+    artifacts: [
+      { label: 'Consensus algorithm', filePath: 'src/lib/hardcore.ts', required: ['summarizeConsensus', 'feedbackPenalty', 'isAdvertorial'] },
+      { label: 'Evidence feedback API', filePath: 'src/app/api/open/evidence/feedback/route.ts', required: ['recordEvidenceFeedback', 'feedbackType'] },
+      { label: 'Evidence feedback persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['creator_feedback_events'] },
+      { label: 'Evidence review persistence', filePath: 'src/lib/admin-blueprint.ts', required: ['evidence_review_decisions', 'reviewEvidenceReport'] },
+      { label: 'Evidence matrix UI', filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx', required: ['Consensus Matrix', 'Hardcore Proof', 'Review by'] },
+      { label: 'Admin evidence operations', filePath: 'src/app/api/admin/evidence/route.ts', required: ['getEvidenceOperationsSnapshot', 'reviewEvidenceReport'] }
+    ]
+  },
+  {
+    doc: '8. Price-value entry point',
+    requirement: 'Current/historical price, value score, buy-window logic, pSEO linkage, and retention alerts are implemented.',
+    artifacts: [
+      { label: 'Price-value algorithm', filePath: 'src/lib/hardcore.ts', required: ['summarizePriceValue', 'valueScore'] },
+      { label: 'Price snapshot refresh', filePath: 'scripts/refresh-hardcore-price-value.ts', required: ['refreshPriceValueSnapshotsForProducts', 'dry-run'] },
+      { label: 'Alert evaluation', filePath: 'scripts/evaluate-price-alerts.ts', required: ['evaluatePriceAlerts', 'queueNotifications'] },
+      { label: 'Alert dispatch', filePath: 'scripts/dispatch-price-alert-notifications.ts', required: ['PRICE_ALERT_WEBHOOK_URL'] },
+      { label: 'Open alerts API', filePath: 'src/app/api/open/evidence/price-alerts/route.ts', required: ['upsertPriceAlert', 'email'] },
+      { label: 'Price-value persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['price_value_snapshots', 'price_alerts', 'price_alert_notifications'] },
+      { label: 'Admin price-value console', filePath: 'src/components/admin/PriceValueConsole.tsx', required: ['Price', 'Value'] }
+    ]
+  },
+  {
+    doc: '9. Programmatic SEO strategy',
+    requirement: 'Intent matrix, URL helpers, scenario/value pages, SEO automation, pSEO signal imports, indexing, and syndication are available.',
+    artifacts: [
+      { label: 'pSEO helpers', filePath: 'src/lib/pseo.ts', required: ['buildScenarioPseoPath', 'buildValuePseoPath', 'getScenarioPseoStaticParams'] },
+      { label: 'pSEO signal import', filePath: 'scripts/import-pseo-signals.ts', required: ['recordPseoPageSignal'] },
+      { label: 'pSEO push', filePath: 'scripts/push-hardcore-pseo.ts', required: ['rerunGoogleIndexing'] },
+      { label: 'SEO automation core', filePath: 'src/lib/seo-automation.ts', required: ['runSeoAutomation', 'applyPseoSignalsToTaxonomy', 'rerunGoogleIndexing'] },
+      { label: 'Syndication handoff', filePath: 'scripts/syndicate-pages.ts', required: ['rerunSyndication'] },
+      { label: 'pSEO signal persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['pseo_page_signals'] },
+      { label: 'Syndication settings', filePath: 'src/lib/seo-ops.ts', required: ['SEO_SYNDICATION_TARGETS_JSON'] }
+    ]
+  },
+  {
+    doc: '10. Admin console blueprint',
+    requirement: 'Authenticated admin IA, product/evidence/taxonomy/price/SEO/pipeline/risk/prompt/data/user modules, permissions, and audit are present.',
+    artifacts: [
+      { label: 'Admin shell', filePath: 'src/components/layout/AdminShell.tsx', required: ['/admin/products', '/admin/evidence', '/admin/seo-ops'] },
+      { label: 'Admin permissions', filePath: 'src/lib/admin-permissions.ts', required: ['ADMIN_ROLE_PERMISSIONS'] },
+      { label: 'Admin audit governance', filePath: 'src/lib/admin-governance.ts', required: ['admin_audit_logs', 'admin_risk_alerts'] },
+      { label: 'Admin dashboard API', filePath: 'src/app/api/admin/dashboard/route.ts', required: ['requireAdmin'] },
+      { label: 'Admin settings validation', filePath: 'src/app/api/admin/settings/validate/route.ts', required: ['proxy', 'affiliate_sync', 'ai'] },
+      { label: 'User access console', filePath: 'src/components/admin/UsersAccessConsole.tsx', required: ['用户列表', '角色'] }
+    ]
+  },
+  {
+    doc: '11. Database architecture optimization',
+    requirement: 'Schema SSOT, SQLite/Postgres migrations, drift checking, production security tables, pipeline ops tables, and backup scripts exist.',
+    artifacts: [
+      { label: 'SQLite baseline', filePath: 'migrations/000_init_schema_consolidated.sqlite.sql', required: ['admin_security_events', 'content_pipeline_runs'] },
+      { label: 'Postgres baseline', filePath: 'pg-migrations/000_init_schema_consolidated.pg.sql', required: ['admin_security_events', 'content_pipeline_runs'] },
+      { label: 'Drift checker', filePath: 'scripts/check-db-baseline-drift.ts', required: ['renderSqliteBaseline', 'renderPostgresBaseline'] },
+      { label: 'Backup script', filePath: 'scripts/backup-runtime.sh', required: ['data', 'storage/media', 'tar'] },
+      { label: 'Restore script', filePath: 'scripts/restore-runtime.sh', required: ['BES3_RESTORE_CONFIRM', 'storage/media', 'tar'] }
+    ]
+  },
+  {
+    doc: '12. Production alerting and launch SOP',
+    requirement: 'Release preflight, runtime env validation, health checks, deployment, backup/restore, and alerting surfaces are available.',
+    artifacts: [
+      { label: 'Release preflight', filePath: 'scripts/preflight-release.sh', required: ['check-runtime-env.js', 'planv2:check-business', 'hardcore:check-planv2-seo', 'commercial-loop:check', 'ops:check-planv2-security', 'db:check-drift', 'type-check', 'ops:smoke-e2e', 'ops:browser-e2e'] },
+      { label: 'Browser E2E', filePath: 'scripts/browser-planv2-e2e.ts', required: ['playwright', 'Buyer-First Ratings', 'DEFAULT_ADMIN_USERNAME', 'DEFAULT_ADMIN_PASSWORD'] },
+      { label: 'Runtime E2E smoke', filePath: 'scripts/smoke-planv2-e2e.ts', required: ['coverage-manifest-v1', '/go/999999999', '/reviews/non-existent-commercial-loop-smoke', 'x-bes3-blocked-reason'] },
+      { label: 'Runtime env validation', filePath: 'scripts/check-runtime-env.js', required: ['JWT_SECRET', 'ENCRYPTION_KEY', 'BROWSER_PROXY_URLS_JSON'] },
+      { label: 'Health endpoint', filePath: 'src/app/api/health/route.ts', required: ['status', 'database'] },
+      { label: 'Internal health endpoint', filePath: 'src/app/api/internal/health/route.ts', required: ['hasValidInternalServiceToken'] },
+      { label: 'GHCR deploy script', filePath: 'scripts/deploy-ghcr.sh', required: ['docker', 'GHCR'] },
+      { label: 'Pipeline worker', filePath: 'scripts/worker-standalone.ts', required: ['startPipelineWorker'] }
+    ]
+  },
+  {
+    doc: 'Commercial loop audit',
+    requirement: 'Affiliate-to-review-to-pSEO-to-merchant-click commercial loop is implemented and has an executable integration check.',
+    artifacts: [
+      { label: 'Commercial loop core', filePath: 'src/lib/commercial-loop.ts', required: ['runCommercialLoop', 'syncPartnerboostAmazonProducts', 'discoverYoutubeVideos', 'upsertEvidenceArticle'] },
+      { label: 'Commercial loop CLI', filePath: 'scripts/run-commercial-loop.ts', required: ['runCommercialLoop', 'execute', 'push-index'] },
+      { label: 'Commercial loop integration', filePath: 'scripts/check-commercial-loop-integration.ts', required: ['publicly readable by long-tail slug', 'merchant CTA redirects and records attribution', 'yt-dlp proxy uses normalized authenticated URL'] },
+      { label: 'Affiliate redirect route', filePath: 'src/app/go/[productId]/route.ts', required: ['recordMerchantClick', 'NextResponse.redirect'] },
+      { label: 'Review route', filePath: 'src/app/reviews/[slug]/page.tsx', required: ['getArticleBySlug', 'article.type !=='] }
+    ]
+  }
+]
+
+const failures: string[] = []
+const coveredDocs: string[] = []
+
+for (const check of checks) {
+  coveredDocs.push(check.doc)
+  for (const artifact of check.artifacts) {
+    failures.push(...checkArtifact(artifact).map((failure) => `${check.doc}: ${failure}`))
+  }
+}
+
+const planDocs = fs.readdirSync(path.join(root, 'docs/planv2')).filter((file) => file.endsWith('.md'))
+for (const file of planDocs) {
+  if (!exists(path.join('docs/planv2', file))) failures.push(`Plan document missing: ${file}`)
+}
+
+const packageJson = JSON.parse(read('package.json')) as { scripts?: Record<string, string> }
+const expectedScripts = [
+  'hardcore:check-planv2-seo',
+  'ops:check-planv2-security',
+  'commercial-loop:check',
+  'db:check-drift',
+  'ops:check-env:local',
+  'ops:smoke-e2e',
+  'ops:browser-e2e',
+  'planv2:check-business'
+]
+for (const scriptName of expectedScripts) {
+  if (!packageJson.scripts?.[scriptName]) failures.push(`package.json: missing script ${scriptName}`)
+}
+
+if (failures.length > 0) {
+  console.error('PlanV2 business coverage check failed:')
+  for (const failure of failures) console.error(`- ${failure}`)
+  process.exit(1)
+}
+
+console.log(`PlanV2 business coverage check passed (${coveredDocs.length} requirement groups, ${checks.reduce((count, check) => count + check.artifacts.length, 0)} artifacts)`)

@@ -25,6 +25,14 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Textarea } from '@/components/ui/textarea'
+import {
+  GEMINI_ACTIVE_MODEL,
+  RELAY_GPT_52_MODEL,
+  isModelSupportedByProvider,
+  normalizeModelForProvider
+} from '@/lib/gemini-models'
+import { SUPPORTED_PROXY_COUNTRIES } from '@/lib/proxy-countries'
+import { parseProxyEndpoint } from '@/lib/proxy-url-parser'
 
 type SettingItem = {
   category: string
@@ -59,23 +67,13 @@ type ProxyUrlConfig = {
   error?: string
 }
 
-const GEMINI_OFFICIAL_MODEL = 'gemini-3-flash-preview'
-const RELAY_GPT_MODEL = 'gpt-5.2'
+const GEMINI_OFFICIAL_MODEL = GEMINI_ACTIVE_MODEL
+const RELAY_GPT_MODEL = RELAY_GPT_52_MODEL
 const OFFICIAL_GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com'
 const RELAY_GEMINI_ENDPOINT = 'https://aicode.cat/v1/messages'
 const DEFAULT_PARTNERBOOST_BASE_URL = 'https://app.partnerboost.com'
 const SENSITIVE_PLACEHOLDER = '············'
 const VALIDATABLE_CATEGORIES = ['ai', 'proxy', 'affiliate_sync'] as const
-const SUPPORTED_PROXY_COUNTRIES = [
-  { code: 'US', label: 'United States' },
-  { code: 'GB', label: 'United Kingdom' },
-  { code: 'CA', label: 'Canada' },
-  { code: 'AU', label: 'Australia' },
-  { code: 'DE', label: 'Germany' },
-  { code: 'FR', label: 'France' },
-  { code: 'ROW', label: 'Rest of World' }
-] as const
-
 const CATEGORY_ORDER = ['ai', 'proxy', 'deepScrape', 'affiliate_sync', 'media', 'seo'] as const
 const AFFILIATE_SYNC_DELETABLE_KEYS = ['partnerboost_token', 'amazonPageSize', 'dtcPageSize', 'maxPagesPerSync'] as const
 
@@ -127,7 +125,7 @@ const FIELD_META: Record<string, FieldMeta> = {
     description: '第 2 步：服务商确定后，再选择该服务商支持的模型。',
     defaultValue: GEMINI_OFFICIAL_MODEL,
     options: [
-      { value: GEMINI_OFFICIAL_MODEL, label: 'Gemini 3 Flash Preview（官方，高效）' },
+      { value: GEMINI_OFFICIAL_MODEL, label: 'Gemini 3 Flash Preview（官方 / 第三方中转，高效）' },
       { value: RELAY_GPT_MODEL, label: 'GPT-5.2（第三方中转专用）' }
     ]
   },
@@ -439,8 +437,7 @@ function getAiEndpoint(provider: string) {
 }
 
 function getAiModel(provider: string, model: string) {
-  if (provider === 'relay') return model === RELAY_GPT_MODEL ? model : RELAY_GPT_MODEL
-  return model === RELAY_GPT_MODEL ? GEMINI_OFFICIAL_MODEL : model || GEMINI_OFFICIAL_MODEL
+  return normalizeModelForProvider(model, provider)
 }
 
 function shouldShowAiField(provider: string, key: string) {
@@ -462,6 +459,11 @@ function validateProxyUrlFormat(url: string): string | null {
   if (/^(https?|socks5):\/\//i.test(trimmed)) return null
   if (trimmed.split(':').length >= 2) return null
   return '代理 URL 必须是完整 URL 或 host:port[:username:password] 格式'
+}
+
+function inferProxyCountryFromUrl(url: string): string {
+  const parsed = parseProxyEndpoint(url)
+  return parsed?.countryCode || ''
 }
 
 function normalizeComparableRecord(items: SettingItem[]): Record<string, string> {
@@ -538,8 +540,8 @@ export function SettingsConsole() {
         ? parsed
             .map((item) => {
               if (!item || typeof item !== 'object') return null
-              const country = String((item as { country?: unknown }).country || '').trim().toUpperCase()
               const url = String((item as { url?: unknown }).url || '').trim()
+              const country = String((item as { country?: unknown }).country || inferProxyCountryFromUrl(url)).trim().toUpperCase()
               return country && url ? { country, url, error: validateProxyUrlFormat(url) || undefined } : null
             })
             .filter(Boolean) as ProxyUrlConfig[]
@@ -838,7 +840,10 @@ export function SettingsConsole() {
         if (itemIndex !== index) return item
         const nextItem = {
           ...item,
-          [field]: field === 'country' ? value.toUpperCase() : value
+          [field]: field === 'country' ? value.toUpperCase() : value,
+          country: field === 'url' && !item.country.trim()
+            ? inferProxyCountryFromUrl(value)
+            : field === 'country' ? value.toUpperCase() : item.country
         }
         return {
           ...nextItem,
@@ -863,7 +868,7 @@ export function SettingsConsole() {
         item.category === 'ai' && item.key === 'gemini_model'
           ? options.filter((option) => {
               const provider = getDefaultedValue(getCategoryItems('ai').find((entry) => entry.key === 'gemini_provider') || { category: 'ai', key: 'gemini_provider', value: 'official' })
-              return provider === 'relay' ? option.value === RELAY_GPT_MODEL : option.value !== RELAY_GPT_MODEL
+              return isModelSupportedByProvider(option.value, provider)
             })
           : options
       return (
@@ -1106,7 +1111,9 @@ export function SettingsConsole() {
                       {proxyUrls.map((item, index) => (
                         <div key={`${item.country}-${index}`} className="grid gap-3 rounded-lg border bg-white p-3 lg:grid-cols-[180px_minmax(0,1fr)_auto]">
                           <div>
-                            <Label className="mb-1.5 block text-caption text-muted-foreground">国家/地区</Label>
+                            <Label className="mb-1.5 block text-caption text-muted-foreground">
+                              国家/地区 {index === 0 ? <span className="text-amber-600">(默认)</span> : null}
+                            </Label>
                             <Select value={item.country} onValueChange={(nextValue) => updateProxyUrl(index, 'country', nextValue)}>
                               {SUPPORTED_PROXY_COUNTRIES.map((country) => (
                                 <SelectItem key={country.code} value={country.code}>

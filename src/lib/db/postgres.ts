@@ -6,6 +6,10 @@ function convertPlaceholders(sql: string): string {
   return sql.replace(/\?/g, () => `$${index++}`)
 }
 
+function normalizeParams(params: unknown[]): unknown[] {
+  return params.map((param) => (param === undefined ? null : param))
+}
+
 function handlePostgresNotice(notice: { code?: string; message?: string; severity?: string }): void {
   if (notice.code === '42P07' && notice.message?.includes('already exists, skipping')) {
     return
@@ -29,7 +33,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   }
 
   async query<T = Record<string, unknown>>(sql: string, params: unknown[] = []): Promise<T[]> {
-    const result = await this.client.unsafe(convertPlaceholders(sql), params as any[])
+    const result = await this.client.unsafe(convertPlaceholders(sql), normalizeParams(params) as any[])
     return result as unknown as T[]
   }
 
@@ -41,7 +45,7 @@ export class PostgresAdapter implements DatabaseAdapter {
   async exec(sql: string, params: unknown[] = []): Promise<{ changes: number; lastInsertRowid?: number }> {
     const isInsert = /^\s*INSERT\b/i.test(sql) && !/\bRETURNING\b/i.test(sql)
     const statement = isInsert ? `${convertPlaceholders(sql)} RETURNING id` : convertPlaceholders(sql)
-    const result = (await this.client.unsafe(statement, params as any[])) as unknown as Array<{ id?: number | string }> & { count?: number }
+    const result = (await this.client.unsafe(statement, normalizeParams(params) as any[])) as unknown as Array<{ id?: number | string }> & { count?: number }
     return {
       changes: typeof result.count === 'number' ? result.count : Array.isArray(result) ? result.length : 0,
       lastInsertRowid: isInsert && Array.isArray(result) && result[0]?.id != null ? Number(result[0].id) : undefined

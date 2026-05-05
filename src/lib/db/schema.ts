@@ -917,6 +917,88 @@ function toPostgresStatement(statement: string) {
 
 const POSTGRES_SCHEMA = SQLITE_SCHEMA.map(toPostgresStatement)
 
+const POSTGRES_TIMESTAMP_COLUMNS: ReadonlyArray<{
+  table: string
+  column: string
+  notNullDefault?: boolean
+}> = [
+  { table: 'users', column: 'created_at', notNullDefault: true },
+  { table: 'users', column: 'updated_at', notNullDefault: true },
+  { table: 'sessions', column: 'created_at', notNullDefault: true },
+  { table: 'admin_login_attempts', column: 'attempted_at', notNullDefault: true },
+  { table: 'admin_user_sessions', column: 'last_activity_at', notNullDefault: true },
+  { table: 'admin_user_sessions', column: 'expires_at' },
+  { table: 'admin_user_sessions', column: 'revoked_at' },
+  { table: 'admin_user_sessions', column: 'created_at', notNullDefault: true },
+  { table: 'admin_security_events', column: 'resolved_at' },
+  { table: 'admin_security_events', column: 'created_at', notNullDefault: true },
+  { table: 'admin_role_permissions', column: 'created_at', notNullDefault: true },
+  { table: 'admin_role_permissions', column: 'updated_at', notNullDefault: true },
+  { table: 'admin_audit_logs', column: 'created_at', notNullDefault: true },
+  { table: 'admin_import_runs', column: 'created_at', notNullDefault: true },
+  { table: 'admin_import_runs', column: 'finished_at' },
+  { table: 'admin_risk_alerts', column: 'detected_at', notNullDefault: true },
+  { table: 'admin_risk_alerts', column: 'resolved_at' },
+  { table: 'admin_risk_alerts', column: 'created_at', notNullDefault: true },
+  { table: 'admin_risk_alerts', column: 'updated_at', notNullDefault: true },
+  { table: 'settings', column: 'updated_at', notNullDefault: true },
+  { table: 'affiliate_products', column: 'created_at', notNullDefault: true },
+  { table: 'affiliate_products', column: 'updated_at', notNullDefault: true },
+  { table: 'products', column: 'published_at' },
+  { table: 'products', column: 'created_at', notNullDefault: true },
+  { table: 'products', column: 'updated_at', notNullDefault: true },
+  { table: 'products', column: 'price_last_checked_at' },
+  { table: 'products', column: 'offer_last_checked_at' },
+  { table: 'affiliate_links', column: 'last_verified' },
+  { table: 'affiliate_links', column: 'created_at', notNullDefault: true },
+  { table: 'affiliate_links', column: 'updated_at', notNullDefault: true },
+  { table: 'review_videos', column: 'published_at' },
+  { table: 'review_videos', column: 'created_at', notNullDefault: true },
+  { table: 'review_videos', column: 'updated_at', notNullDefault: true },
+  { table: 'analysis_reports', column: 'created_at', notNullDefault: true },
+  { table: 'product_media_assets', column: 'created_at', notNullDefault: true },
+  { table: 'merchants', column: 'created_at', notNullDefault: true },
+  { table: 'merchants', column: 'updated_at', notNullDefault: true },
+  { table: 'product_offers', column: 'reference_price_last_checked_at' },
+  { table: 'product_offers', column: 'last_checked_at', notNullDefault: true },
+  { table: 'product_offers', column: 'created_at', notNullDefault: true },
+  { table: 'product_offers', column: 'updated_at', notNullDefault: true },
+  { table: 'content_pipeline_runs', column: 'scheduled_at' },
+  { table: 'content_pipeline_runs', column: 'locked_at' },
+  { table: 'content_pipeline_runs', column: 'started_at' },
+  { table: 'content_pipeline_runs', column: 'finished_at' },
+  { table: 'content_pipeline_runs', column: 'lock_expires_at' },
+  { table: 'content_pipeline_runs', column: 'last_heartbeat_at' },
+  { table: 'content_pipeline_runs', column: 'cancel_requested_at' },
+  { table: 'content_pipeline_runs', column: 'created_at', notNullDefault: true },
+  { table: 'content_pipeline_runs', column: 'updated_at', notNullDefault: true },
+  { table: 'content_pipeline_jobs', column: 'started_at', notNullDefault: true },
+  { table: 'content_pipeline_jobs', column: 'finished_at' },
+  { table: 'content_pipeline_jobs', column: 'created_at', notNullDefault: true },
+  { table: 'product_scrape_tasks', column: 'started_at' },
+  { table: 'product_scrape_tasks', column: 'completed_at' },
+  { table: 'product_scrape_tasks', column: 'updated_at', notNullDefault: true },
+  { table: 'articles', column: 'published_at' },
+  { table: 'articles', column: 'created_at', notNullDefault: true },
+  { table: 'articles', column: 'updated_at', notNullDefault: true },
+  { table: 'seo_pages', column: 'published_at' },
+  { table: 'seo_pages', column: 'created_at', notNullDefault: true },
+  { table: 'seo_pages', column: 'updated_at', notNullDefault: true },
+  { table: 'publish_events', column: 'created_at', notNullDefault: true },
+  { table: 'pseo_page_signals', column: 'captured_at', notNullDefault: true },
+  { table: 'taxonomy_rescan_queue', column: 'created_at', notNullDefault: true },
+  { table: 'newsletter_subscribers', column: 'created_at', notNullDefault: true },
+  { table: 'newsletter_subscribers', column: 'updated_at', notNullDefault: true },
+  { table: 'merchant_click_events', column: 'created_at', notNullDefault: true },
+  { table: 'link_inspector_runs', column: 'started_at' },
+  { table: 'link_inspector_runs', column: 'finished_at' },
+  { table: 'link_inspector_runs', column: 'created_at', notNullDefault: true },
+  { table: 'buyer_decision_events', column: 'created_at', notNullDefault: true },
+  { table: 'price_alert_notifications', column: 'sent_at' },
+  { table: 'price_alert_notifications', column: 'created_at', notNullDefault: true },
+  { table: 'price_alert_notifications', column: 'updated_at', notNullDefault: true }
+]
+
 async function listColumns(db: DatabaseAdapter, tableName: string): Promise<Set<string>> {
   if (db.type === 'sqlite') {
     const rows = await db.query<{ name: string }>(`PRAGMA table_info(${tableName})`)
@@ -957,6 +1039,50 @@ async function ensureColumn(db: DatabaseAdapter, tableName: string, columnName: 
   } catch (error) {
     if (isAlreadyExistsError(db, error, 'column')) return
     throw error
+  }
+}
+
+async function getPostgresColumnType(db: DatabaseAdapter, tableName: string, columnName: string): Promise<string | null> {
+  const row = await db.queryOne<{ data_type: string }>(
+    `
+      SELECT data_type
+      FROM information_schema.columns
+      WHERE table_name = ? AND column_name = ? AND table_schema = ANY (current_schemas(false))
+      LIMIT 1
+    `,
+    [tableName, columnName]
+  )
+  return row?.data_type || null
+}
+
+async function ensurePostgresTimestampColumnTypes(db: DatabaseAdapter): Promise<void> {
+  if (db.type !== 'postgres') return
+
+  for (const item of POSTGRES_TIMESTAMP_COLUMNS) {
+    const dataType = await getPostgresColumnType(db, item.table, item.column)
+    if (!dataType || dataType === 'timestamp with time zone') continue
+    if (!['text', 'character varying', 'timestamp without time zone'].includes(dataType)) continue
+
+    await db.exec(`ALTER TABLE ${item.table} ALTER COLUMN ${item.column} DROP DEFAULT`)
+    if (item.notNullDefault) {
+      await db.exec(`ALTER TABLE ${item.table} ALTER COLUMN ${item.column} DROP NOT NULL`)
+    }
+    await db.exec(`
+      ALTER TABLE ${item.table}
+      ALTER COLUMN ${item.column} TYPE TIMESTAMPTZ
+      USING CASE
+        WHEN ${item.column} IS NULL THEN NULL
+        WHEN btrim(${item.column}::text) = '' THEN NULL
+        WHEN btrim(${item.column}::text) !~ '^\\d{4}-\\d{2}-\\d{2}[ T]' THEN NULL
+        ELSE ${item.column}::timestamptz
+      END
+    `)
+
+    if (item.notNullDefault) {
+      await db.exec(`ALTER TABLE ${item.table} ALTER COLUMN ${item.column} SET DEFAULT CURRENT_TIMESTAMP`)
+      await db.exec(`UPDATE ${item.table} SET ${item.column} = CURRENT_TIMESTAMP WHERE ${item.column} IS NULL`)
+      await db.exec(`ALTER TABLE ${item.table} ALTER COLUMN ${item.column} SET NOT NULL`)
+    }
   }
 }
 
@@ -1659,6 +1785,7 @@ export async function ensureSchema(db: DatabaseAdapter): Promise<void> {
   for (const statement of statements) {
     await db.exec(statement)
   }
+  await ensurePostgresTimestampColumnTypes(db)
   await ensureAdminOpsSchema(db)
   await ensureProductGraphSchema(db)
   await ensurePipelineRunSchema(db)

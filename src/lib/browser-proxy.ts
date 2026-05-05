@@ -1,17 +1,9 @@
-import { getSettingValueOrEnv } from '@/lib/settings'
+import { getSettingValue, getSettingValueOrEnv } from '@/lib/settings'
+import { buildProxyUrl, describeProxyEndpoint, parseProxyEndpoint, type ParsedProxyEndpoint } from '@/lib/proxy-url-parser'
 
 type ProxySettingItem = {
   country?: string
   url?: string
-}
-
-type ParsedProxyEndpoint = {
-  host: string
-  port: number
-  username?: string
-  password?: string
-  protocol: 'http' | 'https' | 'socks5'
-  originalUrl: string
 }
 
 type BrowserProxyFetchOptions = {
@@ -41,60 +33,7 @@ function getCountryCandidates(country: string | null | undefined): Set<string> {
   return candidates
 }
 
-function parseProxyEndpoint(proxyUrl: string): ParsedProxyEndpoint | null {
-  const trimmed = String(proxyUrl || '').trim()
-  if (!trimmed) return null
-
-  const direct = trimmed.replace(/^https?:\/\//, '')
-  const directParts = direct.split(':')
-  if (directParts.length >= 4) {
-    const port = Number.parseInt(directParts[1], 10)
-    if (Number.isFinite(port)) {
-      return {
-        host: directParts[0],
-        port,
-        username: directParts[2] || undefined,
-        password: directParts.slice(3).join(':') || undefined,
-        protocol: 'http',
-        originalUrl: trimmed
-      }
-    }
-  }
-
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('socks5://')) {
-    try {
-      const url = new URL(trimmed)
-      return {
-        host: url.hostname,
-        port: url.port ? Number.parseInt(url.port, 10) : url.protocol === 'https:' ? 443 : 80,
-        username: url.username || undefined,
-        password: url.password || undefined,
-        protocol: url.protocol === 'https:' ? 'https' : url.protocol === 'socks5:' ? 'socks5' : 'http',
-        originalUrl: trimmed
-      }
-    } catch {
-      return null
-    }
-  }
-
-  const parts = trimmed.split(':')
-  if (parts.length === 2) {
-    const port = Number.parseInt(parts[1], 10)
-    if (Number.isFinite(port)) {
-      return {
-        host: parts[0],
-        port,
-        protocol: 'http',
-        originalUrl: trimmed
-      }
-    }
-  }
-
-  return null
-}
-
-async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
-  const raw = await getSettingValueOrEnv('proxy', 'urls', 'BROWSER_PROXY_URLS_JSON', '[]')
+function parseBrowserProxySettings(raw: string): ProxySettingItem[] {
   try {
     const parsed = JSON.parse(raw)
     if (!Array.isArray(parsed)) return []
@@ -118,6 +57,15 @@ async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
   } catch {
     return []
   }
+}
+
+async function loadBrowserProxySettings(): Promise<ProxySettingItem[]> {
+  const stored = await getSettingValue('proxy', 'urls')
+  const storedProxies = stored && stored.trim() ? parseBrowserProxySettings(stored) : []
+  if (storedProxies.length > 0) return storedProxies
+
+  const envRaw = process.env.BROWSER_PROXY_URLS_JSON || '[]'
+  return parseBrowserProxySettings(envRaw)
 }
 
 async function getDefaultProxyCountry(): Promise<string | null> {
@@ -145,12 +93,24 @@ export async function resolveBrowserProxy(countryCode?: string | null): Promise<
   if (!proxies.length) return null
 
   const candidates = getCountryCandidates(countryCode || await getDefaultProxyCountry())
+  const parsed = proxies
+    .map((item) => {
+      const proxy = item.url ? parseProxyEndpoint(item.url) : null
+      if (!proxy) return null
+      const configuredCountry = normalizeCountryCode(item.country)
+      return {
+        configuredCountry,
+        proxy
+      }
+    })
+    .filter((item): item is { configuredCountry: string | null; proxy: ParsedProxyEndpoint } => Boolean(item))
   const preferred =
-    proxies.find((item) => item.country && candidates.has(String(item.country).toUpperCase())) ||
-    proxies.find((item) => !item.country) ||
-    proxies[0]
+    parsed.find((item) => item.configuredCountry && candidates.has(item.configuredCountry)) ||
+    parsed.find((item) => item.proxy.countryCode && candidates.has(item.proxy.countryCode)) ||
+    parsed.find((item) => !item.configuredCountry && !item.proxy.countryCode) ||
+    parsed[0]
 
-  return preferred?.url ? parseProxyEndpoint(preferred.url) : null
+  return preferred?.proxy || null
 }
 
 export async function fetchWithBrowserProxy(
@@ -175,11 +135,8 @@ export async function fetchWithBrowserProxy(
     return fetch(input, init)
   }
 
-  const auth =
-    proxy.username || proxy.password
-      ? `${encodeURIComponent(proxy.username || '')}:${encodeURIComponent(proxy.password || '')}@`
-      : ''
-  const dispatcher = createProxyAgent(`${proxy.protocol}://${auth}${proxy.host}:${proxy.port}`)
+  const proxyDescription = describeProxyEndpoint(proxy)
+  const dispatcher = createProxyAgent(buildProxyUrl(proxy))
 
   try {
     return await fetch(input, {
@@ -188,11 +145,18 @@ export async function fetchWithBrowserProxy(
     } as RequestInit & { dispatcher: unknown })
   } catch (error: any) {
     if (options.strict) {
-      throw new Error(`Proxy request via ${proxy.host}:${proxy.port} failed: ${error?.message || error}`)
+      throw new Error(`Proxy request via ${proxyDescription} failed: ${error?.message || error}`)
     }
-    console.warn(`[proxy] request via ${proxy.host}:${proxy.port} failed, falling back to direct fetch: ${error?.message || error}`)
+    console.warn(`[proxy] request via ${proxyDescription} failed, falling back to direct fetch: ${error?.message || error}`)
     return fetch(input, init)
   }
+}
+
+export async function getBrowserProxyUrl(countryCode?: string | null): Promise<string> {
+  const proxy = await resolveBrowserProxy(countryCode)
+  if (!proxy || proxy.protocol === 'socks5') return ''
+
+  return buildProxyUrl(proxy)
 }
 
 export async function getPlaywrightProxy(countryCode?: string | null): Promise<{
