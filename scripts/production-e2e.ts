@@ -427,6 +427,22 @@ async function mutationStep(context: BrowserContext, name: string, check: ApiChe
   })
 }
 
+async function waitForPipelineRunStatus(context: BrowserContext, runId: number, statuses: string[], timeoutMs = requestTimeoutMs) {
+  const deadline = Date.now() + timeoutMs
+  let lastStatus = 'unknown'
+  while (Date.now() < deadline) {
+    const run = (await fetchJson(context, {
+      path: `/api/admin/pipeline-runs/${runId}`,
+      authenticated: true,
+      expectedStatus: 200
+    })).json
+    lastStatus = String(run?.status || 'unknown')
+    if (statuses.includes(lastStatus) && (lastStatus !== 'cancelled' || run?.finished_at)) return run
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
+  throw new Error(`pipeline run ${runId} did not reach ${statuses.join('/')} before timeout; last status ${lastStatus}`)
+}
+
 async function checkProductionMutationCoverage(context: BrowserContext) {
   let productsPayload: any = null
   let articlesPayload: any[] = []
@@ -661,6 +677,10 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
       if (!json?.success || !['cancelled', 'running'].includes(String(json?.status))) throw new Error('pipeline cancel response missing cancelled status')
     }
   )
+  await safeStep('Production mutations', 'Confirm cancelled pipeline run is retryable', async () => {
+    const run = await waitForPipelineRunStatus(context, Number(cancelSourceRun.runId), ['cancelled'], mutationTimeoutMs)
+    return { runId: run.id, status: run.status, finishedAt: run.finished_at || null }
+  })
 
   await mutationStep(
     context,

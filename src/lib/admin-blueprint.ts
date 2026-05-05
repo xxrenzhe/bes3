@@ -365,17 +365,31 @@ export async function updateRiskAlertStatus(input: {
   actor: AuthPayload
 }) {
   const db = await getDatabase()
-  await db.exec(
-    `
-      UPDATE admin_risk_alerts
-      SET status = ?,
-          resolved_at = CASE WHEN ? = 'resolved' THEN CURRENT_TIMESTAMP ELSE NULL END,
-          resolved_by = CASE WHEN ? = 'resolved' THEN ? ELSE NULL END,
-          updated_at = CURRENT_TIMESTAMP
-      WHERE id = ?
-    `,
-    [input.status, input.status, input.status, input.actor.userId, input.alertId]
-  )
+  if (input.status === 'resolved') {
+    await db.exec(
+      `
+        UPDATE admin_risk_alerts
+        SET status = 'resolved',
+            resolved_at = CURRENT_TIMESTAMP,
+            resolved_by = ?,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [input.actor.userId, input.alertId]
+    )
+  } else {
+    await db.exec(
+      `
+        UPDATE admin_risk_alerts
+        SET status = 'open',
+            resolved_at = NULL,
+            resolved_by = NULL,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [input.alertId]
+    )
+  }
   return { success: true }
 }
 

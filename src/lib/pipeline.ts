@@ -1827,7 +1827,7 @@ export async function retryPipelineRun(runId: number): Promise<number> {
 export async function runProductWorkspaceAction(productId: number, action: ProductWorkspaceAction): Promise<number> {
   const product = await loadStoredProductRecord(productId)
   const runId = await createRun({
-    sourceLink: product.sourceAffiliateLink,
+    sourceLink: product.sourceAffiliateLink || `workspace:${productId}:${action}`,
     affiliateProductId: product.affiliateProductId,
     productId,
     runType: 'workspaceAction',
@@ -2472,14 +2472,22 @@ export async function rescrapeProductMedia(productId: number): Promise<void> {
     productId
   })
   const scraped = deepScrape.scraped
-  await db.exec('DELETE FROM product_media_assets WHERE product_id = ?', [productId])
+  let persisted = 0
   for (const [index, imageUrl] of scraped.imageUrls.slice(0, 6).entries()) {
-    await persistMediaAsset({
-      productId,
-      sourceUrl: imageUrl,
-      assetRole: index === 0 ? 'hero' : 'gallery',
-      index
-    })
+    try {
+      await persistMediaAsset({
+        productId,
+        sourceUrl: imageUrl,
+        assetRole: index === 0 ? 'hero' : 'gallery',
+        index
+      })
+      persisted += 1
+    } catch (error: any) {
+      await publishEvent('media.rescrape.warning', 'warning', { productId, imageUrl, error: error?.message || String(error) })
+    }
+  }
+  if (scraped.imageUrls.length > 0 && persisted === 0) {
+    await publishEvent('media.rescrape.warning', 'warning', { productId, imageCount: scraped.imageUrls.length, error: 'No media assets persisted' })
   }
 }
 
