@@ -62,7 +62,29 @@ export function ComparisonSummaryMatrix({
           This matrix keeps the two finalists pinned at the top so you can compare the big tradeoffs without losing context.
         </p>
       </div>
-      <div className="overflow-x-auto rounded-[1.75rem] border border-border/60">
+      <div className="grid gap-3 md:hidden">
+        <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Default winner</p>
+          <p className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{winner}</p>
+        </div>
+        {rows.map((row) => (
+          <article key={row.label} className="rounded-[1.5rem] border border-border/60 bg-white p-4 shadow-sm">
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{row.label}</p>
+            <div className="mt-3 grid gap-3">
+              <div className={`rounded-2xl p-3 ${leftTitle === winner ? 'bg-emerald-50' : 'bg-muted/60'}`}>
+                <p className="text-xs font-bold text-foreground">{leftTitle}</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{row.left}</p>
+              </div>
+              <div className={`rounded-2xl p-3 ${rightTitle === winner ? 'bg-emerald-50' : 'bg-muted/60'}`}>
+                <p className="text-xs font-bold text-foreground">{rightTitle}</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">{row.right}</p>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      <div className="hidden overflow-x-auto rounded-[1.75rem] border border-border/60 md:block">
         <div className="min-w-[720px]">
           <div className="sticky top-0 z-10 grid grid-cols-[220px_1fr_1fr] border-b border-border/60 bg-white/95 backdrop-blur">
             <div className="px-5 py-4 text-[10px] font-bold uppercase tracking-[0.24em] text-muted-foreground">Comparison</div>
@@ -112,7 +134,7 @@ export function ComparisonSummaryMatrix({
                   key={scenario.id}
                   type="button"
                   onClick={() => setActiveScenarioId(scenario.id)}
-                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`min-h-11 touch-manipulation rounded-full border px-4 py-2 text-sm font-semibold transition-[background-color,border-color,color,transform] hover:-translate-y-0.5 ${
                     isActive
                       ? 'border-primary bg-primary text-primary-foreground'
                       : 'border-border bg-white text-foreground hover:border-primary/30 hover:text-primary'
@@ -126,7 +148,7 @@ export function ComparisonSummaryMatrix({
           </div>
 
           {activeScenario ? (
-            <div className="mt-6 grid gap-4 xl:grid-cols-[0.72fr_0.28fr]">
+            <div className="mt-6 grid gap-4 xl:grid-cols-[0.72fr_0.28fr]" role="status" aria-live="polite">
               <article className="rounded-[1.75rem] border border-border/60 bg-white p-6 shadow-[0_24px_60px_-40px_rgba(15,23,42,0.24)]">
                 <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{activeScenario.label}</p>
                 <h4 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">

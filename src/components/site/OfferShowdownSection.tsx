@@ -124,7 +124,44 @@ export function OfferShowdownSection({
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{showdown.winner.nextStepReason}</p>
               </div>
 
-              <div className="rounded-[1.5rem] border border-border/60">
+              <div className="grid gap-3 2xl:hidden">
+                {showdown.contenders.map((item, index) => (
+                  <article key={item.product.id} className="rounded-[1.5rem] border border-border/60 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div>
+                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">
+                          {index === 0 ? 'Winner' : `Option ${index + 1}`}
+                        </p>
+                        <h4 className="mt-2 text-base font-black text-foreground">{item.product.productName}</h4>
+                      </div>
+                      <p className="rounded-full bg-slate-950 px-3 py-1 text-sm font-black text-white">
+                        {formatPriceSnapshot(item.currentPrice, item.currentCurrency)}
+                      </p>
+                    </div>
+                    <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.nextStepReason}</p>
+                    <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                      <div className="rounded-2xl bg-muted/60 p-3">
+                        <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Promotion</dt>
+                        <dd className="mt-1 font-semibold text-foreground">{formatPromotionLabel(item)}</dd>
+                      </div>
+                      <div className="rounded-2xl bg-muted/60 p-3">
+                        <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Timing</dt>
+                        <dd className="mt-1 font-semibold text-foreground">{formatTrackedLabel(item.distanceFromTrackedLowPercent)}</dd>
+                      </div>
+                      <div className="rounded-2xl bg-muted/60 p-3">
+                        <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Shipping</dt>
+                        <dd className="mt-1 font-semibold text-foreground">{formatShippingLabel(item)}</dd>
+                      </div>
+                      <div className="rounded-2xl bg-muted/60 p-3">
+                        <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Buyer proof</dt>
+                        <dd className="mt-1 font-semibold text-foreground">{formatRatingLabel(item)}</dd>
+                      </div>
+                    </dl>
+                  </article>
+                ))}
+              </div>
+
+              <div className="hidden rounded-[1.5rem] border border-border/60 2xl:block">
                 <div className="overflow-x-auto">
                   <div className="min-w-[1340px]">
                     <div className="grid grid-cols-[1.7fr_1fr_1fr_1fr_1fr_1fr_1fr_1.1fr_1.2fr] gap-3 bg-muted/70 px-4 py-3 text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">

@@ -1535,7 +1535,29 @@ export function ShortlistWorkspace({
           </div>
 
           {compare.length ? (
-            <div className="mt-6 overflow-x-auto">
+            <div className="mt-6 grid gap-3 md:hidden">
+              {comparisonSummary.rows.map((row) => (
+                <article key={row.label} className="rounded-[1.5rem] border border-border/60 bg-white/80 p-4 shadow-sm">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">{row.label}</p>
+                  <div className="mt-3 grid gap-3">
+                    {row.values.map((value, index) => (
+                      <div key={`${row.label}-${compare[index]?.id || index}`} className="rounded-2xl bg-muted/50 p-3">
+                        <p className="text-xs font-bold text-foreground">{compare[index]?.productName || `Pick ${index + 1}`}</p>
+                        <p className="mt-2 text-sm leading-7 text-muted-foreground">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <div className="mt-6 rounded-[1.5rem] border border-dashed border-border bg-muted/30 px-5 py-10 text-sm text-muted-foreground">
+              Once at least one product enters compare, Bes3 will keep the matrix here. Two or three products gives the clearest side-by-side view.
+            </div>
+          )}
+
+          {compare.length ? (
+            <div className="mt-6 hidden overflow-x-auto md:block">
               <table className="min-w-full border-separate border-spacing-y-3">
                 <thead>
                   <tr>
@@ -1561,11 +1583,7 @@ export function ShortlistWorkspace({
                 </tbody>
               </table>
             </div>
-          ) : (
-            <div className="mt-6 rounded-[1.5rem] border border-dashed border-border bg-muted/30 px-5 py-10 text-sm text-muted-foreground">
-              Once at least one product enters compare, Bes3 will keep the matrix here. Two or three products gives the clearest side-by-side view.
-            </div>
-          )}
+          ) : null}
         </div>
       </section>
     </div>
