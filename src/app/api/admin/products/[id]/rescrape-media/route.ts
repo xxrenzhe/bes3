@@ -9,7 +9,11 @@ export async function POST(
 ) {
   const actor = await requireAdminPermission('products:write')
   const productId = Number((await params).id)
-  await rescrapeProductMedia(productId)
+  try {
+    await rescrapeProductMedia(productId)
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Media rescrape failed' }, { status: 422 })
+  }
   await logAdminAudit({
     actor,
     request,

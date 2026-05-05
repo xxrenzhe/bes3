@@ -25,11 +25,16 @@ export async function POST(request: Request) {
   }
 
   const status = String(body.status || 'resolved') === 'open' ? 'open' : 'resolved'
-  const result = await updateRiskAlertStatus({
-    actor,
-    alertId: Number(body.alertId),
-    status
-  })
+  let result: Awaited<ReturnType<typeof updateRiskAlertStatus>>
+  try {
+    result = await updateRiskAlertStatus({
+      actor,
+      alertId: Number(body.alertId),
+      status
+    })
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Risk status update failed' }, { status: 422 })
+  }
   await logAdminAudit({
     actor,
     request,

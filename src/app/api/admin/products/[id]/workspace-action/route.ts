@@ -24,7 +24,12 @@ export async function POST(
   }
 
   const productId = Number((await params).id)
-  const runId = await runProductWorkspaceAction(productId, action)
+  let runId: number
+  try {
+    runId = await runProductWorkspaceAction(productId, action)
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Workspace action failed' }, { status: 422 })
+  }
   await logAdminAudit({
     actor,
     request,

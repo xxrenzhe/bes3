@@ -460,7 +460,7 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
 
   const productLink = pickProductLink(productsPayload)
   const affiliateProduct = (productsPayload?.affiliateProducts || []).find((item: any) => Number.isFinite(Number(item?.id)))
-  const linkedProduct = (productsPayload?.products || []).find((item: any) => Number.isFinite(Number(item?.id)) && (item?.source_affiliate_link || item?.affiliate_product_id))
+  const linkedProduct = (productsPayload?.products || []).find((item: any) => Number.isFinite(Number(item?.id)) && item?.source_affiliate_link)
   const article = articlesPayload.find((item: any) => Number.isFinite(Number(item?.id)) && Number.isFinite(Number(item?.product_id)))
   const evidenceReport = firstItem(evidencePayload, 'reports')
   const taxonomyTag = firstItem(taxonomyPayload, 'tags')

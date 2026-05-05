@@ -10,7 +10,12 @@ export async function POST(
   const actor = await requireAdminPermission('pipeline:write')
   const runId = Number((await params).id)
   const before = await getPipelineRun(runId)
-  const nextRunId = await retryPipelineRun(runId)
+  let nextRunId: number
+  try {
+    nextRunId = await retryPipelineRun(runId)
+  } catch (error: any) {
+    return NextResponse.json({ error: error?.message || 'Pipeline retry failed' }, { status: 422 })
+  }
   const run = await getPipelineRun(nextRunId)
   await logAdminAudit({
     actor,
