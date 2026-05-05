@@ -3,6 +3,7 @@
 # Runs one-time application initialization before handing control to supervisord.
 
 set -e
+exec 2>&1
 
 CURRENT_CHILD_PID=""
 TERMINATION_REQUESTED=0

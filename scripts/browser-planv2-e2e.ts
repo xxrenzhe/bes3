@@ -32,7 +32,7 @@ function startServer() {
     stdio: ['ignore', 'pipe', 'pipe']
   })
   child.stdout.on('data', (chunk) => process.stdout.write(`[browser-e2e-server] ${chunk}`))
-  child.stderr.on('data', (chunk) => process.stderr.write(`[browser-e2e-server] ${chunk}`))
+  child.stderr.on('data', (chunk) => process.stdout.write(`[browser-e2e-server] ${chunk}`))
   return child
 }
 

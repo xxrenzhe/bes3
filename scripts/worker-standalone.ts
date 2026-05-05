@@ -5,7 +5,7 @@
  * 由 supervisord 管理，独立于 Next.js 进程运行。
  * 启动后持续从数据库队列拉取并执行 pipeline 任务。
  *
- * 日志输出到 stdout/stderr，由 supervisord 转发到容器日志。
+ * 日志统一输出到 stdout，由 supervisord 转发到容器日志。
  */
 
 import './load-env'

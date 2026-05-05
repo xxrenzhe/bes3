@@ -106,7 +106,7 @@ function startServer() {
     stdio: ['ignore', 'pipe', 'pipe']
   })
   child.stdout.on('data', (chunk) => process.stdout.write(`[smoke-server] ${chunk}`))
-  child.stderr.on('data', (chunk) => process.stderr.write(`[smoke-server] ${chunk}`))
+  child.stderr.on('data', (chunk) => process.stdout.write(`[smoke-server] ${chunk}`))
   return child
 }
 
