@@ -465,16 +465,21 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
   const evidenceReport = firstItem(evidencePayload, 'reports')
   const taxonomyTag = firstItem(taxonomyPayload, 'tags')
   let riskAlert = firstItem<any>(riskPayload, 'riskAlerts')
+  let riskFixtureError: string | null = null
   if (!riskAlert?.id) {
-    const ensuredRisk = (await fetchJson(context, {
-      method: 'POST',
-      path: '/api/admin/risk',
-      authenticated: true,
-      expectedStatus: [200, 201],
-      body: { action: 'ensureQaAlert' }
-    }, mutationTimeoutMs)).json
-    if (ensuredRisk?.alertId) {
-      riskAlert = { id: ensuredRisk.alertId, status: 'open' }
+    try {
+      const ensuredRisk = (await fetchJson(context, {
+        method: 'POST',
+        path: '/api/admin/risk',
+        authenticated: true,
+        expectedStatus: [200, 201],
+        body: { action: 'ensureQaAlert' }
+      }, mutationTimeoutMs)).json
+      if (ensuredRisk?.alertId) {
+        riskAlert = { id: ensuredRisk.alertId, status: 'open' }
+      }
+    } catch (error: any) {
+      riskFixtureError = error?.message || String(error)
     }
   }
   const currentUser = (usersPayload?.users || []).find((item: any) => item?.username === adminUsername) || firstItem(usersPayload, 'users')
@@ -490,6 +495,7 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
     if (!article?.id) throw new Error('no article available for regeneration test')
     if (!evidenceReport?.id) throw new Error('no evidence report available for review test')
     if (!taxonomyTag?.category_slug || !taxonomyTag?.slug) throw new Error('no taxonomy tag available for rescan test')
+    if (riskFixtureError) throw new Error(`unable to prepare QA risk alert: ${riskFixtureError}`)
     if (!riskAlert?.id) throw new Error('no risk alert available for status update test')
     if (!currentUser?.id) throw new Error('no user available for access test')
     if (!safeSetting) throw new Error('no non-sensitive setting available for settings update test')
