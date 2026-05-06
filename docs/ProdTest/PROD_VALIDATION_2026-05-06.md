@@ -331,3 +331,35 @@ After restart, recheck these external URLs:
 ### Note
 
 - A mistyped manual probe to `/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-193a73f` also returned 404; that path is not the advertised product URL and is not used as product-page evidence.
+
+## Deployment State Recheck - 2026-05-06T11:29:34Z
+
+### Commands Run
+
+- `curl -sS -D /tmp/bes3-product54-latest.headers -o /tmp/bes3-product54-latest.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=bdc7b27-latest'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/search?q=LOMON&limit=5'`
+- Sample product pages:
+  - `/products/lomon-oversized-sweatshirt-for-women-crewneck-long-sleeve-casual-fleece-tops-graphic-hoodies-pullover-sweater`
+  - `/products/lomon-3-4-length-sleeve-womens-tops-v-neck-blouses-dressy-casual-flowy-shirts-business-tunic-to-wear-with-leggings-s-3xl`
+  - `/products/dolphin-nautilus-pool-wall-demo`
+- `curl -sS 'https://www.bes3.com/api/health'`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 5`
+
+### Evidence
+
+- Product 54 detail page still returns HTTP 404 and the Bes3 404 recovery page.
+- Other open-commerce product detail pages sampled from sitemap also return HTTP 404:
+  - LOMON oversized sweatshirt: 404
+  - LOMON 3/4 sleeve tops: 404
+- The hardcore evidence product `/products/dolphin-nautilus-pool-wall-demo` returns HTTP 200, so the `/products/[slug]` route exists and only the open-commerce branch is failing.
+- Production API `/api/open/commerce/products/54` still serializes `product.id` as a JSON string (`"54"`). Current committed code maps product ids through `toInteger` and `serializePublicProductSnapshot` does not stringify ids, so this is direct evidence that production is still serving code older than commit `9fe8b87`.
+- `/api/health` returns `status=ok`, `database.connected=true`, and `database.type=postgres`; the database is reachable.
+- Latest GitHub release workflows are all green:
+  - `25432263973` for `bdc7b27`: success
+  - `25431968121` for `193a73f`: success
+  - `25431652239` for `9fe8b87`: success
+
+### Conclusion
+
+The remaining product-detail failure is not a CI/build failure and not a database outage. It is a deployment-state blocker: production must pull and restart the image that includes commit `9fe8b87` or later. Until then, all open-commerce product detail URLs exposed by sitemap/search may continue to return 404.
