@@ -5,12 +5,27 @@ import { PublicShell } from '@/components/layout/PublicShell'
 import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { PriceAlertForm } from '@/components/site/PriceAlertForm'
 import { EvidenceFeedbackButtons } from '@/components/site/EvidenceFeedbackButtons'
+import { PrimaryCta } from '@/components/site/PrimaryCta'
+import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { StructuredData } from '@/components/site/StructuredData'
+import { buildProductDecisionContent } from '@/lib/decision-content'
+import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { formatHardcorePrice, getHardcoreProductBySlug } from '@/lib/hardcore'
-import { buildPageMetadata } from '@/lib/metadata'
+import { buildIntentMetadataDescription, buildPageMetadata } from '@/lib/metadata'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { getRequestLocale } from '@/lib/request-locale'
-import { buildBreadcrumbSchema, buildFaqSchema } from '@/lib/structured-data'
+import { buildBreadcrumbSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 import { toAbsoluteUrl } from '@/lib/site-url'
+import {
+  getBrandPolicyBySlug,
+  getBrandSlug,
+  getOpenCommerceProductBySlug,
+  listBrandCompatibilityFacts,
+  listProductAttributeFacts,
+  listProductOffers,
+  listProductPriceHistory
+} from '@/lib/site-data'
+import { formatPriceSnapshot } from '@/lib/utils'
 
 function formatScore(value: number | null) {
   return value == null ? 'Researching' : `${value.toFixed(1)}/10`
@@ -21,9 +36,198 @@ function timestampUrl(youtubeId: string | null, seconds: number | null) {
   return `https://www.youtube.com/watch?v=${youtubeId}${seconds ? `&t=${seconds}s` : ''}`
 }
 
+async function CommerceProductPage({ slug }: { slug: string }) {
+  const product = await getOpenCommerceProductBySlug(slug)
+  if (!product) notFound()
+
+  const brandSlug = getBrandSlug(product.brand)
+  const [attributeFacts, offers, priceHistory, brandPolicy, compatibilityFacts] = await Promise.all([
+    listProductAttributeFacts(product.id, 12),
+    listProductOffers(product.id),
+    listProductPriceHistory(product.id),
+    brandSlug ? getBrandPolicyBySlug(brandSlug) : Promise.resolve(null),
+    brandSlug ? listBrandCompatibilityFacts(brandSlug, { category: product.category || undefined, limit: 6 }) : Promise.resolve([])
+  ])
+  const bestOffer = product.bestOffer || offers[0] || null
+  const path = `/products/${product.slug}`
+  const merchantHref = hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, 'product-detail') : null
+  const decisionModules = buildProductDecisionContent(product, 'product', {
+    nextStepTitle: 'Choose the next action from current evidence',
+    nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
+  })
+  const breadcrumbItems = [
+    { name: 'Home', path: '/' },
+    { name: 'Products', path: '/products' },
+    { name: product.productName, path }
+  ]
+  const faqEntries = [
+    {
+      question: `Is ${product.productName} ready to buy from this page?`,
+      answer: bestOffer
+        ? 'Use this page to confirm the current offer, product attributes, freshness, and merchant handoff before checkout.'
+        : 'Bes3 has a product record, but no active offer is attached yet, so use it for research rather than checkout.'
+    },
+    {
+      question: 'Does Bes3 change recommendations for affiliate commission?',
+      answer: 'No. Affiliate links only make a product purchasable from Bes3. The page keeps price, evidence, and freshness signals visible so the decision can be audited.'
+    }
+  ]
+
+  return (
+    <PublicShell>
+      <StructuredData
+        data={[
+          buildBreadcrumbSchema(path, breadcrumbItems),
+          buildProductAggregateSchema({
+            path,
+            name: product.productName,
+            description: product.description || `${product.productName} product brief from Bes3.`,
+            image: product.heroImageUrl,
+            ratingValue: product.rating,
+            reviewCount: product.reviewCount,
+            offerUrl: merchantHref,
+            price: bestOffer?.priceAmount || product.priceAmount,
+            priceCurrency: bestOffer?.priceCurrency || product.priceCurrency,
+            availabilityStatus: bestOffer?.availabilityStatus
+          }),
+          buildFaqSchema(path, faqEntries)
+        ]}
+      />
+      <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.72fr] lg:items-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Product Brief</p>
+            <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
+              {product.productName}
+            </h1>
+            <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
+              {product.description || 'Bes3 is tracking this product with offer, attribute, freshness, and merchant handoff context.'}
+            </p>
+            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm font-semibold text-muted-foreground">
+              {product.brand ? <span>{product.brand}</span> : null}
+              {product.category ? <span>{product.category}</span> : null}
+              <span>{getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)}</span>
+            </div>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/products" className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
+                Back to products
+              </Link>
+              <Link href={`/api/open/commerce/products/${product.id}`} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
+                Open machine payload
+              </Link>
+            </div>
+          </div>
+          <div className="rounded-md border border-border bg-slate-50 p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current offer</p>
+            <p className="mt-4 font-mono text-5xl font-black">
+              {formatPriceSnapshot(bestOffer?.priceAmount || product.priceAmount, bestOffer?.priceCurrency || product.priceCurrency || 'USD')}
+            </p>
+            <p className="mt-3 text-sm leading-7 text-muted-foreground">
+              {bestOffer?.merchantName ? `${bestOffer.merchantName} offer` : 'Merchant offer'} · checked {formatEditorialDate(bestOffer?.lastCheckedAt || product.offerLastCheckedAt || product.updatedAt, 'Tracking soon')}.
+            </p>
+            <div className="mt-6">
+              <PrimaryCta
+                href={merchantHref}
+                productId={product.id}
+                trackingSource="product-detail"
+                note="Verify live price, stock, shipping, and promotion terms on the merchant page before ordering."
+                trustBadge={`${product.evidenceCount} product facts tracked by Bes3`}
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
+          <PriceTrendSparkline
+            priceHistory={priceHistory}
+            fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
+            fallbackCurrency={bestOffer?.priceCurrency || product.priceCurrency}
+          />
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Decision Notes</p>
+            <div className="mt-5 grid gap-4 md:grid-cols-2">
+              {decisionModules.map((module) => (
+                <article key={module.id} className="rounded-md bg-slate-50 p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{module.eyebrow}</p>
+                  <h2 className="mt-2 text-lg font-black tracking-tight">{module.title}</h2>
+                  <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+                    {module.items.map((item) => <li key={item}>{item}</li>)}
+                  </ul>
+                </article>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Product Facts</p>
+            <div className="mt-5 divide-y divide-border">
+              {attributeFacts.length ? attributeFacts.map((fact) => (
+                <div key={fact.id} className="grid gap-2 py-3 text-sm sm:grid-cols-[0.38fr_0.62fr]">
+                  <span className="font-semibold text-foreground">{fact.attributeLabel}</span>
+                  <span className="text-muted-foreground">{fact.attributeValue}</span>
+                </div>
+              )) : (
+                <p className="text-sm leading-7 text-muted-foreground">Product facts are still being enriched for this item.</p>
+              )}
+            </div>
+          </div>
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Brand Context</p>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-muted-foreground">
+              {brandPolicy ? (
+                <>
+                  {brandPolicy.shippingPolicy ? <p><span className="font-semibold text-foreground">Shipping:</span> {brandPolicy.shippingPolicy}</p> : null}
+                  {brandPolicy.returnPolicy ? <p><span className="font-semibold text-foreground">Returns:</span> {brandPolicy.returnPolicy}</p> : null}
+                  {brandPolicy.warrantyPolicy ? <p><span className="font-semibold text-foreground">Warranty:</span> {brandPolicy.warrantyPolicy}</p> : null}
+                </>
+              ) : (
+                <p>Brand policy details are not verified yet.</p>
+              )}
+              {compatibilityFacts.slice(0, 4).map((fact) => (
+                <p key={fact.id}><span className="font-semibold text-foreground">{fact.factLabel}:</span> {fact.factValue}</p>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    </PublicShell>
+  )
+}
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
-  const product = await getHardcoreProductBySlug((await params).slug)
+  const slug = (await params).slug
+  const product = await getHardcoreProductBySlug(slug)
   if (!product) {
+    const commerceProduct = await getOpenCommerceProductBySlug(slug)
+    if (commerceProduct) {
+      return buildPageMetadata({
+        title: `${commerceProduct.productName} Product Brief`,
+        description: buildIntentMetadataDescription({
+          title: commerceProduct.productName,
+          description: commerceProduct.description || `${commerceProduct.productName} product brief with offer, price, and buyer-fit context.`,
+          pageType: 'product'
+        }),
+        path: `/products/${commerceProduct.slug}`,
+        locale: await getRequestLocale(),
+        image: commerceProduct.heroImageUrl,
+        category: commerceProduct.category || undefined,
+        freshnessDate: commerceProduct.updatedAt || commerceProduct.priceLastCheckedAt || commerceProduct.offerLastCheckedAt,
+        keywords: [
+          commerceProduct.productName,
+          commerceProduct.brand || '',
+          commerceProduct.category || '',
+          'product brief',
+          'price check'
+        ].filter(Boolean)
+      })
+    }
+
     return buildPageMetadata({
       title: 'Product Researching',
       description: 'This Bes3 product is not available in the public ratings system yet.',
@@ -46,8 +250,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 }
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
-  const product = await getHardcoreProductBySlug((await params).slug)
-  if (!product) notFound()
+  const slug = (await params).slug
+  const product = await getHardcoreProductBySlug(slug)
+  if (!product) return <CommerceProductPage slug={slug} />
   const path = `/products/${product.slug}`
   const faqEntries = [
     {

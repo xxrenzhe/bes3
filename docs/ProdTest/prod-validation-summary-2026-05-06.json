@@ -1,0 +1,79 @@
+{
+  "baseUrl": "https://www.bes3.com",
+  "generatedAt": "2026-05-06T09:43:55.447Z",
+  "overallStatus": "partial",
+  "manualReviewUrls": {
+    "workingEvidenceProduct": "https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo",
+    "pseoScenarioNoindex": "https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing",
+    "openCommerceProductApi": "https://www.bes3.com/api/open/commerce/products/54",
+    "openCommerceOffersApi": "https://www.bes3.com/api/open/commerce/products/54/offers",
+    "merchantHandoff": "https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506",
+    "pendingDeployProductPage": "https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket"
+  },
+  "productionSignals": {
+    "coverage": {
+      "products": 42,
+      "articles": 4,
+      "reviews": 2,
+      "comparisons": 2,
+      "machineEntries": [
+        "/llms.txt",
+        "/.well-known/security.txt",
+        "/api/open/buying-feed",
+        "/api/open/coverage",
+        "/api/open/evidence",
+        "/opensearch.xml",
+        "/media-sitemap.xml"
+      ]
+    },
+    "evidence": {
+      "categories": 15,
+      "tags": 60,
+      "products": 3,
+      "evidenceReports": 2,
+      "pendingTags": 6,
+      "queuedRescans": 11,
+      "priceValueSnapshots": 12
+    },
+    "buyingFeed": {
+      "totalProducts": 24,
+      "sampleProductId": 54,
+      "sampleProductName": "LOMON Womens Fuzzy Sherpa Fleece Jacket Lightweight Vest Cozy Sleeveless Cardigan Zipper Waistcoat Outerwear with Pocket",
+      "sampleConfidence": 0.58,
+      "sampleDisclaimers": 3,
+      "sampleActions": [
+        "view_product",
+        "merchant_handoff",
+        "start_alert",
+        "browse_category"
+      ]
+    },
+    "search": {
+      "poolRobotResults": 0,
+      "lomonResults": 10
+    },
+    "product54": {
+      "attributeFacts": 32,
+      "priceHistory": 6,
+      "offerCount": 1,
+      "merchantHandoffRedirectHost": "www.amazon.com"
+    }
+  },
+  "blockers": [
+    "Production admin login returned 401, blocking authenticated business audit checks.",
+    "Current production build returns 404 for advertised open-commerce product page /products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket.",
+    "Production product and editorial sitemap routes return empty urlsets.",
+    "Sample pSEO scenario page renders with noindex.",
+    "Open-commerce search for pool robot returns zero results despite pool evidence product existing."
+  ],
+  "localFixes": [
+    "Added open-commerce fallback rendering to src/app/products/[slug]/page.tsx.",
+    "Made src/app/products/sitemap.ts dynamic and included open-commerce plus hardcore evidence products.",
+    "Made src/app/editorial/sitemap.ts dynamic."
+  ],
+  "verification": {
+    "eslintChangedFiles": "passed",
+    "typescript": "passed",
+    "nextBuild": "passed"
+  }
+}
