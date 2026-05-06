@@ -11,9 +11,13 @@ RUN npm ci
 
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS builder
 WORKDIR /app
+ARG BES3_BUILD_SHA=""
+ARG BES3_BUILD_REF=""
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_PUBLIC_APP_URL=https://bes3.com
 ENV BES3_ALLOWED_HOSTS=bes3.com,www.bes3.com,localhost,localhost:3000,127.0.0.1,127.0.0.1:3000
+ENV BES3_BUILD_SHA=${BES3_BUILD_SHA}
+ENV BES3_BUILD_REF=${BES3_BUILD_REF}
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 RUN mkdir -p public
@@ -21,10 +25,14 @@ RUN npm run build
 
 FROM mcr.microsoft.com/playwright:v1.59.1-noble AS runner
 WORKDIR /app
+ARG BES3_BUILD_SHA=""
+ARG BES3_BUILD_REF=""
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV PORT=80
 ENV HOSTNAME=0.0.0.0
+ENV BES3_BUILD_SHA=${BES3_BUILD_SHA}
+ENV BES3_BUILD_REF=${BES3_BUILD_REF}
 RUN apt-get update && apt-get install -y --no-install-recommends supervisor && rm -rf /var/lib/apt/lists/*
 COPY --from=deps /app/node_modules ./node_modules
 COPY --from=builder /app/.next/standalone ./

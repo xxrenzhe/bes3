@@ -363,3 +363,36 @@ After restart, recheck these external URLs:
 ### Conclusion
 
 The remaining product-detail failure is not a CI/build failure and not a database outage. It is a deployment-state blocker: production must pull and restart the image that includes commit `9fe8b87` or later. Until then, all open-commerce product detail URLs exposed by sitemap/search may continue to return 404.
+
+## Deployment Observability Fix - 2026-05-06T11:37:55Z
+
+### Problem
+
+Production could not prove which Git commit was actually running. `/api/health` only exposed package version `0.1.0`, so deployment-state checks had to infer old code from behavior such as string ids and open-commerce 404s.
+
+### Local Fix
+
+- `src/lib/health.ts`: added a public `build` object to health responses with `sha` and `ref`.
+- `Dockerfile`: accepts `BES3_BUILD_SHA` and `BES3_BUILD_REF` build args and exposes them as runtime environment variables in builder and runner stages.
+- `.github/workflows/deploy.yml`: passes `${{ github.sha }}` and `${{ github.ref_name }}` into Docker build args.
+
+### Verification
+
+- `npx eslint src/lib/health.ts`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+- `npm run build`: passed. Build output confirms `/api/health` remains dynamic server-rendered.
+
+### Expected Manual Verification After Next Deploy
+
+After the next GHCR image is pulled and restarted in production, `https://www.bes3.com/api/health` should include:
+
+```json
+{
+  "build": {
+    "sha": "<current git sha>",
+    "ref": "main"
+  }
+}
+```
+
+This gives a direct external signal for whether production is running the image that contains the open-commerce product-detail fix.

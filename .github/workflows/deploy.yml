@@ -143,6 +143,9 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ steps.tags.outputs.tags }}
+          build-args: |
+            BES3_BUILD_SHA=${{ github.sha }}
+            BES3_BUILD_REF=${{ github.ref_name }}
           cache-from: type=gha,scope=bes3-deploy
           cache-to: type=gha,mode=min,scope=bes3-deploy
           provenance: false

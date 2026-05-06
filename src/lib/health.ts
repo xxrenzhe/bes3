@@ -6,6 +6,15 @@ import { getSettingValueOrEnv, listSettingDiagnostics, type SettingDiagnostic } 
 import type { DatabaseAdapter } from '@/lib/types'
 
 const BES3_VERSION = process.env.npm_package_version || '0.1.0'
+const BES3_BUILD_SHA = process.env.BES3_BUILD_SHA || null
+const BES3_BUILD_REF = process.env.BES3_BUILD_REF || null
+
+function getBuildMetadata() {
+  return {
+    sha: BES3_BUILD_SHA,
+    ref: BES3_BUILD_REF
+  }
+}
 
 function mapDependencyStatus(status: SettingDiagnostic['status']): 'ok' | 'degraded' | 'unavailable' {
   if (status === 'configured') return 'ok'
@@ -91,6 +100,7 @@ export async function getDetailedHealthReport() {
   return {
     status: coreDegraded ? 'degraded' : 'ok',
     version: BES3_VERSION,
+    build: getBuildMetadata(),
     checkedAt: new Date().toISOString(),
     worker: {
       ...workerConfig,
@@ -117,6 +127,7 @@ export async function getDetailedHealthReportSafe() {
     return {
       status: 'degraded' as const,
       version: BES3_VERSION,
+      build: getBuildMetadata(),
       checkedAt: new Date().toISOString(),
       worker: {
         ...getPipelineWorkerRuntimeConfig(),
@@ -153,6 +164,7 @@ export async function getPublicHealthReport() {
   return {
     status: 'ok' as const,
     version: BES3_VERSION,
+    build: getBuildMetadata(),
     checkedAt: new Date().toISOString(),
     service: 'bes3'
   }
