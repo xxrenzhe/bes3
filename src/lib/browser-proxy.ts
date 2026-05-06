@@ -10,10 +10,17 @@ type BrowserProxyFetchOptions = {
   strict?: boolean
 }
 
+const PROXY_FAILURE_COOLDOWN_MS = Math.max(
+  30_000,
+  Number.parseInt(process.env.BROWSER_PROXY_FAILURE_COOLDOWN_MS || '300000', 10) || 300_000
+)
+
 const COUNTRY_ALIAS_MAP: Readonly<Record<string, string[]>> = {
   GB: ['UK'],
   UK: ['GB']
 }
+
+const proxyCooldownUntilByKey = new Map<string, number>()
 
 function normalizeCountryCode(value: string | null | undefined): string | null {
   const text = String(value || '').trim().toUpperCase()
@@ -31,6 +38,21 @@ function getCountryCandidates(country: string | null | undefined): Set<string> {
   }
 
   return candidates
+}
+
+function getProxyCooldownKey(proxy: ParsedProxyEndpoint) {
+  return `${proxy.protocol}://${proxy.host}:${proxy.port}:${proxy.username || ''}`
+}
+
+function isProxyCoolingDown(proxy: ParsedProxyEndpoint) {
+  const until = proxyCooldownUntilByKey.get(getProxyCooldownKey(proxy)) || 0
+  if (until > Date.now()) return true
+  if (until) proxyCooldownUntilByKey.delete(getProxyCooldownKey(proxy))
+  return false
+}
+
+function markProxyFailed(proxy: ParsedProxyEndpoint) {
+  proxyCooldownUntilByKey.set(getProxyCooldownKey(proxy), Date.now() + PROXY_FAILURE_COOLDOWN_MS)
 }
 
 function parseBrowserProxySettings(raw: string): ProxySettingItem[] {
@@ -126,6 +148,12 @@ export async function fetchWithBrowserProxy(
     }
     return fetch(input, init)
   }
+  if (isProxyCoolingDown(proxy)) {
+    if (options.strict) {
+      throw new Error(`Browser proxy ${describeProxyEndpoint(proxy)} is in failure cooldown`)
+    }
+    return fetch(input, init)
+  }
 
   const createProxyAgent = await getProxyAgentConstructor()
   if (!createProxyAgent) {
@@ -144,10 +172,11 @@ export async function fetchWithBrowserProxy(
       dispatcher
     } as RequestInit & { dispatcher: unknown })
   } catch (error: any) {
+    markProxyFailed(proxy)
     if (options.strict) {
       throw new Error(`Proxy request via ${proxyDescription} failed: ${error?.message || error}`)
     }
-    console.warn(`[proxy] request via ${proxyDescription} failed, falling back to direct fetch: ${error?.message || error}`)
+    console.warn(`[proxy] request via ${proxyDescription} failed, cooling down for ${Math.round(PROXY_FAILURE_COOLDOWN_MS / 1000)}s and falling back to direct fetch: ${error?.message || error}`)
     return fetch(input, init)
   }
 }

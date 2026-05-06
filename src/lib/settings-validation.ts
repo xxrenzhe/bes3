@@ -5,6 +5,18 @@ const GEMINI_OFFICIAL_ENDPOINT = 'https://generativelanguage.googleapis.com'
 const GEMINI_RELAY_ENDPOINT = 'https://aicode.cat/v1/messages'
 const SENSITIVE_VALUE_PLACEHOLDER = '············'
 const VALIDATION_TIMEOUT_MS = 10_000
+const PROXY_VALIDATION_TARGETS = [
+  {
+    label: '出口 IP',
+    url: 'https://api.ipify.org?format=json',
+    requireOk: true
+  },
+  {
+    label: 'YouTube 可达性',
+    url: 'https://www.youtube.com/generate_204',
+    requireOk: false
+  }
+]
 
 type GeminiProvider = 'official' | 'relay'
 
@@ -188,26 +200,40 @@ async function validateSingleProxy(config: ProxyUrlConfig): Promise<{ valid: boo
 
   try {
     const { ProxyAgent } = await import('undici')
-    const dispatcher = new ProxyAgent(buildProxyUrl(parsed))
-    const response = await fetch('https://api.ipify.org?format=json', {
-      cache: 'no-store',
-      signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS),
-      dispatcher
-    } as RequestInit & { dispatcher: unknown })
+    const proxyUrl = buildProxyUrl(parsed)
+    const targetResults = []
 
-    if (!response.ok) {
-      const text = await response.text().catch(() => '')
-      return {
-        valid: false,
-        message: `${config.country} 代理连接失败：接口返回 ${response.status}${text ? `，${text.trim().slice(0, 120)}` : ''}`
+    for (const target of PROXY_VALIDATION_TARGETS) {
+      const dispatcher = new ProxyAgent(proxyUrl)
+      const startedAt = Date.now()
+      const response = await fetch(target.url, {
+        cache: 'no-store',
+        signal: AbortSignal.timeout(VALIDATION_TIMEOUT_MS),
+        dispatcher
+      } as RequestInit & { dispatcher: unknown })
+
+      if (target.requireOk && !response.ok) {
+        const text = await response.text().catch(() => '')
+        return {
+          valid: false,
+          message: `${config.country} 代理${target.label}验证失败：接口返回 ${response.status}${text ? `，${text.trim().slice(0, 120)}` : ''}`
+        }
       }
+
+      targetResults.push({
+        label: target.label,
+        status: response.status,
+        ms: Date.now() - startedAt,
+        payload: target.url.includes('api.ipify.org') ? await response.json().catch(() => ({} as { ip?: string })) : null
+      })
     }
 
-    const payload = await response.json().catch(() => ({} as { ip?: string }))
-    const ip = trimValue(payload?.ip)
+    const ipPayload = targetResults.find((item) => item.label === '出口 IP')?.payload as { ip?: string } | null
+    const ip = trimValue(ipPayload?.ip)
+    const timing = targetResults.map((item) => `${item.label}${item.status ? ` ${item.status}` : ''}/${item.ms}ms`).join('，')
     return {
       valid: true,
-      message: `${config.country} 代理验证成功${ip ? `（出口 IP ${ip}）` : ''}`
+      message: `${config.country} 代理验证成功${ip ? `（出口 IP ${ip}）` : ''}，${timing}`
     }
   } catch (error: any) {
     return {
