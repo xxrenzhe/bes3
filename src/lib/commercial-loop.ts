@@ -972,6 +972,24 @@ export async function importCommercialLoopEvidence(input: CommercialLoopEvidence
   if (transcript.length < 120) throw new Error('transcript_too_short')
 
   const db = await getDatabase()
+  await db.exec(
+    `
+      UPDATE products
+      SET category = COALESCE(category, ?),
+          category_slug = COALESCE(category_slug, ?),
+          source_affiliate_link = COALESCE(source_affiliate_link, ?),
+          resolved_url = COALESCE(resolved_url, ?),
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    [
+      category.name,
+      category.slug,
+      candidate.promoLink || candidate.productUrl || null,
+      candidate.promoLink || candidate.productUrl || null,
+      productId
+    ]
+  )
   const existingVideo = await db.queryOne<{ id: number }>('SELECT id FROM review_videos WHERE youtube_id = ? LIMIT 1', [youtubeId])
   const entityMatch = {
     matchedAt: new Date().toISOString(),
