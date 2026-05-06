@@ -1,7 +1,14 @@
 {
   "baseUrl": "https://www.bes3.com",
   "generatedAt": "2026-05-06T09:43:55.447Z",
-  "overallStatus": "partial",
+  "overallStatus": "partial_release_image_built_server_not_restarted",
+  "release": {
+    "commit": "5598466",
+    "workflowRunId": "25428374415",
+    "workflowStatus": "completed",
+    "workflowConclusion": "success",
+    "productionPostPushStatus": "old_runtime_still_serving"
+  },
   "manualReviewUrls": {
     "workingEvidenceProduct": "https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo",
     "pseoScenarioNoindex": "https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing",
@@ -63,6 +70,7 @@
     "Production admin login returned 401, blocking authenticated business audit checks.",
     "Current production build returns 404 for advertised open-commerce product page /products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket.",
     "Production product and editorial sitemap routes return empty urlsets.",
+    "Fix commit 5598466 is built and pushed, but www.bes3.com still serves the old runtime until production pulls/restarts the new image.",
     "Sample pSEO scenario page renders with noindex.",
     "Open-commerce search for pool robot returns zero results despite pool evidence product existing."
   ],

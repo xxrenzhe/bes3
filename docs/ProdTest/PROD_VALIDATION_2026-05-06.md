@@ -11,7 +11,7 @@ This report records the production validation steps, evidence, fixes made locall
 - Production has YouTube-backed evidence pages, including an externally accessible evidence URL.
 - Production open-commerce product actions currently link to `/products/<slug>` URLs that 404 for open-commerce products.
 - Local code was patched so `/products/[slug]` now falls back to open-commerce products and product/editorial sitemap routes are dynamic.
-- Production deployment is still required before the fixed open-commerce product page URL can be manually verified externally.
+- Fix commit `5598466` was pushed to `main`; GitHub Actions release workflow `25428374415` completed successfully and published the release image, but `www.bes3.com` still serves the old runtime until the server pulls/restarts the new image.
 
 ## External URLs For Manual Review
 
@@ -20,7 +20,7 @@ This report records the production validation steps, evidence, fixes made locall
 - Open commerce product API: `https://www.bes3.com/api/open/commerce/products/54`
 - Open commerce offers API: `https://www.bes3.com/api/open/commerce/products/54/offers`
 - Merchant handoff, currently redirects to Amazon: `https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506`
-- Broken in current production, fixed locally and pending deploy: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
+- Broken in current production after image build, fixed in commit `5598466`, pending server pull/restart: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
 
 ## Validation Evidence
 
@@ -58,6 +58,10 @@ This report records the production validation steps, evidence, fixes made locall
 - `npx eslint 'src/app/products/[slug]/page.tsx' src/app/products/sitemap.ts src/app/editorial/sitemap.ts`
 - `npx tsc --noEmit --pretty false`
 - `npm run build`
+- `git commit -m "Fix production product detail coverage"`
+- `git push origin main`
+- `gh api 'repos/xxrenzhe/bes3/actions/runs/25428374415'`
+- Post-push production rechecks for product 54 detail URL and `/products/sitemap.xml`
 
 ## Production Findings
 
@@ -79,6 +83,7 @@ This report records the production validation steps, evidence, fixes made locall
 - `https://www.bes3.com/editorial/sitemap.xml` returned an empty `<urlset>`.
 - `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` returned 200 with canonical and JSON-LD, but contains `noindex`.
 - `pool robot` open-commerce search returned 0 results, even though an evidence product exists for the pool category.
+- After commit `5598466` was pushed and release workflow `25428374415` completed successfully, production still returned 404 for the product 54 detail URL and 0 URLs for `/products/sitemap.xml`; this confirms the server has not yet pulled/restarted the new image.
 
 ## Local Fixes Made
 
@@ -92,12 +97,12 @@ This report records the production validation steps, evidence, fixes made locall
 - `npx tsc --noEmit --pretty false`: passed.
 - `npm run build`: passed. Build output shows `/products/[slug]`, `/products/sitemap.xml`, and `/editorial/sitemap.xml` as dynamic server-rendered routes.
 - Local production server could not prove the LOMON product-detail fix because local SQLite data does not contain the production LOMON product. This is expected data-environment mismatch, not a TypeScript/build failure.
+- GitHub Actions release workflow `25428374415`: completed with `success` for commit `5598466`.
 
 ## Required Next Steps
 
-1. Deploy the local code changes to production using the documented GHCR flow.
+1. Pull/restart the production server on the new GHCR image from commit `5598466`.
 2. Re-run `npm run ops:production-business-audit` with valid production admin credentials.
 3. Re-check the pending external URL for product 54 and both sitemap URLs after deployment.
 4. Remove pSEO `noindex` only after evidence thresholds are intentionally met, or adjust thresholds if one-product scenario pages should rank.
 5. Improve open-commerce search so evidence products can be discovered by queries such as `pool robot`.
-
