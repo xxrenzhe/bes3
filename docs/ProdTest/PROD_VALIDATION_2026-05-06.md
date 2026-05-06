@@ -256,3 +256,51 @@ The user confirmed production had pulled the latest code, so validation continue
 
 - Product 54 detail page needs this numeric-id normalization commit built and deployed before the external URL can be marked pass.
 - Authenticated production business audit remains blocked by `/api/auth/login returned 401` until valid production admin credentials are supplied.
+
+## Release Recheck - 2026-05-06T11:14:23Z
+
+### Commands Run
+
+- `git commit -m "Normalize production site data ids"`
+- `git push origin main`
+- `gh run watch 25431652239 --repo xxrenzhe/bes3 --exit-status`
+- `gh run view 25431652239 --repo xxrenzhe/bes3 --json status,conclusion,headSha,url,jobs`
+- `curl -sS -D /tmp/bes3-prod-product54-after9fe8.headers -o /tmp/bes3-prod-product54-after9fe8.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=9fe8b87'`
+- `curl -sS 'https://www.bes3.com/products/sitemap.xml?codex_recheck=9fe8b87'`
+- `curl -sS 'https://www.bes3.com/editorial/sitemap.xml?codex_recheck=9fe8b87'`
+- `PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest npm run ops:production-business-audit`
+
+### Release Result
+
+- Commit pushed: `9fe8b87` (`Normalize production site data ids`).
+- GitHub Actions release workflow `25431652239`: completed with `success`.
+- `build-and-test` passed type check, ESLint, schema drift check, production build, and runtime smoke diagnostics.
+- `build-and-push` passed and published the GHCR image for `9fe8b87`.
+
+### Production Recheck
+
+- `/products/sitemap.xml?codex_recheck=9fe8b87`: returns 215 `<url>` entries.
+- `/editorial/sitemap.xml?codex_recheck=9fe8b87`: returns 20 `<url>` entries.
+- Product 54 detail URL still returns HTTP 404 and the Bes3 404 recovery page immediately after the image publish.
+- The HTML still references product route chunk `page-11eb834d09265723.js`, so the live production instance does not yet appear to be serving the newly published `9fe8b87` image.
+- Production business audit still stops at admin authentication: `/api/auth/login returned 401`.
+- New audit artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T11-14-25-168Z.json`.
+
+### Current Required Operator Action
+
+Production needs to pull/restart the newly published image for `9fe8b87` before product 54 can be externally rechecked again:
+
+```bash
+GHCR_USERNAME=<github-username> \
+GHCR_TOKEN=<ghcr-token> \
+BES3_IMAGE=ghcr.io/xxrenzhe/bes3:prod-latest \
+./scripts/deploy-ghcr.sh
+```
+
+After restart, recheck these external URLs:
+
+- `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
+- `https://www.bes3.com/products/sitemap.xml`
+- `https://www.bes3.com/editorial/sitemap.xml`
+- `https://www.bes3.com/api/open/commerce/products/54`
+- `https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506`
