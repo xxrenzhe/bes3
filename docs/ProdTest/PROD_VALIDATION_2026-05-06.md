@@ -63,6 +63,7 @@ This report records the production validation steps, evidence, fixes made locall
 - `gh api 'repos/xxrenzhe/bes3/actions/runs/25428374415'`
 - Post-push production rechecks for product 54 detail URL and `/products/sitemap.xml`
 - Final recheck after workflow `25428790831` success: product 54 detail URL, `/products/sitemap.xml`, and `npm run ops:production-business-audit`
+- Deployment capability check: local `/srv/bes3`, `.env.production`, Docker daemon, SSH host config, and project ClawCloud deploy documentation
 
 ## Production Findings
 
@@ -86,6 +87,7 @@ This report records the production validation steps, evidence, fixes made locall
 - `pool robot` open-commerce search returned 0 results, even though an evidence product exists for the pool category.
 - After commit `5598466` was pushed and release workflow `25428374415` completed successfully, production still returned 404 for the product 54 detail URL and 0 URLs for `/products/sitemap.xml`; this confirms the server has not yet pulled/restarted the new image.
 - After report commit `a09c76b` and release workflow `25428790831` also completed successfully, production still returned 404 for the product 54 detail URL, 0 URLs for `/products/sitemap.xml`, and admin audit still failed with `/api/auth/login returned 401`.
+- Workflow `25428991241` for final recheck commit `b0754e6` also completed successfully. Local deployment capability check found no `/srv/bes3`, no production `.env.production`, Docker daemon not running, and no SSH host entry for a Bes3/ClawCloud server. Project docs explicitly state ClawCloud deployment is manual from GHCR.
 
 ## Local Fixes Made
 
@@ -101,6 +103,7 @@ This report records the production validation steps, evidence, fixes made locall
 - Local production server could not prove the LOMON product-detail fix because local SQLite data does not contain the production LOMON product. This is expected data-environment mismatch, not a TypeScript/build failure.
 - GitHub Actions release workflow `25428374415`: completed with `success` for commit `5598466`.
 - GitHub Actions release workflow `25428790831`: completed with `success` for report commit `a09c76b`.
+- GitHub Actions release workflow `25428991241`: completed with `success` for final recheck commit `b0754e6`.
 - Final production business audit artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T10-05-26-097Z.json`.
 
 ## Required Next Steps

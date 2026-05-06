@@ -10,6 +10,9 @@
     "reportCommit": "a09c76b",
     "reportWorkflowRunId": "25428790831",
     "reportWorkflowConclusion": "success",
+    "finalRecheckCommit": "b0754e6",
+    "finalRecheckWorkflowRunId": "25428991241",
+    "finalRecheckWorkflowConclusion": "success",
     "productionPostPushStatus": "old_runtime_still_serving"
   },
   "manualReviewUrls": {
@@ -75,6 +78,7 @@
     "Production product and editorial sitemap routes return empty urlsets.",
     "Fix commit 5598466 is built and pushed, but www.bes3.com still serves the old runtime until production pulls/restarts the new image.",
     "Report commit a09c76b is also built and pushed, but final production recheck still shows the old runtime.",
+    "Final recheck commit b0754e6 is also built and pushed; local machine has no /srv/bes3, no production .env.production, Docker daemon is not running, and SSH config has no Bes3/ClawCloud host entry.",
     "Sample pSEO scenario page renders with noindex.",
     "Open-commerce search for pool robot returns zero results despite pool evidence product existing."
   ],
