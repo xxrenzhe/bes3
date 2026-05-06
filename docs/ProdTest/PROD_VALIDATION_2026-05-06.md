@@ -766,6 +766,36 @@ The objective is not achieved. The public APIs and merchant redirect prove parts
 
 There is no additional local code action that can make `https://www.bes3.com` serve the already-published image from this session. The next required action remains a clean production-host pull/restart of `ghcr.io/xxrenzhe/bes3:prod-latest`, followed by the post-deploy verifier and authenticated audit.
 
+## Post-Deploy Verifier Recheck - 2026-05-06T14:03:50Z
+
+### Commands Run
+
+- `git status --short --branch`
+- `bd show bes3-dg3t`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 3 --json databaseId,status,conclusion,headSha,displayTitle,url,createdAt`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+
+### Evidence
+
+- No new main-branch release workflow appeared after commit `421563c` because it was intentionally committed with `[skip ci]`.
+- Latest release workflow remains `25439387298` for commit `8ccd949`, completed successfully.
+- New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-03-44-121Z.json`.
+- The verifier result remains unchanged: 3 passed and 3 failed.
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+
+### Completion Audit
+
+The objective is still not achieved. The latest live evidence does not cover or pass the required product-detail, corrected pSEO, build-metadata, or authenticated-admin validation gates. Public data surfaces and the working evidence page remain useful manual-review evidence, but they are not sufficient to prove the end-to-end production business loop is perfect.
+
+### Conclusion
+
+Further local verifier reruns are low value until the production host is restarted or production admin authentication is fixed. The next concrete required action is external to this session: run the ClawCloud production pull/restart, then rerun the post-deploy verifier and authenticated business audit.
+
 ## Deployment Automation Capability Check - 2026-05-06T13:00:00Z
 
 ### Commands Run
