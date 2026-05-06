@@ -287,6 +287,63 @@ function parseBoolean(value: unknown): boolean {
   return value === true || value === 1 || value === '1'
 }
 
+function escapeHtml(value: unknown) {
+  return String(value ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;')
+}
+
+function youtubeTimestampUrl(youtubeId: string | null, timestampSeconds: number | null) {
+  if (!youtubeId) return null
+  return `https://www.youtube.com/watch?v=${youtubeId}${timestampSeconds ? `&t=${timestampSeconds}s` : ''}`
+}
+
+function appendEvidenceMatrix(contentHtml: string, row: any) {
+  if (row.article_type !== 'review' || !row.product_id || !row.evidence_json) return contentHtml
+  if (/YouTube Evidence Matrix/i.test(contentHtml)) return contentHtml
+
+  let evidence: any[] = []
+  try {
+    const parsed = Array.isArray(row.evidence_json)
+      ? row.evidence_json
+      : JSON.parse(String(row.evidence_json || '[]'))
+    evidence = Array.isArray(parsed) ? parsed : []
+  } catch {
+    evidence = []
+  }
+  const qualified = evidence.filter((report) =>
+    report?.youtube_id &&
+    report?.evidence_quote &&
+    Number(report?.evidence_confidence || 0) >= 0.65 &&
+    Number(report?.is_advertorial || 0) === 0
+  )
+  if (!qualified.length) return contentHtml
+
+  const rows = qualified.slice(0, 8).map((report) => {
+    const timestamp = youtubeTimestampUrl(report.youtube_id, report.timestamp_seconds == null ? null : Number(report.timestamp_seconds))
+    return [
+      '<tr>',
+      `<td>${escapeHtml(report.tag_name || 'Evidence')}</td>`,
+      `<td>${escapeHtml(report.rating || 'Reviewed')}</td>`,
+      `<td><blockquote>${escapeHtml(report.evidence_quote)}</blockquote>${report.context_snippet ? `<p>${escapeHtml(report.context_snippet)}</p>` : ''}</td>`,
+      `<td>${timestamp ? `<a href="${escapeHtml(timestamp)}" rel="nofollow noopener" target="_blank">Review by ${escapeHtml(report.channel_name || 'YouTube reviewer')}</a>` : `Review by ${escapeHtml(report.channel_name || 'YouTube reviewer')}`}</td>`,
+      '</tr>'
+    ].join('')
+  }).join('')
+
+  return [
+    contentHtml,
+    '<h2>YouTube Evidence Matrix</h2>',
+    `<p>Bes3 links this review to ${qualified.length} timestamped YouTube evidence report${qualified.length === 1 ? '' : 's'} for this product.</p>`,
+    '<table><thead><tr><th>Scenario</th><th>Verdict</th><th>Creator proof</th><th>Source</th></tr></thead><tbody>',
+    rows,
+    '</tbody></table>'
+  ].join('\n')
+}
+
 function normalizeBrandName(value: string | null | undefined) {
   return value?.replace(/\s+/g, ' ').trim() || ''
 }
@@ -395,7 +452,7 @@ function mapArticleRow(row: any): ArticleRecord {
     summary: row.summary,
     keyword: row.keyword,
     heroImageUrl: row.hero_image_url,
-    contentHtml: row.content_html,
+    contentHtml: appendEvidenceMatrix(row.content_html, row),
     seoTitle: row.seo_title,
     seoDescription: row.seo_description,
     publishedAt: row.published_at,
@@ -453,8 +510,57 @@ function mapPriceHistoryRow(row: any): ProductPriceHistoryRecord {
   }
 }
 
+function articleEvidenceJsonSql(dbType: 'postgres' | 'sqlite') {
+  if (dbType === 'postgres') {
+    return `
+        (
+          SELECT json_agg(json_build_object(
+            'id', ar.id,
+            'tag_name', tt.canonical_name,
+            'rating', ar.rating,
+            'evidence_quote', ar.evidence_quote,
+            'timestamp_seconds', ar.timestamp_seconds,
+            'context_snippet', ar.context_snippet,
+            'evidence_confidence', ar.evidence_confidence,
+            'is_advertorial', ar.is_advertorial,
+            'channel_name', rv.channel_name,
+            'youtube_id', rv.youtube_id
+          ) ORDER BY ar.evidence_confidence DESC, ar.created_at DESC)
+          FROM analysis_reports ar
+          LEFT JOIN taxonomy_tags tt ON tt.id = ar.tag_id
+          LEFT JOIN review_videos rv ON rv.id = ar.video_id
+          WHERE ar.product_id = p.id
+        ) AS evidence_json`
+  }
+
+  return `
+        (
+          SELECT json_group_array(json_object(
+            'id', ar.id,
+            'tag_name', tt.canonical_name,
+            'rating', ar.rating,
+            'evidence_quote', ar.evidence_quote,
+            'timestamp_seconds', ar.timestamp_seconds,
+            'context_snippet', ar.context_snippet,
+            'evidence_confidence', ar.evidence_confidence,
+            'is_advertorial', ar.is_advertorial,
+            'channel_name', rv.channel_name,
+            'youtube_id', rv.youtube_id
+          ))
+          FROM (
+            SELECT *
+            FROM analysis_reports
+            WHERE product_id = p.id
+            ORDER BY evidence_confidence DESC, created_at DESC
+          ) ar
+          LEFT JOIN taxonomy_tags tt ON tt.id = ar.tag_id
+          LEFT JOIN review_videos rv ON rv.id = ar.video_id
+        ) AS evidence_json`
+}
+
 const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCachedPromise('listPublishedArticles', async () => {
   const db = await getDatabase()
+  const evidenceJsonSql = articleEvidenceJsonSql(db.type)
   const rows = await db.query(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
@@ -462,6 +568,7 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
+        ${evidenceJsonSql},
         (
           SELECT public_url
           FROM product_media_assets m
@@ -484,6 +591,7 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
 
 const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | null> => withCachedPromise(`getArticleBySlug:${slug}`, async () => {
   const db = await getDatabase()
+  const evidenceJsonSql = articleEvidenceJsonSql(db.type)
   const row = await db.queryOne(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
@@ -491,6 +599,7 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
+        ${evidenceJsonSql},
         (
           SELECT public_url
           FROM product_media_assets m
