@@ -49,6 +49,9 @@ jobs:
       - name: Run ESLint
         run: npm run lint
 
+      - name: Run pSEO recommendation quality gate
+        run: npm run pseo:check-recommendation-quality
+
       - name: Run schema drift check
         run: npm run db:check-drift
 

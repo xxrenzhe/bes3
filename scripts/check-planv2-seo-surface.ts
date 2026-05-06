@@ -15,7 +15,14 @@ const checks: SurfaceCheck[] = [
     label: 'Scenario pSEO page',
     filePath: 'src/app/[category]/[landing]/page.tsx',
     required: [
-      'BLUF:',
+      'Current Evidence-Backed Pick',
+      'Current Recommendation',
+      'AI Answer Summary',
+      'Recommendation Guardrails',
+      'buildAiRecommendationSummary',
+      'current evidence-backed pick',
+      'shortlist recommendation',
+      'Confidence boundary',
       'DecisionFitSection',
       'HardcoreEvidenceMatrix',
       'EvidenceStream',
@@ -24,8 +31,7 @@ const checks: SurfaceCheck[] = [
       'buildProductAggregateSchema',
       'generateStaticParams',
       'buildBreadcrumbSchema',
-      'robots: page.status ===',
-      'no fabricated winners'
+      'not a fake top-10'
     ]
   },
   {
