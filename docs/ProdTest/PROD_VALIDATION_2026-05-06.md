@@ -304,3 +304,30 @@ After restart, recheck these external URLs:
 - `https://www.bes3.com/editorial/sitemap.xml`
 - `https://www.bes3.com/api/open/commerce/products/54`
 - `https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506`
+
+## Public Flow Recheck - 2026-05-06T11:21:27Z
+
+### Commands Run
+
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/search?q=LOMON%20Womens%20Fuzzy%20Sherpa%20Fleece%20Jacket&limit=1'`
+- `curl -sS -D /tmp/bes3-prod-product54-correct.headers -o /tmp/bes3-prod-product54-correct.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=193a73f-correct'`
+- `curl -sS -D /tmp/bes3-prod-go54-current.headers -o /tmp/bes3-prod-go54-current.html 'https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506'`
+- `curl -sS 'https://www.bes3.com/products/sitemap.xml?codex_recheck=193a73f'`
+- `curl -sS 'https://www.bes3.com/editorial/sitemap.xml?codex_recheck=193a73f'`
+- `curl -sS -D /tmp/bes3-prod-pseo-current.headers -o /tmp/bes3-prod-pseo-current.html 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=193a73f'`
+
+### Evidence
+
+- Product 54 API returns real production data with id `"54"`, the expected slug, 1 active offer, 32 evidence facts, 32 attribute facts, and 6 price-history entries.
+- Exact open-commerce search returns product 54 as the first and only result for `LOMON Womens Fuzzy Sherpa Fleece Jacket`.
+- The search result's `view_product` action points to the expected product-detail URL.
+- Product 54 detail URL still returns HTTP 404 and the Bes3 404 recovery page. The page still references old route chunk `page-11eb834d09265723.js`, so the production server still has not picked up the id-normalization image.
+- `/go/54?source=prodtest&visitor=prodtest-20260506` returns HTTP 307 to the Amazon product URL for ASIN `B0D7HLBT61`, so merchant handoff and affiliate conversion tracking route are reachable.
+- `/products/sitemap.xml?codex_recheck=193a73f` returns 215 product URLs.
+- `/editorial/sitemap.xml?codex_recheck=193a73f` returns 20 editorial URLs.
+- pSEO page `/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` returns HTTP 200, has crawler-visible JSON-LD/canonical metadata, includes YouTube timestamp evidence, and still has `noindex, follow`.
+
+### Note
+
+- A mistyped manual probe to `/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-193a73f` also returned 404; that path is not the advertised product URL and is not used as product-page evidence.
