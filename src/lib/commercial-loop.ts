@@ -391,6 +391,7 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
 
 export async function listAffiliateReviewCandidates(limit = 50): Promise<CommercialLoopCandidate[]> {
   const db = await getDatabase()
+  const sourceLimit = Math.max(limit * 25, 250)
   const dataFreshnessSql = db.type === 'postgres'
     ? `CAST(EXTRACT(EPOCH FROM (CURRENT_TIMESTAMP - ap.updated_at)) / 86400 AS INTEGER) AS data_freshness_days`
     : `CAST((julianday('now') - julianday(ap.updated_at)) AS INTEGER) AS data_freshness_days`
@@ -445,7 +446,7 @@ export async function listAffiliateReviewCandidates(limit = 50): Promise<Commerc
       ORDER BY ap.updated_at DESC, ap.id DESC
       LIMIT ?
     `,
-    [Math.max(limit * 4, limit)]
+    [sourceLimit]
   )
 
   return rows
