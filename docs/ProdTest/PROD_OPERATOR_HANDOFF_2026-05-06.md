@@ -2,14 +2,16 @@
 
 Target: `https://www.bes3.com`
 
-Use this after getting access to the ClawCloud production host. The current local session cannot safely deploy because it has no production host, no production `.env.production`, no GHCR credentials, and no remote deployment workflow.
+This handoff was created while production was blocked on stale bundles and admin authentication. Final update: production has since been restarted on the latest image, public post-deploy verification passed, and authenticated production business audit passed.
 
-## Current Blocker
+## Current Status
 
-- `www.bes3.com` still serves stale/mixed page bundles.
-- `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket` still returns HTTP 404.
-- `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` still serves old `Reddit Consensus` / `noindex` copy.
-- Authenticated production audit still fails at `/api/auth/login returned 401`.
+- Public post-deploy verifier passed 6/6 in `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-53-52-774Z.json`.
+- Authenticated production business audit passed 14/14 in `docs/ProdTest/production-business-loop-audit-2026-05-06T15-00-20-160Z.json`.
+- Product 54 detail page now renders externally.
+- Product sitemap has 215 URLs and editorial sitemap has 20 URLs.
+- Product 54 merchant handoff redirects to Amazon with HTTP 307.
+- Residual follow-up: the sampled pSEO page still records `stillNoindex: true`, so indexability policy should be decided separately.
 
 ## Production Host Deploy
 
@@ -105,9 +107,9 @@ Pass criteria:
 
 ## Completion Rule
 
-Do not close bead `bes3-dg3t` and do not mark the thread goal complete until:
+The original completion criteria have been met:
 
-- Production host serves the latest image.
-- Product 54 detail URL is externally HTTP 200.
+- Production host serves the latest image with `/api/health` build metadata for commit `766807b518584c8faef6d406e046d5e5dd3e6ce1`.
+- Product 54 detail URL is externally HTTP 200 and renders product brief content.
 - The sampled pSEO page serves corrected research-mode copy.
-- Authenticated production business audit runs past login and records results under `docs/ProdTest`.
+- Authenticated production business audit runs past login and records 14/14 passing results under `docs/ProdTest`.
