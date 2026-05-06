@@ -1,6 +1,7 @@
 #!/usr/bin/env tsx
 
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
+import fs from 'node:fs'
 
 type SmokeCheck = {
   label: string
@@ -15,6 +16,7 @@ type SmokeCheck = {
 const port = Number.parseInt(process.env.SMOKE_E2E_PORT || '3210', 10)
 const baseUrl = `http://127.0.0.1:${Number.isFinite(port) ? port : 3210}`
 const startupTimeoutMs = Number.parseInt(process.env.SMOKE_E2E_STARTUP_TIMEOUT_MS || '45000', 10)
+const requestTimeoutMs = Number.parseInt(process.env.SMOKE_E2E_REQUEST_TIMEOUT_MS || '8000', 10)
 const serverOutputLimit = Number.parseInt(process.env.SMOKE_E2E_SERVER_OUTPUT_LIMIT || '12000', 10)
 const responseBodyLimit = Number.parseInt(process.env.SMOKE_E2E_RESPONSE_BODY_LIMIT || '1200', 10)
 
@@ -124,9 +126,33 @@ function appendBounded(buffer: string[], chunk: Buffer | string, maxLength: numb
   }
 }
 
+async function fetchWithTimeout(url: string, init: RequestInit = {}) {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), Number.isFinite(requestTimeoutMs) ? requestTimeoutMs : 8000)
+
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: controller.signal
+    })
+  } catch (error: any) {
+    if (error?.name === 'AbortError') {
+      throw new Error(`request timed out after ${requestTimeoutMs}ms`)
+    }
+    throw error
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 function startServer() {
   const recentOutput: string[] = []
-  const child = spawn('npm', ['run', 'start', '--', '-p', String(port)], {
+  const standaloneServerPath = '.next/standalone/server.js'
+  const command = fs.existsSync(standaloneServerPath) ? process.execPath : 'npm'
+  const args = fs.existsSync(standaloneServerPath)
+    ? [standaloneServerPath]
+    : ['run', 'start', '--', '-p', String(port)]
+  const child = spawn(command, args, {
     cwd: process.cwd(),
     env: {
       ...process.env,
@@ -162,7 +188,7 @@ async function waitForServer(child: ChildProcessWithoutNullStreams, recentOutput
     }
 
     try {
-      const response = await fetch(`${baseUrl}/api/health`, { redirect: 'manual' })
+      const response = await fetchWithTimeout(`${baseUrl}/api/health`, { redirect: 'manual' })
       if (response.status === 200) return
       lastError = `HTTP ${response.status}`
     } catch (error: any) {
@@ -187,7 +213,7 @@ function statusMatches(actual: number, expected: number | number[] | undefined) 
 
 async function runCheck(check: SmokeCheck) {
   const url = `${baseUrl}${check.path}`
-  const response = await fetch(url, { redirect: 'manual' })
+  const response = await fetchWithTimeout(url, { redirect: 'manual' })
   const contentType = response.headers.get('content-type') || ''
   let cachedText: string | undefined
   const readText = async () => {
@@ -298,6 +324,7 @@ async function stopServer(child: ChildProcessWithoutNullStreams) {
 async function main() {
   console.log(`PlanV2 runtime E2E smoke check starting at ${baseUrl}`)
   console.log(`Startup timeout: ${startupTimeoutMs}ms`)
+  console.log(`Request timeout: ${requestTimeoutMs}ms`)
   console.log(`NEXT_PUBLIC_APP_URL=${process.env.NEXT_PUBLIC_APP_URL || baseUrl}`)
   console.log(`DATABASE_URL=${process.env.DATABASE_URL ? 'set' : 'unset'}`)
   console.log(`DATABASE_PATH=${process.env.DATABASE_PATH || '(default)'}`)

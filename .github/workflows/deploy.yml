@@ -56,8 +56,11 @@ jobs:
         run: npm run build
 
       - name: Run runtime smoke diagnostics
+        timeout-minutes: 3
         env:
           SMOKE_E2E_PORT: 3210
+          SMOKE_E2E_STARTUP_TIMEOUT_MS: 60000
+          SMOKE_E2E_REQUEST_TIMEOUT_MS: 8000
           JWT_SECRET: github-smoke-jwt-secret-with-enough-length
           ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
           DEFAULT_ADMIN_PASSWORD: github-smoke-admin-password
