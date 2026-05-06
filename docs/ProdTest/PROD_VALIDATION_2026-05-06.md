@@ -156,3 +156,59 @@ This recheck was run directly against `https://www.bes3.com` after the earlier r
 2. Product and editorial sitemaps remain empty in production; product sitemap is explicitly cached as `x-nextjs-cache: HIT`.
 3. Admin credentials are still invalid or unavailable, so authenticated audit gates for inventory truth, evidence quality, taxonomy sources, SEO backlog, and conversion telemetry remain unverified.
 4. pSEO pages remain `noindex`, so search-ranking automation cannot be called a pass yet.
+
+## Release Recheck - 2026-05-06T10:48:52Z
+
+### Commands Run
+
+- `gh run cancel 25430181094 --repo xxrenzhe/bes3`
+- `env SMOKE_E2E_PORT=3210 SMOKE_E2E_STARTUP_TIMEOUT_MS=60000 SMOKE_E2E_REQUEST_TIMEOUT_MS=8000 JWT_SECRET=local-smoke-jwt-secret-with-enough-length ENCRYPTION_KEY=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef DEFAULT_ADMIN_PASSWORD=local-smoke-admin-password DATABASE_PATH=./data/local-smoke.db npm run ops:smoke-e2e`
+- `npx tsc --noEmit --pretty false`
+- `git commit -m "Harden runtime smoke diagnostics"`
+- `git push origin main`
+- `gh run watch 25430545440 --repo xxrenzhe/bes3 --exit-status`
+- `gh run view 25430545440 --repo xxrenzhe/bes3 --json status,conclusion,headSha,url,jobs`
+- `curl -sS -D /tmp/bes3-prod-product54-after280.headers -o /tmp/bes3-prod-product54-after280.body 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket'`
+- `curl -sS -D /tmp/bes3-products-sitemap-after280.headers -o /tmp/bes3-products-sitemap-after280.xml 'https://www.bes3.com/products/sitemap.xml'`
+- `curl -sS -D /tmp/bes3-editorial-sitemap-after280.headers -o /tmp/bes3-editorial-sitemap-after280.xml 'https://www.bes3.com/editorial/sitemap.xml'`
+
+### New Fixes
+
+- `scripts/smoke-planv2-e2e.ts`: uses `.next/standalone/server.js` when available, adds request-level timeout, and prints request timeout in diagnostics.
+- `.github/workflows/deploy.yml`: caps the runtime smoke diagnostics step at 3 minutes and passes explicit startup/request timeout settings.
+
+### Verification
+
+- Local standalone runtime smoke passed with 10 checks.
+- `npx tsc --noEmit --pretty false`: passed.
+- GitHub release workflow `25430545440` for commit `280013f` completed successfully.
+- CI `build-and-test` passed: type check, ESLint, schema drift, production build, and runtime smoke diagnostics.
+- CI `build-and-push` passed and published:
+  - `ghcr.io/xxrenzhe/bes3:prod-latest`
+  - `ghcr.io/xxrenzhe/bes3:prod-280013f`
+
+### Production Recheck After Image Publish
+
+- Product 54 detail URL still returns HTTP 404 and renders the Bes3 404 recovery page.
+- `/products/sitemap.xml` still returns 0 `<url>` entries with `x-nextjs-cache: HIT`.
+- `/editorial/sitemap.xml` still returns 0 `<url>` entries with `x-nextjs-cache: HIT`.
+- Project deployment docs and workflow comments still confirm ClawCloud deployment is manual: GitHub Actions only publishes GHCR images, then the server must pull/restart `ghcr.io/xxrenzhe/bes3:prod-latest`.
+
+### Current Required Operator Action
+
+Run the manual ClawCloud deployment from the production server with the current image:
+
+```bash
+GHCR_USERNAME=<github-username> \
+GHCR_TOKEN=<ghcr-token> \
+BES3_IMAGE=ghcr.io/xxrenzhe/bes3:prod-latest \
+./scripts/deploy-ghcr.sh
+```
+
+Then re-run:
+
+```bash
+PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com \
+PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest \
+npm run ops:production-business-audit
+```
