@@ -554,9 +554,9 @@ export async function listHardcoreTags(categorySlug?: string): Promise<HardcoreT
 
 export async function listHardcoreProducts(categorySlug?: string): Promise<HardcoreProduct[]> {
   const [rows, tags] = await Promise.all([listProductRows(), listHardcoreTags()])
-  const evidenceByProduct = await listEvidenceForProducts(rows.map((row) => row.id))
+  const evidenceByProduct = await listEvidenceForProducts(rows.map((row) => Number(row.id)))
   return rows
-    .map((row) => mapProduct(row, tags, evidenceByProduct.get(row.id) || []))
+    .map((row) => mapProduct(row, tags, evidenceByProduct.get(Number(row.id)) || []))
     .filter((product): product is HardcoreProduct => Boolean(product))
     .filter((product) => !categorySlug || product.categorySlug === categorySlug)
     .sort((left, right) => {
