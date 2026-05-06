@@ -396,3 +396,55 @@ After the next GHCR image is pulled and restarted in production, `https://www.be
 ```
 
 This gives a direct external signal for whether production is running the image that contains the open-commerce product-detail fix.
+
+## Production Latest-Code Recheck - 2026-05-06T11:51:12Z
+
+### Context
+
+The operator reported that production had been updated to the latest code. Current local `main` HEAD is `557b304` (`Expose production build metadata`), and GitHub Actions release workflow `25433025039` for that commit completed successfully at `2026-05-06T11:39:51Z`.
+
+### Commands Run
+
+- `curl -sS -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' 'https://www.bes3.com/api/health?codex_recheck=latest-20260506T1152'`
+- `curl -sS -D /tmp/bes3-prod-product54-latest.headers -o /tmp/bes3-prod-product54-latest.html -H 'Cache-Control: no-cache' -H 'Pragma: no-cache' 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=latest-20260506T1152'`
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/open/commerce/products/54?codex_recheck=latest-20260506T1152'`
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/open/commerce/search?q=LOMON%20Womens%20Fuzzy%20Sherpa%20Fleece%20Jacket&limit=1&codex_recheck=latest-20260506T1153'`
+- `curl -sS -D /tmp/bes3-prod-go54-latest.headers -o /tmp/bes3-prod-go54-latest.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506-latest'`
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/sitemap.xml?codex_recheck=latest-20260506T1153'`
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/editorial/sitemap.xml?codex_recheck=latest-20260506T1153'`
+- `curl -sS -D /tmp/bes3-prod-pseo-latest.headers -o /tmp/bes3-prod-pseo-latest.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=latest-20260506T1153'`
+- `PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest npm run ops:production-business-audit`
+- `curl -sS -D /tmp/bes3-apex-health.headers -o /tmp/bes3-apex-health.body -H 'Cache-Control: no-cache' 'https://bes3.com/api/health?codex_recheck=apex-20260506T1155'`
+
+### Evidence
+
+- `https://www.bes3.com/api/health` still returns `status=ok`, `version=0.1.0`, `database.connected=true`, and `database.type=postgres`, but still does not include the `build` object added in `557b304`.
+- Product 54 detail page still returns HTTP 404 and `NEXT_HTTP_ERROR_FALLBACK;404`.
+- Product 54 detail HTML still references old route chunk `static/chunks/app/products/%5Bslug%5D/page-11eb834d09265723.js`.
+- Product 54 API still returns `product.id` as JSON string `"54"`, not a number. This is direct runtime evidence that the id-normalization code from `9fe8b87` is not active on the public `www` service.
+- Product 54 API returns the expected slug and 6 price-history rows, but the latest probe returned 0 offers and 0 facts through the public product endpoint.
+- Open-commerce search returns the expected LOMON product as the only result, with `view_product` pointing to the product URL that still returns 404 and `merchant_handoff` pointing to `/go/54?source=open-commerce-search`.
+- `/go/54?source=prodtest&visitor=prodtest-20260506-latest` still returns HTTP 307 to the Amazon ASIN `B0D7HLBT61` affiliate URL.
+- `/products/sitemap.xml` still returns 215 product URLs.
+- `/editorial/sitemap.xml` still returns 20 editorial URLs.
+- pSEO sample `/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` still returns HTTP 200, includes schema/canonical metadata and YouTube timestamp evidence, and still emits `noindex, follow`.
+- Production business audit still fails at authentication: `/api/auth/login returned 401`.
+- New audit artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T11-50-39-655Z.json`.
+- Apex domain `https://bes3.com/api/health` returns Cloudflare HTTP 525 (`error code: 525`), while `https://www.bes3.com/api/health` is reachable. Manual verification should use `www.bes3.com` until apex TLS is corrected.
+
+### Conclusion
+
+Production is still not externally serving the latest `557b304` image on `www.bes3.com`. The public evidence remains consistent with an older runtime: no health build metadata, open-commerce product detail 404s, old product route chunk, and string product ids. The GitHub release image was built successfully, so the remaining blocker is the production pull/restart path rather than CI.
+
+### Current Required Operator Action
+
+Pull and restart the latest GHCR image on the production host, then recheck `https://www.bes3.com/api/health` for `build.sha`:
+
+```bash
+GHCR_USERNAME=<github-username> \
+GHCR_TOKEN=<ghcr-token> \
+BES3_IMAGE=ghcr.io/xxrenzhe/bes3:prod-latest \
+./scripts/deploy-ghcr.sh
+```
+
+The production business audit also remains blocked until valid production admin credentials are available or the production auth configuration is corrected.
