@@ -494,3 +494,36 @@ This fix is not externally visible on `https://www.bes3.com` until the new commi
 - `https://www.bes3.com/api/health` should include `build.sha` for the deployed commit.
 - `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` should show `Research Snapshot` and `Yard and Pool Automation for Pool Wall Climbing: Evidence Check`.
 - The page should no longer show `Reddit Consensus: The 1 Best ...` or `Programmatic Scenario Page`.
+
+## pSEO Fix Release and Production Recheck - 2026-05-06T12:21:09Z
+
+### Release Evidence
+
+- Commit `20fef2d` (`Improve research pSEO page quality`) was pushed to `main`.
+- GitHub Actions release workflow `25434615490` completed successfully.
+- `build-and-test` passed in 1m46s:
+  - Type check passed.
+  - ESLint passed.
+  - Schema drift check passed.
+  - Production build passed.
+  - Runtime smoke diagnostics passed.
+- `build-and-push` passed in 3m09s:
+  - Docker Buildx setup passed.
+  - GHCR login passed.
+  - Docker image tags were generated.
+  - Docker image was built and pushed.
+
+### Production Recheck
+
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/health?codex_recheck=20fef2d'`
+  - Returned `status=ok`, `version=0.1.0`, `database.connected=true`, and `database.type=postgres`.
+  - Still did not include `build.sha`, so the public runtime is not serving the build-metadata image.
+- `curl -sS -D /tmp/bes3-prod-pseo-20fef2d.headers -o /tmp/bes3-prod-pseo-20fef2d.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=20fef2d'`
+  - Returned HTTP 200.
+  - Still referenced old chunk `static/chunks/app/%5Bcategory%5D/%5Blanding%5D/page-dbd05c86d7f423cc.js`.
+  - Still rendered old metadata/title text: `Reddit Consensus: The 1 Best Yard and Pool Automation for Pool Wall Climbing (2026 Tested)`.
+  - Still included old FAQ/ranking language in the streamed payload.
+
+### Conclusion
+
+The pSEO content-quality fix is built and pushed to GHCR, but it is not live on `https://www.bes3.com` yet. Production still needs to pull/restart an image that includes `20fef2d` or later. Until `/api/health` exposes `build.sha`, the public URL remains an old-runtime manual review target and should not be treated as fixed.
