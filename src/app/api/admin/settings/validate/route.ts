@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { getSettingValue } from '@/lib/settings'
 import { validateAffiliateSyncConfig } from '@/lib/affiliate-sync-validation'
-import { normalizeSensitiveValue, validateGeminiConfig, validateProxyPoolConfig } from '@/lib/settings-validation'
+import { PROXY_VALIDATION_VERSION, normalizeSensitiveValue, validateGeminiConfig, validateProxyPoolConfig } from '@/lib/settings-validation'
 import { GEMINI_ACTIVE_MODEL } from '@/lib/gemini-models'
 
 const DEFAULT_PARTNERBOOST_BASE_URL = 'https://app.partnerboost.com'
@@ -26,7 +26,7 @@ export async function POST(request: Request) {
       ? body.config as Record<string, unknown>
       : {}
 
-    let result: { valid: boolean; message: string }
+    let result: { valid: boolean; message: string; version?: string }
 
     switch (category) {
       case 'ai': {
@@ -88,7 +88,8 @@ export async function POST(request: Request) {
     return NextResponse.json({
       success: true,
       valid: result.valid,
-      message: result.message
+      message: result.message,
+      version: result.version || (category === 'proxy' ? PROXY_VALIDATION_VERSION : undefined)
     })
   } catch (error: any) {
     console.error('配置验证失败:', error)

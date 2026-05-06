@@ -5,6 +5,7 @@ const GEMINI_OFFICIAL_ENDPOINT = 'https://generativelanguage.googleapis.com'
 const GEMINI_RELAY_ENDPOINT = 'https://aicode.cat/v1/messages'
 const SENSITIVE_VALUE_PLACEHOLDER = '············'
 const VALIDATION_TIMEOUT_MS = 10_000
+export const PROXY_VALIDATION_VERSION = 'proxy-validation-v2'
 const PROXY_VALIDATION_TARGETS = [
   {
     label: '出口 IP',
@@ -245,7 +246,7 @@ async function validateSingleProxy(config: ProxyUrlConfig): Promise<{ valid: boo
 
 export async function validateProxyPoolConfig(
   rawValue: string
-): Promise<{ valid: boolean; message: string }> {
+): Promise<{ valid: boolean; message: string; version: string }> {
   let parsed: unknown
 
   try {
@@ -253,6 +254,7 @@ export async function validateProxyPoolConfig(
   } catch {
     return {
       valid: false,
+      version: PROXY_VALIDATION_VERSION,
       message: '代理配置 JSON 解析失败'
     }
   }
@@ -260,6 +262,7 @@ export async function validateProxyPoolConfig(
   if (!Array.isArray(parsed)) {
     return {
       valid: false,
+      version: PROXY_VALIDATION_VERSION,
       message: '代理配置格式错误，应为数组格式'
     }
   }
@@ -283,6 +286,7 @@ export async function validateProxyPoolConfig(
   if (proxyUrls.length === 0) {
     return {
       valid: true,
+      version: PROXY_VALIDATION_VERSION,
       message: '未配置代理URL，代理功能已禁用'
     }
   }
@@ -293,6 +297,7 @@ export async function validateProxyPoolConfig(
     if (seenCountries.has(country)) {
       return {
         valid: false,
+        version: PROXY_VALIDATION_VERSION,
         message: `国家 ${country} 重复配置`
       }
     }
@@ -308,12 +313,14 @@ export async function validateProxyPoolConfig(
   if (errors.length > 0) {
     return {
       valid: false,
+      version: PROXY_VALIDATION_VERSION,
       message: errors.join('；')
     }
   }
 
   return {
     valid: true,
+    version: PROXY_VALIDATION_VERSION,
     message: `✅ 已配置 ${proxyUrls.length} 个代理URL，连接验证通过`
   }
 }
