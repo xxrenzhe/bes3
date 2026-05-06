@@ -448,3 +448,49 @@ BES3_IMAGE=ghcr.io/xxrenzhe/bes3:prod-latest \
 ```
 
 The production business audit also remains blocked until valid production admin credentials are available or the production auth configuration is corrected.
+
+## pSEO Page Content Quality Fix - 2026-05-06T12:12:56Z
+
+### Trigger
+
+Manual review flagged `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` as unsuitable for real users or AI extraction. The prior production page returned HTTP 200 and had schema/canonical metadata, but the rendered content overclaimed the evidence state:
+
+- Title used `Reddit Consensus: The 1 Best ...`, despite only one product and one evidence report.
+- Eyebrow used `Programmatic Scenario Page`, which is implementation-facing, not user-facing.
+- Body text and matrix language used `winner`, `ranking`, and `current winner` wording while the page was still `noindex, follow`.
+- The page exposed useful YouTube proof, but did not clearly separate what was known from what was still unproven.
+
+### Code Changes
+
+- `src/app/[category]/[landing]/page.tsx`
+  - Added explicit live/research status gating with `isLiveScenario`.
+  - Researching pages now render as `Evidence Check` / `Research Snapshot` pages instead of `Best` pages.
+  - Researching BLUF now states the exact evidence count, product count, best quote, and why the page is not a final ranking.
+  - FAQ entries now switch between research-mode source-checking questions and live-mode ranking questions.
+  - Metadata title, description, keywords, and structured-data `about` terms no longer use `Reddit Consensus` for research pages.
+- `src/components/site/HardcoreEvidenceMatrix.tsx`
+  - Added `isResearching` rendering mode.
+  - Researching pages now label the table as `Evidence Matrix`, use `Source Score`, and use `Source Proof`.
+  - Researching matrix copy now says the table is not a ranked recommendation and exists to expose proof, source depth, price context, and gaps.
+
+### Local Validation
+
+- `npx eslint 'src/app/[category]/[landing]/page.tsx' src/components/site/HardcoreEvidenceMatrix.tsx`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+- `npm run build`: passed; `/[category]/[landing]` remains dynamic server-rendered.
+- Local production preview:
+  - `npm run start -- --hostname 127.0.0.1 --port 3010`
+  - `http://127.0.0.1:3010/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` returned HTTP 200.
+  - Browser-rendered title: `Yard and Pool Automation for Pool Wall Climbing: Evidence Check | Bes3`.
+  - Browser-rendered H1: `Yard and Pool Automation for Pool Wall Climbing: Evidence Check`.
+  - Browser-rendered research summary now says there is 1 timestamped YouTube evidence report across 1 product and explicitly says it is not a final ranking.
+  - Browser-rendered body includes `Research Snapshot`, `Research Status`, `Evidence Matrix`, `Source Score`, `Source Proof`, and `Timestamped YouTube proof and the gap it leaves`.
+  - Browser snapshot confirmed the final visible page is the research evidence page, not the 404 recovery page.
+
+### Remaining Production Gate
+
+This fix is not externally visible on `https://www.bes3.com` until the new commit is built into the GHCR image and the production host pulls/restarts that image. After deployment, recheck:
+
+- `https://www.bes3.com/api/health` should include `build.sha` for the deployed commit.
+- `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` should show `Research Snapshot` and `Yard and Pool Automation for Pool Wall Climbing: Evidence Check`.
+- The page should no longer show `Reddit Consensus: The 1 Best ...` or `Programmatic Scenario Page`.

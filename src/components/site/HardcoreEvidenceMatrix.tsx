@@ -34,10 +34,12 @@ function findAlternativeProduct(products: HardcoreProduct[], current: HardcorePr
 
 export function HardcoreEvidenceMatrix({
   products,
-  emptyTitle = 'We are still collecting enough verified reviews for this category.'
+  emptyTitle = 'We are still collecting enough verified reviews for this category.',
+  isResearching = false
 }: {
   products: HardcoreProduct[]
   emptyTitle?: string
+  isResearching?: boolean
 }) {
   if (!products.length) {
     return (
@@ -57,10 +59,19 @@ export function HardcoreEvidenceMatrix({
     <section id="consensus-matrix" className="scroll-mt-24 border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 max-w-3xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Consensus Matrix</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">
+            {isResearching ? 'Evidence Matrix' : 'Consensus Matrix'}
+          </p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
-            Real-world evidence, price timing, and the current winner in one table.
+            {isResearching
+              ? 'Current source proof and missing confidence signals in one table.'
+              : 'Real-world evidence, price timing, and the current winner in one table.'}
           </h2>
+          {isResearching ? (
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              This table is not a ranked recommendation yet. It shows the available proof, source depth, and price context so the research gap is visible.
+            </p>
+          ) : null}
         </div>
         <div className="grid gap-4 md:hidden">
           {products.map((product) => {
@@ -78,7 +89,9 @@ export function HardcoreEvidenceMatrix({
                     <p className="mt-1 text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">{product.categoryName}</p>
                   </div>
                   <div className="rounded-2xl bg-slate-950 px-3 py-2 text-right text-white">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">Consensus</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
+                      {isResearching ? 'Source Score' : 'Consensus'}
+                    </p>
                     <p className="font-mono text-lg font-black">{formatScore(product.consensus.score10)}</p>
                   </div>
                 </div>
@@ -101,7 +114,9 @@ export function HardcoreEvidenceMatrix({
                     </p>
                   </div>
                   <div className="rounded-2xl bg-muted/60 p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Hardcore Proof</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
+                      {isResearching ? 'Source Proof' : 'Hardcore Proof'}
+                    </p>
                     {report ? (
                       <blockquote className="mt-2 border-l-2 border-primary pl-3 text-xs leading-6 text-muted-foreground">
                         {report.evidenceQuote}
@@ -156,10 +171,10 @@ export function HardcoreEvidenceMatrix({
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <th className="py-4 pr-6">Model</th>
-                <th className="px-4 py-4">Consensus</th>
+                <th className="px-4 py-4">{isResearching ? 'Source Score' : 'Consensus'}</th>
                 <th className="px-4 py-4">Evidence</th>
                 <th className="px-4 py-4">Price/Value</th>
-                <th className="px-4 py-4">Hardcore Proof</th>
+                <th className="px-4 py-4">{isResearching ? 'Source Proof' : 'Hardcore Proof'}</th>
                 <th className="py-4 pl-4">Action</th>
               </tr>
             </thead>
