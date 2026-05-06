@@ -27,6 +27,9 @@ import {
 } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 function formatScore(value: number | null) {
   return value == null ? 'Researching' : `${value.toFixed(1)}/10`
 }

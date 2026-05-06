@@ -965,10 +965,15 @@ export async function getOpenCommerceProductById(productId: number): Promise<Com
 }
 
 const getOpenCommerceProductBySlugCached = async (slug: string): Promise<CommerceProductRecord | null> => withCachedPromise(`getOpenCommerceProductBySlug:${slug}`, async () => {
-  if (!slug.trim()) return null
+  const normalizedSlug = slug.trim()
+  if (!normalizedSlug) return null
 
-  const product = await getProductBySlug(slug)
-  if (!product) return null
+  const product = await getProductBySlug(normalizedSlug)
+  if (!product) {
+    const products = await listOpenCommerceProducts()
+    return products.find((item) => item.slug === normalizedSlug) || null
+  }
+
   return getOpenCommerceProductById(product.id)
 })
 

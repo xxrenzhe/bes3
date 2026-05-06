@@ -113,3 +113,46 @@ This report records the production validation steps, evidence, fixes made locall
 3. Re-check the pending external URL for product 54 and both sitemap URLs after deployment.
 4. Remove pSEO `noindex` only after evidence thresholds are intentionally met, or adjust thresholds if one-product scenario pages should rank.
 5. Improve open-commerce search so evidence products can be discovered by queries such as `pool robot`.
+
+## Continuation Recheck - 2026-05-06T10:31:10Z
+
+This recheck was run directly against `https://www.bes3.com` after the earlier release workflow successes.
+
+### Commands Run
+
+- `curl -sS -D /tmp/bes3-prod-product54.headers -o /tmp/bes3-prod-product54.body 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket'`
+- `curl -sS 'https://www.bes3.com/products/sitemap.xml'`
+- `curl -sS 'https://www.bes3.com/editorial/sitemap.xml'`
+- `curl -sS -D /tmp/bes3-pseo.headers -o /tmp/bes3-pseo.body 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing'`
+- `PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest npm run ops:production-business-audit`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/search?q=LOMON&limit=1'`
+- `npx eslint 'src/app/products/[slug]/page.tsx' src/lib/site-data.ts src/app/products/sitemap.ts`
+- `npx tsc --noEmit --pretty false`
+
+### New Evidence
+
+- Product 54 advertised URL now returns HTTP 404 at the protocol layer, even though the body is a rendered Bes3 404 recovery page. Earlier shell output that printed `status=200` was from the proxy preamble line, not the final HTTP/2 status.
+- Product 54 API still returns the advertised slug and product-detail action: `lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`.
+- `/api/open/commerce/search?q=LOMON&limit=1` returns product id 15 first, proving search works for some LOMON products but not the exact pending URL.
+- `/products/sitemap.xml` still returns 0 `<url>` entries and `x-nextjs-cache: HIT`.
+- `/editorial/sitemap.xml` still returns 0 `<url>` entries.
+- The sampled pSEO page still returns 200 with crawler-visible evidence, JSON-LD, canonical, YouTube timestamp links, and `noindex, follow`.
+- The built-in production business audit still stops at admin authentication: `/api/auth/login returned 401`. New artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T10-25-32-614Z.json`.
+
+### Additional Local Fix
+
+- `src/app/products/[slug]/page.tsx`: forced the product detail route to dynamic rendering with `revalidate = 0` so runtime DB changes are not hidden behind stale route output.
+- `src/lib/site-data.ts`: made `getOpenCommerceProductBySlug` fall back to `listOpenCommerceProducts()` when the direct slug query misses, matching the API path that already exposes the product.
+
+### Verification After Additional Local Fix
+
+- `npx eslint 'src/app/products/[slug]/page.tsx' src/lib/site-data.ts src/app/products/sitemap.ts`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+
+### Current Blockers
+
+1. Product 54 page is still externally broken in production until this additional fix is committed, pushed, built, and the production server pulls/restarts the new image.
+2. Product and editorial sitemaps remain empty in production; product sitemap is explicitly cached as `x-nextjs-cache: HIT`.
+3. Admin credentials are still invalid or unavailable, so authenticated audit gates for inventory truth, evidence quality, taxonomy sources, SEO backlog, and conversion telemetry remain unverified.
+4. pSEO pages remain `noindex`, so search-ranking automation cannot be called a pass yet.

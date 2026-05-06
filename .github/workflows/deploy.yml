@@ -55,6 +55,15 @@ jobs:
       - name: Run production build
         run: npm run build
 
+      - name: Run runtime smoke diagnostics
+        env:
+          SMOKE_E2E_PORT: 3210
+          JWT_SECRET: github-smoke-jwt-secret-with-enough-length
+          ENCRYPTION_KEY: 0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
+          DEFAULT_ADMIN_PASSWORD: github-smoke-admin-password
+          DATABASE_PATH: ./data/github-smoke.db
+        run: npm run ops:smoke-e2e
+
       - name: Run optional tests
         if: ${{ env.RUN_OPTIONAL_TESTS == 'true' }}
         run: npm run test --if-present

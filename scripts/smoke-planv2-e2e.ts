@@ -15,6 +15,8 @@ type SmokeCheck = {
 const port = Number.parseInt(process.env.SMOKE_E2E_PORT || '3210', 10)
 const baseUrl = `http://127.0.0.1:${Number.isFinite(port) ? port : 3210}`
 const startupTimeoutMs = Number.parseInt(process.env.SMOKE_E2E_STARTUP_TIMEOUT_MS || '45000', 10)
+const serverOutputLimit = Number.parseInt(process.env.SMOKE_E2E_SERVER_OUTPUT_LIMIT || '12000', 10)
+const responseBodyLimit = Number.parseInt(process.env.SMOKE_E2E_RESPONSE_BODY_LIMIT || '1200', 10)
 
 const checks: SmokeCheck[] = [
   {
@@ -95,26 +97,70 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
+function expectedStatusLabel(expected: number | number[] | undefined) {
+  if (expected == null) return '2xx/3xx'
+  return Array.isArray(expected) ? expected.join('/') : String(expected)
+}
+
+function truncate(value: string, maxLength: number) {
+  if (value.length <= maxLength) return value
+  return `${value.slice(0, maxLength)}... [truncated ${value.length - maxLength} chars]`
+}
+
+function appendBounded(buffer: string[], chunk: Buffer | string, maxLength: number) {
+  const value = String(chunk)
+  buffer.push(value)
+  let totalLength = buffer.reduce((length, item) => length + item.length, 0)
+  while (totalLength > maxLength && buffer.length > 0) {
+    const first = buffer[0]
+    const overflow = totalLength - maxLength
+    if (first.length <= overflow) {
+      buffer.shift()
+      totalLength -= first.length
+    } else {
+      buffer[0] = first.slice(overflow)
+      totalLength -= overflow
+    }
+  }
+}
+
 function startServer() {
+  const recentOutput: string[] = []
   const child = spawn('npm', ['run', 'start', '--', '-p', String(port)], {
     cwd: process.cwd(),
     env: {
       ...process.env,
+      NODE_ENV: 'production',
       PORT: String(port),
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || baseUrl
     },
     stdio: ['ignore', 'pipe', 'pipe']
   })
-  child.stdout.on('data', (chunk) => process.stdout.write(`[smoke-server] ${chunk}`))
-  child.stderr.on('data', (chunk) => process.stdout.write(`[smoke-server] ${chunk}`))
-  return child
+  const recordOutput = (chunk: Buffer) => {
+    appendBounded(recentOutput, chunk, Number.isFinite(serverOutputLimit) ? serverOutputLimit : 12000)
+    process.stdout.write(`[smoke-server] ${chunk}`)
+  }
+  child.stdout.on('data', recordOutput)
+  child.stderr.on('data', recordOutput)
+  return { child, recentOutput }
 }
 
-async function waitForServer() {
+async function waitForServer(child: ChildProcessWithoutNullStreams, recentOutput: string[]) {
   const startedAt = Date.now()
   let lastError = ''
 
   while (Date.now() - startedAt < startupTimeoutMs) {
+    if (child.exitCode != null) {
+      throw new Error(
+        [
+          `Smoke server exited before becoming ready (code=${child.exitCode}, signal=${child.signalCode || 'none'})`,
+          `Last startup error: ${lastError || 'none'}`,
+          'Recent server output:',
+          recentOutput.join('').trim() || '(none)'
+        ].join('\n')
+      )
+    }
+
     try {
       const response = await fetch(`${baseUrl}/api/health`, { redirect: 'manual' })
       if (response.status === 200) return
@@ -125,7 +171,13 @@ async function waitForServer() {
     await wait(500)
   }
 
-  throw new Error(`Timed out waiting for ${baseUrl}: ${lastError}`)
+  throw new Error(
+    [
+      `Timed out waiting for ${baseUrl} after ${startupTimeoutMs}ms: ${lastError || 'no response'}`,
+      'Recent server output:',
+      recentOutput.join('').trim() || '(none)'
+    ].join('\n')
+  )
 }
 
 function statusMatches(actual: number, expected: number | number[] | undefined) {
@@ -134,34 +186,99 @@ function statusMatches(actual: number, expected: number | number[] | undefined) 
 }
 
 async function runCheck(check: SmokeCheck) {
-  const response = await fetch(`${baseUrl}${check.path}`, { redirect: 'manual' })
+  const url = `${baseUrl}${check.path}`
+  const response = await fetch(url, { redirect: 'manual' })
+  const contentType = response.headers.get('content-type') || ''
+  let cachedText: string | undefined
+  const readText = async () => {
+    cachedText = cachedText ?? await response.text()
+    return cachedText
+  }
+
   if (!statusMatches(response.status, check.expectStatus)) {
-    throw new Error(`${check.label}: expected status ${check.expectStatus || '2xx/3xx'}, got ${response.status}`)
+    const body = await readText().catch((error: any) => `failed to read response body: ${error?.message || error}`)
+    throw new Error(
+      [
+        `${check.label}: expected status ${expectedStatusLabel(check.expectStatus)}, got ${response.status}`,
+        `url=${url}`,
+        `content-type=${contentType || 'none'}`,
+        `location=${response.headers.get('location') || 'none'}`,
+        `body=${truncate(body.replace(/\s+/g, ' ').trim(), Number.isFinite(responseBodyLimit) ? responseBodyLimit : 1200) || '(empty)'}`
+      ].join('\n')
+    )
   }
 
   if (check.expectRedirectTo) {
     const location = response.headers.get('location') || ''
     const redirectUrl = location.startsWith('http') ? new URL(location).pathname : location
     if (redirectUrl !== check.expectRedirectTo) {
-      throw new Error(`${check.label}: expected redirect to ${check.expectRedirectTo}, got ${location || 'none'}`)
+      throw new Error(
+        [
+          `${check.label}: expected redirect to ${check.expectRedirectTo}, got ${location || 'none'}`,
+          `url=${url}`,
+          `status=${response.status}`
+        ].join('\n')
+      )
     }
   }
 
   for (const [name, expected] of Object.entries(check.requiredHeaders || {})) {
     const actual = response.headers.get(name)
     if (expected ? actual !== expected : !actual) {
-      throw new Error(`${check.label}: missing/invalid header ${name}`)
+      throw new Error(
+        [
+          `${check.label}: missing/invalid header ${name}`,
+          `url=${url}`,
+          `status=${response.status}`,
+          `expected=${expected || '(present)'}`,
+          `actual=${actual || 'none'}`
+        ].join('\n')
+      )
     }
   }
 
   if (check.jsonCheck) {
-    const value = await response.json()
+    let value: any
+    try {
+      const text = await readText()
+      value = JSON.parse(text)
+    } catch (error: any) {
+      throw new Error(
+        [
+          `${check.label}: failed to parse JSON response`,
+          `url=${url}`,
+          `status=${response.status}`,
+          `content-type=${contentType || 'none'}`,
+          `error=${error?.message || error}`,
+          `body=${truncate((cachedText || '').replace(/\s+/g, ' ').trim(), Number.isFinite(responseBodyLimit) ? responseBodyLimit : 1200) || '(empty)'}`
+        ].join('\n')
+      )
+    }
     const issue = check.jsonCheck(value)
-    if (issue) throw new Error(`${check.label}: ${issue}`)
+    if (issue) {
+      throw new Error(
+        [
+          `${check.label}: ${issue}`,
+          `url=${url}`,
+          `status=${response.status}`,
+          `body=${truncate(JSON.stringify(value), Number.isFinite(responseBodyLimit) ? responseBodyLimit : 1200)}`
+        ].join('\n')
+      )
+    }
   } else if (check.requiredText?.length) {
-    const text = await response.text()
+    const text = await readText()
     const missing = check.requiredText.filter((needle) => !text.includes(needle))
-    if (missing.length) throw new Error(`${check.label}: missing text ${missing.join(', ')}`)
+    if (missing.length) {
+      throw new Error(
+        [
+          `${check.label}: missing text ${missing.join(', ')}`,
+          `url=${url}`,
+          `status=${response.status}`,
+          `content-type=${contentType || 'none'}`,
+          `body=${truncate(text.replace(/\s+/g, ' ').trim(), Number.isFinite(responseBodyLimit) ? responseBodyLimit : 1200) || '(empty)'}`
+        ].join('\n')
+      )
+    }
   }
 
   console.log(`✓ ${check.label} (${check.path}, ${response.status})`)
@@ -179,9 +296,15 @@ async function stopServer(child: ChildProcessWithoutNullStreams) {
 }
 
 async function main() {
-  const child = startServer()
+  console.log(`PlanV2 runtime E2E smoke check starting at ${baseUrl}`)
+  console.log(`Startup timeout: ${startupTimeoutMs}ms`)
+  console.log(`NEXT_PUBLIC_APP_URL=${process.env.NEXT_PUBLIC_APP_URL || baseUrl}`)
+  console.log(`DATABASE_URL=${process.env.DATABASE_URL ? 'set' : 'unset'}`)
+  console.log(`DATABASE_PATH=${process.env.DATABASE_PATH || '(default)'}`)
+
+  const { child, recentOutput } = startServer()
   try {
-    await waitForServer()
+    await waitForServer(child, recentOutput)
     for (const check of checks) {
       await runCheck(check)
     }
