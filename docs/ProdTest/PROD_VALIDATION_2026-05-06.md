@@ -527,3 +527,24 @@ This fix is not externally visible on `https://www.bes3.com` until the new commi
 ### Conclusion
 
 The pSEO content-quality fix is built and pushed to GHCR, but it is not live on `https://www.bes3.com` yet. Production still needs to pull/restart an image that includes `20fef2d` or later. Until `/api/health` exposes `build.sha`, the public URL remains an old-runtime manual review target and should not be treated as fixed.
+
+## Production Runtime Recheck - 2026-05-06T12:30:04Z
+
+### Commands Run
+
+- `curl -sS -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/health?codex_recheck=19fc2a9-final'`
+- `curl -sS -D /tmp/bes3-prod-pseo-19fc2a9.headers -o /tmp/bes3-prod-pseo-19fc2a9.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=19fc2a9-final'`
+- `curl -sS -D /tmp/bes3-prod-product54-final.headers -o /tmp/bes3-prod-product54-final.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=19fc2a9-final'`
+
+### Evidence
+
+- `/api/health` still returns `status=ok`, `version=0.1.0`, `database.connected=true`, and `database.type=postgres`, but still does not include `build.sha`.
+- The pSEO page returns HTTP 200 but still serves old route chunk `static/chunks/app/%5Bcategory%5D/%5Blanding%5D/page-dbd05c86d7f423cc.js`.
+- The pSEO page still renders old metadata/title text: `Reddit Consensus: The 1 Best Yard and Pool Automation for Pool Wall Climbing (2026 Tested)`.
+- The pSEO page still includes old `Scenario FAQ`, `winner`, `ranking`, and `Hardcore Proof` copy in the streamed payload.
+- The pSEO page does not yet expose the fixed `Research Snapshot`, `Evidence Check`, `Source Score`, or `Source Proof` language on production.
+- Product 54 detail URL still returns HTTP 404 and `NEXT_HTTP_ERROR_FALLBACK;404`, using old product route chunk `static/chunks/app/products/%5Bslug%5D/page-11eb834d09265723.js`.
+
+### Conclusion
+
+As of `2026-05-06T12:30:04Z`, production has still not pulled/restarted the image containing `20fef2d` / `19fc2a9`. The deployment blocker remains unchanged: CI and GHCR publish are green, but the public runtime on `www.bes3.com` is still old.
