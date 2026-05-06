@@ -548,3 +548,30 @@ The pSEO content-quality fix is built and pushed to GHCR, but it is not live on 
 ### Conclusion
 
 As of `2026-05-06T12:30:04Z`, production has still not pulled/restarted the image containing `20fef2d` / `19fc2a9`. The deployment blocker remains unchanged: CI and GHCR publish are green, but the public runtime on `www.bes3.com` is still old.
+
+## Deployment Capability Recheck - 2026-05-06T12:35:00Z
+
+### Commands Run
+
+- `sed -n '1,260p' scripts/deploy-ghcr.sh`
+- `printf 'GHCR_USERNAME=%s\nGHCR_TOKEN=%s\nBES3_IMAGE=%s\n' "${GHCR_USERNAME:+set}" "${GHCR_TOKEN:+set}" "${BES3_IMAGE:-unset}"`
+- `rg -n "deploy-ghcr|GHCR_USERNAME|BES3_IMAGE|ClawCloud|docker compose|prod-latest" ...`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 3`
+
+### Evidence
+
+- `scripts/deploy-ghcr.sh` is present and supports manual production deployment from GHCR.
+- The script requires Docker, `docker-compose.yml`, `.env.production`, and optional `GHCR_USERNAME` / `GHCR_TOKEN` for GHCR login.
+- Current shell has no deploy credentials:
+  - `GHCR_USERNAME` is unset.
+  - `GHCR_TOKEN` is unset.
+  - `BES3_IMAGE` is unset, so the script would default to `ghcr.io/xxrenzhe/bes3:prod-latest`.
+- Project docs repeatedly confirm the deployment model: GitHub Actions publishes `prod-latest`, then the ClawCloud/production host must manually pull and restart.
+- Latest workflows:
+  - `25435409379` for docs-only commit `42e1962` is in progress.
+  - `25434971734` for `19fc2a9` completed successfully.
+  - `25434615490` for `20fef2d` completed successfully and pushed GHCR image.
+
+### Conclusion
+
+It is not safe or possible to run production deployment from this local session: the required GHCR credentials are absent, and this workspace is not confirmed as the ClawCloud production host with production `.env.production`. Running `scripts/deploy-ghcr.sh` here could only affect the local compose target, not the actual public runtime. The next required action is still to run the GHCR deploy script on the production host with valid credentials.
