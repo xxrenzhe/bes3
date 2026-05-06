@@ -212,3 +212,47 @@ PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com \
 PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest \
 npm run ops:production-business-audit
 ```
+
+## Post-Deploy Recheck - 2026-05-06T11:06:28Z
+
+The user confirmed production had pulled the latest code, so validation continued directly against `https://www.bes3.com`.
+
+### Commands Run
+
+- `curl -sS -D - -o /tmp/bes3-product-page.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=20260506b'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/search?q=LOMON%20Womens%20Fuzzy%20Sherpa%20Fleece%20Jacket&limit=1'`
+- `curl -sS -D - -o /tmp/bes3-hardcore-product.html 'https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo?codex_recheck=20260506b'`
+- `npx eslint src/lib/site-data.ts 'src/app/products/[slug]/page.tsx'`
+- `npx tsc --noEmit --pretty false`
+- `npm run build`
+
+### New Evidence
+
+- Production now serves the updated product route bundle and fresh CSS, but the product 54 detail URL still returns HTTP 404 with the Bes3 404 recovery page.
+- The same production service returns product 54 from `/api/open/commerce/products/54`; the payload includes the expected slug, 32 attribute facts, 6 price history points, 1 current offer, and fresh 2026-05-06 timestamps.
+- Exact open-commerce search returns product 54 first and advertises the same product-detail action URL that currently returns 404.
+- The existing hardcore evidence product URL `/products/dolphin-nautilus-pool-wall-demo` returns HTTP 200, so the product route itself is mounted and only the open-commerce slug path is failing.
+
+### Root Cause Found
+
+- Production Postgres returns some numeric identifiers as strings in JSON/query rows. Product 54 appears as `"id": "54"` in the public API payload.
+- `mapProductRow` preserved that string id, so `getOpenCommerceProductBySlug` found the row by slug but then passed `"54"` into `getOpenCommerceProductById`.
+- `getOpenCommerceProductById` intentionally rejects non-number ids with `Number.isInteger(productId)`, causing the page path to treat the product as missing and call `notFound()`.
+- Sitemap/search/id API paths could still expose the same product because they do not all take the same slug-to-id round trip.
+
+### Local Fix
+
+- `src/lib/site-data.ts`: normalize product, offer, fact, article, and price-history ids to integers when mapping database rows.
+- This keeps public data types consistent across SQLite and production Postgres and prevents slug lookups from failing after a valid slug row is found.
+
+### Verification After Local Fix
+
+- `npx eslint src/lib/site-data.ts 'src/app/products/[slug]/page.tsx'`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+- `npm run build`: passed. Build output confirms `/products/[slug]`, `/products/sitemap.xml`, and `/editorial/sitemap.xml` are dynamic server-rendered routes.
+
+### Remaining Production Gate
+
+- Product 54 detail page needs this numeric-id normalization commit built and deployed before the external URL can be marked pass.
+- Authenticated production business audit remains blocked by `/api/auth/login returned 401` until valid production admin credentials are supplied.

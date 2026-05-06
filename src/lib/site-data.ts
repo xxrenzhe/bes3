@@ -361,6 +361,22 @@ function pickLatestDate(values: Array<string | null | undefined>) {
   }, null)
 }
 
+function toInteger(value: unknown): number {
+  if (typeof value === 'number' && Number.isInteger(value)) return value
+  if (typeof value === 'bigint') return Number(value)
+  if (typeof value === 'string') {
+    const parsed = Number.parseInt(value, 10)
+    if (Number.isInteger(parsed)) return parsed
+  }
+  return 0
+}
+
+function toNullableInteger(value: unknown): number | null {
+  if (value == null) return null
+  const parsed = toInteger(value)
+  return parsed > 0 ? parsed : null
+}
+
 export function getBrandSlug(value: string | null | undefined) {
   const normalized = normalizeBrandName(value)
   return normalized ? slugify(normalized) : ''
@@ -377,9 +393,9 @@ function getFreshnessBucket(value: string | null | undefined): CommerceProductRe
 
 function mapProductRow(row: any): ProductRecord {
   return {
-    id: row.id,
+    id: toInteger(row.id),
     slug: row.slug,
-    affiliateProductId: row.affiliate_product_id ?? null,
+    affiliateProductId: toNullableInteger(row.affiliate_product_id),
     brand: row.brand,
     productModel: row.product_model || null,
     modelNumber: row.model_number || null,
@@ -411,9 +427,9 @@ function mapProductRow(row: any): ProductRecord {
 function mapArticleRow(row: any): ArticleRecord {
   const product = row.product_id
       ? {
-        id: row.product_id,
+        id: toInteger(row.product_id),
         slug: row.product_slug,
-        affiliateProductId: row.affiliate_product_id ?? null,
+        affiliateProductId: toNullableInteger(row.affiliate_product_id),
         brand: row.brand,
         productModel: row.product_model || null,
         modelNumber: row.model_number || null,
@@ -444,8 +460,8 @@ function mapArticleRow(row: any): ArticleRecord {
   const publicProduct = product && isPublicProduct(product) ? product : null
 
   return {
-    id: row.id,
-    productId: row.product_id,
+    id: toInteger(row.id),
+    productId: toNullableInteger(row.product_id),
     type: row.article_type,
     title: row.title,
     slug: row.slug,
@@ -499,9 +515,9 @@ function mapCompatibilityFactRow(row: any): CompatibilityFactRecord {
 
 function mapPriceHistoryRow(row: any): ProductPriceHistoryRecord {
   return {
-    id: row.id,
-    productId: row.product_id,
-    productOfferId: row.product_offer_id || null,
+    id: toInteger(row.id),
+    productId: toInteger(row.product_id),
+    productOfferId: toNullableInteger(row.product_offer_id),
     merchantName: row.merchant_name || null,
     priceAmount: row.price_amount,
     priceCurrency: row.price_currency || null,
@@ -787,9 +803,9 @@ function compareOffers(left: ProductOfferRecord, right: ProductOfferRecord) {
 
 function mapOfferRow(row: any): ProductOfferRecord {
   return {
-    id: row.id,
-    productId: row.product_id,
-    merchantId: row.merchant_id ?? null,
+    id: toInteger(row.id),
+    productId: toInteger(row.product_id),
+    merchantId: toNullableInteger(row.merchant_id),
     merchantName: row.merchant_name || null,
     merchantSlug: row.merchant_slug || null,
     websiteUrl: row.website_url || null,
@@ -815,8 +831,8 @@ function mapOfferRow(row: any): ProductOfferRecord {
 
 function mapAttributeFactRow(row: any): ProductAttributeFactRecord {
   return {
-    id: row.id,
-    productId: row.product_id,
+    id: toInteger(row.id),
+    productId: toInteger(row.product_id),
     attributeKey: row.attribute_key,
     attributeLabel: row.attribute_label,
     attributeValue: row.attribute_value,
@@ -872,7 +888,7 @@ async function listAttributeFactCountsForProductIds(productIds: number[]): Promi
     productIds
   )
 
-  return new Map(rows.map((row) => [row.product_id, Number(row.count || 0)]))
+  return new Map(rows.map((row) => [toInteger(row.product_id), Number(row.count || 0)]))
 }
 
 export async function listProductOffers(productId: number): Promise<ProductOfferRecord[]> {
