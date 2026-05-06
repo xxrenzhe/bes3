@@ -105,6 +105,7 @@ interface ProductRow {
   current_price: number | null
   hist_low_price: number | null
   avg_90d_price: number | null
+  evidence_category_slug: string | null
 }
 
 interface TagRow {
@@ -429,11 +430,24 @@ async function listProductRows(): Promise<ProductRow[]> {
         p.price_currency,
         p.current_price,
         p.hist_low_price,
-        p.avg_90d_price
+        p.avg_90d_price,
+        (
+          SELECT tt.category_slug
+          FROM analysis_reports ar
+          LEFT JOIN taxonomy_tags tt ON tt.id = ar.tag_id
+          WHERE ar.product_id = p.id
+            AND tt.category_slug IS NOT NULL
+          ORDER BY ar.evidence_confidence DESC, ar.created_at DESC
+          LIMIT 1
+        ) AS evidence_category_slug
       FROM products p
       LEFT JOIN affiliate_products ap ON ap.id = p.affiliate_product_id
       WHERE p.slug IS NOT NULL
-      ORDER BY p.updated_at DESC, p.id DESC
+      ORDER BY (
+        SELECT COUNT(*)
+        FROM analysis_reports ar
+        WHERE ar.product_id = p.id
+      ) DESC, p.updated_at DESC, p.id DESC
       LIMIT 250
     `
   )
@@ -513,7 +527,7 @@ function tagsForProduct(allTags: HardcoreTag[], evidence: EvidenceReport[], cate
 }
 
 function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceReport[]): HardcoreProduct | null {
-  const category = findCategory(row.category_slug || row.category)
+  const category = findCategory(row.category_slug || row.category || row.evidence_category_slug)
   if (!category || !row.slug) return null
   const consensus = summarizeConsensus(evidence)
   const currentPrice = row.current_price ?? row.price_amount
