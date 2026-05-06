@@ -1,0 +1,76 @@
+{
+  "baseUrl": "https://www.bes3.com",
+  "generatedAt": "2026-05-06T14:53:55.649Z",
+  "productSlug": "lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket",
+  "pseoPath": "/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing",
+  "totals": {
+    "passed": 6,
+    "failed": 0
+  },
+  "results": [
+    {
+      "area": "Runtime",
+      "name": "Health exposes deployed build metadata",
+      "status": "passed",
+      "evidence": {
+        "status": "ok",
+        "version": "0.1.0",
+        "database": {
+          "connected": true,
+          "type": "postgres"
+        },
+        "build": {
+          "sha": "766807b518584c8faef6d406e046d5e5dd3e6ce1",
+          "ref": "main"
+        }
+      }
+    },
+    {
+      "area": "Product detail",
+      "name": "Open-commerce product 54 page renders",
+      "status": "passed",
+      "evidence": {
+        "path": "/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?post_deploy=2026-05-06T14-53-52-774Z",
+        "productSlug": "lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket",
+        "htmlBytes": 113331
+      }
+    },
+    {
+      "area": "pSEO",
+      "name": "Scenario page serves corrected research copy",
+      "status": "passed",
+      "evidence": {
+        "path": "/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?post_deploy=2026-05-06T14-53-52-774Z",
+        "htmlBytes": 116318,
+        "stillNoindex": true
+      }
+    },
+    {
+      "area": "Discovery",
+      "name": "Product sitemap remains populated",
+      "status": "passed",
+      "evidence": {
+        "urls": 215,
+        "minimum": 215
+      }
+    },
+    {
+      "area": "Discovery",
+      "name": "Editorial sitemap remains populated",
+      "status": "passed",
+      "evidence": {
+        "urls": 20,
+        "minimum": 20
+      }
+    },
+    {
+      "area": "Conversion",
+      "name": "Product 54 merchant handoff redirects",
+      "status": "passed",
+      "evidence": {
+        "status": 307,
+        "locationHost": "www.amazon.com"
+      }
+    }
+  ]
+}

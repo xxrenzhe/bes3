@@ -1,0 +1,22 @@
+{
+  "baseUrl": "https://www.bes3.com",
+  "generatedAt": "2026-05-06T14:54:06.946Z",
+  "thresholds": {
+    "minQualifiedProducts": 1,
+    "minQualifiedReviews": 1,
+    "minQualifiedEvidenceReports": 1,
+    "minLongTailIntentSources": 1
+  },
+  "totals": {
+    "passed": 0,
+    "failed": 1
+  },
+  "results": [
+    {
+      "area": "Authentication",
+      "name": "Admin API login works",
+      "status": "failed",
+      "detail": "/api/auth/login returned 401"
+    }
+  ]
+}

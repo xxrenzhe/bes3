@@ -916,6 +916,51 @@ The public production gates are materially closer but still not complete. Produc
 
 Do not close `bes3-dg3t` yet. Push the health/verifier fix, wait for GHCR image publication, have production pull/restart that image, then rerun the post-deploy verifier. If it passes, run the authenticated production business audit.
 
+## Public Post-Deploy Pass - 2026-05-06T14:54:07Z
+
+The user confirmed production had pulled/restarted the latest code again. The release workflow and production verifier were checked.
+
+### Commands Run
+
+- `gh run view 25442512635 --repo xxrenzhe/bes3 --json status,conclusion,headSha,url,jobs`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+- `PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest npm run ops:production-business-audit`
+
+### Evidence
+
+- GitHub workflow `25442512635` for commit `766807b518584c8faef6d406e046d5e5dd3e6ce1` completed successfully.
+- CI `build-and-test` passed type check, ESLint, schema drift check, production build, and runtime smoke diagnostics.
+- CI `build-and-push` passed and published the GHCR image.
+- New public verifier artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-53-52-774Z.json`.
+- Public post-deploy verifier result: 6 passed, 0 failed.
+- `/api/health` now exposes `build.sha=766807b518584c8faef6d406e046d5e5dd3e6ce1` and `build.ref=main`.
+- Product 54 detail page renders externally: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`.
+- Sample pSEO page serves corrected research copy: `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing`.
+- Product sitemap remains populated with 215 URLs.
+- Editorial sitemap remains populated with 20 URLs.
+- `/go/54` redirects to Amazon with HTTP 307.
+- New authenticated audit artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T14-54-07-003Z.json`.
+- Authenticated business audit still fails at `Authentication`: `/api/auth/login returned 401`.
+
+### Completion Audit
+
+The public production business path is now passing for runtime identity, product detail rendering, pSEO research copy, sitemap discovery, and merchant handoff. This is enough to provide external manual-review URLs and prove the public buyer path works for the sampled product.
+
+The overall objective is still not fully achieved because the authenticated admin audit remains blocked at login. Without that audit, inventory truth, evidence report quality, taxonomy-source validation, SEO backlog state, and price-value summaries are still not independently verified from admin APIs.
+
+### External URLs For Manual Review
+
+- Working evidence page: `https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo`
+- Working product 54 page: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
+- Working pSEO research page: `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing`
+- Product 54 machine API: `https://www.bes3.com/api/open/commerce/products/54`
+- Product 54 offers API: `https://www.bes3.com/api/open/commerce/products/54/offers`
+- Product 54 merchant handoff: `https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506`
+
+### Conclusion
+
+Do not close `bes3-dg3t` yet and do not mark the thread goal complete. The remaining required action is to fix or provide valid production admin authentication, then rerun `npm run ops:production-business-audit` until it runs past login and records admin-backed results under `docs/ProdTest`.
+
 ## Prompt-to-Artifact Completion Checklist - 2026-05-06T13:06:00Z
 
 Objective restated as concrete deliverables:
