@@ -2,7 +2,7 @@
 
 Target: `https://www.bes3.com`
 
-This report records the production validation steps, evidence, fixes made locally, and remaining blockers. The result is not a full pass yet because production admin authentication failed, one public product-detail URL is broken in the currently deployed build, and pSEO product/editorial sitemaps are empty in production.
+This report records the production validation steps, evidence, fixes made locally, and remaining blockers. The result is not a full pass yet because production admin authentication still fails, the advertised open-commerce product-detail URL still returns 404, and the sampled pSEO page still serves old `Reddit Consensus` / `noindex` copy. Product and editorial sitemaps are now populated, but production still appears to run mixed/stale page bundles.
 
 ## Executive Result
 
@@ -10,8 +10,9 @@ This report records the production validation steps, evidence, fixes made locall
 - Production has monetizable products and `/go/54` redirects to Amazon with affiliate attribution.
 - Production has YouTube-backed evidence pages, including an externally accessible evidence URL.
 - Production open-commerce product actions currently link to `/products/<slug>` URLs that 404 for open-commerce products.
+- Product and editorial sitemaps now return 215 and 20 URLs respectively, but sitemap discovery is not internally consistent while product 54 still 404s.
 - Local code was patched so `/products/[slug]` now falls back to open-commerce products and product/editorial sitemap routes are dynamic.
-- Fix commit `5598466` was pushed to `main`; GitHub Actions release workflow `25428374415` completed successfully and published the release image, but `www.bes3.com` still serves the old runtime until the server pulls/restarts the new image.
+- Fix commits were pushed to `main` and GHCR release workflows completed successfully, but `www.bes3.com` still serves stale page chunks until the production host cleanly pulls/restarts the latest image.
 
 ## External URLs For Manual Review
 
@@ -20,7 +21,11 @@ This report records the production validation steps, evidence, fixes made locall
 - Open commerce product API: `https://www.bes3.com/api/open/commerce/products/54`
 - Open commerce offers API: `https://www.bes3.com/api/open/commerce/products/54/offers`
 - Merchant handoff, currently redirects to Amazon: `https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506`
-- Broken in current production after image build, fixed in commit `5598466`, pending server pull/restart: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
+- Broken in current production after image builds, fixed locally and pending clean production pull/restart: `https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`
+
+## Operator Handoff
+
+- Production unblock and post-deploy verification checklist: `docs/ProdTest/PROD_OPERATOR_HANDOFF_2026-05-06.md`
 
 ## Validation Evidence
 
@@ -31,11 +36,11 @@ This report records the production validation steps, evidence, fixes made locall
 | Extract detailed information from YouTube products | Partial | Evidence page includes creator quote/context. Admin report-level validation is blocked by login 401. Product 54 machine payload has 32 attribute facts and 6 price-history points, but it is commerce data rather than YouTube-derived evidence. |
 | Mine real long-tail keywords | Partial | Evidence API reports 60 tags and 6 pending tags; taxonomy sitemap has 750 URLs. Admin taxonomy intent-source validation is blocked by login 401. |
 | Generate high-quality review/product pages | Partial | Evidence product page is 200, indexable, contains evidence and YouTube link. Open-commerce product page for product 54 is 404 in production; local code patch adds fallback page. |
-| pSEO ranking automation | Weak | Main sitemap has 945 URLs and taxonomy sitemap has 750 URLs. Product and editorial sitemaps are empty in production; sampled pSEO page renders but contains `noindex`. |
+| pSEO ranking automation | Weak | Product/editorial sitemaps now return 215/20 URLs and taxonomy sitemap has 750 URLs. Sampled pSEO page still serves old `Reddit Consensus` copy and contains `noindex`. |
 | Improve affiliate-click conversion | Partial | `/go/54` redirects to Amazon with affiliate parameters; buying-feed actions include `merchant_handoff`, `start_alert`, and `browse_category`. Deployed product-detail page 404 weakens conversion. |
 | Improve AI recommendation ability | Partial | `llms.txt`, `/api/open/coverage`, `/api/open/buying-feed`, and open commerce endpoints exist. `LOMON` search returns 10 results; `pool robot` search returns 0 despite evidence product existing. |
 | Solve issues encountered | Partial | Fixed local root cause for broken open-commerce product URLs and stale product/editorial sitemap routes. Production deployment and credentials remain blockers. |
-| Write every step under `docs/ProdTest` | Done | This report plus `production-business-loop-audit-2026-05-06T09-29-18-390Z.json` are stored in `docs/ProdTest`. |
+| Write every step under `docs/ProdTest` | Done | This report plus repeated production audit JSON artifacts through `production-business-loop-audit-2026-05-06T12-48-17-514Z.json` are stored in `docs/ProdTest`. |
 
 ## Commands Run
 
@@ -575,3 +580,164 @@ As of `2026-05-06T12:30:04Z`, production has still not pulled/restarted the imag
 ### Conclusion
 
 It is not safe or possible to run production deployment from this local session: the required GHCR credentials are absent, and this workspace is not confirmed as the ClawCloud production host with production `.env.production`. Running `scripts/deploy-ghcr.sh` here could only affect the local compose target, not the actual public runtime. The next required action is still to run the GHCR deploy script on the production host with valid credentials.
+
+## Continued Production Recheck - 2026-05-06T12:50:41Z
+
+### Commands Run
+
+- `curl -sS -D /tmp/bes3-health-latest.headers -o /tmp/bes3-health-latest.json -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/health?codex_recheck=latest-20260506'`
+- `curl -sS -D /tmp/bes3-product54-latest.headers -o /tmp/bes3-product54-latest.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=latest-20260506'`
+- `curl -sS -D /tmp/bes3-pseo-latest.headers -o /tmp/bes3-pseo-latest.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=latest-20260506'`
+- `curl -sS -D /tmp/bes3-products-sitemap-latest.headers -o /tmp/bes3-products-sitemap-latest.xml -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/sitemap.xml?codex_recheck=latest-20260506'`
+- `curl -sS -D /tmp/bes3-editorial-sitemap-latest.headers -o /tmp/bes3-editorial-sitemap-latest.xml -H 'Cache-Control: no-cache' 'https://www.bes3.com/editorial/sitemap.xml?codex_recheck=latest-20260506'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54/offers'`
+- `curl -sS -D /tmp/bes3-go54-latest.headers -o /tmp/bes3-go54-latest.body -H 'Cache-Control: no-cache' 'https://www.bes3.com/go/54?source=prodtest&visitor=prodtest-20260506-latest'`
+- `curl -sS -D /tmp/bes3-hardcore-product-latest.headers -o /tmp/bes3-hardcore-product-latest.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo?codex_recheck=latest-20260506'`
+- `PRODUCTION_BUSINESS_AUDIT_BASE_URL=https://www.bes3.com PRODUCTION_BUSINESS_AUDIT_OUTPUT_DIR=docs/ProdTest npm run ops:production-business-audit`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 5`
+
+### New Evidence
+
+- `/api/health` returned HTTP 200 with `status=ok`, `version=0.1.0`, `database.connected=true`, and `database.type=postgres`, but still does not expose `build.sha`.
+- Product 54 open-commerce API is live and current: `.product.id` is `"54"`, the advertised slug is `lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`, `attributeFacts` has 32 entries, and `priceHistory` has 6 entries.
+- Product 54 offers API returned 1 offer, 4 actions, and 3 disclaimers. The `view_product` action points to `https://bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket`.
+- Product 54 merchant handoff still works: `/go/54?source=prodtest&visitor=prodtest-20260506-latest` returned HTTP 307 to Amazon.
+- Product 54 detail page still fails externally: the advertised product URL returned HTTP 404 with `NEXT_HTTP_ERROR_FALLBACK;404` and still references old route chunk `static/chunks/app/products/%5Bslug%5D/page-11eb834d09265723.js`.
+- Existing YouTube-backed evidence URL still works: `https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo` returned HTTP 200 with the `Nautilus Pool Wall Demo Evidence Report`, creator quote, timestamped YouTube link, and `Check price` CTA.
+- `/products/sitemap.xml` has improved from the earlier empty sitemap to 215 `<url>` entries. It now includes the product 54 URL, but that URL still returns 404, so sitemap discovery is not yet internally consistent.
+- `/editorial/sitemap.xml` has improved from the earlier empty sitemap to 20 `<url>` entries.
+- The sampled pSEO page still serves old route chunk `static/chunks/app/%5Bcategory%5D/%5Blanding%5D/page-dbd05c86d7f423cc.js`, still renders `Reddit Consensus: The 1 Best Yard and Pool Automation for Pool Wall Climbing (2026 Tested)`, and still lacks the fixed `Research Snapshot`, `Evidence Check`, `Source Score`, and `Source Proof` language.
+- Built-in production business audit still cannot proceed past authenticated admin checks. New artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T12-48-17-514Z.json`; failure remains `/api/auth/login returned 401`.
+- Latest main-branch release workflows are green through `25435685844` (`Document deployment capability blocker`), so CI/GHCR publishing is not the current blocker.
+
+### Completion Audit
+
+- Business loop is still partial: public APIs, product data, offer data, and merchant redirect are real, but the advertised product detail page remains broken and admin inventory truth cannot be audited.
+- YouTube evidence discovery is still partial: the external evidence page works and exposes timestamp proof, but the quantity/quality threshold remains low.
+- Detailed product extraction is partially proven: product 54 has 32 attribute facts and 6 price-history points, while the YouTube-derived detail depth remains limited to the seeded evidence product.
+- Long-tail keyword mining is still partial: public sitemap and taxonomy evidence exist, but authenticated taxonomy-source validation remains blocked.
+- High-quality review/product page generation is still partial: one evidence page is valid, but the advertised open-commerce product page remains HTTP 404.
+- pSEO ranking automation is not a pass: product/editorial sitemap generation now returns URLs, but the sampled pSEO page is still old, `noindex`, and not using the corrected research-mode copy.
+- Affiliate-click conversion is partial: `/go/54` redirects to Amazon, but the broken product-detail page interrupts the conversion path.
+- AI recommendation readiness is partial: machine-readable open-commerce endpoints work, but the public product URL advertised by those endpoints is still broken.
+
+### Current Blocker
+
+Production appears partially updated: sitemap routes now reflect newer dynamic data, but product and pSEO page bundles still serve old chunks. The next required operator action is still a clean production-host pull/restart of `ghcr.io/xxrenzhe/bes3:prod-latest`, followed by another recheck of `/api/health`, product 54 detail URL, the sampled pSEO page, and the admin audit with valid production credentials.
+
+## Minimal Production Recheck - 2026-05-06T12:55:24Z
+
+### Commands Run
+
+- `curl -sS -D /tmp/bes3-health-1255.headers -o /tmp/bes3-health-1255.json -H 'Cache-Control: no-cache' 'https://www.bes3.com/api/health?codex_recheck=20260506T1255'`
+- `curl -sS -D /tmp/bes3-product54-1255.headers -o /tmp/bes3-product54-1255.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?codex_recheck=20260506T1255'`
+- `curl -sS -D /tmp/bes3-pseo-1255.headers -o /tmp/bes3-pseo-1255.html -H 'Cache-Control: no-cache' 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?codex_recheck=20260506T1255'`
+- `curl -sS 'https://www.bes3.com/products/sitemap.xml?codex_recheck=20260506T1255'`
+- `curl -sS 'https://www.bes3.com/editorial/sitemap.xml?codex_recheck=20260506T1255'`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 5`
+
+### Evidence
+
+- Latest main release workflows are still green through `25435685844`, with no newer deployment signal visible from GitHub Actions.
+- `/api/health` still returns HTTP 200 with `status=ok`, `version=0.1.0`, and connected Postgres, but still no `build.sha`.
+- Product 54 advertised URL still returns HTTP 404 and `NEXT_HTTP_ERROR_FALLBACK;404`; it still serves `static/chunks/app/products/%5Bslug%5D/page-11eb834d09265723.js`.
+- The pSEO URL still returns HTTP 200 with `Reddit Consensus: The 1 Best Yard and Pool Automation for Pool Wall Climbing (2026 Tested)`, `noindex, follow`, `Scenario FAQ`, `winner` / `ranking` wording, and old chunk `static/chunks/app/%5Bcategory%5D/%5Blanding%5D/page-dbd05c86d7f423cc.js`.
+- `/products/sitemap.xml` still returns 215 `<url>` entries.
+- `/editorial/sitemap.xml` still returns 20 `<url>` entries.
+
+### Conclusion
+
+No meaningful improvement since the 12:50Z recheck. Sitemaps remain populated, but the two externally important manual-review pages are still not serving the corrected runtime. The production validation objective remains blocked by stale/mixed production runtime plus unavailable valid admin credentials.
+
+## Executable Post-Deploy Verifier - 2026-05-06T13:21:20Z
+
+### Code Added
+
+- `scripts/production-post-deploy-verify.ts`: verifies post-deploy runtime state, product 54 detail rendering, corrected pSEO research copy, product/editorial sitemap counts, and product 54 merchant handoff.
+- `package.json`: added `npm run ops:production-post-deploy-verify`.
+
+### Commands Run
+
+- `npm run ops:production-post-deploy-verify`
+- `npx tsc --noEmit --pretty false`
+
+### Current Production Result
+
+New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T13-21-15-035Z.json`.
+
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+- Validation: `npx tsc --noEmit --pretty false` passed.
+
+### Usage After Production Restart
+
+After the ClawCloud host pulls/restarts `ghcr.io/xxrenzhe/bes3:prod-latest`, run:
+
+```bash
+PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com \
+PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest \
+npm run ops:production-post-deploy-verify
+```
+
+This script should pass before repeating the authenticated `npm run ops:production-business-audit` gate.
+
+## Deployment Automation Capability Check - 2026-05-06T13:00:00Z
+
+### Commands Run
+
+- `rg -n "deploy|ClawCloud|GHCR|prod-latest|workflow_dispatch|repository_dispatch|ssh|restart|pull" .github scripts docs AGENTS.md README.md package.json docker-compose.yml`
+- `sed -n '1,230p' .github/workflows/deploy.yml`
+- `sed -n '1,180p' scripts/deploy-ghcr.sh`
+- `env | rg '^(GHCR|BES3|CLAW|SSH|DOCKER|PRODUCTION|VERCEL|FLY|RAILWAY|RENDER|CLOUDFLARE|CF_)'`
+- `ls -la ~/.ssh && sed -n '1,220p' ~/.ssh/config`
+- `gh auth status`
+- `gh secret list --repo xxrenzhe/bes3`
+- `gh variable list --repo xxrenzhe/bes3`
+- `gh workflow list --repo xxrenzhe/bes3`
+
+### Evidence
+
+- `.github/workflows/deploy.yml` has `workflow_dispatch`, but the workflow only runs build/test and `build-and-push` to GHCR. It has no SSH, ClawCloud API, Docker remote context, webhook, or deployment job.
+- The workflow comments explicitly state: `ClawCloud deployment stays manual: pull from GHCR and start the container on the server`.
+- `scripts/deploy-ghcr.sh` is a host-local script. It requires local `docker`, local `docker-compose.yml`, local `.env.production`, and then runs `docker compose pull`, runtime env check, migration, and `docker compose up -d --no-build`.
+- Current environment exposes only `SSH_AUTH_SOCK`; no `GHCR_*`, `BES3_*`, `CLAW*`, `PRODUCTION*`, or Cloudflare deploy credentials are present.
+- `~/.ssh/config` only includes Colima config and `Host * ForwardAgent yes`; no Bes3 or ClawCloud production host alias is configured.
+- GitHub CLI is authenticated as `xxrenzhe` with `repo` and `workflow` scopes, but `gh secret list --repo xxrenzhe/bes3` and `gh variable list --repo xxrenzhe/bes3` returned no deploy secrets or variables.
+- `gh workflow list --repo xxrenzhe/bes3` returned only `Build Bes3 Release Image`.
+
+### Conclusion
+
+There is no safe callable deployment path from this session. Triggering `workflow_dispatch` would only rebuild and republish `ghcr.io/xxrenzhe/bes3:prod-latest`; it would not restart `www.bes3.com`. Running `scripts/deploy-ghcr.sh` locally would target this workstation, not the production ClawCloud host. The remaining blocker requires operator access to the production host or a new deployment automation path with appropriate credentials.
+
+## Prompt-to-Artifact Completion Checklist - 2026-05-06T13:06:00Z
+
+Objective restated as concrete deliverables:
+
+1. Prove the public production business loop is closed with real data from discovery, evidence, product detail, merchant handoff, SEO surfaces, and AI-readable APIs.
+2. Produce at least one externally accessible product/review URL suitable for manual human validation.
+3. Write every command/result and any blocker under `docs/ProdTest`.
+4. Do not mark completion until production serves the corrected runtime and authenticated admin validation can verify data truth and quality gates.
+
+| User Requirement | Artifact / Evidence Checked | Current Result | Gap To Close |
+| --- | --- | --- | --- |
+| 1. Business loop closed and data real | `/api/open/buying-feed`, `/api/open/commerce/products/54`, `/api/open/commerce/products/54/offers`, `/go/54`, latest audit JSON | Partial | Public data and merchant redirect are real, but product 54 public detail URL still 404s and admin audit still fails at `/api/auth/login returned 401`. |
+| 2. Find product matching high-quality YouTube review video | `/api/open/evidence`, `https://www.bes3.com/products/dolphin-nautilus-pool-wall-demo`, timestamped YouTube proof in page HTML | Partial | Evidence exists, but only 1 seeded evidence report / 1 creator source is proven; quality/scale threshold remains weak. |
+| 3. Extract detailed information from YouTube product | Evidence page content plus product 54 machine API with 32 `attributeFacts` and 6 `priceHistory` points | Partial | Product 54 extraction depth is commerce-derived, not verified as YouTube-derived; admin report-level validation remains blocked. |
+| 4. Mine real long-tail keywords | Evidence API tags, taxonomy sitemap evidence, pSEO scenario URL, product/editorial sitemaps | Partial | Long-tail surfaces exist, but authenticated taxonomy intent-source validation is unavailable and sampled pSEO page still serves old copy. |
+| 5. Generate high-quality product review page | Working evidence page URL and broken product 54 URL | Partial | `dolphin-nautilus-pool-wall-demo` works; advertised product 54 URL remains HTTP 404. |
+| 6. pSEO automated ranking ability | `/products/sitemap.xml` = 215 URLs, `/editorial/sitemap.xml` = 20 URLs, sampled pSEO page | Not pass | Sitemaps are populated, but sampled pSEO page is still `noindex`, old `Reddit Consensus` copy, and not the corrected research-mode page. |
+| 7. Improve affiliate click conversion | `/go/54` 307 Amazon redirect, offers API actions/disclaimers, product page CTAs | Partial | Merchant handoff works, but broken product detail page interrupts the intended conversion path. |
+| 8. Improve AI recommendation ability | `llms.txt`, `/api/open/coverage`, `/api/open/buying-feed`, open-commerce APIs, sitemap URLs | Partial | Machine-readable endpoints work, but public API advertises product detail URLs that still 404. |
+| 9. Solve problems until perfect result | Local fixes, successful GHCR release workflows, deployment capability checks | Blocked | Code/build side was fixed and image published; production host restart and admin credentials are unavailable from this session. |
+| 10. Write steps under `docs/ProdTest` and give external URL | This report plus audit JSON files under `docs/ProdTest`; manual URLs listed near top | Partial | Documentation requirement is satisfied; final externally accessible URL set includes one working evidence page and one still-broken product URL that must be rechecked after deployment. |
+
+Completion decision:
+
+- Do not close `bes3-dg3t`.
+- Do not call the thread goal complete.
+- Required next input/action is production operator access: run a clean pull/restart of `ghcr.io/xxrenzhe/bes3:prod-latest` on the ClawCloud host, then provide valid production admin credentials or fix admin login configuration so the authenticated audit can run.

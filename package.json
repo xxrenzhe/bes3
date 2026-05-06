@@ -26,6 +26,7 @@
     "ops:browser-e2e": "tsx scripts/browser-planv2-e2e.ts",
     "ops:production-e2e": "tsx scripts/production-e2e.ts",
     "ops:production-business-audit": "tsx scripts/production-business-loop-audit.ts",
+    "ops:production-post-deploy-verify": "tsx scripts/production-post-deploy-verify.ts",
     "ai:test-gemini": "tsx scripts/test-gemini.ts",
     "seo:index": "tsx scripts/google-indexing.ts",
     "seo:inspect-links": "tsx scripts/link-inspector.ts",
