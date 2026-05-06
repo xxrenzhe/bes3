@@ -10,6 +10,7 @@ export async function GET() {
     {
       status,
       version: report.version,
+      build: report.build,
       checkedAt: report.checkedAt,
       service: 'bes3',
       database: {

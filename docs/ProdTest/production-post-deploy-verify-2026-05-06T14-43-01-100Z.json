@@ -1,0 +1,61 @@
+{
+  "baseUrl": "https://www.bes3.com",
+  "generatedAt": "2026-05-06T14:43:08.712Z",
+  "productSlug": "lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket",
+  "pseoPath": "/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing",
+  "totals": {
+    "passed": 4,
+    "failed": 2
+  },
+  "results": [
+    {
+      "area": "Runtime",
+      "name": "Health exposes deployed build metadata",
+      "status": "failed",
+      "detail": "/api/health does not expose build.sha"
+    },
+    {
+      "area": "Product detail",
+      "name": "Open-commerce product 54 page renders",
+      "status": "failed",
+      "detail": "unexpected text: 404 Recovery, That page could not be found."
+    },
+    {
+      "area": "pSEO",
+      "name": "Scenario page serves corrected research copy",
+      "status": "passed",
+      "evidence": {
+        "path": "/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?post_deploy=2026-05-06T14-43-01-100Z",
+        "htmlBytes": 115085,
+        "stillNoindex": true
+      }
+    },
+    {
+      "area": "Discovery",
+      "name": "Product sitemap remains populated",
+      "status": "passed",
+      "evidence": {
+        "urls": 215,
+        "minimum": 215
+      }
+    },
+    {
+      "area": "Discovery",
+      "name": "Editorial sitemap remains populated",
+      "status": "passed",
+      "evidence": {
+        "urls": 20,
+        "minimum": 20
+      }
+    },
+    {
+      "area": "Conversion",
+      "name": "Product 54 merchant handoff redirects",
+      "status": "passed",
+      "evidence": {
+        "status": 307,
+        "locationHost": "www.amazon.com"
+      }
+    }
+  ]
+}

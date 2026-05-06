@@ -824,6 +824,98 @@ Further local verifier reruns are low value until the production host is restart
 
 There is no safe callable deployment path from this session. Triggering `workflow_dispatch` would only rebuild and republish `ghcr.io/xxrenzhe/bes3:prod-latest`; it would not restart `www.bes3.com`. Running `scripts/deploy-ghcr.sh` locally would target this workstation, not the production ClawCloud host. The remaining blocker requires operator access to the production host or a new deployment automation path with appropriate credentials.
 
+## Cloudflare Cache Purge Recheck - 2026-05-06T14:37:52Z
+
+The user manually purged Cloudflare cache for `bes3.com`, so production verification was repeated against `https://www.bes3.com`.
+
+### Commands Run
+
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+- `curl -sS -D - -o /tmp/bes3-health-after-cf-purge.json 'https://www.bes3.com/api/health?after_cf_purge=20260506T1437'`
+- `curl -sS -D - -o /tmp/bes3-product54-after-cf-purge.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?after_cf_purge=20260506T1437'`
+- `curl -sS -D - -o /tmp/bes3-pseo-after-cf-purge.html 'https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing?after_cf_purge=20260506T1437'`
+- `rg -n "NEXT_HTTP_ERROR_FALLBACK|page-[a-z0-9]+\\.js|Evidence Check|Research Snapshot|Source Score|Source Proof|Reddit Consensus|noindex|static/chunks" /tmp/bes3-product54-after-cf-purge.html /tmp/bes3-pseo-after-cf-purge.html`
+- `npx eslint src/app/api/health/route.ts scripts/production-post-deploy-verify.ts`
+- `npx tsc --noEmit --pretty false`
+
+### Evidence
+
+- New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-37-21-828Z.json`.
+- The verifier still returns 3 passed and 3 failed after the Cloudflare purge.
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+- Response headers for `/api/health`, product 54, and the pSEO page show `server: istio-envoy` and no `cf-cache-status`, so the repeated failures are coming from the origin path after the cache purge, not an observable Cloudflare edge cache hit.
+- `/api/health` body is still `{"status":"ok","version":"0.1.0","checkedAt":"2026-05-06T14:37:52.539Z","service":"bes3","database":{"connected":true,"type":"postgres"}}`.
+- Product 54 response still includes `NEXT_HTTP_ERROR_FALLBACK;404`.
+- pSEO response still loads `/_next/static/chunks/app/%5Bcategory%5D/%5Blanding%5D/page-dbd05c86d7f423cc.js`, still uses `Reddit Consensus: The 1 Best...`, and still emits `noindex, follow`.
+
+### Local Fix
+
+- `src/app/api/health/route.ts`: added `build: report.build` to the public health response. Without this, the post-deploy verifier's build-metadata gate could not pass even after the production host pulls a corrected image.
+
+### Verification
+
+- `npx eslint src/app/api/health/route.ts scripts/production-post-deploy-verify.ts`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+
+### Conclusion
+
+Manual Cloudflare cache purge did not unblock production. The remaining public failures are now attributable to origin/runtime state and one confirmed local health-response omission. Product 54 and pSEO route fixes are already present locally, but production must still pull/restart a new image containing all current fixes before the post-deploy verifier can pass.
+
+## Production Recheck After User Deploy - 2026-05-06T14:44:25Z
+
+The user confirmed production had updated to the latest deployed code, so the post-deploy verifier and targeted live checks were repeated.
+
+### Commands Run
+
+- `git status --short --branch`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+- `curl -sS -D /tmp/bes3-health-1443.headers -o /tmp/bes3-health-1443.json 'https://www.bes3.com/api/health?recheck=20260506T1443'`
+- `curl -sS -D /tmp/bes3-product54-1443.headers -o /tmp/bes3-product54-1443.html 'https://www.bes3.com/products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket?recheck=20260506T1443'`
+- `curl -sS 'https://www.bes3.com/api/open/commerce/products/54'`
+- `npx eslint src/app/api/health/route.ts scripts/production-post-deploy-verify.ts`
+- `npx tsc --noEmit --pretty false`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+
+### Evidence
+
+- First new artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-43-01-100Z.json`.
+- First verifier result improved to 4 passed and 2 failed: pSEO, product sitemap, editorial sitemap, and `/go/54` passed; health build metadata and product detail failed.
+- Targeted product detail fetch showed HTTP 200 and rendered real product content: `Product Brief`, `Current offer`, `Open machine payload`, `Product Facts`, price `$22.49`, Amazon offer, 32 product facts, and `/go/54?source=product-detail`.
+- Product 54 machine API returned product id `54`, the expected slug, Amazon offer, 32 attribute facts, 6 price-history points, and public actions including product detail and merchant handoff.
+- The first product-detail verifier failure was a false negative caused by residual 404 recovery strings in the streamed HTML payload, even though the HTTP status and primary content were already correct.
+- `scripts/production-post-deploy-verify.ts` was updated to keep the hard `NEXT_HTTP_ERROR_FALLBACK;404` rejection while requiring positive product-page evidence: `LOMON`, `Product Brief`, `Current offer`, and `Open machine payload`.
+- Second new artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T14-44-21-132Z.json`.
+- Second verifier result improved to 5 passed and 1 failed.
+- Passed: product 54 detail page renders.
+- Passed: sampled pSEO page serves corrected research copy.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` redirects to Amazon with HTTP 307.
+- Failed: `/api/health` still does not expose `build.sha`.
+
+### Local Fixes
+
+- `src/app/api/health/route.ts`: added `build: report.build` to the public health response.
+- `scripts/production-post-deploy-verify.ts`: corrected product-detail verification to use positive page evidence and avoid failing on stale non-primary recovery text when the page is HTTP 200 and renders the product brief.
+
+### Verification
+
+- `npx eslint src/app/api/health/route.ts scripts/production-post-deploy-verify.ts`: passed.
+- `npx tsc --noEmit --pretty false`: passed.
+
+### Completion Audit
+
+The public production gates are materially closer but still not complete. Product detail, pSEO research copy, sitemap discovery, and merchant handoff now pass. The remaining public gate is build metadata on `/api/health`, which requires production to pull/restart an image containing the local health-route fix. The authenticated business audit has still not been rerun successfully past login, so admin-backed proof for inventory truth, taxonomy source quality, SEO backlog, and price-value summaries remains incomplete.
+
+### Conclusion
+
+Do not close `bes3-dg3t` yet. Push the health/verifier fix, wait for GHCR image publication, have production pull/restart that image, then rerun the post-deploy verifier. If it passes, run the authenticated production business audit.
+
 ## Prompt-to-Artifact Completion Checklist - 2026-05-06T13:06:00Z
 
 Objective restated as concrete deliverables:
