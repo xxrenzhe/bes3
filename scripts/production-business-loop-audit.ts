@@ -363,7 +363,8 @@ async function auditYoutubeEvidence(evidenceAdmin: any, evidenceFeed: any) {
       product?.id &&
       cleanText(product?.slug) &&
       Number(product?.consensus?.evidenceCount || 0) >= minQualifiedEvidenceReports &&
-      cleanText(product?.consensus?.verdict || product?.consensus?.summary || JSON.stringify(product?.consensus || '')).length >= 20
+      cleanText(product?.consensus?.verdict || product?.consensus?.summary || JSON.stringify(product?.consensus || '')).length >= 20 &&
+      !looksSynthetic(`${product?.name} ${product?.slug} ${JSON.stringify(product?.consensus || {})}`)
     )
     requireCount('public evidence products', qualified.length, minQualifiedProducts)
     return {

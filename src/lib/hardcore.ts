@@ -93,6 +93,7 @@ interface ProductRow {
   brand: string | null
   product_name: string
   category: string | null
+  category_slug: string | null
   description: string | null
   asin: string | null
   hero_image_url: string | null
@@ -405,6 +406,7 @@ async function listProductRows(): Promise<ProductRow[]> {
         p.brand,
         p.product_name,
         p.category,
+        p.category_slug,
         p.description,
         COALESCE(p.asin, ap.asin) AS asin,
         (
@@ -511,7 +513,7 @@ function tagsForProduct(allTags: HardcoreTag[], evidence: EvidenceReport[], cate
 }
 
 function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceReport[]): HardcoreProduct | null {
-  const category = findCategory(row.category)
+  const category = findCategory(row.category_slug || row.category)
   if (!category || !row.slug) return null
   const consensus = summarizeConsensus(evidence)
   const currentPrice = row.current_price ?? row.price_amount
