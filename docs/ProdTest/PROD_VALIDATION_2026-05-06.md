@@ -686,6 +686,29 @@ npm run ops:production-post-deploy-verify
 
 This script should pass before repeating the authenticated `npm run ops:production-business-audit` gate.
 
+## Post-Deploy Verifier Recheck - 2026-05-06T13:38:34Z
+
+### Commands Run
+
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 2`
+
+### Evidence
+
+- GitHub release workflow `25438298032` for commit `ff09092` completed successfully and published the latest GHCR image.
+- New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T13-38-28-428Z.json`.
+- The verifier result is unchanged from the pre-restart baseline: 3 passed and 3 failed.
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+
+### Conclusion
+
+Production has not yet pulled/restarted the `ff09092` image. The newly committed verifier confirms the same deployment-state blocker remains after the successful GHCR publish.
+
 ## Deployment Automation Capability Check - 2026-05-06T13:00:00Z
 
 ### Commands Run
