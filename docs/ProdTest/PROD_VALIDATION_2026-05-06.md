@@ -734,6 +734,38 @@ Production has not yet pulled/restarted the `ff09092` image. The newly committed
 
 The latest image has been built and pushed, but `https://www.bes3.com` still has not pulled/restarted into the corrected runtime. The bead remains open pending production host operator action and valid production admin authentication.
 
+## Post-Deploy Verifier Recheck - 2026-05-06T13:57:49Z
+
+### Commands Run
+
+- `bd prime`
+- `git status --short --branch`
+- `bd show bes3-dg3t`
+- `gh run list --repo xxrenzhe/bes3 --branch main --limit 3 --json databaseId,status,conclusion,headSha,displayTitle,url,createdAt`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+
+### Evidence
+
+- Latest release workflow `25439387298` for commit `8ccd949` completed successfully.
+- The repository is synced with `origin/main`; only untracked local `.playwright-mcp/` state is present.
+- Bead `bes3-dg3t` remains `in_progress`.
+- New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T13-57-41-283Z.json`.
+- The verifier result remains unchanged after the green `8ccd949` image publish: 3 passed and 3 failed.
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+
+### Completion Audit
+
+The objective is not achieved. The public APIs and merchant redirect prove parts of the business loop, and the working evidence page remains available for manual review, but the production runtime still fails the required corrected-runtime gates. The advertised product 54 page is still externally HTTP 404, the sampled pSEO page still serves old copy, `/api/health` still lacks build metadata, and the authenticated production business audit still cannot be counted as complete without valid admin login.
+
+### Conclusion
+
+There is no additional local code action that can make `https://www.bes3.com` serve the already-published image from this session. The next required action remains a clean production-host pull/restart of `ghcr.io/xxrenzhe/bes3:prod-latest`, followed by the post-deploy verifier and authenticated audit.
+
 ## Deployment Automation Capability Check - 2026-05-06T13:00:00Z
 
 ### Commands Run
