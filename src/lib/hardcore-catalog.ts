@@ -89,6 +89,14 @@ export const HARDCORE_CATEGORIES: HardcoreCategory[] = [
     redditSeeds: ['air purifier wildfire smoke', 'reverse osmosis waste water ratio']
   },
   {
+    slug: 'bathroom-fixtures',
+    name: 'Bathroom Fixtures',
+    coreProducts: ['smart toilets', 'bathroom vanities', 'bidet toilet seats'],
+    metrics: ['flush reliability', 'bidet comfort', 'installation fit', 'countertop durability'],
+    painpoints: ['Flush Reliability', 'Easy Install', 'Bidet Comfort', 'Vanity Durability'],
+    redditSeeds: ['smart toilet worth it', 'bathroom vanity marble top durability', 'bidet toilet seat installation']
+  },
+  {
     slug: 'maker-gear',
     name: 'Maker Gear',
     coreProducts: ['3D printers', 'resin printers', 'laser engravers'],

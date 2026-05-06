@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { requireAdmin, requireAdminPermission } from '@/lib/auth'
 import { logAdminAudit } from '@/lib/admin-governance'
-import { buildCommercialLoopRuntimeGuide, runCommercialLoop, type CommercialLoopOptions } from '@/lib/commercial-loop'
+import { buildCommercialLoopRuntimeGuide, importCommercialLoopEvidence, runCommercialLoop, type CommercialLoopOptions } from '@/lib/commercial-loop'
 
 function readBoolean(value: unknown, fallback = false) {
   return typeof value === 'boolean' ? value : fallback
@@ -52,6 +52,18 @@ export async function GET() {
 export async function POST(request: Request) {
   const actor = await requireAdminPermission('pipeline:write')
   const body = await request.json().catch(() => ({}))
+  if (body?.action === 'importEvidence') {
+    const result = await importCommercialLoopEvidence(body)
+    await logAdminAudit({
+      actor,
+      request,
+      action: 'commercial_loop_import_evidence',
+      entityType: 'commercial_loop',
+      after: result
+    })
+    return NextResponse.json({ success: true, result })
+  }
+
   const options = readOptions(body && typeof body === 'object' && !Array.isArray(body) ? body as Record<string, unknown> : {})
   const result = await runCommercialLoop(options)
   await logAdminAudit({

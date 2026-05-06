@@ -93,6 +93,23 @@ export interface CommercialLoopResult {
   }>
 }
 
+export interface CommercialLoopEvidenceImportInput {
+  affiliateProductId?: number
+  productId?: number
+  youtubeId?: string
+  videoTitle?: string
+  channelName?: string
+  channelUrl?: string | null
+  transcript?: string
+  tagSlug?: string
+  rating?: HardcoreRating
+  evidenceQuote?: string
+  contextSnippet?: string
+  timestampSeconds?: number
+  evidenceConfidence?: number
+  publishArticle?: boolean
+}
+
 interface AffiliateCandidateRow {
   affiliate_product_id: number
   product_id: number | null
@@ -207,6 +224,16 @@ function normalizeText(value: string | null | undefined) {
   return String(value || '').replace(/\s+/g, ' ').trim()
 }
 
+function normalizeYoutubeId(value: unknown) {
+  const raw = normalizeText(String(value || ''))
+  const match = raw.match(/(?:v=|youtu\.be\/|shorts\/)?([A-Za-z0-9_-]{11})/)
+  return match?.[1] || ''
+}
+
+function looksSynthetic(value: unknown) {
+  return /\b(demo|fixture|sample|test|seeded|qa)\b/i.test(normalizeText(String(value || '')))
+}
+
 function clampScore(value: number) {
   return Math.max(0, Math.min(100, Math.round(value)))
 }
@@ -245,6 +272,26 @@ function categoryAllowed(categorySlug: string | null, category: string | null) {
   return HARDCORE_CATEGORIES.some((item) => item.slug === normalized || slugify(item.name) === normalized)
 }
 
+function inferHardcoreCategorySlug(categorySlug: string | null, category: string | null, productName: string) {
+  const normalized = slugify(categorySlug || category || '')
+  const direct = HARDCORE_CATEGORIES.find((item) => item.slug === normalized || slugify(item.name) === normalized)
+  if (direct) return direct.slug
+
+  const haystack = `${productName} ${categorySlug || ''} ${category || ''}`.toLowerCase()
+  if (/\b(smart toilet|bidet|toilet seat|bathroom vanity|vanity unit|marble top|bathroom fixture)\b/.test(haystack)) {
+    return 'bathroom-fixtures'
+  }
+  return null
+}
+
+function isReviewablePhysicalProduct(productName: string, categorySlug: string | null, category: string | null) {
+  const haystack = `${productName} ${categorySlug || ''} ${category || ''}`.toLowerCase()
+  if (/\b(product protection|shipping protection|existing orders only|warranty|insurance|gift card|replacement plan)\b/.test(haystack)) {
+    return false
+  }
+  return Boolean(inferHardcoreCategorySlug(categorySlug, category, productName))
+}
+
 function hasAffiliatePromotionLink(candidate: CommercialLoopCandidate) {
   return Boolean(candidate.promoLink && candidate.promoLink.trim())
 }
@@ -254,10 +301,12 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
   const youtubeMatchTerms = parseJsonArray(row.youtube_match_terms_json)
   const expectedCommissionValue = row.expected_commission_value ?? estimateCommissionValue(row.price_amount, row.commission_rate)
   const dataFreshnessDays = row.data_freshness_days ?? daysSince(row.updated_at)
+  const inferredCategorySlug = inferHardcoreCategorySlug(row.category_slug, row.category, productName)
+  const inferredCategory = HARDCORE_CATEGORIES.find((item) => item.slug === inferredCategorySlug) || null
   const reasons: string[] = []
   let score = 0
 
-  if (categoryAllowed(row.category_slug, row.category)) {
+  if (inferredCategorySlug) {
     score += 18
     reasons.push('inside hardcore category whitelist')
   }
@@ -320,8 +369,8 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
     productName,
     brand: row.brand,
     asin: row.asin,
-    category: row.category,
-    categorySlug: row.category_slug,
+    category: inferredCategory?.name || row.category,
+    categorySlug: inferredCategorySlug || row.category_slug,
     promoLink: row.short_promo_link || row.promo_link,
     productUrl: row.product_url,
     priceAmount: row.price_amount,
@@ -401,6 +450,7 @@ export async function listAffiliateReviewCandidates(limit = 50): Promise<Commerc
 
   return rows
     .map(scoreAffiliateCandidate)
+    .filter((candidate) => isReviewablePhysicalProduct(candidate.productName, candidate.categorySlug, candidate.category))
     .sort((left, right) => right.reviewValueScore - left.reviewValueScore || right.affiliateProductId - left.affiliateProductId)
     .slice(0, limit)
 }
@@ -883,6 +933,118 @@ function parseAiJson(text: string | null): unknown {
 function categoryForCandidate(candidate: CommercialLoopCandidate) {
   const slug = slugify(candidate.categorySlug || candidate.category || '')
   return HARDCORE_CATEGORIES.find((item) => item.slug === slug || slugify(item.name) === slug) || null
+}
+
+async function loadCandidateForEvidenceImport(input: CommercialLoopEvidenceImportInput): Promise<CommercialLoopCandidate> {
+  const candidates = await listAffiliateReviewCandidates(100)
+  const matched = candidates.find((candidate) =>
+    (input.affiliateProductId && Number(candidate.affiliateProductId) === Number(input.affiliateProductId)) ||
+    (input.productId && Number(candidate.productId) === Number(input.productId))
+  ) || candidates.find(hasAffiliatePromotionLink)
+  if (!matched) throw new Error('no_reviewable_affiliate_candidate')
+  return matched
+}
+
+export async function importCommercialLoopEvidence(input: CommercialLoopEvidenceImportInput) {
+  const candidate = await loadCandidateForEvidenceImport(input)
+  const productId = input.productId ? Number(input.productId) : await ensureProductForCandidate(candidate)
+  candidate.productId = productId
+
+  const category = categoryForCandidate(candidate)
+  if (!category) throw new Error('candidate_category_not_supported')
+  const tags = await listHardcoreTags(category.slug)
+  const requestedTagSlug = slugify(input.tagSlug || '')
+  const tag = tags.find((entry) => entry.slug === requestedTagSlug) || tags.find((entry) => entry.id)
+  if (!tag?.id) throw new Error('candidate_category_has_no_tags')
+
+  const youtubeId = normalizeYoutubeId(input.youtubeId)
+  const videoTitle = normalizeText(input.videoTitle || `${candidate.productName} review`)
+  const channelName = normalizeText(input.channelName || 'YouTube reviewer')
+  const evidenceQuote = normalizeText(input.evidenceQuote)
+  const contextSnippet = normalizeText(input.contextSnippet)
+  const transcript = normalizeText(input.transcript || `${contextSnippet} ${evidenceQuote}`)
+  const combinedText = `${youtubeId} ${videoTitle} ${channelName} ${evidenceQuote} ${contextSnippet}`
+  if (!youtubeId) throw new Error('youtube_id_required')
+  if (looksSynthetic(combinedText)) throw new Error('synthetic_evidence_rejected')
+  if (evidenceQuote.length < 40) throw new Error('evidence_quote_too_short')
+  if (contextSnippet.length < 20) throw new Error('context_snippet_too_short')
+  if (transcript.length < 120) throw new Error('transcript_too_short')
+
+  const db = await getDatabase()
+  const existingVideo = await db.queryOne<{ id: number }>('SELECT id FROM review_videos WHERE youtube_id = ? LIMIT 1', [youtubeId])
+  const entityMatch = {
+    matchedAt: new Date().toISOString(),
+    productId,
+    confidence: 0.92,
+    strategy: 'commercial-loop-import',
+    reason: 'Operator-imported real YouTube review evidence for production business audit.'
+  }
+  let videoId: number
+  if (existingVideo?.id) {
+    videoId = existingVideo.id
+    await db.exec(
+      `
+        UPDATE review_videos
+        SET title = ?, channel_name = ?, channel_url = ?, transcript = ?, description = ?,
+            processed_status = 'success', entity_match_json = ?, updated_at = CURRENT_TIMESTAMP
+        WHERE id = ?
+      `,
+      [videoTitle, channelName, input.channelUrl || null, transcript, contextSnippet, JSON.stringify(entityMatch), videoId]
+    )
+  } else {
+    const insertedVideo = await db.exec(
+      `
+        INSERT INTO review_videos (
+          youtube_id, channel_name, channel_url, blogger_rank, authority_tier, title, video_type,
+          transcript, description, processed_status, published_at, entity_match_json
+        ) VALUES (?, ?, ?, 1, 'general', ?, 'long-form', ?, ?, 'success', CURRENT_TIMESTAMP, ?)
+      `,
+      [youtubeId, channelName, input.channelUrl || null, videoTitle, transcript, contextSnippet, JSON.stringify(entityMatch)]
+    )
+    videoId = Number(insertedVideo.lastInsertRowid || 0)
+  }
+  if (!videoId) throw new Error('video_import_failed')
+
+  const rating = (['Excellent', 'Good', 'Average', 'Struggles', 'Fails'] as HardcoreRating[]).includes(input.rating as HardcoreRating)
+    ? input.rating as HardcoreRating
+    : 'Good'
+  const timestampSeconds = Number.isFinite(Number(input.timestampSeconds)) ? Math.max(0, Number(input.timestampSeconds)) : 0
+  const evidenceConfidence = Math.max(0.65, Math.min(Number(input.evidenceConfidence || 0.82), 0.98))
+  const existingReport = await db.queryOne<{ id: number }>(
+    'SELECT id FROM analysis_reports WHERE product_id = ? AND video_id = ? AND tag_id = ? LIMIT 1',
+    [productId, videoId, tag.id]
+  )
+  if (existingReport?.id) {
+    await db.exec(
+      `
+        UPDATE analysis_reports
+        SET rating = ?, evidence_quote = ?, timestamp_seconds = ?, context_snippet = ?,
+            evidence_confidence = ?, evidence_type = 'standard-review', is_advertorial = 0, quality_flags_json = ?
+        WHERE id = ?
+      `,
+      [rating, evidenceQuote, timestampSeconds, contextSnippet, evidenceConfidence, JSON.stringify({ commercial_loop: true, imported_real_youtube: true }), existingReport.id]
+    )
+  } else {
+    await db.exec(
+      `
+        INSERT INTO analysis_reports (
+          product_id, video_id, tag_id, rating, evidence_quote, timestamp_seconds, context_snippet,
+          evidence_confidence, evidence_type, is_advertorial, quality_flags_json
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'standard-review', 0, ?)
+      `,
+      [productId, videoId, tag.id, rating, evidenceQuote, timestampSeconds, contextSnippet, evidenceConfidence, JSON.stringify({ commercial_loop: true, imported_real_youtube: true })]
+    )
+  }
+
+  const article = input.publishArticle !== false ? await upsertEvidenceArticle(productId, candidate) : null
+  return {
+    productId,
+    affiliateProductId: candidate.affiliateProductId,
+    videoId,
+    youtubeId,
+    tagSlug: tag.slug,
+    article
+  }
 }
 
 async function extractEvidenceForProduct(productId: number, candidate: CommercialLoopCandidate): Promise<number> {
