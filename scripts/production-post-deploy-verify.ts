@@ -135,12 +135,28 @@ async function main() {
   await check('pSEO', 'Scenario page serves corrected research copy', async () => {
     const routePath = withCacheBust(pseoPath)
     const { body } = await fetchText(routePath)
-    requireIncludes(body, ['Evidence Check', 'Research Snapshot', 'Source Score', 'Source Proof'])
-    requireExcludes(body, ['Reddit Consensus: The 1 Best'])
+    requireIncludes(body, [
+      'Current Evidence-Backed Pick',
+      'Current Recommendation',
+      'AI Answer Summary',
+      'current evidence-backed pick',
+      'Confidence boundary',
+      'Source Score',
+      'Source Proof'
+    ])
+    requireExcludes(body, [
+      'Reddit Consensus: The 1 Best',
+      'Evidence Check',
+      'Research Snapshot',
+      'not a final ranking',
+      'not a ranked recommendation yet',
+      'not yet strong enough for a final ranking',
+      'noindex'
+    ])
     return {
       path: routePath,
       htmlBytes: body.length,
-      stillNoindex: body.includes('noindex')
+      indexable: !body.includes('noindex')
     }
   })
 

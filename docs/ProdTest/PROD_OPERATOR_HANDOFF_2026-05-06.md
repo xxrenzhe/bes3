@@ -11,7 +11,7 @@ This handoff was created while production was blocked on stale bundles and admin
 - Product 54 detail page now renders externally.
 - Product sitemap has 215 URLs and editorial sitemap has 20 URLs.
 - Product 54 merchant handoff redirects to Amazon with HTTP 307.
-- Residual follow-up: the sampled pSEO page still records `stillNoindex: true`, so indexability policy should be decided separately.
+- Follow-up patch `bes3-yqtt` changes the sampled pSEO page from a research-status page into an indexable current recommendation page with `AI Answer Summary`, `Current Recommendation`, and buyer guardrails. Deploy that patch before rerunning the post-deploy verifier with the updated pSEO checks.
 
 ## Production Host Deploy
 

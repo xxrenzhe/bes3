@@ -64,12 +64,12 @@ export function HardcoreEvidenceMatrix({
           </p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
             {isResearching
-              ? 'Current source proof and missing confidence signals in one table.'
+              ? 'Why this is the current shortlist pick, and what still needs proof.'
               : 'Real-world evidence, price timing, and the current winner in one table.'}
           </h2>
           {isResearching ? (
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              This table is not a ranked recommendation yet. It shows the available proof, source depth, and price context so the research gap is visible.
+              Use this table to verify the current recommendation against creator proof, source depth, and price context. The confidence warning stays visible because the page has not reached the full ranked-guide threshold.
             </p>
           ) : null}
         </div>

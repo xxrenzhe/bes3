@@ -115,7 +115,7 @@ This report records the production validation steps, evidence, fixes made locall
 
 ## Required Next Steps
 
-1. Decide whether the sampled pSEO research page should remain `noindex`; the latest verifier records `stillNoindex: true` even though corrected research copy passes.
+1. Deploy the pSEO page usefulness patch from bead `bes3-yqtt`; it turns the sampled scenario page into an indexable current recommendation page with an AI answer summary and buyer guardrails.
 2. Improve open-commerce search so evidence products can be discovered by queries such as `pool robot`.
 
 ## Continuation Recheck - 2026-05-06T10:31:10Z
