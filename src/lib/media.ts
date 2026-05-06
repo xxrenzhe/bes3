@@ -5,6 +5,7 @@ import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { fetchWithBrowserProxy } from '@/lib/browser-proxy'
 import { getDatabase } from '@/lib/db'
 import { getSettingValueOrEnv } from '@/lib/settings'
+import { getSiteUrl, toAbsoluteUrl } from '@/lib/site-url'
 import type { MediaAssetRole, MediaStorageProvider } from '@/lib/types'
 
 type MediaConfig = {
@@ -51,6 +52,22 @@ function getS3PublicBaseUrl(config: MediaConfig): string {
 
 function buildPublicObjectUrl(baseUrl: string, storageKey: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/${storageKey.replace(/^\/+/, '')}`
+}
+
+function sameHost(left: string, right: string) {
+  try {
+    return new URL(left).host.toLowerCase() === new URL(right).host.toLowerCase()
+  } catch {
+    return false
+  }
+}
+
+function shouldBypassMediaProxy(sourceUrl: string, config: MediaConfig) {
+  const normalizedSourceUrl = toAbsoluteUrl(sourceUrl)
+  const publicBaseUrl = getS3PublicBaseUrl(config)
+  return sourceUrl.startsWith('/media/') ||
+    sameHost(normalizedSourceUrl, getSiteUrl()) ||
+    Boolean(publicBaseUrl && sameHost(normalizedSourceUrl, publicBaseUrl))
 }
 
 async function getMediaConfig(): Promise<MediaConfig> {
@@ -111,16 +128,17 @@ export async function persistMediaAsset(input: {
   index: number
   countryCode?: string | null
 }): Promise<string> {
-  const response = await fetchWithBrowserProxy(
-    input.sourceUrl,
-    {
-      headers: {
-        'user-agent':
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36'
-      }
-    },
-    input.countryCode
-  )
+  const config = await getMediaConfig()
+  const requestUrl = toAbsoluteUrl(input.sourceUrl)
+  const requestInit = {
+    headers: {
+      'user-agent':
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0 Safari/537.36'
+    }
+  }
+  const response = shouldBypassMediaProxy(input.sourceUrl, config)
+    ? await fetch(requestUrl, requestInit)
+    : await fetchWithBrowserProxy(requestUrl, requestInit, input.countryCode)
   if (!response.ok) {
     throw new Error(`Failed to download media: ${response.status}`)
   }
@@ -131,7 +149,6 @@ export async function persistMediaAsset(input: {
   const extension = guessExtension(contentType)
   const fileName = `${input.productId}-${input.assetRole}-${input.index}-${checksum.slice(0, 10)}.${extension}`
   const storageKey = `${new Date().toISOString().slice(0, 7)}/${fileName}`
-  const config = await getMediaConfig()
   const driver = config.driver
   let publicUrl = input.sourceUrl
 

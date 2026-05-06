@@ -321,6 +321,6 @@ export async function validateProxyPoolConfig(
   return {
     valid: true,
     version: PROXY_VALIDATION_VERSION,
-    message: `✅ 已配置 ${proxyUrls.length} 个代理URL，连接验证通过`
+    message: `✅ 已配置 ${proxyUrls.length} 个代理URL，连接验证通过：${results.map((item) => item.message).join('；')}`
   }
 }
