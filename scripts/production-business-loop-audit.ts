@@ -179,6 +179,11 @@ function hasDecisionContent(productResult: any) {
   return modules.some((item: any) => cleanText(typeof item === 'string' ? item : JSON.stringify(item || '')).length >= 80)
 }
 
+function looksSynthetic(value: unknown) {
+  const text = cleanText(value).toLowerCase()
+  return /\b(demo|fixture|sample|test|seeded|qa)\b/.test(text)
+}
+
 function isLongTail(value: unknown) {
   const text = cleanText(value).toLowerCase()
   const tokens = text.split(/[^a-z0-9]+/).filter(Boolean)
@@ -308,9 +313,16 @@ async function auditYoutubeEvidence(evidenceAdmin: any, evidenceFeed: any) {
     const summary = evidenceAdmin?.summary || {}
     requireCount('review videos', Number(summary.videos || 0), minQualifiedEvidenceReports)
     requireCount('analysis reports', Number(summary.reports || 0), minQualifiedEvidenceReports)
+    const videos = asArray(evidenceAdmin?.videos)
+    const realVideos = videos.filter((video: any) =>
+      cleanText(video?.youtube_id) &&
+      !looksSynthetic(`${video?.youtube_id} ${video?.title} ${video?.channel_name}`)
+    )
+    requireCount('real non-demo review videos', realVideos.length, minQualifiedEvidenceReports)
     return {
       videos: summary.videos,
       reports: summary.reports,
+      realVideos: realVideos.length,
       lowConfidenceReports: summary.low_confidence_reports,
       advertorialReports: summary.advertorial_reports
     }
@@ -327,7 +339,8 @@ async function auditYoutubeEvidence(evidenceAdmin: any, evidenceFeed: any) {
       cleanText(report?.context_snippet).length >= 20 &&
       Number.isFinite(Number(report?.timestamp_seconds)) &&
       Number(report?.evidence_confidence || 0) >= 0.65 &&
-      Number(report?.is_advertorial || 0) === 0
+      Number(report?.is_advertorial || 0) === 0 &&
+      !looksSynthetic(`${report?.product_name} ${report?.youtube_id} ${report?.channel_name} ${report?.evidence_quote} ${report?.context_snippet}`)
     )
     requireCount('qualified YouTube evidence reports', qualified.length, minQualifiedEvidenceReports)
     return {
@@ -371,6 +384,7 @@ async function auditIntentAndPseo(taxonomyAdmin: any, coverage: any, articlesAdm
     const intentSources = asArray(taxonomyAdmin?.intentSources).filter((source: any) => isLongTail(source?.normalized_query || source?.raw_query))
     const pendingTags = asArray(taxonomyAdmin?.pendingTags).filter((tag: any) => isLongTail(tag?.canonical_name || tag?.trigger_query))
     requireCount('long-tail tags/intents', tags.length + intentSources.length + pendingTags.length, minLongTailIntentSources)
+    requireCount('long-tail search intent sources', intentSources.length + pendingTags.length, minLongTailIntentSources)
     return {
       longTailTags: tags.length,
       longTailIntentSources: intentSources.length,

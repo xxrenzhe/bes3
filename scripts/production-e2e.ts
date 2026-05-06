@@ -135,6 +135,7 @@ const adminApiChecks: ApiCheck[] = [
   { area: 'Admin API', name: 'Articles snapshot', path: '/api/admin/articles', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Pipeline runs snapshot', path: '/api/admin/pipeline-runs', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Pipeline ops snapshot', path: '/api/admin/pipeline-ops', authenticated: true, expectedStatus: 200 },
+  { area: 'Admin API', name: 'Commercial loop guide', path: '/api/admin/commercial-loop', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Evidence snapshot', path: '/api/admin/evidence', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Taxonomy snapshot', path: '/api/admin/taxonomy', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Price value snapshot', path: '/api/admin/price-value', authenticated: true, expectedStatus: 200 },
@@ -556,6 +557,40 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
     },
     (json) => {
       if (!json || typeof json.createdIds === 'undefined' || typeof json.updatedIds === 'undefined') throw new Error('sync result missing createdIds/updatedIds')
+    }
+  )
+
+  await mutationStep(
+    context,
+    'Preview commercial loop candidates',
+    {
+      method: 'POST',
+      path: '/api/admin/commercial-loop',
+      authenticated: true,
+      body: { execute: false, limit: 5, minScore: 0, discoverVideos: false, fetchTranscripts: false, extractEvidence: false, publishArticles: false }
+    },
+    (json) => {
+      if (!json?.success || !Array.isArray(json?.result?.candidates) || json.result.candidates.length < 1) {
+        throw new Error('commercial loop preview missing candidates')
+      }
+    }
+  )
+
+  const searchIntentQuery = `best cordless pool robot for vinyl liner walls ${Date.now()}`
+  await mutationStep(
+    context,
+    'Capture long-tail search intent',
+    {
+      method: 'POST',
+      path: '/api/open/evidence/search-intake',
+      body: {
+        query: searchIntentQuery,
+        categorySlug: 'yard-pool-automation',
+        source: 'production-e2e'
+      }
+    },
+    (json) => {
+      if (!json?.pendingTag?.slug || json?.status !== 'pending') throw new Error('search intake response missing pending tag')
     }
   )
 
