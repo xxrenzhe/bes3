@@ -7,6 +7,9 @@
     "workflowRunId": "25428374415",
     "workflowStatus": "completed",
     "workflowConclusion": "success",
+    "reportCommit": "a09c76b",
+    "reportWorkflowRunId": "25428790831",
+    "reportWorkflowConclusion": "success",
     "productionPostPushStatus": "old_runtime_still_serving"
   },
   "manualReviewUrls": {
@@ -71,6 +74,7 @@
     "Current production build returns 404 for advertised open-commerce product page /products/lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket.",
     "Production product and editorial sitemap routes return empty urlsets.",
     "Fix commit 5598466 is built and pushed, but www.bes3.com still serves the old runtime until production pulls/restarts the new image.",
+    "Report commit a09c76b is also built and pushed, but final production recheck still shows the old runtime.",
     "Sample pSEO scenario page renders with noindex.",
     "Open-commerce search for pool robot returns zero results despite pool evidence product existing."
   ],

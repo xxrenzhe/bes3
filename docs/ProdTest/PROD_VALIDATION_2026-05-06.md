@@ -62,6 +62,7 @@ This report records the production validation steps, evidence, fixes made locall
 - `git push origin main`
 - `gh api 'repos/xxrenzhe/bes3/actions/runs/25428374415'`
 - Post-push production rechecks for product 54 detail URL and `/products/sitemap.xml`
+- Final recheck after workflow `25428790831` success: product 54 detail URL, `/products/sitemap.xml`, and `npm run ops:production-business-audit`
 
 ## Production Findings
 
@@ -84,6 +85,7 @@ This report records the production validation steps, evidence, fixes made locall
 - `https://www.bes3.com/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing` returned 200 with canonical and JSON-LD, but contains `noindex`.
 - `pool robot` open-commerce search returned 0 results, even though an evidence product exists for the pool category.
 - After commit `5598466` was pushed and release workflow `25428374415` completed successfully, production still returned 404 for the product 54 detail URL and 0 URLs for `/products/sitemap.xml`; this confirms the server has not yet pulled/restarted the new image.
+- After report commit `a09c76b` and release workflow `25428790831` also completed successfully, production still returned 404 for the product 54 detail URL, 0 URLs for `/products/sitemap.xml`, and admin audit still failed with `/api/auth/login returned 401`.
 
 ## Local Fixes Made
 
@@ -98,6 +100,8 @@ This report records the production validation steps, evidence, fixes made locall
 - `npm run build`: passed. Build output shows `/products/[slug]`, `/products/sitemap.xml`, and `/editorial/sitemap.xml` as dynamic server-rendered routes.
 - Local production server could not prove the LOMON product-detail fix because local SQLite data does not contain the production LOMON product. This is expected data-environment mismatch, not a TypeScript/build failure.
 - GitHub Actions release workflow `25428374415`: completed with `success` for commit `5598466`.
+- GitHub Actions release workflow `25428790831`: completed with `success` for report commit `a09c76b`.
+- Final production business audit artifact: `docs/ProdTest/production-business-loop-audit-2026-05-06T10-05-26-097Z.json`.
 
 ## Required Next Steps
 
