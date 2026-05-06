@@ -709,6 +709,31 @@ This script should pass before repeating the authenticated `npm run ops:producti
 
 Production has not yet pulled/restarted the `ff09092` image. The newly committed verifier confirms the same deployment-state blocker remains after the successful GHCR publish.
 
+## Post-Deploy Verifier Recheck - 2026-05-06T13:46:48Z
+
+### Commands Run
+
+- `gh run watch 25438928754 --repo xxrenzhe/bes3 --exit-status`
+- `PRODUCTION_POST_DEPLOY_BASE_URL=https://www.bes3.com PRODUCTION_POST_DEPLOY_OUTPUT_DIR=docs/ProdTest npm run ops:production-post-deploy-verify`
+
+### Evidence
+
+- GitHub release workflow `25438928754` for commit `8c5a534` completed successfully.
+- CI `build-and-test` passed type check, ESLint, schema drift check, production build, and runtime smoke diagnostics.
+- CI `build-and-push` passed and published the GHCR release image.
+- New artifact: `docs/ProdTest/production-post-deploy-verify-2026-05-06T13-46-42-345Z.json`.
+- The verifier result is still unchanged: 3 passed and 3 failed.
+- Failed: `/api/health` still does not expose `build.sha`.
+- Failed: product 54 detail page still returns HTTP 404.
+- Failed: sampled pSEO page still lacks `Evidence Check`, `Research Snapshot`, `Source Score`, and `Source Proof`.
+- Passed: product sitemap remains populated with 215 URLs.
+- Passed: editorial sitemap remains populated with 20 URLs.
+- Passed: `/go/54` still redirects to Amazon with HTTP 307.
+
+### Conclusion
+
+The latest image has been built and pushed, but `https://www.bes3.com` still has not pulled/restarted into the corrected runtime. The bead remains open pending production host operator action and valid production admin authentication.
+
 ## Deployment Automation Capability Check - 2026-05-06T13:00:00Z
 
 ### Commands Run
