@@ -3,6 +3,7 @@ import { buildCategoryPath } from '@/lib/category'
 import { buildCommerceDecisionReadiness } from '@/lib/decision-readiness'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
 import { normalizeMerchantSource, buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { isHardcoreCategorySlug } from '@/lib/product-category'
 import { sanitizePromotionSummary } from '@/lib/promotion'
 import type {
   ArticleRecord,
@@ -78,8 +79,12 @@ function buildProductPath(product: CommerceProductRecord) {
   return product.slug ? `/products/${product.slug}` : null
 }
 
-function getCategoryPath(category: string | null | undefined) {
-  return buildCategoryPath(category)
+function getCategoryPath(product: CommerceProductRecord) {
+  if (!isHardcoreCategorySlug(product.categorySlug || product.category)) {
+    return '/products'
+  }
+
+  return buildCategoryPath(product.categorySlug || product.category)
 }
 
 function getAlertPath(product: CommerceProductRecord) {
@@ -131,10 +136,12 @@ export function buildCommerceActions(product: CommerceProductRecord, options?: {
 
   actions.push({
     type: 'browse_category',
-    label: 'Browse category',
-    href: toAbsoluteUrl(getCategoryPath(product.category)),
+    label: isHardcoreCategorySlug(product.categorySlug || product.category) ? 'Browse category' : 'Browse products',
+    href: toAbsoluteUrl(getCategoryPath(product)),
     method: 'GET',
-    description: 'Return to the nearby category coverage when the shortlist is not final yet.'
+    description: isHardcoreCategorySlug(product.categorySlug || product.category)
+      ? 'Return to the nearby category coverage when the shortlist is not final yet.'
+      : 'Return to the public product index when the category does not have a dedicated evidence matrix yet.'
   })
 
   return actions

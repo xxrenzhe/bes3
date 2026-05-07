@@ -134,6 +134,29 @@ async function main() {
     }
   })
 
+  await check('Product detail', 'Open-commerce product 54 category semantics are buyer-accurate', async () => {
+    const payload = await fetchJson(withCacheBust('/api/open/commerce/products/54'))
+    const category = payload?.result?.entity?.category || payload?.product?.category
+    const categorySlug = payload?.product?.categorySlug || payload?.product?.category_slug || null
+    const actionHrefs = Array.isArray(payload?.result?.actions)
+      ? payload.result.actions.map((action: any) => String(action?.href || ''))
+      : []
+    if (category !== 'Apparel') {
+      throw new Error(`expected category Apparel, got ${category || 'empty'}`)
+    }
+    if (categorySlug !== 'apparel') {
+      throw new Error(`expected categorySlug apparel, got ${categorySlug || 'empty'}`)
+    }
+    if (actionHrefs.some((href: string) => /\/categories\/tech(?:\?|$|#|\/)/i.test(href) || /category=tech(?:&|$)/i.test(href))) {
+      throw new Error('product 54 actions still expose tech category semantics')
+    }
+    return {
+      category,
+      categorySlug,
+      actionHrefs
+    }
+  })
+
   await check('pSEO', 'Scenario page serves research quality gate', async () => {
     const routePath = withCacheBust(pseoPath)
     const { body } = await fetchText(routePath)

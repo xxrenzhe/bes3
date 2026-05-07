@@ -2,6 +2,7 @@ import { chromium, type Browser, type BrowserContext, type Page, type Response }
 import { getPlaywrightProxy, resolveBrowserProxy } from '@/lib/browser-proxy'
 import { getDatabase } from '@/lib/db'
 import { buildProductIdentityEnrichment } from '@/lib/product-acquisition'
+import { normalizeProductCategory } from '@/lib/product-category'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import { resolveAffiliateLinkWithOptions } from '@/lib/url-resolver'
@@ -464,6 +465,15 @@ function mergeBrowserSignals(scraped: ScrapedProduct, signals: BrowserSignals | 
     specs,
     rawPayload: { browserSignals: signals }
   })
+  const normalizedCategory = normalizeProductCategory({
+    productName,
+    brand: scraped.brand,
+    productType: scraped.productType || identity.productType,
+    category: scraped.category || identity.category,
+    categorySlug: scraped.categorySlug || identity.categorySlug,
+    description,
+    specs
+  })
   const offers = scraped.offers.length > 0 || priceAmount == null
     ? scraped.offers
     : [{
@@ -506,8 +516,8 @@ function mergeBrowserSignals(scraped: ScrapedProduct, signals: BrowserSignals | 
     productModel: scraped.productModel || identity.productModel,
     modelNumber: scraped.modelNumber || identity.modelNumber,
     productType: scraped.productType || identity.productType,
-    category: scraped.category || identity.category,
-    categorySlug: scraped.categorySlug || identity.categorySlug,
+    category: normalizedCategory.category || scraped.category || identity.category,
+    categorySlug: normalizedCategory.categorySlug || scraped.categorySlug || identity.categorySlug,
     youtubeMatchTerms: scraped.youtubeMatchTerms.length ? scraped.youtubeMatchTerms : identity.youtubeMatchTerms,
     description,
     priceAmount,

@@ -371,6 +371,7 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
   const { getBrowserProxyUrl, resolveBrowserProxy } = await import('@/lib/browser-proxy')
   const { NextRequest } = await import('next/server')
   const merchantExitRoute = await import('@/app/go/[productId]/route')
+  const categorySemantics = await import('@/lib/product-category')
 
   await bootstrapApplication()
   const db = await getDatabase()
@@ -434,6 +435,10 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
   const openCommerceProducts = await siteData.listOpenCommerceProducts()
   const hiddenOpenProduct = await siteData.getOpenCommerceProductBySlug('no-commission-no-video-pool-robot')
   const hiddenPublicArticle = await siteData.getArticleBySlug('noproof-no-commission-no-video-pool-robot-review')
+  const lomonCategory = categorySemantics.inferProductCategory({
+    productName: 'LOMON Womens Fuzzy Sherpa Fleece Jacket Lightweight Vest Cozy Sleeveless Cardigan Zipper Waistcoat Outerwear With Pocket',
+    category: 'tech'
+  })
   const hardcore = await import('@/lib/hardcore')
   const hardcoreProducts = await hardcore.listHardcoreProducts()
   const hiddenHardcoreProduct = await hardcore.getHardcoreProductBySlug('no-commission-no-video-pool-robot')
@@ -546,6 +551,11 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
           !sitemapSourceArticles.some((item) => item.id === fixture.hiddenArticleId)
       ),
       detail: hiddenPublicArticle ? `leaked=${hiddenPublicArticle.slug}` : `blocked=${fixture.hiddenArticleId}`
+    },
+    {
+      label: 'public category semantics correct obvious apparel products',
+      ok: lomonCategory.category === 'Apparel' && lomonCategory.categorySlug === 'apparel',
+      detail: `${lomonCategory.category || 'null'} / ${lomonCategory.categorySlug || 'null'}`
     },
     {
       label: 'hardcore evidence layer blocks no-commission/no-video products',

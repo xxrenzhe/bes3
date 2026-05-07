@@ -2,6 +2,7 @@
 
 import fs from 'node:fs'
 import path from 'node:path'
+import { inferProductCategory } from '@/lib/product-category'
 
 type FileExpectation = {
   label: string
@@ -142,6 +143,14 @@ const failures = [
   ...expectations.flatMap(checkExpectation),
   ...[workflowExpectation, dockerfileExpectation, packageExpectation].flatMap(checkExpectation)
 ]
+
+const lomonCategory = inferProductCategory({
+  productName: 'LOMON Womens Fuzzy Sherpa Fleece Jacket Lightweight Vest Cozy Sleeveless Cardigan Zipper Waistcoat Outerwear With Pocket',
+  category: 'tech'
+})
+if (lomonCategory.category !== 'Apparel' || lomonCategory.categorySlug !== 'apparel') {
+  failures.push(`Product category semantics: LOMON apparel fixture normalized to ${lomonCategory.category || 'null'} / ${lomonCategory.categorySlug || 'null'}`)
+}
 
 if (failures.length) {
   console.error('pSEO recommendation quality gate failed:')

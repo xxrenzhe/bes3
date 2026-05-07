@@ -22,6 +22,7 @@ import {
   normalizeProductAcquisitionHints,
   type ProductAcquisitionHints
 } from '@/lib/product-acquisition'
+import { normalizeProductCategory } from '@/lib/product-category'
 import type { PipelineRunType, PipelineStage, PipelineStatus } from '@/lib/types'
 import { slugify } from '@/lib/slug'
 
@@ -1098,6 +1099,18 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
     rawPayload,
     hints: acquisitionHints
   })
+  const mergedCategory = normalizeProductCategory({
+    productName:
+      scraped.productName && !/^unknown\b/i.test(scraped.productName)
+        ? scraped.productName
+        : affiliateProduct.product_name || String(rawPayload.product_name || rawPayload.name || '').trim() || scraped.productName,
+    brand: scraped.brand || affiliateProduct.brand || String(rawPayload.brand_name || rawPayload.brand || rawPayload.merchant_name || '').trim() || null,
+    productType: scraped.productType || identity.productType,
+    category: scraped.category || identity.category || fallbackCategory,
+    categorySlug: scraped.categorySlug || identity.categorySlug,
+    description: scraped.description || String(rawPayload.description || rawPayload.promotion_title || '').trim() || null,
+    specs
+  })
   const referencePriceAmount = [rawPayload.original_price, rawPayload.list_price, rawPayload.compare_at_price]
     .map((value) => {
       const parsed = Number.parseFloat(String(value ?? '').replace(/[^\d.-]/g, ''))
@@ -1124,8 +1137,8 @@ function mergeAffiliateFallbackIntoScrape(affiliateProduct: AffiliateProductReco
     productModel: scraped.productModel || identity.productModel,
     modelNumber: scraped.modelNumber || identity.modelNumber,
     productType: scraped.productType || identity.productType,
-    category: scraped.category || identity.category || fallbackCategory,
-    categorySlug: scraped.categorySlug || identity.categorySlug,
+    category: mergedCategory.category || scraped.category || identity.category || fallbackCategory,
+    categorySlug: mergedCategory.categorySlug || scraped.categorySlug || identity.categorySlug,
     youtubeMatchTerms: scraped.youtubeMatchTerms.length ? scraped.youtubeMatchTerms : identity.youtubeMatchTerms,
     description:
       scraped.description ||

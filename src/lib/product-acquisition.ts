@@ -1,4 +1,5 @@
 import { slugify } from '@/lib/slug'
+import { normalizeProductCategory } from '@/lib/product-category'
 
 export interface ProductAcquisitionHints {
   brandName?: string | null
@@ -142,14 +143,24 @@ export function buildProductIdentityEnrichment(input: {
   )
   const productModel = explicitModel || stripBrandFromName(normalizeText(input.productName), brand) || modelNumber
   const categorySlug = hints.categorySlug || normalizeSlug(raw.category_slug) || normalizeSlug(category)
+  const normalizedCategory = normalizeProductCategory({
+    productName: input.productName,
+    brand,
+    productType,
+    category,
+    categorySlug,
+    specs: input.specs
+  })
   const productName = normalizeText(input.productName)
+  const normalizedCategoryName = normalizedCategory.category || category
+  const normalizedCategorySlug = normalizedCategory.categorySlug || categorySlug
 
   return {
     productModel,
     modelNumber,
     productType,
-    category,
-    categorySlug,
+    category: normalizedCategoryName,
+    categorySlug: normalizedCategorySlug,
     youtubeMatchTerms: uniqueTerms([
       brand && productModel ? `${brand} ${productModel}` : null,
       brand && modelNumber ? `${brand} ${modelNumber}` : null,
@@ -157,8 +168,8 @@ export function buildProductIdentityEnrichment(input: {
       productModel,
       modelNumber,
       productType && productModel ? `${productModel} ${productType}` : null,
-      category && productModel ? `${productModel} ${category}` : null,
-      categorySlug && productModel ? `${productModel} ${categorySlug.replace(/-/g, ' ')}` : null
+      normalizedCategoryName && productModel ? `${productModel} ${normalizedCategoryName}` : null,
+      normalizedCategorySlug && productModel ? `${productModel} ${normalizedCategorySlug.replace(/-/g, ' ')}` : null
     ])
   }
 }

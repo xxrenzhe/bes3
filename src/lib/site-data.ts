@@ -2,6 +2,7 @@ import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/c
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { getCommissionableMerchantUrl, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { normalizeProductCategory } from '@/lib/product-category'
 import { sanitizePublicSnippetList } from '@/lib/public-text'
 import { slugify } from '@/lib/slug'
 
@@ -426,6 +427,17 @@ function getFreshnessBucket(value: string | null | undefined): CommerceProductRe
 }
 
 function mapProductRow(row: any): ProductRecord {
+  const specs = parseJsonObject(row.specs_json)
+  const normalizedCategory = normalizeProductCategory({
+    productName: row.product_name,
+    brand: row.brand,
+    productType: row.product_type,
+    category: row.category,
+    categorySlug: row.category_slug,
+    description: row.description,
+    specs
+  })
+
   return {
     id: toInteger(row.id),
     slug: row.slug,
@@ -434,17 +446,17 @@ function mapProductRow(row: any): ProductRecord {
     productModel: row.product_model || null,
     modelNumber: row.model_number || null,
     productType: row.product_type || null,
-    categorySlug: row.category_slug || null,
+    categorySlug: normalizedCategory.categorySlug,
     youtubeMatchTerms: parseJsonArray(row.youtube_match_terms_json),
     productName: row.product_name,
-    category: row.category,
+    category: normalizedCategory.category,
     description: row.description,
     heroImageUrl: row.hero_image_url || null,
     priceAmount: row.price_amount,
     priceCurrency: row.price_currency,
     rating: row.rating,
     reviewCount: row.review_count,
-    specs: parseJsonObject(row.specs_json),
+    specs,
     reviewHighlights: sanitizePublicSnippetList(parseJsonArray(row.review_highlights_json)),
     resolvedUrl: row.resolved_url,
     sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
@@ -461,7 +473,19 @@ function mapProductRow(row: any): ProductRecord {
 
 function mapArticleRow(row: any): ArticleRecord {
   const product = row.product_id
-      ? {
+      ? (() => {
+        const specs = parseJsonObject(row.specs_json)
+        const normalizedCategory = normalizeProductCategory({
+          productName: row.product_name,
+          brand: row.brand,
+          productType: row.product_type,
+          category: row.category,
+          categorySlug: row.category_slug,
+          description: row.product_description,
+          specs
+        })
+
+        return {
         id: toInteger(row.product_id),
         slug: row.product_slug,
         affiliateProductId: toNullableInteger(row.affiliate_product_id),
@@ -469,17 +493,17 @@ function mapArticleRow(row: any): ArticleRecord {
         productModel: row.product_model || null,
         modelNumber: row.model_number || null,
         productType: row.product_type || null,
-        categorySlug: row.category_slug || null,
+        categorySlug: normalizedCategory.categorySlug,
         youtubeMatchTerms: parseJsonArray(row.youtube_match_terms_json),
         productName: row.product_name,
-        category: row.category,
+        category: normalizedCategory.category,
         description: row.product_description,
         heroImageUrl: row.product_hero_image_url || null,
         priceAmount: row.price_amount,
         priceCurrency: row.price_currency,
         rating: row.rating,
         reviewCount: row.review_count,
-        specs: parseJsonObject(row.specs_json),
+        specs,
         reviewHighlights: sanitizePublicSnippetList(parseJsonArray(row.review_highlights_json)),
         resolvedUrl: row.resolved_url,
         sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
@@ -492,6 +516,7 @@ function mapArticleRow(row: any): ArticleRecord {
         publishedAt: row.product_published_at || row.product_created_at || null,
         updatedAt: row.product_updated_at || null
       }
+      })()
     : null
   const publicProduct = product && isPublicProduct(product) ? product : null
 
