@@ -2,6 +2,7 @@ import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/c
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { getCommissionableMerchantUrl, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { sanitizePublicSnippetList } from '@/lib/public-text'
 import { slugify } from '@/lib/slug'
 
 export interface ProductRecord {
@@ -281,7 +282,8 @@ function parseJsonObject(value: string | null): Record<string, string> {
 function parseJsonArray(value: string | null): string[] {
   if (!value) return []
   try {
-    return JSON.parse(value) as string[]
+    const parsed = JSON.parse(value)
+    return Array.isArray(parsed) ? parsed.map((item) => String(item || '')).filter(Boolean) : []
   } catch {
     return []
   }
@@ -443,7 +445,7 @@ function mapProductRow(row: any): ProductRecord {
     rating: row.rating,
     reviewCount: row.review_count,
     specs: parseJsonObject(row.specs_json),
-    reviewHighlights: parseJsonArray(row.review_highlights_json),
+    reviewHighlights: sanitizePublicSnippetList(parseJsonArray(row.review_highlights_json)),
     resolvedUrl: row.resolved_url,
     sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
     priceLastCheckedAt: row.price_last_checked_at || null,
@@ -478,7 +480,7 @@ function mapArticleRow(row: any): ArticleRecord {
         rating: row.rating,
         reviewCount: row.review_count,
         specs: parseJsonObject(row.specs_json),
-        reviewHighlights: parseJsonArray(row.review_highlights_json),
+        reviewHighlights: sanitizePublicSnippetList(parseJsonArray(row.review_highlights_json)),
         resolvedUrl: row.resolved_url,
         sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
         priceLastCheckedAt: row.price_last_checked_at || null,

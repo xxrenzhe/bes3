@@ -1,4 +1,5 @@
 import { buildBestFor, buildConfidenceSignals, buildDecisionChecklist, buildNotFor, getCategoryLabel } from '@/lib/editorial'
+import { sanitizePublicSnippetList } from '@/lib/public-text'
 import type { ArticleRecord, ProductRecord } from '@/lib/site-data'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -10,7 +11,25 @@ export interface DecisionContentModule {
 }
 
 function compactItems(items: Array<string | null | undefined>, limit: number = 3) {
-  return Array.from(new Set(items.map((item) => String(item || '').trim()).filter(Boolean))).slice(0, limit)
+  return sanitizePublicSnippetList(items, limit)
+}
+
+function buildBuyerFeedbackSignal(highlights: string[]) {
+  if (!highlights.length) return null
+
+  const text = highlights.join(' ').toLowerCase()
+  const checks = [
+    /\b(?:fit|size|sizing|true to size|larger|smaller|medium|large|small)\b/.test(text) ? 'fit and sizing' : null,
+    /\b(?:wash|washed|shrink|sheds|lint|durable|quality)\b/.test(text) ? 'care and durability' : null,
+    /\b(?:soft|warm|cozy|comfortable|comfort)\b/.test(text) ? 'comfort' : null,
+    /\b(?:pocket|zipper|sleeve|fabric|material|polyester)\b/.test(text) ? 'feature details' : null
+  ].filter(Boolean)
+
+  if (!checks.length) {
+    return 'Buyer feedback is available; use it to validate the fit details that matter before checkout.'
+  }
+
+  return `Buyer feedback is available for ${checks.slice(0, 3).join(', ')}; verify those details against your use case before checkout.`
 }
 
 function buildProductPriceContext(product?: ProductRecord | null) {
@@ -30,6 +49,7 @@ export function buildProductDecisionContent(
   const categoryLabel = getCategoryLabel(product?.category)
   const reviewHighlights = compactItems(product?.reviewHighlights || [], 3)
   const confidenceSignals = compactItems(buildConfidenceSignals(product), 3)
+  const nonPriceConfidenceSignals = confidenceSignals.filter((signal) => !/^Current listed price\b/i.test(signal))
   const checklist = compactItems(buildDecisionChecklist(product), 3)
   const bestFor = buildBestFor(product, articleType)
   const notFor = buildNotFor(product, articleType)
@@ -42,11 +62,11 @@ export function buildProductDecisionContent(
       title: `${productName} in one short pass`,
       items: compactItems(
         [
-          ...reviewHighlights,
-          ...confidenceSignals,
-          priceContext
+          ...nonPriceConfidenceSignals,
+          priceContext,
+          buildBuyerFeedbackSignal(reviewHighlights)
         ],
-        3
+        4
       )
     },
     {

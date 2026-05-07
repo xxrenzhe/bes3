@@ -114,7 +114,7 @@ export function buildDecisionChecklist(product?: ProductRecord | null) {
     extras.push(`If price is within your budget, ${product.productName} is already viable enough to move to merchant-level checking.`)
   }
   if (product.reviewHighlights.length) {
-    extras.push(product.reviewHighlights[0])
+    extras.push('Use buyer feedback as a fit check, not as the only reason to buy.')
   }
 
   return [...extras, ...base].slice(0, 4)
