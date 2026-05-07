@@ -15,7 +15,6 @@ import { buildIntentMetadataDescription, buildPageMetadata } from '@/lib/metadat
 import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
-import { toAbsoluteUrl } from '@/lib/site-url'
 import {
   getBrandPolicyBySlug,
   getBrandSlug,
@@ -277,40 +276,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             { name: product.categoryName, path: `/categories/${product.categorySlug}` },
             { name: product.name, path }
           ]),
-          {
-            '@context': 'https://schema.org',
-            '@type': 'Product',
-            '@id': `${toAbsoluteUrl(path)}#product`,
+          buildProductAggregateSchema({
+            path,
             name: product.name,
-            brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
-            image: product.imageUrl ? [toAbsoluteUrl(product.imageUrl)] : undefined,
             description: product.description || `${product.name} evidence report from Bes3.`,
-            aggregateRating:
-              product.consensus.score10 != null
-                ? {
-                    '@type': 'AggregateRating',
-                    ratingValue: product.consensus.score5?.toFixed(1),
-                    reviewCount: product.consensus.evidenceCount,
-                    bestRating: '5',
-                    worstRating: '1'
-                  }
-                : undefined,
-            offers:
-              product.price.currentPrice != null
-                ? {
-                    '@type': 'Offer',
-                    url: toAbsoluteUrl(product.affiliateUrl ? `/go/${product.id}` : path),
-                    price: product.price.currentPrice.toFixed(2),
-                    priceCurrency: product.price.currency,
-                    availability:
-                      product.affiliateStatus === 'out_of_stock'
-                        ? 'https://schema.org/OutOfStock'
-                        : product.affiliateStatus === 'broken'
-                          ? 'https://schema.org/Discontinued'
-                          : 'https://schema.org/InStock'
-                  }
-                : undefined
-          },
+            image: product.imageUrl,
+            ratingValue: product.consensus.score5,
+            reviewCount: product.consensus.evidenceCount,
+            offerUrl: product.affiliateUrl ? `/go/${product.id}` : null,
+            price: product.price.currentPrice,
+            priceCurrency: product.price.currency,
+            availabilityStatus: product.affiliateStatus
+          }),
           buildFaqSchema(path, faqEntries)
         ]}
       />

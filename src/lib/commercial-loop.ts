@@ -19,6 +19,12 @@ import {
   type HardcoreTag
 } from '@/lib/hardcore'
 import { buildVideoEvidencePrompt, parseVideoEvidenceWithRetry, shouldKeepPositiveEvidence } from '@/lib/hardcore-prompts'
+import {
+  auditCommissionBlindCandidateOrder,
+  isCommercialFocusCategory,
+  scoreCommissionBlindCandidate,
+  type CommissionBlindAudit
+} from '@/lib/recommendation-quality'
 import { getArticlePath } from '@/lib/article-path'
 import { escapeHtml } from '@/lib/html'
 import { slugify } from '@/lib/slug'
@@ -62,6 +68,8 @@ export interface CommercialLoopCandidate {
   videoCount: number
   merchantClicks: number
   reviewValueScore: number
+  commissionBlindReviewScore: number
+  commissionInfluenceDelta: number
   reasons: string[]
 }
 
@@ -85,6 +93,7 @@ export interface CommercialLoopResult {
     path: string
     title: string
   }>
+  commissionBlindAudit: CommissionBlindAudit
   indexing: string
   skipped: Array<{
     scope: string
@@ -306,6 +315,10 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
   const reasons: string[] = []
   let score = 0
 
+  if (isCommercialFocusCategory(inferredCategorySlug)) {
+    score += 10
+    reasons.push('inside current commercial focus category')
+  }
   if (inferredCategorySlug) {
     score += 18
     reasons.push('inside hardcore category whitelist')
@@ -362,7 +375,7 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
     reasons.push('stale affiliate data should be refreshed before publishing')
   }
 
-  return {
+  const baseCandidate = {
     affiliateProductId: row.affiliate_product_id,
     productId: row.product_id,
     platform: row.platform,
@@ -386,6 +399,13 @@ function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCand
     merchantClicks: Number(row.merchant_clicks || 0),
     reviewValueScore: clampScore(score),
     reasons
+  }
+  const commissionBlindReviewScore = scoreCommissionBlindCandidate(baseCandidate)
+
+  return {
+    ...baseCandidate,
+    commissionBlindReviewScore,
+    commissionInfluenceDelta: baseCandidate.reviewValueScore - commissionBlindReviewScore
   }
 }
 
@@ -1503,6 +1523,7 @@ export async function runCommercialLoop(input: CommercialLoopOptions = {}): Prom
   const options = normalizeOptions(input)
   const sync = options.execute ? await runSync(options.syncPlatform) : {}
   const candidates = await listAffiliateReviewCandidates(Math.max(options.limit, 25))
+  const commissionBlindAudit = auditCommissionBlindCandidateOrder(candidates)
   const qualified = candidates.filter((candidate) => candidate.reviewValueScore >= options.minScore)
   const conversionBlocked = qualified.filter((candidate) => !hasAffiliatePromotionLink(candidate))
   const skipped: CommercialLoopResult['skipped'] = conversionBlocked.map((candidate) => ({
@@ -1592,6 +1613,7 @@ export async function runCommercialLoop(input: CommercialLoopOptions = {}): Prom
     transcriptsFetched,
     evidenceReportsWritten,
     articlesPublished,
+    commissionBlindAudit,
     indexing,
     skipped
   }
@@ -1607,6 +1629,7 @@ export function buildCommercialLoopRuntimeGuide() {
     ],
     commands: {
       preview: 'npm run commercial-loop:run',
+      liveReadiness: 'npm run commercial-loop:check-live-readiness -- --dry-run --limit=50',
       execute: 'npm run commercial-loop:run -- --execute --sync=amazon --discover-videos --fetch-transcripts --extract-evidence --publish',
       productEnrichment: 'npm run commercial-loop:run -- --execute --enrich-products',
       transcriptMode: 'npm run commercial-loop:run -- --execute --fetch-transcripts'
@@ -1614,6 +1637,7 @@ export function buildCommercialLoopRuntimeGuide() {
     reusedAutobbPatterns: [
       'PartnerBoost platform sync as the source of affiliate truth',
       'estimated commission value and merchant review count for hot-product prioritization',
+      'commission-blind audit reports how much payout data influenced candidate priority',
       'stealth browser scrape with proxy-aware failure classification and fetch fallback',
       'affiliate click redirect attribution through /go/{productId}'
     ],

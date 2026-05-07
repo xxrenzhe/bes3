@@ -8,6 +8,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getMultiConstraintLandingPage, getScenarioLandingPage, listHardcoreTags } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildScenarioPseoPath, buildValuePseoPath, getScenarioPseoStaticParams } from '@/lib/pseo'
+import { getScenarioIndexEligibility } from '@/lib/recommendation-quality'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 import type { HardcoreProduct } from '@/lib/hardcore'
@@ -29,7 +30,7 @@ function testedProductCount(products: HardcoreProduct[]) {
 }
 
 function isLiveScenario(status: string | null | undefined, products: HardcoreProduct[]) {
-  return status === 'live' && testedProductCount(products) >= 3
+  return getScenarioIndexEligibility(status, products).indexable
 }
 
 function buyerCategoryName(categorySlug: string, categoryName: string, tagLabel: string) {
@@ -83,7 +84,8 @@ function buildBluf({
 
   if (!winner || !tested || !isLiveScenario(status, products)) {
     const proofText = proof?.evidenceQuote ? ` The source proof says: "${proof.evidenceQuote}"` : ''
-    return `Short answer: ${productDisplayName(winner)} is the current evidence-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube evidence report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner.${proofText}`
+    const pickName = winner ? productDisplayName(winner) : 'No product'
+    return `Short answer: ${pickName} is the current evidence-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube evidence report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner.${proofText}`
   }
 
   return `Decision summary: Bes3 analyzed ${evidenceCount} creator evidence reports across ${tested} tested products for ${tagLabel}. ${productDisplayName(winner)} is currently the strongest evidence-backed pick${proof ? ` because reviewers found: "${proof.evidenceQuote}"` : ''}.`
@@ -365,6 +367,7 @@ export async function generateMetadata({
           : `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using teardown evidence and price-value signals.`,
         path: `/${multiPage.category.slug}/${resolved.landing}`,
         locale: await getRequestLocale(),
+        robots: isResearching ? { index: false, follow: true } : undefined,
         keywords: [`best ${multiPage.category.name} for ${tagLabel}`, `${multiPage.category.name} ${tagLabel} recommendation`, 'YouTube review proof']
       })
     }
@@ -385,6 +388,7 @@ export async function generateMetadata({
       : `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
     path: buildScenarioPseoPath(page.category.slug, page.tag.slug),
     locale: await getRequestLocale(),
+    robots: isResearching ? { index: false, follow: true } : undefined,
     keywords: [`best ${buyerCategoryName(page.category.slug, page.category.name, page.tag.name)} for ${page.tag.name}`, `${page.tag.name} recommendation`, 'YouTube review proof']
   })
 }
@@ -407,7 +411,8 @@ export default async function ScenarioLandingPage({
   const categoryName = page ? page.category.name : multiPage!.category.name
   const categorySlug = page ? page.category.slug : multiPage!.category.slug
   const status = page ? page.status : multiPage!.status
-  const isResearching = !isLiveScenario(status, products)
+  const qualityGate = getScenarioIndexEligibility(status, products)
+  const isResearching = !qualityGate.indexable
   const valuePath = buildValuePseoPath(categorySlug, 500)
   const title = buildScenarioTitle({ categorySlug, categoryName, tagLabel, products, status })
   const bluf = buildBluf({ products, tagLabel, status })
@@ -504,7 +509,7 @@ export default async function ScenarioLandingPage({
             {title}
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            {bluf}
+            <strong className="font-semibold text-foreground">BLUF:</strong> {bluf}
           </p>
           {isResearching ? (
             <div className="mt-8 grid gap-4 text-sm leading-7 text-muted-foreground md:grid-cols-3">
@@ -514,11 +519,17 @@ export default async function ScenarioLandingPage({
               </div>
               <div className="rounded-md border border-border bg-white p-4">
                 <p className="font-semibold text-foreground">Confidence boundary</p>
-                <p className="mt-2">Needs at least 3 independently evidenced products before this becomes a full ranked guide.</p>
+                <p className="mt-2">Needs 3 commercially actionable products, 3 timestamped evidence reports, 3 independent sources, and price context before this becomes an indexable ranked guide.</p>
               </div>
               <div className="rounded-md border border-border bg-white p-4">
                 <p className="font-semibold text-foreground">How to use it</p>
                 <p className="mt-2">Use the current pick as a shortlist, then check the quote, timestamp, and price window before buying.</p>
+              </div>
+              <div className="rounded-md border border-amber-200 bg-amber-50 p-4 md:col-span-3">
+                <p className="font-semibold text-amber-950">Index quality gate</p>
+                <p className="mt-2 text-amber-900">
+                  Current gate: {qualityGate.metrics.eligibleProducts}/3 eligible products, {qualityGate.metrics.totalEvidenceReports}/3 timestamped reports, {qualityGate.metrics.uniqueSources}/3 independent sources, {qualityGate.metrics.productsWithPriceContext}/3 price-context products. Missing: {qualityGate.reasons.join(', ') || 'none'}.
+                </p>
               </div>
             </div>
           ) : null}

@@ -25,6 +25,8 @@ const expectations: FileExpectation[] = [
       'current evidence-backed pick',
       'shortlist recommendation',
       'Confidence boundary',
+      'Index quality gate',
+      'getScenarioIndexEligibility',
       'productDisplayName',
       'currentPick'
     ],
@@ -33,8 +35,7 @@ const expectations: FileExpectation[] = [
       'Research Snapshot',
       'Research Status',
       'not a ranked recommendation yet',
-      'not yet strong enough for a final ranking',
-      'robots: isResearching'
+      'not yet strong enough for a final ranking'
     ]
   },
   {
@@ -63,6 +64,29 @@ const expectations: FileExpectation[] = [
     ],
     forbidden: [
       'stillNoindex'
+    ]
+  },
+  {
+    label: 'Trust methodology page',
+    filePath: 'src/app/trust/page.tsx',
+    required: [
+      'Index quality gate',
+      'Commission-blind audit',
+      'Schema safety',
+      'getCommercialFocusCategories'
+    ],
+    forbidden: []
+  },
+  {
+    label: 'Product structured data safety',
+    filePath: 'src/lib/structured-data.ts',
+    required: [
+      'getProductSchemaEligibility',
+      'includeAggregateRating',
+      'includeOffer'
+    ],
+    forbidden: [
+      'safeReviewCount || 1'
     ]
   }
 ]

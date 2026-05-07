@@ -397,6 +397,15 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
       detail: `selected=${result.selected.length}, skipped=${result.skipped.length}`
     },
     {
+      label: 'commercial loop emits commission-blind ranking audit',
+      ok: Boolean(
+        result.commissionBlindAudit.items.length &&
+          result.commissionBlindAudit.items.some((item) => item.affiliateProductId === fixture.affiliateProductId) &&
+          result.selected.every((candidate) => Number.isFinite(candidate.commissionBlindReviewScore))
+      ),
+      detail: `flagged=${result.commissionBlindAudit.flaggedCount}`
+    },
+    {
       label: 'commercial loop blocks high-score products without affiliate promotion links',
       ok: Boolean(
         !result.selected.some((candidate) => candidate.affiliateProductId === fixture.nonMonetizableAffiliateProductId) &&
@@ -511,6 +520,17 @@ async function main() {
       'missing_affiliate_promotion_link',
       'qualified.filter(hasAffiliatePromotionLink)'
     ]),
+    staticCheck('Commercial loop audits commission influence separately from evidence fit', 'src/lib/commercial-loop.ts', [
+      'auditCommissionBlindCandidateOrder',
+      'commissionBlindAudit',
+      'commissionBlindReviewScore'
+    ]),
+    staticCheck('Commercial loop live readiness runbook exists', 'scripts/check-commercial-loop-live-readiness.ts', [
+      'recommendedSampleSize',
+      '--execute',
+      'runCommercialLoop'
+    ]),
+    staticCheck('Commercial loop live readiness package script exists', 'package.json', ['commercial-loop:check-live-readiness']),
     staticCheck('Published reviews are publicly routable', 'src/app/reviews/[slug]/page.tsx', [
       'getArticleBySlug',
       'EditorialArticlePage',

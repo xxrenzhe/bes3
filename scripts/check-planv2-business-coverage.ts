@@ -40,6 +40,7 @@ const checks: PlanDocCheck[] = [
     requirement: 'Hardcore category scope, monetization, compliance, UX, AI/data pipeline, and growth surfaces are present.',
     artifacts: [
       { label: 'Hardcore category roster', filePath: 'src/lib/hardcore-catalog.ts', required: ['HARDCORE_CATEGORIES', 'yard-pool-automation'] },
+      { label: 'Commercial focus quality rules', filePath: 'src/lib/recommendation-quality.ts', required: ['COMMERCIAL_FOCUS_CATEGORY_SLUGS', 'PSEO_INDEX_QUALITY_GATE', 'auditCommissionBlindCandidateOrder'] },
       { label: 'Public evidence homepage', filePath: 'src/app/page.tsx', required: ['HardcoreEvidenceMatrix', 'real buyer concerns'] },
       { label: 'Commercial loop monetization', filePath: 'src/lib/commercial-loop.ts', required: ['listAffiliateReviewCandidates', 'rel="nofollow sponsored"', '/go/${product.id}?source=evidence-review'] },
       { label: 'FTC and cookie shell', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
@@ -82,7 +83,7 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Robots policy', filePath: 'src/app/robots.ts', required: ['/llms.txt', '/api/open/', '/admin'] },
       { label: 'LLM text route', filePath: 'src/app/llms.txt/route.ts', required: ['Bes3', '/api/open/evidence'] },
-      { label: 'Scenario pSEO route', filePath: 'src/app/[category]/[landing]/page.tsx', required: ['BLUF:', 'SeoFaqSection', 'buildProductAggregateSchema'] },
+      { label: 'Scenario pSEO route', filePath: 'src/app/[category]/[landing]/page.tsx', required: ['BLUF:', 'SeoFaqSection', 'buildProductAggregateSchema', 'getScenarioIndexEligibility', 'Index quality gate'] },
       { label: 'Value pSEO route', filePath: 'src/app/deals/[slug]/page.tsx', required: ['buildValuePseoPath', 'Price Drop Alert'] },
       { label: 'Open coverage manifest', filePath: 'src/app/api/open/coverage/route.ts', required: ['coverage-manifest-v1', '/trust'] }
     ]
@@ -180,7 +181,8 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Commercial loop core', filePath: 'src/lib/commercial-loop.ts', required: ['runCommercialLoop', 'syncPartnerboostAmazonProducts', 'discoverYoutubeVideos', 'upsertEvidenceArticle'] },
       { label: 'Commercial loop CLI', filePath: 'scripts/run-commercial-loop.ts', required: ['runCommercialLoop', 'execute', 'push-index'] },
-      { label: 'Commercial loop integration', filePath: 'scripts/check-commercial-loop-integration.ts', required: ['publicly readable by long-tail slug', 'merchant CTA redirects and records attribution', 'yt-dlp proxy uses normalized authenticated URL'] },
+      { label: 'Commercial loop integration', filePath: 'scripts/check-commercial-loop-integration.ts', required: ['publicly readable by long-tail slug', 'merchant CTA redirects and records attribution', 'yt-dlp proxy uses normalized authenticated URL', 'commission-blind ranking audit'] },
+      { label: 'Commercial loop live readiness', filePath: 'scripts/check-commercial-loop-live-readiness.ts', required: ['recommendedSampleSize', 'nextCommand', 'runCommercialLoop'] },
       { label: 'Affiliate redirect route', filePath: 'src/app/go/[productId]/route.ts', required: ['recordMerchantClick', 'NextResponse.redirect'] },
       { label: 'Review route', filePath: 'src/app/reviews/[slug]/page.tsx', required: ['getArticleBySlug', 'article.type !=='] }
     ]
@@ -207,6 +209,7 @@ const expectedScripts = [
   'hardcore:check-planv2-seo',
   'ops:check-planv2-security',
   'commercial-loop:check',
+  'commercial-loop:check-live-readiness',
   'db:check-drift',
   'ops:check-env:local',
   'ops:smoke-e2e',

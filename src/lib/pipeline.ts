@@ -13,6 +13,7 @@ import { getDatabase } from '@/lib/db'
 import { runDeepProductScrapeTask } from '@/lib/deep-product-scraper'
 import { buildSeoPagePersistencePayload } from '@/lib/seo-page-payload'
 import { dispatchSeoNotifications } from '@/lib/seo-ops'
+import { COMMERCIAL_FOCUS_CATEGORY_SLUGS } from '@/lib/recommendation-quality'
 import { scrapeProductPage, type ScrapedProduct } from '@/lib/scraper'
 import { getBrandSlug, listBrands, listProducts, listPublishedArticles, type ProductRecord } from '@/lib/site-data'
 import { getSettingValueOrEnv } from '@/lib/settings'
@@ -151,6 +152,16 @@ export interface AdminDashboardSummary {
       attributeCompletenessScore: number
       reasons: string[]
     }>
+  }
+  profitabilityKpis: {
+    evidenceBackedOutboundClicks: number
+    evidenceBackedOutboundClicksLast7Days: number
+    publishedReviewPages: number
+    commerciallyActionableEvidenceProducts: number
+    highScoreProductsMissingAffiliatePath: number
+    focusCategoryProducts: number
+    focusCategoryEvidenceProducts: number
+    focusCategoryCommercialProducts: number
   }
   brandQuality: {
     trackedBrands: number
@@ -2540,7 +2551,7 @@ function getCompletenessBucket(value: number): 'high' | 'medium' | 'low' {
 
 export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary> {
   const db = await getDatabase()
-  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, brands, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, priceHistoryCountRows, merchantClickRows, brandPolicyRows, compatibilityFactRows] = await Promise.all([
+  const [products, affiliateProducts, articles, runs, recentRuns, recentAffiliateProducts, siteProducts, publishedArticles, brands, newsletterSubscribers, targetedSubscribers, merchantClicks, decisionFunnel, offerCountRows, evidenceCountRows, priceHistoryCountRows, merchantClickRows, evidenceBackedClickRows, publishedReviewPages, commercialEvidenceRows, brandPolicyRows, compatibilityFactRows] = await Promise.all([
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM affiliate_products'),
     db.queryOne<{ count: number }>('SELECT COUNT(*) AS count FROM articles'),
@@ -2589,6 +2600,64 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         SELECT product_id, created_at
         FROM merchant_click_events
         WHERE product_id IS NOT NULL
+      `
+    ),
+    db.query<{ created_at: string | null }>(
+      `
+        SELECT created_at
+        FROM merchant_click_events
+        WHERE source = 'evidence-review'
+      `
+    ),
+    db.queryOne<{ count: number }>(
+      `
+        SELECT COUNT(*) AS count
+        FROM articles
+        WHERE article_type = 'review'
+          AND status = 'published'
+      `
+    ),
+    db.query<{
+      id: number
+      category_slug: string | null
+      source_affiliate_link: string | null
+      resolved_url: string | null
+      active_affiliate_links: number
+      evidence_count: number
+      average_rating_score: number | null
+    }>(
+      `
+        SELECT
+          p.id,
+          p.category_slug,
+          p.source_affiliate_link,
+          p.resolved_url,
+          (
+            SELECT COUNT(*)
+            FROM affiliate_links al
+            WHERE al.product_id = p.id
+              AND al.status = 'active'
+          ) AS active_affiliate_links,
+          (
+            SELECT COUNT(*)
+            FROM analysis_reports ar
+            WHERE ar.product_id = p.id
+          ) AS evidence_count,
+          (
+            SELECT AVG(
+              CASE ar.rating
+                WHEN 'Excellent' THEN 5
+                WHEN 'Good' THEN 4
+                WHEN 'Average' THEN 3
+                WHEN 'Struggles' THEN 2
+                WHEN 'Fails' THEN 1
+                ELSE NULL
+              END
+            )
+            FROM analysis_reports ar
+            WHERE ar.product_id = p.id
+          ) AS average_rating_score
+        FROM products p
       `
     ),
     db.query<{ brand_slug: string }>(
@@ -2742,6 +2811,18 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
 
   const brandPolicySlugs = new Set(brandPolicyRows.map((row) => row.brand_slug).filter(Boolean))
   const compatibilityFactCounts = new Map(compatibilityFactRows.map((row) => [row.brand_slug, Number(row.count || 0)]))
+  const focusCategorySlugs = new Set<string>(COMMERCIAL_FOCUS_CATEGORY_SLUGS)
+  const sevenDayThreshold = Date.now() - 7 * 86_400_000
+  const evidenceBackedOutboundClicksLast7Days = evidenceBackedClickRows.reduce((count, row) => {
+    const timestamp = row.created_at ? Date.parse(row.created_at) : NaN
+    return Number.isFinite(timestamp) && timestamp >= sevenDayThreshold ? count + 1 : count
+  }, 0)
+  const hasAffiliatePath = (row: { source_affiliate_link: string | null; resolved_url: string | null; active_affiliate_links: number }) =>
+    Boolean(row.source_affiliate_link || row.resolved_url || Number(row.active_affiliate_links || 0) > 0)
+  const evidenceProducts = commercialEvidenceRows.filter((row) => Number(row.evidence_count || 0) > 0)
+  const focusCategoryProducts = commercialEvidenceRows.filter((row) => focusCategorySlugs.has(String(row.category_slug || '')))
+  const focusCategoryEvidenceProducts = focusCategoryProducts.filter((row) => Number(row.evidence_count || 0) > 0)
+  const focusCategoryCommercialProducts = focusCategoryEvidenceProducts.filter(hasAffiliatePath)
   const brandQualityRows = brands.map((brand) => {
     const hasPolicy = brandPolicySlugs.has(brand.slug)
     const compatibilityFactCount = compatibilityFactCounts.get(brand.slug) || 0
@@ -2809,6 +2890,20 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
           return left.productName.localeCompare(right.productName)
         })
         .slice(0, 5)
+    },
+    profitabilityKpis: {
+      evidenceBackedOutboundClicks: evidenceBackedClickRows.length,
+      evidenceBackedOutboundClicksLast7Days,
+      publishedReviewPages: Number(publishedReviewPages?.count || 0),
+      commerciallyActionableEvidenceProducts: evidenceProducts.filter(hasAffiliatePath).length,
+      highScoreProductsMissingAffiliatePath: commercialEvidenceRows.filter((row) =>
+        Number(row.average_rating_score || 0) >= 4 &&
+        Number(row.evidence_count || 0) >= 3 &&
+        !hasAffiliatePath(row)
+      ).length,
+      focusCategoryProducts: focusCategoryProducts.length,
+      focusCategoryEvidenceProducts: focusCategoryEvidenceProducts.length,
+      focusCategoryCommercialProducts: focusCategoryCommercialProducts.length
     },
     brandQuality: {
       trackedBrands: brands.length,

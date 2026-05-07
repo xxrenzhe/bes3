@@ -42,6 +42,7 @@
     "hardcore:seo-automation": "tsx scripts/run-seo-automation.ts",
     "ops:check-planv2-security": "tsx scripts/check-planv2-security-surface.ts",
     "commercial-loop:check": "tsx scripts/check-commercial-loop-integration.ts",
+    "commercial-loop:check-live-readiness": "tsx scripts/check-commercial-loop-live-readiness.ts",
     "hardcore:import-intents": "tsx scripts/import-hardcore-intents.ts",
     "hardcore:import-keyword-planner": "tsx scripts/import-keyword-planner-intents.ts",
     "hardcore:import-shorts-evidence": "tsx scripts/import-shorts-evidence.ts",

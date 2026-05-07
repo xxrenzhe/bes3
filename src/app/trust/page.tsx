@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { StructuredData } from '@/components/site/StructuredData'
 import { buildPageMetadata } from '@/lib/metadata'
+import { getCommercialFocusCategories, PSEO_INDEX_QUALITY_GATE } from '@/lib/recommendation-quality'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
@@ -17,6 +18,7 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function TrustPage() {
+  const focusCategories = getCommercialFocusCategories()
   const faqEntries = [
     {
       question: 'How does Bes3 handle affiliate links?',
@@ -25,6 +27,10 @@ export default async function TrustPage() {
     {
       question: 'How does Bes3 avoid copying creators?',
       answer: 'Bes3 extracts facts, ratings, and short evidence quotes, then links back to the original YouTube video and timestamp whenever available.'
+    },
+    {
+      question: 'When can a recommendation page be indexed?',
+      answer: `A scenario page needs ${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} commercially actionable products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} timestamped evidence reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, and price context before Bes3 treats it as indexable.`
     }
   ]
 
@@ -66,13 +72,32 @@ export default async function TrustPage() {
             ['Advertorial penalty', 'Videos flagged as soft ads are heavily downweighted in consensus scoring.'],
             ['No fake discounts', 'Price labels require current price plus historical low or 90-day average context.'],
             ['Crawler openness', 'robots.txt explicitly allows major AI crawlers to read the public evidence surface.'],
-            ['Data minimization', 'Public data focuses on products and evidence, not sensitive user identity.']
+            ['Data minimization', 'Public data focuses on products and evidence, not sensitive user identity.'],
+            ['Index quality gate', `${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} eligible products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} timestamped reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, affiliate paths, and price context are required before a scenario page can be indexable.`],
+            ['Commission-blind audit', 'Commercial candidates are audited against a score that excludes commission rate and estimated commission value, so high payout cannot silently become public ranking logic.'],
+            ['Schema safety', 'Product structured data only emits ratings when visible evidence count exists, and only emits offers when a real price and outbound path exist.']
           ].map(([title, description]) => (
             <div key={title} className="rounded-md border border-border bg-white p-6">
               <h2 className="font-[var(--font-display)] text-2xl font-black">{title}</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">{description}</p>
             </div>
           ))}
+        </div>
+        <div className="mx-auto mt-8 max-w-7xl rounded-md border border-border bg-slate-950 p-6 text-white">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Current Focus</p>
+          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
+            Bes3 scales trust by narrowing the first commercial wedge.
+          </h2>
+          <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
+            The long-term catalog can cover many hard goods, but production growth starts with the categories most likely to combine high purchase anxiety, strong YouTube evidence density, and meaningful order value.
+          </p>
+          <div className="mt-5 flex flex-wrap gap-2">
+            {focusCategories.map((category) => (
+              <Link key={category.slug} href={`/categories/${category.slug}`} className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-sm font-semibold text-white hover:bg-white/20">
+                {category.name}
+              </Link>
+            ))}
+          </div>
         </div>
         <div className="mx-auto mt-8 flex max-w-7xl flex-wrap gap-3">
           {[

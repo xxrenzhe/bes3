@@ -2,6 +2,7 @@ import { DEFAULT_SITE_NAME, DEFAULT_SITE_TAGLINE } from '@/lib/constants'
 import { getCategoryLabel } from '@/lib/editorial'
 import { DEFAULT_LOCALE, SUPPORTED_LOCALES, addLocaleToPath, getHtmlLang, getLocaleLabel, type SiteLocale } from '@/lib/i18n'
 import { pickMetadataDescription, sanitizeMetadataTitle } from '@/lib/metadata'
+import { getProductSchemaEligibility } from '@/lib/recommendation-quality'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import type { ArticleRecord, ProductRecord } from '@/lib/site-data'
 import { slugify } from '@/lib/slug'
@@ -316,7 +317,13 @@ export function buildProductAggregateSchema({
 }: ProductAggregateSchemaOptions): SchemaNode {
   const url = toAbsoluteUrl(path)
   const safeRating = ratingValue != null && Number.isFinite(ratingValue) ? Math.max(1, Math.min(5, ratingValue)) : null
-  const safeReviewCount = reviewCount != null && Number.isFinite(reviewCount) ? Math.max(1, Math.round(reviewCount)) : null
+  const safeReviewCount = reviewCount != null && Number.isFinite(reviewCount) ? Math.max(0, Math.round(reviewCount)) : null
+  const eligibility = getProductSchemaEligibility({
+    ratingValue: safeRating,
+    reviewCount: safeReviewCount,
+    offerUrl,
+    price
+  })
 
   return {
     '@context': SCHEMA_CONTEXT,
@@ -326,20 +333,20 @@ export function buildProductAggregateSchema({
     description,
     image: image ? [toAbsoluteUrl(image)] : undefined,
     url,
-    aggregateRating: safeRating
+    aggregateRating: eligibility.includeAggregateRating && safeRating && safeReviewCount
       ? {
           '@type': 'AggregateRating',
           ratingValue: Number(safeRating.toFixed(2)),
-          reviewCount: safeReviewCount || 1,
+          reviewCount: safeReviewCount,
           bestRating: 5,
           worstRating: 1
         }
       : undefined,
-    offers: offerUrl
+    offers: eligibility.includeOffer && offerUrl
       ? {
           '@type': 'Offer',
           url: toAbsoluteUrl(offerUrl),
-          price: price != null && Number.isFinite(price) ? Number(price.toFixed(2)) : undefined,
+          price: Number(Number(price).toFixed(2)),
           priceCurrency: priceCurrency || 'USD',
           availability: mapSchemaAvailability(availabilityStatus),
           itemCondition: 'https://schema.org/NewCondition'

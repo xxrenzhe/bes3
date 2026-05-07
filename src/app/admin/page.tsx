@@ -46,6 +46,7 @@ export default async function AdminDashboardPage() {
   const decisionFunnel = summary.conversionSignals.decisionFunnel
   const assistantFunnel = decisionFunnel.assistantFunnel
   const commerceQuality = summary.commerceQuality
+  const profitabilityKpis = summary.profitabilityKpis
   const brandQuality = summary.brandQuality
 
   const quickActions = [
@@ -122,6 +123,29 @@ export default async function AdminDashboardPage() {
       label: '验证跳转',
       value: decisionFunnel.verifiedMerchantVisitors,
       description: `${decisionFunnel.verifiedMerchantEvents} 次服务端跳转`
+    }
+  ]
+
+  const profitabilityCards = [
+    {
+      label: '证据跳转',
+      value: profitabilityKpis.evidenceBackedOutboundClicks,
+      description: `最近 7 天 ${profitabilityKpis.evidenceBackedOutboundClicksLast7Days} 次 evidence-review 出口。`
+    },
+    {
+      label: '可变现证据商品',
+      value: profitabilityKpis.commerciallyActionableEvidenceProducts,
+      description: '已有证据且具备可执行商家/联盟路径。'
+    },
+    {
+      label: '高分无出口',
+      value: profitabilityKpis.highScoreProductsMissingAffiliatePath,
+      description: '高证据评分但缺少商家出口，会直接损失收入。'
+    },
+    {
+      label: '聚焦品类闭环',
+      value: `${profitabilityKpis.focusCategoryCommercialProducts}/${profitabilityKpis.focusCategoryProducts}`,
+      description: '当前 3 个商业聚焦品类中已证据化且可跳转的商品。'
     }
   ]
 
@@ -202,6 +226,28 @@ export default async function AdminDashboardPage() {
         <MetricCard label="标准商品" value={summary.totals.products} description="已归一化并进入 Bes3 数据库的商品。" tone="green" />
         <MetricCard label="内容文章" value={summary.totals.articles} description="流水线生成或编辑维护的评测与对比页。" tone="amber" />
         <MetricCard label="流水线任务" value={summary.totals.runs} description="完整内容工作流累计运行记录。" tone="slate" />
+      </section>
+
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-overline font-semibold text-primary">盈利质量 KPI</p>
+            <h2 className="card-title mt-1">北极星是 evidence-backed outbound clicks</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              这里不看虚荣流量，优先看有证据、有购买路径、能被归因的商家跳转，以及高分但无法变现的缺口。
+            </p>
+          </div>
+          <StatusBadge value={profitabilityKpis.highScoreProductsMissingAffiliatePath === 0 ? 'configured' : 'partial'} />
+        </div>
+        <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {profitabilityCards.map((card) => (
+            <div key={card.label} className="rounded-md border bg-muted/40 p-3">
+              <p className="text-sm font-medium text-muted-foreground">{card.label}</p>
+              <p className="mt-1 text-2xl font-bold text-slate-950">{card.value}</p>
+              <p className="mt-1 text-xs leading-5 text-muted-foreground">{card.description}</p>
+            </div>
+          ))}
+        </div>
       </section>
 
       <section className="grid gap-3 xl:grid-cols-[1fr_0.9fr]">
