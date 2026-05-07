@@ -1,5 +1,6 @@
 import { buildArticleDecisionContent, buildProductDecisionContent } from '@/lib/decision-content'
 import { buildCategoryPath } from '@/lib/category'
+import { buildCommerceDecisionReadiness } from '@/lib/decision-readiness'
 import { buildBestFor, buildConfidenceSignals, buildNotFor, getFreshnessLabel } from '@/lib/editorial'
 import { normalizeMerchantSource, buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { sanitizePromotionSummary } from '@/lib/promotion'
@@ -248,6 +249,7 @@ export function serializeCommerceProduct(
   const alternativeOffers = dedupeAlternativeOffers(bestOffer, offers)
   const fitSummary = buildBestFor(product, 'product')
   const notForSummary = buildNotFor(product, 'product')
+  const decisionReadiness = buildCommerceDecisionReadiness(product)
   const priceHistorySummary = summarizePriceHistory(priceHistory, bestOffer?.priceCurrency || product.priceCurrency)
   const serializedBestOffer = serializePublicOffer(bestOffer)
   const serializedAlternativeOffers = serializePublicOffers(alternativeOffers)
@@ -280,8 +282,10 @@ export function serializeCommerceProduct(
       notForSummary,
       confidence: product.dataConfidenceScore,
       confidenceSignals: buildConfidenceSignals(product),
-      freshness: product.freshness
+      freshness: product.freshness,
+      decisionReadiness
     },
+    decisionReadiness,
     bestOffer: serializedBestOffer,
     alternativeOffers: serializedAlternativeOffers,
     fitSummary,

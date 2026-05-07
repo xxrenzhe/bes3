@@ -2,12 +2,14 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { PublicShell } from '@/components/layout/PublicShell'
+import { DecisionReadinessCard } from '@/components/site/DecisionReadinessCard'
 import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { PriceAlertForm } from '@/components/site/PriceAlertForm'
 import { EvidenceFeedbackButtons } from '@/components/site/EvidenceFeedbackButtons'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { StructuredData } from '@/components/site/StructuredData'
+import { buildCommerceDecisionReadiness, buildEvidenceDecisionReadiness } from '@/lib/decision-readiness'
 import { buildProductDecisionContent } from '@/lib/decision-content'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { formatHardcorePrice, getHardcoreProductBySlug, listHardcoreProducts } from '@/lib/hardcore'
@@ -53,6 +55,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
   const bestOffer = product.bestOffer || offers[0] || null
   const path = `/products/${product.slug}`
   const merchantHref = hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, 'product-detail') : null
+  const decisionReadiness = buildCommerceDecisionReadiness(product)
   const decisionModules = buildProductDecisionContent(product, 'product', {
     nextStepTitle: 'Choose the next action from current evidence',
     nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
@@ -127,6 +130,9 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               {bestOffer?.merchantName ? `${bestOffer.merchantName} offer` : 'Merchant offer'} · checked {formatEditorialDate(bestOffer?.lastCheckedAt || product.offerLastCheckedAt || product.updatedAt, 'Tracking soon')}.
             </p>
+            <div className="mt-5">
+              <DecisionReadinessCard readiness={decisionReadiness} />
+            </div>
             <div className="mt-6">
               <PrimaryCta
                 href={merchantHref}
@@ -262,6 +268,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     product.affiliateStatus !== 'out_of_stock' &&
     product.affiliateStatus !== 'broken'
   )
+  const decisionReadiness = buildEvidenceDecisionReadiness(product)
   const monetizedAlternatives = hasCommissionableExit
     ? []
     : products
@@ -357,6 +364,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               targetPrice={product.price.histLowPrice}
               targetValueScore={product.price.valueScore}
             />
+            <div className="mt-5">
+              <DecisionReadinessCard readiness={decisionReadiness} />
+            </div>
             {!hasCommissionableExit ? (
               <div className="mt-5 rounded-md border border-border bg-white p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buying path</p>

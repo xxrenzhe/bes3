@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { buildEvidenceDecisionReadiness } from '@/lib/decision-readiness'
 import { getDatabase } from '@/lib/db'
 import { HARDCORE_CATEGORIES, listHardcoreProducts, listHardcoreTags } from '@/lib/hardcore'
 import { buildValuePseoPath } from '@/lib/pseo'
@@ -64,6 +65,7 @@ export async function GET() {
         product.affiliateStatus !== 'out_of_stock' &&
         product.affiliateStatus !== 'broken'
       )
+      const decisionReadiness = buildEvidenceDecisionReadiness(product)
 
       return {
         id: product.id,
@@ -83,6 +85,7 @@ export async function GET() {
             ? ['open_product_report', 'merchant_handoff', 'price_alert']
             : ['open_product_report', 'price_alert', 'browse_category']
         },
+        decisionReadiness,
         route: `/products/${product.slug}`
       }
     })
