@@ -1,6 +1,7 @@
 import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/category'
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
+import { getCommissionableMerchantUrl, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { slugify } from '@/lib/slug'
 
 export interface ProductRecord {
@@ -30,6 +31,7 @@ export interface ProductRecord {
   attributeCompletenessScore: number
   dataConfidenceScore: number
   sourceCount: number
+  publicEvidenceCount: number
   publishedAt: string | null
   updatedAt: string | null
 }
@@ -205,6 +207,7 @@ export interface ArticleRecord {
   createdAt: string | null
   updatedAt: string | null
   product: ProductRecord | null
+  publicEvidenceCount: number
 }
 
 export interface BrandRecord {
@@ -288,6 +291,47 @@ function parseBoolean(value: unknown): boolean {
   return value === true || value === 1 || value === '1'
 }
 
+function parseEvidenceReports(value: unknown): any[] {
+  if (!value) return []
+  if (Array.isArray(value)) return value
+  try {
+    const parsed = typeof value === 'string' ? JSON.parse(value) : value
+    return Array.isArray(parsed) ? parsed : []
+  } catch {
+    return []
+  }
+}
+
+function isUsablePublicEvidence(row: any, report: any) {
+  return Boolean(
+    report?.youtube_id &&
+      String(report?.evidence_quote || '').trim() &&
+      Number(report?.evidence_confidence || 0) >= 0.65 &&
+      !parseBoolean(report?.is_advertorial) &&
+      isPublicEvidenceUsable(
+        {
+          productName: row.product_name,
+          brand: row.brand,
+          productModel: row.product_model,
+          modelNumber: row.model_number
+        },
+        {
+          youtubeId: report.youtube_id,
+          title: report.video_title,
+          channelName: report.channel_name,
+          evidenceQuote: report.evidence_quote,
+          contextSnippet: report.context_snippet
+        }
+      )
+  )
+}
+
+function countUsablePublicEvidence(row: any, field: 'public_evidence_json' | 'evidence_json' = 'public_evidence_json') {
+  const evidence = parseEvidenceReports(row[field])
+  if (evidence.length) return evidence.filter((report) => isUsablePublicEvidence(row, report)).length
+  return Number(row.public_evidence_count || 0)
+}
+
 function escapeHtml(value: unknown) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -306,36 +350,8 @@ function appendEvidenceMatrix(contentHtml: string, row: any) {
   if (row.article_type !== 'review' || !row.product_id || !row.evidence_json) return contentHtml
   if (/YouTube Evidence Matrix/i.test(contentHtml)) return contentHtml
 
-  let evidence: any[] = []
-  try {
-    const parsed = Array.isArray(row.evidence_json)
-      ? row.evidence_json
-      : JSON.parse(String(row.evidence_json || '[]'))
-    evidence = Array.isArray(parsed) ? parsed : []
-  } catch {
-    evidence = []
-  }
-  const qualified = evidence.filter((report) =>
-    report?.youtube_id &&
-    report?.evidence_quote &&
-    Number(report?.evidence_confidence || 0) >= 0.65 &&
-    Number(report?.is_advertorial || 0) === 0 &&
-    isPublicEvidenceUsable(
-      {
-        productName: row.product_name,
-        brand: row.brand,
-        productModel: row.product_model,
-        modelNumber: row.model_number
-      },
-      {
-        youtubeId: report.youtube_id,
-        title: report.video_title,
-        channelName: report.channel_name,
-        evidenceQuote: report.evidence_quote,
-        contextSnippet: report.context_snippet
-      }
-    )
-  )
+  const evidence = parseEvidenceReports(row.evidence_json)
+  const qualified = evidence.filter((report) => isUsablePublicEvidence(row, report))
   if (!qualified.length) return contentHtml
 
   const rows = qualified.slice(0, 8).map((report) => {
@@ -429,12 +445,13 @@ function mapProductRow(row: any): ProductRecord {
     specs: parseJsonObject(row.specs_json),
     reviewHighlights: parseJsonArray(row.review_highlights_json),
     resolvedUrl: row.resolved_url,
-    sourceAffiliateLink: row.source_affiliate_link || null,
+    sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
     priceLastCheckedAt: row.price_last_checked_at || null,
     offerLastCheckedAt: row.offer_last_checked_at || null,
     attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
     dataConfidenceScore: Number(row.data_confidence_score || 0),
     sourceCount: Number(row.source_count || 0),
+    publicEvidenceCount: countUsablePublicEvidence(row),
     publishedAt: row.published_at || null,
     updatedAt: row.updated_at || null
   }
@@ -463,12 +480,13 @@ function mapArticleRow(row: any): ArticleRecord {
         specs: parseJsonObject(row.specs_json),
         reviewHighlights: parseJsonArray(row.review_highlights_json),
         resolvedUrl: row.resolved_url,
-        sourceAffiliateLink: row.source_affiliate_link || null,
+        sourceAffiliateLink: getCommissionableMerchantUrl(row.source_affiliate_link, row.active_affiliate_url, row.resolved_url),
         priceLastCheckedAt: row.price_last_checked_at || null,
         offerLastCheckedAt: row.offer_last_checked_at || null,
         attributeCompletenessScore: Number(row.attribute_completeness_score || 0),
         dataConfidenceScore: Number(row.data_confidence_score || 0),
         sourceCount: Number(row.source_count || 0),
+        publicEvidenceCount: countUsablePublicEvidence(row, 'evidence_json'),
         publishedAt: row.product_published_at || row.product_created_at || null,
         updatedAt: row.product_updated_at || null
       }
@@ -490,7 +508,8 @@ function mapArticleRow(row: any): ArticleRecord {
     publishedAt: row.published_at,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
-    product: publicProduct
+    product: publicProduct,
+    publicEvidenceCount: countUsablePublicEvidence(row, 'evidence_json')
   }
 }
 
@@ -592,9 +611,78 @@ function articleEvidenceJsonSql(dbType: 'postgres' | 'sqlite') {
         ) AS evidence_json`
 }
 
+function publicEvidenceJsonSql(dbType: 'postgres' | 'sqlite', productAlias = 'products') {
+  if (dbType === 'postgres') {
+    return `
+        (
+          SELECT json_agg(json_build_object(
+            'id', ar.id,
+            'evidence_quote', ar.evidence_quote,
+            'context_snippet', ar.context_snippet,
+            'evidence_confidence', ar.evidence_confidence,
+            'is_advertorial', ar.is_advertorial,
+            'channel_name', rv.channel_name,
+            'video_title', rv.title,
+            'youtube_id', rv.youtube_id
+          ) ORDER BY ar.evidence_confidence DESC, ar.created_at DESC)
+          FROM analysis_reports ar
+          INNER JOIN review_videos rv ON rv.id = ar.video_id
+          WHERE ar.product_id = ${productAlias}.id
+            AND rv.youtube_id IS NOT NULL
+            AND COALESCE(TRIM(ar.evidence_quote), '') <> ''
+            AND ar.evidence_confidence >= 0.65
+            AND COALESCE(ar.is_advertorial, 0) = 0
+        ) AS public_evidence_json`
+  }
+
+  return `
+        (
+          SELECT json_group_array(json_object(
+            'id', ar.id,
+            'evidence_quote', ar.evidence_quote,
+            'context_snippet', ar.context_snippet,
+            'evidence_confidence', ar.evidence_confidence,
+            'is_advertorial', ar.is_advertorial,
+            'channel_name', rv.channel_name,
+            'video_title', rv.title,
+            'youtube_id', rv.youtube_id
+          ))
+          FROM (
+            SELECT *
+            FROM analysis_reports
+            WHERE product_id = ${productAlias}.id
+              AND COALESCE(TRIM(evidence_quote), '') <> ''
+              AND evidence_confidence >= 0.65
+              AND COALESCE(is_advertorial, 0) = 0
+            ORDER BY evidence_confidence DESC, created_at DESC
+          ) ar
+          INNER JOIN review_videos rv ON rv.id = ar.video_id
+          WHERE rv.youtube_id IS NOT NULL
+        ) AS public_evidence_json`
+}
+
+function activeAffiliateUrlSql(productAlias = 'products') {
+  return `
+        (
+          SELECT affiliate_url
+          FROM affiliate_links al
+          WHERE al.product_id = ${productAlias}.id
+            AND al.status NOT IN ('broken', 'inactive')
+          ORDER BY CASE al.status WHEN 'active' THEN 0 WHEN 'unknown' THEN 1 ELSE 2 END, al.updated_at DESC, al.id DESC
+          LIMIT 1
+        ) AS active_affiliate_url`
+}
+
+function isPublicArticle(article: ArticleRecord) {
+  if (article.type === 'review' && article.publicEvidenceCount <= 0) return false
+  if (article.productId && !article.product) return false
+  return true
+}
+
 const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCachedPromise('listPublishedArticles', async () => {
   const db = await getDatabase()
   const evidenceJsonSql = articleEvidenceJsonSql(db.type)
+  const activeAffiliateUrl = activeAffiliateUrlSql('p')
   const rows = await db.query(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
@@ -602,6 +690,7 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
+        ${activeAffiliateUrl},
         ${evidenceJsonSql},
         (
           SELECT public_url
@@ -616,7 +705,7 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
       ORDER BY a.published_at DESC, a.id DESC
     `
   )
-  return rows.map(mapArticleRow)
+  return rows.map(mapArticleRow).filter(isPublicArticle)
 })
 
 export async function listPublishedArticles(): Promise<ArticleRecord[]> {
@@ -626,6 +715,7 @@ export async function listPublishedArticles(): Promise<ArticleRecord[]> {
 const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | null> => withCachedPromise(`getArticleBySlug:${slug}`, async () => {
   const db = await getDatabase()
   const evidenceJsonSql = articleEvidenceJsonSql(db.type)
+  const activeAffiliateUrl = activeAffiliateUrlSql('p')
   const row = await db.queryOne(
     `
       SELECT a.*, p.slug AS product_slug, p.brand, p.product_model, p.model_number, p.product_type, p.category_slug,
@@ -633,6 +723,7 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
         p.affiliate_product_id, p.source_affiliate_link, p.price_amount, p.price_currency, p.rating, p.review_count, p.specs_json, p.review_highlights_json, p.resolved_url,
         p.price_last_checked_at, p.offer_last_checked_at, p.attribute_completeness_score, p.data_confidence_score, p.source_count,
         p.published_at AS product_published_at, p.created_at AS product_created_at, p.updated_at AS product_updated_at,
+        ${activeAffiliateUrl},
         ${evidenceJsonSql},
         (
           SELECT public_url
@@ -648,7 +739,9 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
     `,
     [slug]
   )
-  return row ? mapArticleRow(row) : null
+  if (!row) return null
+  const article = mapArticleRow(row)
+  return isPublicArticle(article) ? article : null
 })
 
 export async function getArticleBySlug(slug: string): Promise<ArticleRecord | null> {
@@ -662,6 +755,8 @@ export async function listArticlesByType(type: string): Promise<ArticleRecord[]>
 
 const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromise('listProducts', async () => {
   const db = await getDatabase()
+  const publicEvidenceJson = publicEvidenceJsonSql(db.type, 'products')
+  const activeAffiliateUrl = activeAffiliateUrlSql('products')
   const rows = await db.query<any>(
     `
       SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
@@ -669,6 +764,8 @@ const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromi
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
+        ${activeAffiliateUrl},
+        ${publicEvidenceJson},
         (
           SELECT public_url
           FROM product_media_assets m
@@ -690,6 +787,8 @@ export async function listProducts(): Promise<ProductRecord[]> {
 
 const getProductBySlugCached = async (slug: string): Promise<ProductRecord | null> => withCachedPromise(`getProductBySlug:${slug}`, async () => {
   const db = await getDatabase()
+  const publicEvidenceJson = publicEvidenceJsonSql(db.type, 'products')
+  const activeAffiliateUrl = activeAffiliateUrlSql('products')
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
@@ -697,6 +796,8 @@ const getProductBySlugCached = async (slug: string): Promise<ProductRecord | nul
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
+        ${activeAffiliateUrl},
+        ${publicEvidenceJson},
         (
           SELECT public_url
           FROM product_media_assets m
@@ -724,6 +825,8 @@ export async function getProductById(productId: number): Promise<ProductRecord |
   if (!Number.isInteger(productId) || productId <= 0) return null
 
   const db = await getDatabase()
+  const publicEvidenceJson = publicEvidenceJsonSql(db.type, 'products')
+  const activeAffiliateUrl = activeAffiliateUrlSql('products')
   const row = await db.queryOne<any>(
     `
       SELECT id, slug, brand, product_model, model_number, product_type, category_slug, youtube_match_terms_json,
@@ -731,6 +834,8 @@ export async function getProductById(productId: number): Promise<ProductRecord |
         affiliate_product_id, source_affiliate_link, rating, review_count, specs_json, review_highlights_json, resolved_url,
         price_last_checked_at, offer_last_checked_at, attribute_completeness_score, data_confidence_score, source_count,
         published_at, updated_at,
+        ${activeAffiliateUrl},
+        ${publicEvidenceJson},
         (
           SELECT public_url
           FROM product_media_assets m
@@ -756,7 +861,7 @@ export async function listProductsByCategory(category: string): Promise<ProductR
 }
 
 export function isPublicProduct(product: ProductRecord) {
-  return Boolean(product.slug && product.affiliateProductId && (product.resolvedUrl || product.sourceAffiliateLink))
+  return Boolean(product.slug && (hasMerchantExitTarget(product) || product.publicEvidenceCount > 0))
 }
 
 const listPublishedProductsCached = async (): Promise<ProductRecord[]> => withCachedPromise('listPublishedProducts', async () => {

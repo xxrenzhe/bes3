@@ -536,21 +536,25 @@ function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceRepo
   const category = findCategory(row.category_slug || row.category || row.evidence_category_slug)
   if (!category || !row.slug) return null
   const publicEvidence = evidence.filter((report) =>
-    isPublicEvidenceUsable(
-      {
-        productName: row.product_name,
-        brand: row.brand,
-        productModel: row.product_model,
-        modelNumber: row.model_number
-      },
-      {
-        youtubeId: report.youtubeId,
-        title: report.videoTitle,
-        channelName: report.channelName,
-        evidenceQuote: report.evidenceQuote,
-        contextSnippet: report.contextSnippet
-      }
-    )
+    report.youtubeId &&
+      report.evidenceQuote.trim() &&
+      report.evidenceConfidence >= 0.65 &&
+      !report.isAdvertorial &&
+      isPublicEvidenceUsable(
+        {
+          productName: row.product_name,
+          brand: row.brand,
+          productModel: row.product_model,
+          modelNumber: row.model_number
+        },
+        {
+          youtubeId: report.youtubeId,
+          title: report.videoTitle,
+          channelName: report.channelName,
+          evidenceQuote: report.evidenceQuote,
+          contextSnippet: report.contextSnippet
+        }
+      )
   )
   const consensus = summarizeConsensus(publicEvidence)
   const currentPrice = row.current_price ?? row.price_amount
@@ -597,6 +601,7 @@ export async function listHardcoreProducts(categorySlug?: string): Promise<Hardc
   return rows
     .map((row) => mapProduct(row, tags, evidenceByProduct.get(Number(row.id)) || []))
     .filter((product): product is HardcoreProduct => Boolean(product))
+    .filter((product) => Boolean(product.affiliateUrl) || product.consensus.evidenceCount > 0)
     .filter((product) => !categorySlug || product.categorySlug === categorySlug)
     .sort((left, right) => {
       const scoreDelta = (right.consensus.score10 || 0) - (left.consensus.score10 || 0)

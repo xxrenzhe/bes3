@@ -310,6 +310,7 @@ function normalizeStoredProductRow(row: any): StoredProductRecord {
     attributeCompletenessScore: Number(row.attributeCompletenessScore ?? row.attributecompletenessscore ?? row.attribute_completeness_score ?? 0),
     dataConfidenceScore: Number(row.dataConfidenceScore ?? row.dataconfidencescore ?? row.data_confidence_score ?? 0),
     sourceCount: Number(row.sourceCount ?? row.sourcecount ?? row.source_count ?? 0),
+    publicEvidenceCount: Number(row.publicEvidenceCount ?? row.publicevidencecount ?? row.public_evidence_count ?? 0),
     publishedAt: row.publishedAt ?? row.publishedat ?? row.published_at ?? null,
     updatedAt: row.updatedAt ?? row.updatedat ?? row.updated_at ?? null,
     sourceAffiliateLink: row.sourceAffiliateLink ?? row.sourceaffiliatelink ?? row.source_affiliate_link ?? row.resolvedUrl ?? row.resolvedurl ?? row.resolved_url ?? '',

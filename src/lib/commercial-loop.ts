@@ -26,7 +26,9 @@ import {
   type CommissionBlindAudit
 } from '@/lib/recommendation-quality'
 import { getArticlePath } from '@/lib/article-path'
+import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { escapeHtml } from '@/lib/html'
+import { getCommissionableMerchantUrl } from '@/lib/merchant-links'
 import { slugify } from '@/lib/slug'
 import { toAbsoluteUrl } from '@/lib/site-url'
 import { syncPartnerboostAmazonProducts, syncPartnerboostDtcProducts } from '@/lib/partnerboost'
@@ -150,6 +152,8 @@ interface ProductArticleRow {
   id: number
   slug: string | null
   brand: string | null
+  product_model: string | null
+  model_number: string | null
   product_name: string
   category: string | null
   category_slug: string | null
@@ -160,6 +164,7 @@ interface ProductArticleRow {
   hist_low_price: number | null
   avg_90d_price: number | null
   source_affiliate_link: string | null
+  active_affiliate_url: string | null
   resolved_url: string | null
   hero_image_url: string | null
 }
@@ -301,8 +306,12 @@ function isReviewablePhysicalProduct(productName: string, categorySlug: string |
   return Boolean(inferHardcoreCategorySlug(categorySlug, category, productName))
 }
 
+function getCandidateAffiliateUrl(candidate: CommercialLoopCandidate) {
+  return getCommissionableMerchantUrl(candidate.promoLink, candidate.productUrl)
+}
+
 function hasAffiliatePromotionLink(candidate: CommercialLoopCandidate) {
-  return Boolean(candidate.promoLink && candidate.promoLink.trim())
+  return Boolean(getCandidateAffiliateUrl(candidate))
 }
 
 function scoreAffiliateCandidate(row: AffiliateCandidateRow): CommercialLoopCandidate {
@@ -481,7 +490,7 @@ async function ensureProductForCandidate(candidate: CommercialLoopCandidate): Pr
 
   const db = await getDatabase()
   const productSlug = slugify(candidate.productName)
-  const sourceLink = candidate.promoLink || candidate.productUrl
+  const sourceLink = getCandidateAffiliateUrl(candidate)
   if (!sourceLink) throw new Error('candidate_missing_source_link')
 
   const existing =
@@ -538,7 +547,7 @@ async function ensureProductForCandidate(candidate: CommercialLoopCandidate): Pr
     ]
   )
   const productId = Number(result.lastInsertRowid || 0)
-  if (productId && candidate.promoLink) {
+  if (productId && sourceLink) {
     const existingLink = await db.queryOne<{ id: number }>(
       'SELECT id FROM affiliate_links WHERE product_id = ? AND platform = ? AND country_code = ? LIMIT 1',
       [productId, candidate.platform, 'US']
@@ -549,7 +558,7 @@ async function ensureProductForCandidate(candidate: CommercialLoopCandidate): Pr
           INSERT INTO affiliate_links (product_id, platform, affiliate_url, original_url, country_code, commission_rate, status, last_verified)
           VALUES (?, ?, ?, ?, 'US', ?, 'active', CURRENT_TIMESTAMP)
         `,
-        [productId, candidate.platform, candidate.promoLink, candidate.productUrl, candidate.commissionRate]
+        [productId, candidate.platform, sourceLink, candidate.productUrl, candidate.commissionRate]
       )
     } else {
       await db.exec(
@@ -559,7 +568,7 @@ async function ensureProductForCandidate(candidate: CommercialLoopCandidate): Pr
               last_verified = CURRENT_TIMESTAMP, updated_at = CURRENT_TIMESTAMP
           WHERE id = ?
         `,
-        [candidate.promoLink, candidate.productUrl, candidate.commissionRate, existingLink.id]
+        [sourceLink, candidate.productUrl, candidate.commissionRate, existingLink.id]
       )
     }
   }
@@ -990,8 +999,22 @@ export async function importCommercialLoopEvidence(input: CommercialLoopEvidence
   if (evidenceQuote.length < 40) throw new Error('evidence_quote_too_short')
   if (contextSnippet.length < 20) throw new Error('context_snippet_too_short')
   if (transcript.length < 120) throw new Error('transcript_too_short')
+  if (!isPublicEvidenceUsable(
+    {
+      productName: candidate.productName,
+      brand: candidate.brand
+    },
+    {
+      youtubeId,
+      title: videoTitle,
+      channelName,
+      evidenceQuote,
+      contextSnippet
+    }
+  )) throw new Error('evidence_identity_not_public_usable')
 
   const db = await getDatabase()
+  const sourceLink = getCandidateAffiliateUrl(candidate)
   await db.exec(
     `
       UPDATE products
@@ -1005,8 +1028,8 @@ export async function importCommercialLoopEvidence(input: CommercialLoopEvidence
     [
       category.name,
       category.slug,
-      candidate.promoLink || candidate.productUrl || null,
-      candidate.promoLink || candidate.productUrl || null,
+      sourceLink,
+      sourceLink,
       productId
     ]
   )
@@ -1124,6 +1147,19 @@ async function extractEvidenceForProduct(productId: number, candidate: Commercia
       if (!tag?.id) continue
       const rating = item.rating as HardcoreRating
       if (!shouldKeepPositiveEvidence({ isAdvertorial: parsed.data.is_advertorial, rating })) continue
+      if (!isPublicEvidenceUsable(
+        {
+          productName: candidate.productName,
+          brand: candidate.brand
+        },
+        {
+          youtubeId: video.youtube_id,
+          title: video.title,
+          channelName: video.channel_name,
+          evidenceQuote: item.evidence_quote,
+          contextSnippet: item.context_snippet
+        }
+      )) continue
       const existing = await db.queryOne<{ id: number }>(
         'SELECT id FROM analysis_reports WHERE product_id = ? AND video_id = ? AND tag_id = ? LIMIT 1',
         [productId, video.id, tag.id]
@@ -1195,6 +1231,8 @@ async function loadProductArticleRow(productId: number): Promise<ProductArticleR
         p.id,
         p.slug,
         p.brand,
+        p.product_model,
+        p.model_number,
         p.product_name,
         p.category,
         p.category_slug,
@@ -1205,6 +1243,14 @@ async function loadProductArticleRow(productId: number): Promise<ProductArticleR
         p.hist_low_price,
         p.avg_90d_price,
         p.source_affiliate_link,
+        (
+          SELECT affiliate_url
+          FROM affiliate_links al
+          WHERE al.product_id = p.id
+            AND al.status NOT IN ('broken', 'inactive')
+          ORDER BY CASE al.status WHEN 'active' THEN 0 WHEN 'unknown' THEN 1 ELSE 2 END, al.updated_at DESC, al.id DESC
+          LIMIT 1
+        ) AS active_affiliate_url,
         p.resolved_url,
         (
           SELECT public_url
@@ -1258,7 +1304,7 @@ async function loadEvidenceReports(productId: number): Promise<EvidenceReport[]>
     [productId]
   )
 
-  return rows
+  const reports = rows
     .map((row): EvidenceReport | null => {
       const rating = String(row.rating || '') as HardcoreRating
       if (!RATING_TO_SCORE[rating]) return null
@@ -1289,6 +1335,33 @@ async function loadEvidenceReports(productId: number): Promise<EvidenceReport[]>
       }
     })
     .filter((item): item is EvidenceReport => Boolean(item))
+
+  const product = reports[0]
+    ? await loadProductArticleRow(productId)
+    : null
+  if (!product) return []
+
+  return reports.filter((report) =>
+    report.youtubeId &&
+    report.evidenceQuote.trim() &&
+    report.evidenceConfidence >= 0.65 &&
+    !report.isAdvertorial &&
+    isPublicEvidenceUsable(
+      {
+        productName: product.product_name,
+        brand: product.brand,
+        productModel: product.product_model,
+        modelNumber: product.model_number
+      },
+      {
+        youtubeId: report.youtubeId,
+        title: report.videoTitle,
+        channelName: report.channelName,
+        evidenceQuote: report.evidenceQuote,
+        contextSnippet: report.contextSnippet
+      }
+    )
+  )
 }
 
 function youtubeTimestampUrl(report: EvidenceReport) {
@@ -1311,6 +1384,7 @@ function buildEvidenceArticleHtml({
 }) {
   const consensus = summarizeConsensus(evidence)
   const currentPrice = product.current_price ?? product.price_amount
+  const commissionableUrl = getCommissionableMerchantUrl(product.source_affiliate_link, product.active_affiliate_url, product.resolved_url)
   const price = summarizePriceValue({
     currentPrice,
     histLowPrice: product.hist_low_price,
@@ -1319,7 +1393,7 @@ function buildEvidenceArticleHtml({
     consensusScore5: consensus.score5
   })
   const topEvidence = evidence.slice(0, 8)
-  const ctaPath = `/go/${product.id}?source=evidence-review`
+  const ctaPath = commissionableUrl ? `/go/${product.id}?source=evidence-review` : null
   const score = consensus.score10 == null ? 'Researching' : `${consensus.score10.toFixed(1)}/10`
   const rows = topEvidence.map((report) => {
     const timestamp = youtubeTimestampUrl(report)
@@ -1359,8 +1433,10 @@ function buildEvidenceArticleHtml({
     '<li>Skip if you need a product with broader creator agreement than the current evidence set.</li>',
     '</ul>',
     '<h2>Price and Affiliate Link</h2>',
-    `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 may earn a commission if you buy through the link, but the article is generated from evidence, not commission rank.</p>`,
-    `<p><a href="${escapeHtml(ctaPath)}" rel="nofollow sponsored">Check current price</a></p>`
+    ctaPath
+      ? `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 may earn a commission if you buy through the link, but the article is generated from evidence, not commission rank.</p>`
+      : `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 is not showing a purchase button because no verified commissionable merchant link is attached yet.</p>`,
+    ctaPath ? `<p><a href="${escapeHtml(ctaPath)}" rel="nofollow sponsored">Check current price</a></p>` : ''
   ].join('\n')
 }
 
@@ -1383,7 +1459,8 @@ async function upsertEvidenceArticle(productId: number, candidate: CommercialLoo
   const keyword = `${product.product_name} review after YouTube tests`
   const title = `${product.product_name} Review: YouTube Evidence, Price Window, and Buyer Fit`
   const slug = slugify(`${product.product_name} youtube evidence review`)
-  const summary = `${product.product_name} is reviewed from ${evidence.length} timestamped YouTube evidence reports, with ${primaryTag} proof, a ${consensus.confidence.toLowerCase()} confidence score, and a direct affiliate price check.`
+  const hasCommissionableLink = Boolean(getCommissionableMerchantUrl(product.source_affiliate_link, product.active_affiliate_url, product.resolved_url))
+  const summary = `${product.product_name} is reviewed from ${evidence.length} timestamped YouTube evidence reports, with ${primaryTag} proof, a ${consensus.confidence.toLowerCase()} confidence score${hasCommissionableLink ? ', and a direct affiliate price check.' : ', with purchase handoff held until a commissionable merchant link is verified.'}`
   const contentHtml = buildEvidenceArticleHtml({ product, candidate, evidence, keyword, summary })
   const contentMd = buildEvidenceArticleMarkdown(contentHtml)
   const pathName = getArticlePath('review', slug)

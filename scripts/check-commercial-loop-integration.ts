@@ -285,7 +285,83 @@ async function seedCommercialLoopFixture() {
   const nonMonetizableAffiliateProductId = Number(nonMonetizableInsert.lastInsertRowid || 0)
   assertCondition(nonMonetizableAffiliateProductId > 0, 'Non-monetizable affiliate fixture insert failed')
 
-  return { affiliateProductId, productId, nonMonetizableAffiliateProductId }
+  const hiddenProductInsert = await db.exec(
+    `
+      INSERT INTO products (
+        source_platform,
+        source_affiliate_link,
+        resolved_url,
+        canonical_url,
+        slug,
+        brand,
+        product_name,
+        category,
+        category_slug,
+        price_amount,
+        price_currency,
+        current_price,
+        rating,
+        review_count,
+        youtube_match_terms_json,
+        source_payload_json,
+        published_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+    `,
+    [
+      'manual_fixture',
+      'https://example.com/products/no-commission-no-video-pool-robot',
+      'https://example.com/products/no-commission-no-video-pool-robot',
+      'https://example.com/products/no-commission-no-video-pool-robot',
+      'no-commission-no-video-pool-robot',
+      'NoProof',
+      'NoProof No Commission No Video Pool Robot',
+      'Yard & Pool Automation',
+      'yard-pool-automation',
+      299,
+      'USD',
+      299,
+      4.2,
+      12,
+      JSON.stringify(['NoProof pool robot review']),
+      JSON.stringify({ fixture: true, expectedBlockReason: 'no_commission_no_video_evidence' })
+    ]
+  )
+  const hiddenProductId = Number(hiddenProductInsert.lastInsertRowid || 0)
+  assertCondition(hiddenProductId > 0, 'Hidden no-commission/no-video product insert failed')
+
+  const hiddenArticleInsert = await db.exec(
+    `
+      INSERT INTO articles (
+        product_id,
+        article_type,
+        title,
+        slug,
+        summary,
+        keyword,
+        content_md,
+        content_html,
+        seo_title,
+        seo_description,
+        status,
+        published_at
+      ) VALUES (?, 'review', ?, ?, ?, ?, ?, ?, ?, ?, 'published', CURRENT_TIMESTAMP)
+    `,
+    [
+      hiddenProductId,
+      'NoProof No Commission No Video Pool Robot Review',
+      'noproof-no-commission-no-video-pool-robot-review',
+      'This fixture should never be publicly routable because it lacks commission and review video evidence.',
+      'NoProof no commission no video review',
+      'Fixture review without evidence.',
+      '<p>Fixture review without evidence.</p>',
+      'NoProof No Commission No Video Pool Robot Review',
+      'Fixture review without evidence.'
+    ]
+  )
+  const hiddenArticleId = Number(hiddenArticleInsert.lastInsertRowid || 0)
+  assertCondition(hiddenArticleId > 0, 'Hidden no-commission/no-video review article insert failed')
+
+  return { affiliateProductId, productId, nonMonetizableAffiliateProductId, hiddenProductId, hiddenArticleId }
 }
 
 async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
@@ -355,6 +431,12 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
   const siteData = await import('@/lib/site-data')
   const publicArticle = article?.slug ? await siteData.getArticleBySlug(article.slug) : null
   const sitemapSourceArticles = await siteData.listPublishedArticles()
+  const openCommerceProducts = await siteData.listOpenCommerceProducts()
+  const hiddenOpenProduct = await siteData.getOpenCommerceProductBySlug('no-commission-no-video-pool-robot')
+  const hiddenPublicArticle = await siteData.getArticleBySlug('noproof-no-commission-no-video-pool-robot-review')
+  const hardcore = await import('@/lib/hardcore')
+  const hardcoreProducts = await hardcore.listHardcoreProducts()
+  const hiddenHardcoreProduct = await hardcore.getHardcoreProductBySlug('no-commission-no-video-pool-robot')
   const merchantResponse = await merchantExitRoute.GET(
     new NextRequest(`http://localhost:3000/go/${fixture.productId}?source=evidence-review&visitor=commercial-loop-visitor`, {
       headers: {
@@ -450,6 +532,30 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
       detail: `${sitemapSourceArticles.length} published article(s)`
     },
     {
+      label: 'public product layer blocks no-commission/no-video products',
+      ok: Boolean(
+        !openCommerceProducts.some((item) => item.id === fixture.hiddenProductId) &&
+          hiddenOpenProduct === null
+      ),
+      detail: hiddenOpenProduct ? `leaked=${hiddenOpenProduct.slug}` : `blocked=${fixture.hiddenProductId}`
+    },
+    {
+      label: 'public review layer blocks review articles without video evidence',
+      ok: Boolean(
+        hiddenPublicArticle === null &&
+          !sitemapSourceArticles.some((item) => item.id === fixture.hiddenArticleId)
+      ),
+      detail: hiddenPublicArticle ? `leaked=${hiddenPublicArticle.slug}` : `blocked=${fixture.hiddenArticleId}`
+    },
+    {
+      label: 'hardcore evidence layer blocks no-commission/no-video products',
+      ok: Boolean(
+        hiddenHardcoreProduct === null &&
+          !hardcoreProducts.some((item) => item.id === fixture.hiddenProductId)
+      ),
+      detail: hiddenHardcoreProduct ? `leaked=${hiddenHardcoreProduct.slug}` : `blocked=${fixture.hiddenProductId}`
+    },
+    {
       label: 'commercial loop records publish event',
       ok: Boolean(publishEvent?.id),
       detail: publishEvent ? `event=${publishEvent.id}` : 'missing publish event'
@@ -517,8 +623,18 @@ async function main() {
     staticCheck('Commercial loop package script exists', 'package.json', ['commercial-loop:run']),
     staticCheck('Commercial loop enforces conversion eligibility', 'src/lib/commercial-loop.ts', [
       'hasAffiliatePromotionLink',
+      'getCommissionableMerchantUrl',
       'missing_affiliate_promotion_link',
       'qualified.filter(hasAffiliatePromotionLink)'
+    ]),
+    staticCheck('Public data layer blocks products without commission or video evidence', 'src/lib/site-data.ts', [
+      'isPublicProduct',
+      'publicEvidenceCount > 0',
+      'isPublicArticle',
+      'getCommissionableMerchantUrl'
+    ]),
+    staticCheck('Evidence product layer blocks products without commission or evidence', 'src/lib/hardcore.ts', [
+      'Boolean(product.affiliateUrl) || product.consensus.evidenceCount > 0'
     ]),
     staticCheck('Commercial loop audits commission influence separately from evidence fit', 'src/lib/commercial-loop.ts', [
       'auditCommissionBlindCandidateOrder',
