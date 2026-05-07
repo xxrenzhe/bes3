@@ -10,6 +10,7 @@ import { toast } from 'sonner'
 import { useShortlist } from '@/components/site/ShortlistProvider'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate } from '@/lib/editorial'
+import { hasMerchantExitTarget } from '@/lib/merchant-links'
 import type { CanonicalNewsletterIntent } from '@/lib/newsletter-intent'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import {
@@ -1409,7 +1410,7 @@ export function ShortlistWorkspace({
                           <Scale className="h-4 w-4" />
                           {compare.some((candidate) => candidate.id === item.id) ? 'In compare' : 'Add to compare'}
                         </button>
-                        {(item.resolvedUrl || item.sourceAffiliateLink) ? (
+                        {hasMerchantExitTarget(item) ? (
                           <Link
                             href={buildTrackedMerchantExitPath(item.id, 'shortlist-workspace')}
                             target="_blank"

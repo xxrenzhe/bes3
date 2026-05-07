@@ -4,7 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
+import { buildMerchantExitPath, isCommissionableMerchantUrl } from '@/lib/merchant-links'
 import { buildDealDecisionSignal, summarizePriceHistoryWindow } from '@/lib/price-insights'
 import { sanitizePromotionSummary } from '@/lib/promotion'
 import type {
@@ -264,7 +264,7 @@ export function CommerceEvidencePanel({
                       Reference price: {formatPriceSnapshot(offer.referencePriceAmount, offer.referencePriceCurrency || offer.priceCurrency || product.priceCurrency || 'USD')}
                     </p>
                   ) : null}
-                  {offer.offerUrl ? (
+                  {isCommissionableMerchantUrl(offer.offerUrl) ? (
                     <Link
                       href={offerHref}
                       target="_blank"

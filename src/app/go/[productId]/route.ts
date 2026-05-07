@@ -2,23 +2,11 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/db'
 import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/decision-visitor'
 import { recordMerchantClick } from '@/lib/merchant-clicks'
-import { normalizeMerchantSource } from '@/lib/merchant-links'
+import { getCommissionableMerchantUrl, normalizeMerchantSource } from '@/lib/merchant-links'
+import { toAbsoluteUrl } from '@/lib/site-url'
 
 function getFallbackPath(product: { slug: string | null } | null) {
   return product?.slug ? `/products/${product.slug}` : '/directory'
-}
-
-function pickAbsoluteDestination(...candidates: Array<string | null | undefined>) {
-  for (const candidate of candidates) {
-    if (!candidate) continue
-    try {
-      return new URL(candidate).toString()
-    } catch {
-      continue
-    }
-  }
-
-  return null
 }
 
 export async function GET(
@@ -27,7 +15,7 @@ export async function GET(
 ) {
   const productId = Number((await params).productId)
   if (!Number.isInteger(productId) || productId <= 0) {
-    return NextResponse.redirect(new URL('/directory', request.url))
+    return NextResponse.redirect(toAbsoluteUrl('/directory'))
   }
 
   const db = await getDatabase()
@@ -42,7 +30,7 @@ export async function GET(
   )
 
   if (!product) {
-    return NextResponse.redirect(new URL('/directory', request.url))
+    return NextResponse.redirect(toAbsoluteUrl('/directory'))
   }
 
   const requestedOfferId = Number.parseInt(request.nextUrl.searchParams.get('offerId') || '', 10)
@@ -59,14 +47,28 @@ export async function GET(
         )
       : null
 
-  const destination = pickAbsoluteDestination(
+  const activeAffiliateLink = await db.queryOne<{ affiliate_url: string | null; original_url: string | null }>(
+    `
+      SELECT affiliate_url, original_url
+      FROM affiliate_links
+      WHERE product_id = ?
+        AND status NOT IN ('broken', 'inactive')
+      ORDER BY CASE status WHEN 'active' THEN 0 WHEN 'unknown' THEN 1 ELSE 2 END, updated_at DESC, id DESC
+      LIMIT 1
+    `,
+    [productId]
+  )
+
+  const destination = getCommissionableMerchantUrl(
     selectedOffer?.offer_url,
+    product.source_affiliate_link,
+    activeAffiliateLink?.affiliate_url,
     selectedOffer?.source_url,
     product.resolved_url,
-    product.source_affiliate_link
+    activeAffiliateLink?.original_url
   )
   if (!destination) {
-    return NextResponse.redirect(new URL(getFallbackPath(product), request.url))
+    return NextResponse.redirect(toAbsoluteUrl(getFallbackPath(product)))
   }
 
   try {
@@ -88,6 +90,6 @@ export async function GET(
     response.headers.set('Referrer-Policy', 'origin')
     return response
   } catch {
-    return NextResponse.redirect(new URL(getFallbackPath(product), request.url))
+    return NextResponse.redirect(toAbsoluteUrl(getFallbackPath(product)))
   }
 }

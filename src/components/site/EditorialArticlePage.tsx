@@ -3,6 +3,7 @@ import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
+import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { buildArticleSchema, buildBreadcrumbSchema, buildProductSchema, buildReviewSchema } from '@/lib/structured-data'
 import type { ArticleRecord } from '@/lib/site-data'
 
@@ -61,8 +62,8 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
                     View evidence report
                   </Link>
                 ) : null}
-                {product?.resolvedUrl || product?.sourceAffiliateLink ? (
-                  <a href={product.slug ? `/go/${product.id}` : product.resolvedUrl || product.sourceAffiliateLink || '#'} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
+                {product && hasMerchantExitTarget(product) ? (
+                  <a href={buildMerchantExitPath(product.id, 'editorial-article')} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                     Check price
                   </a>
                 ) : null}

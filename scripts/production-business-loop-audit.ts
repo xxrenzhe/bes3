@@ -5,6 +5,7 @@ import fs from 'node:fs/promises'
 import path from 'node:path'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { getEvidenceQualityIssues } from '@/lib/evidence-quality'
+import { isCommissionableMerchantUrl } from '@/lib/merchant-links'
 
 type AuditStatus = 'passed' | 'failed'
 
@@ -483,6 +484,9 @@ async function auditConversionAndAiReadiness(productsAdmin: any, buyingFeed: any
     }
     if (!hasHttpUrl(location)) {
       throw new Error(`/go/${productId} redirect location is not an absolute merchant URL`)
+    }
+    if (!isCommissionableMerchantUrl(location)) {
+      throw new Error(`/go/${productId} redirected to a non-commissionable merchant URL`)
     }
     return {
       productId,

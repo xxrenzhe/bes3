@@ -545,6 +545,7 @@ async function main() {
     ]),
     staticCheck('Affiliate redirect records click attribution', 'src/app/go/[productId]/route.ts', [
       'recordMerchantClick',
+      'getCommissionableMerchantUrl',
       'normalizeMerchantSource',
       'NextResponse.redirect',
       'source_affiliate_link'

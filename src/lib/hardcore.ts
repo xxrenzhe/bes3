@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { HARDCORE_CATEGORIES, type HardcoreCategory } from '@/lib/hardcore-catalog'
+import { getCommissionableMerchantUrl } from '@/lib/merchant-links'
 import { slugify } from '@/lib/slug'
 
 export type HardcoreRating = 'Excellent' | 'Good' | 'Average' | 'Struggles' | 'Fails'
@@ -571,7 +572,7 @@ function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceRepo
     description: row.description,
     imageUrl: row.hero_image_url,
     asin: row.asin,
-    affiliateUrl: row.resolved_url || row.source_affiliate_link,
+    affiliateUrl: getCommissionableMerchantUrl(row.source_affiliate_link, row.resolved_url),
     affiliateStatus: row.affiliate_status || null,
     consensus,
     price,

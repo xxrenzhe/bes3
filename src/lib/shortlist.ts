@@ -1,3 +1,4 @@
+import { hasMerchantExitTarget } from '@/lib/merchant-links'
 import { formatPriceSnapshot } from '@/lib/utils'
 
 export interface ShortlistItem {
@@ -206,7 +207,7 @@ export function toShortlistItem(product: ShortlistItemInput): ShortlistItem {
 }
 
 function hasShortlistMerchantExitTarget(item: Pick<ShortlistItem, 'resolvedUrl' | 'sourceAffiliateLink'>) {
-  return Boolean(item.resolvedUrl || item.sourceAffiliateLink)
+  return hasMerchantExitTarget(item)
 }
 
 export function getShortlistProductPath(item: Pick<ShortlistItem, 'slug'>) {

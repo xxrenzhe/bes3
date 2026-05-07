@@ -3,6 +3,7 @@
 import './load-env'
 import fs from 'node:fs/promises'
 import path from 'node:path'
+import { isCommissionableMerchantUrl } from '@/lib/merchant-links'
 
 type CheckStatus = 'passed' | 'failed'
 
@@ -200,6 +201,9 @@ async function main() {
       }
       if (!/^https:\/\/www\.amazon\.com\//i.test(location)) {
         throw new Error(`/go/54 redirected to unexpected location: ${location}`)
+      }
+      if (!isCommissionableMerchantUrl(location)) {
+        throw new Error('/go/54 redirected to Amazon without affiliate attribution parameters')
       }
       return { status: response.status, locationHost: new URL(location).host }
     } finally {
