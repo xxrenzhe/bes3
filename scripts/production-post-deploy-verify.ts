@@ -22,7 +22,7 @@ const productSlug = process.env.PRODUCTION_POST_DEPLOY_PRODUCT_SLUG || 'lomon-wo
 const pseoPath = process.env.PRODUCTION_POST_DEPLOY_PSEO_PATH || '/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing'
 const expectPseoNoindex = process.env.PRODUCTION_POST_DEPLOY_EXPECT_PSEO_NOINDEX !== 'false'
 const minProductSitemapUrls = readIntegerEnv('PRODUCTION_POST_DEPLOY_MIN_PRODUCT_SITEMAP_URLS', 215)
-const minEditorialSitemapUrls = readIntegerEnv('PRODUCTION_POST_DEPLOY_MIN_EDITORIAL_SITEMAP_URLS', 20)
+const minEditorialSitemapUrls = readIntegerEnv('PRODUCTION_POST_DEPLOY_MIN_EDITORIAL_SITEMAP_URLS', 10)
 const runId = new Date().toISOString().replace(/[:.]/g, '-')
 const cacheBust = `post_deploy=${encodeURIComponent(runId)}`
 

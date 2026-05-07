@@ -189,7 +189,8 @@ function looksSynthetic(value: unknown) {
 function isLongTail(value: unknown) {
   const text = cleanText(value).toLowerCase()
   const tokens = text.split(/[^a-z0-9]+/).filter(Boolean)
-  return tokens.length >= 3 && !['test', 'qa', 'sample', 'fixture'].some((word) => text.includes(word))
+  const disallowedTokens = new Set(['qa', 'sample', 'fixture'])
+  return tokens.length >= 3 && !tokens.some((token) => disallowedTokens.has(token))
 }
 
 function getProductName(product: any) {

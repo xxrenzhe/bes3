@@ -3,6 +3,8 @@ import { importPKCS8, SignJWT } from 'jose'
 import { getDatabase } from '@/lib/db'
 import { SUPPORTED_LOCALES } from '@/lib/i18n'
 import { getSettingValueOrEnv } from '@/lib/settings'
+import { getArticlePath } from '@/lib/article-path'
+import { listPublishedArticles } from '@/lib/site-data'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 type PublishEventStatus = 'success' | 'warning' | 'error' | 'skipped'
@@ -1747,18 +1749,10 @@ export async function runLinkInspector(limit?: number): Promise<LinkInspectorSum
 }
 
 async function listRecentPublishedPaths(limit: number = 12): Promise<string[]> {
-  const db = await getDatabase()
-  const rows = await db.query<{ pathname: string }>(
-    `
-      SELECT pathname
-      FROM seo_pages
-      WHERE status = 'published'
-      ORDER BY updated_at DESC, id DESC
-      LIMIT ?
-    `,
-    [limit]
-  )
-  return rows.map((row) => row.pathname)
+  const articles = await listPublishedArticles()
+  return articles
+    .slice(0, Math.max(1, limit))
+    .map((article) => getArticlePath(article.type, article.slug))
 }
 
 export async function rerunGoogleIndexing(paths?: string[]) {
