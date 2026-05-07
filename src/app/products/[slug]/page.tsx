@@ -10,7 +10,7 @@ import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { StructuredData } from '@/components/site/StructuredData'
 import { buildProductDecisionContent } from '@/lib/decision-content'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import { formatHardcorePrice, getHardcoreProductBySlug } from '@/lib/hardcore'
+import { formatHardcorePrice, getHardcoreProductBySlug, listHardcoreProducts } from '@/lib/hardcore'
 import { buildIntentMetadataDescription, buildPageMetadata } from '@/lib/metadata'
 import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { getRequestLocale } from '@/lib/request-locale'
@@ -253,9 +253,26 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
 export default async function ProductPage({ params }: { params: Promise<{ slug: string }> }) {
   const slug = (await params).slug
-  const product = await getHardcoreProductBySlug(slug)
+  const products = await listHardcoreProducts()
+  const product = products.find((item) => item.slug === slug) || null
   if (!product) return <CommerceProductPage slug={slug} />
   const path = `/products/${product.slug}`
+  const hasCommissionableExit = Boolean(
+    product.affiliateUrl &&
+    product.affiliateStatus !== 'out_of_stock' &&
+    product.affiliateStatus !== 'broken'
+  )
+  const monetizedAlternatives = hasCommissionableExit
+    ? []
+    : products
+        .filter((item) =>
+          item.id !== product.id &&
+          item.categorySlug === product.categorySlug &&
+          item.affiliateUrl &&
+          item.affiliateStatus !== 'out_of_stock' &&
+          item.affiliateStatus !== 'broken'
+        )
+        .slice(0, 3)
   const faqEntries = [
     {
       question: 'Why might the score still be researching?',
@@ -306,12 +323,20 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <Link href={`/categories/${product.categorySlug}`} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
                 Back to {product.categoryName}
               </Link>
-              {product.affiliateUrl && product.affiliateStatus !== 'out_of_stock' && product.affiliateStatus !== 'broken' ? (
+              {hasCommissionableExit ? (
                 <a href={`/go/${product.id}`} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
                   Check price
                 </a>
               ) : null}
             </div>
+            {!hasCommissionableExit ? (
+              <div className="mt-6 max-w-3xl rounded-md border border-amber-200 bg-amber-50 p-4">
+                <p className="text-sm font-black text-amber-950">Evidence-ready, not monetization-ready.</p>
+                <p className="mt-2 text-sm leading-7 text-amber-900">
+                  Bes3 found usable review evidence for this exact product, but it is not showing a purchase button because no verified commissionable merchant link is attached yet.
+                </p>
+              </div>
+            ) : null}
           </div>
           <div className="rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current verdict</p>
@@ -332,6 +357,37 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               targetPrice={product.price.histLowPrice}
               targetValueScore={product.price.valueScore}
             />
+            {!hasCommissionableExit ? (
+              <div className="mt-5 rounded-md border border-border bg-white p-4">
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buying path</p>
+                <p className="mt-2 text-sm leading-7 text-muted-foreground">
+                  No outbound store handoff is available for this item until a real affiliate URL is verified.
+                </p>
+                {monetizedAlternatives.length ? (
+                  <div className="mt-4 space-y-3">
+                    <p className="text-sm font-semibold">Commissionable alternatives in {product.categoryName}</p>
+                    {monetizedAlternatives.map((alternative) => (
+                      <div key={alternative.id} className="rounded-md bg-slate-50 p-3">
+                        <Link href={`/products/${alternative.slug}`} className="block text-sm font-semibold text-foreground hover:text-primary">
+                          {alternative.brand ? `${alternative.brand} ` : ''}{alternative.name}
+                        </Link>
+                        <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                          <span>{formatScore(alternative.consensus.score10)}</span>
+                          <span>{alternative.consensus.evidenceCount} evidence reports</span>
+                          <a href={`/go/${alternative.id}`} className="font-semibold text-primary hover:underline">
+                            Check affiliate price
+                          </a>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <Link href={`/categories/${product.categorySlug}`} className="mt-4 inline-flex rounded-md border border-border px-3 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
+                    Browse category research
+                  </Link>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </section>

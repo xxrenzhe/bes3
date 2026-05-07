@@ -21,6 +21,12 @@ export async function GET() {
       categories: HARDCORE_CATEGORIES.length,
       tags: tags.length,
       products: products.length,
+      evidenceReadyProducts: products.filter((product) => product.consensus.evidenceCount > 0).length,
+      monetizationReadyProducts: products.filter((product) =>
+        product.affiliateUrl &&
+        product.affiliateStatus !== 'out_of_stock' &&
+        product.affiliateStatus !== 'broken'
+      ).length,
       evidenceReports: products.reduce((total, product) => total + product.consensus.evidenceCount, 0),
       pendingTags: pendingTags?.count || 0,
       queuedRescans: rescanQueue?.count || 0,
@@ -52,15 +58,33 @@ export async function GET() {
       evidenceFeedback: '/api/open/evidence/feedback',
       searchIntake: '/api/open/evidence/search-intake'
     },
-    products: products.slice(0, 50).map((product) => ({
-      id: product.id,
-      slug: product.slug,
-      name: product.name,
-      brand: product.brand,
-      categorySlug: product.categorySlug,
-      consensus: product.consensus,
-      price: product.price,
-      route: `/products/${product.slug}`
-    }))
+    products: products.slice(0, 50).map((product) => {
+      const monetizationReady = Boolean(
+        product.affiliateUrl &&
+        product.affiliateStatus !== 'out_of_stock' &&
+        product.affiliateStatus !== 'broken'
+      )
+
+      return {
+        id: product.id,
+        slug: product.slug,
+        name: product.name,
+        brand: product.brand,
+        categorySlug: product.categorySlug,
+        consensus: product.consensus,
+        price: product.price,
+        commercialReadiness: {
+          evidenceReady: product.consensus.evidenceCount > 0,
+          monetizationReady,
+          outboundPolicy: monetizationReady
+            ? 'merchant handoff allowed only through Bes3 /go attribution'
+            : 'no merchant handoff; use for research or compare against monetized alternatives',
+          allowedActions: monetizationReady
+            ? ['open_product_report', 'merchant_handoff', 'price_alert']
+            : ['open_product_report', 'price_alert', 'browse_category']
+        },
+        route: `/products/${product.slug}`
+      }
+    })
   })
 }

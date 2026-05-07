@@ -80,6 +80,14 @@ type Summary = {
   platformGroups: Record<'partnerboost' | 'manual' | 'other', number>
 }
 
+type ProductsPayloadMeta = {
+  compact: boolean
+  affiliateProductsReturned: number
+  productsReturned: number
+  affiliateLimit: number
+  productLimit: number
+}
+
 type SortMode = 'updated_desc' | 'updated_asc' | 'price_desc' | 'reviews_desc' | 'linked_first'
 type PlatformFilter = 'all' | 'partnerboost' | 'manual' | 'other'
 type LinkStateFilter = 'all' | 'linked' | 'inventory_only'
@@ -177,6 +185,7 @@ export function ProductsConsole() {
       other: 0
     }
   })
+  const [payloadMeta, setPayloadMeta] = useState<ProductsPayloadMeta | null>(null)
   const [importLink, setImportLink] = useState('')
   const [importBrand, setImportBrand] = useState('')
   const [importModel, setImportModel] = useState('')
@@ -196,10 +205,11 @@ export function ProductsConsole() {
   const [isPending, startTransition] = useTransition()
 
   const load = async () => {
-    const response = await fetch('/api/admin/products')
+    const response = await fetch('/api/admin/products?affiliateLimit=300&productLimit=120')
     const body = await response.json()
     setAffiliateProducts(body.affiliateProducts || [])
     setProducts(body.products || [])
+    setPayloadMeta(body.meta || null)
     setSummary(body.summary || {
       totalAffiliateProducts: 0,
       linkedProducts: 0,
@@ -695,7 +705,10 @@ export function ProductsConsole() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-muted-foreground">
-          <p>当前显示 {filteredAffiliateProducts.length} / {summary.totalAffiliateProducts} 个库存商品</p>
+          <p>
+            当前显示 {filteredAffiliateProducts.length} / {summary.totalAffiliateProducts} 个库存商品
+            {payloadMeta?.compact ? `（已加载最新 ${payloadMeta.affiliateProductsReturned} 个，避免生产控制台阻塞）` : ''}
+          </p>
           <div className="flex items-center gap-2">
             <Checkbox
               checked={allVisibleSelected}
