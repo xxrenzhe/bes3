@@ -1,0 +1,3 @@
+[ 5156372ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3010/products/dolphin-nautilus-pool-wall-demo?_rsc=156iy:0
+[ 5156634ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3010/?_rsc=156iy:0
+[ 5156924ms] [ERROR] Failed to load resource: net::ERR_CONNECTION_REFUSED @ http://127.0.0.1:3010/api/decision-events:0

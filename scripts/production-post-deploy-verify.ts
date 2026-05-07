@@ -19,6 +19,7 @@ const outputDir = process.env.PRODUCTION_POST_DEPLOY_OUTPUT_DIR || 'docs/ProdTes
 const requestTimeoutMs = readIntegerEnv('PRODUCTION_POST_DEPLOY_REQUEST_TIMEOUT_MS', 30000)
 const productSlug = process.env.PRODUCTION_POST_DEPLOY_PRODUCT_SLUG || 'lomon-womens-fuzzy-sherpa-fleece-jacket-lightweight-vest-cozy-sleeveless-cardigan-zipper-waistcoat-outerwear-with-pocket'
 const pseoPath = process.env.PRODUCTION_POST_DEPLOY_PSEO_PATH || '/yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing'
+const expectPseoNoindex = process.env.PRODUCTION_POST_DEPLOY_EXPECT_PSEO_NOINDEX !== 'false'
 const minProductSitemapUrls = readIntegerEnv('PRODUCTION_POST_DEPLOY_MIN_PRODUCT_SITEMAP_URLS', 215)
 const minEditorialSitemapUrls = readIntegerEnv('PRODUCTION_POST_DEPLOY_MIN_EDITORIAL_SITEMAP_URLS', 20)
 const runId = new Date().toISOString().replace(/[:.]/g, '-')
@@ -132,17 +133,14 @@ async function main() {
     }
   })
 
-  await check('pSEO', 'Scenario page serves corrected research copy', async () => {
+  await check('pSEO', 'Scenario page serves research quality gate', async () => {
     const routePath = withCacheBust(pseoPath)
     const { body } = await fetchText(routePath)
     requireIncludes(body, [
-      'Current Evidence-Backed Pick',
       'Current Recommendation',
       'AI Answer Summary',
-      'current evidence-backed pick',
       'Confidence boundary',
-      'Source Score',
-      'Source Proof'
+      'Index quality gate'
     ])
     requireExcludes(body, [
       'Reddit Consensus: The 1 Best',
@@ -151,12 +149,19 @@ async function main() {
       'not a final ranking',
       'not a ranked recommendation yet',
       'not yet strong enough for a final ranking',
-      'noindex'
+      'demoPoolWall001'
     ])
+    if (expectPseoNoindex && !body.includes('noindex')) {
+      throw new Error('researching pSEO page is missing noindex')
+    }
+    if (!expectPseoNoindex && body.includes('noindex')) {
+      throw new Error('indexable pSEO page unexpectedly includes noindex')
+    }
     return {
       path: routePath,
       htmlBytes: body.length,
-      indexable: !body.includes('noindex')
+      indexable: !body.includes('noindex'),
+      expectedNoindex: expectPseoNoindex
     }
   })
 
@@ -208,6 +213,7 @@ async function main() {
     generatedAt: new Date().toISOString(),
     productSlug,
     pseoPath,
+    expectPseoNoindex,
     totals: {
       passed: results.filter((result) => result.status === 'passed').length,
       failed: results.filter((result) => result.status === 'failed').length

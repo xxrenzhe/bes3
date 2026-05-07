@@ -1,0 +1,425 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]: We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "B3 Independent Product Ratings Bes3" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: B3
+          - generic [ref=e9]:
+            - paragraph [ref=e10]: Independent Product Ratings
+            - paragraph [ref=e11]: Bes3
+        - navigation "Primary navigation" [ref=e12]:
+          - link "Categories" [ref=e13] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e14] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value" [ref=e15] [cursor=pointer]:
+            - /url: /deals
+          - link "Open Data" [ref=e16] [cursor=pointer]:
+            - /url: /data
+          - link "Trust" [ref=e17] [cursor=pointer]:
+            - /url: /trust
+          - link "About" [ref=e18] [cursor=pointer]:
+            - /url: /about
+          - group [ref=e19]:
+            - button "Change language, current language EN" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+              - generic [ref=e24]: EN
+              - generic [ref=e25]: ⌄
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: Buyer-First Ratings
+          - heading "Real testing insights for better buying decisions." [level=1] [ref=e31]
+          - paragraph [ref=e32]: Bes3 converts long-form video reviews, real buyer concerns, exact product matching, and price history into clearer comparisons for products that are hard to judge from specs alone.
+          - generic [ref=e33]:
+            - link "Browse categories" [ref=e34] [cursor=pointer]:
+              - /url: /categories
+            - link "Check best value windows" [ref=e35] [cursor=pointer]:
+              - /url: /deals
+        - generic [ref=e36]:
+          - generic [ref=e37]:
+            - paragraph [ref=e38]: Categories tracked
+            - paragraph [ref=e39]: "15"
+            - paragraph [ref=e40]: Product areas where hands-on testing matters most.
+          - generic [ref=e41]:
+            - paragraph [ref=e42]: Live comparisons
+            - paragraph [ref=e43]: "0"
+            - paragraph [ref=e44]: Categories with enough verified review coverage.
+          - generic [ref=e45]:
+            - paragraph [ref=e46]: Review excerpts
+            - paragraph [ref=e47]: "2"
+            - paragraph [ref=e48]: Source-backed quotes currently available.
+      - generic [ref=e50]:
+        - generic [ref=e51]:
+          - paragraph [ref=e52]: Pain-Point Selector
+          - heading "Start with the failure mode you actually care about." [level=2] [ref=e53]
+        - generic [ref=e54]:
+          - link "Yard and Pool Automation Boundary Free Navigation See which products handle boundary free navigation best based on review evidence and price timing." [ref=e55] [cursor=pointer]:
+            - /url: /yard-pool-automation/best-yard-pool-automation-for-boundary-free-navigation
+            - paragraph [ref=e56]: Yard and Pool Automation
+            - heading "Boundary Free Navigation" [level=3] [ref=e57]
+            - paragraph [ref=e58]: See which products handle boundary free navigation best based on review evidence and price timing.
+          - link "Yard and Pool Automation Pool Wall Climbing See which products handle pool wall climbing best based on review evidence and price timing." [ref=e59] [cursor=pointer]:
+            - /url: /yard-pool-automation/best-yard-pool-automation-for-pool-wall-climbing
+            - paragraph [ref=e60]: Yard and Pool Automation
+            - heading "Pool Wall Climbing" [level=3] [ref=e61]
+            - paragraph [ref=e62]: See which products handle pool wall climbing best based on review evidence and price timing.
+          - link "Impact Wrenches Rusty Lug Nuts See which products handle rusty lug nuts best based on review evidence and price timing." [ref=e63] [cursor=pointer]:
+            - /url: /impact-wrenches/best-impact-wrenches-for-rusty-lug-nuts
+            - paragraph [ref=e64]: Impact Wrenches
+            - heading "Rusty Lug Nuts" [level=3] [ref=e65]
+            - paragraph [ref=e66]: See which products handle rusty lug nuts best based on review evidence and price timing.
+          - link "Impact Wrenches Cold Weather Starts See which products handle cold weather starts best based on review evidence and price timing." [ref=e67] [cursor=pointer]:
+            - /url: /impact-wrenches/best-impact-wrenches-for-cold-weather-starts
+            - paragraph [ref=e68]: Impact Wrenches
+            - heading "Cold Weather Starts" [level=3] [ref=e69]
+            - paragraph [ref=e70]: See which products handle cold weather starts best based on review evidence and price timing.
+          - link "Smart Pet Gear Safety Sensors See which products handle safety sensors best based on review evidence and price timing." [ref=e71] [cursor=pointer]:
+            - /url: /smart-pet-gear/best-smart-pet-gear-for-safety-sensors
+            - paragraph [ref=e72]: Smart Pet Gear
+            - heading "Safety Sensors" [level=3] [ref=e73]
+            - paragraph [ref=e74]: See which products handle safety sensors best based on review evidence and price timing.
+          - link "Smart Pet Gear Offline Feeding See which products handle offline feeding best based on review evidence and price timing." [ref=e75] [cursor=pointer]:
+            - /url: /smart-pet-gear/best-smart-pet-gear-for-offline-feeding
+            - paragraph [ref=e76]: Smart Pet Gear
+            - heading "Offline Feeding" [level=3] [ref=e77]
+            - paragraph [ref=e78]: See which products handle offline feeding best based on review evidence and price timing.
+          - link "Espresso Gear Fast Warmup See which products handle fast warmup best based on review evidence and price timing." [ref=e79] [cursor=pointer]:
+            - /url: /espresso-gear/best-espresso-gear-for-fast-warmup
+            - paragraph [ref=e80]: Espresso Gear
+            - heading "Fast Warmup" [level=3] [ref=e81]
+            - paragraph [ref=e82]: See which products handle fast warmup best based on review evidence and price timing.
+          - link "Espresso Gear Low Static Grinding See which products handle low static grinding best based on review evidence and price timing." [ref=e83] [cursor=pointer]:
+            - /url: /espresso-gear/best-espresso-gear-for-low-static-grinding
+            - paragraph [ref=e84]: Espresso Gear
+            - heading "Low Static Grinding" [level=3] [ref=e85]
+            - paragraph [ref=e86]: See which products handle low static grinding best based on review evidence and price timing.
+          - link "Power Stations Real Runtime See which products handle real runtime best based on review evidence and price timing." [ref=e87] [cursor=pointer]:
+            - /url: /power-stations/best-power-stations-for-real-runtime
+            - paragraph [ref=e88]: Power Stations
+            - heading "Real Runtime" [level=3] [ref=e89]
+            - paragraph [ref=e90]: See which products handle real runtime best based on review evidence and price timing.
+          - link "Power Stations Hot Weather Use See which products handle hot weather use best based on review evidence and price timing." [ref=e91] [cursor=pointer]:
+            - /url: /power-stations/best-power-stations-for-hot-weather-use
+            - paragraph [ref=e92]: Power Stations
+            - heading "Hot Weather Use" [level=3] [ref=e93]
+            - paragraph [ref=e94]: See which products handle hot weather use best based on review evidence and price timing.
+          - link "Sim Racing Torque Fade See which products handle torque fade best based on review evidence and price timing." [ref=e95] [cursor=pointer]:
+            - /url: /sim-racing/best-sim-racing-for-torque-fade
+            - paragraph [ref=e96]: Sim Racing
+            - heading "Torque Fade" [level=3] [ref=e97]
+            - paragraph [ref=e98]: See which products handle torque fade best based on review evidence and price timing.
+          - link "Sim Racing Brake Consistency See which products handle brake consistency best based on review evidence and price timing." [ref=e99] [cursor=pointer]:
+            - /url: /sim-racing/best-sim-racing-for-brake-consistency
+            - paragraph [ref=e100]: Sim Racing
+            - heading "Brake Consistency" [level=3] [ref=e101]
+            - paragraph [ref=e102]: See which products handle brake consistency best based on review evidence and price timing.
+          - link "Home Security Cold Battery Life See which products handle cold battery life best based on review evidence and price timing." [ref=e103] [cursor=pointer]:
+            - /url: /home-security/best-home-security-for-cold-battery-life
+            - paragraph [ref=e104]: Home Security
+            - heading "Cold Battery Life" [level=3] [ref=e105]
+            - paragraph [ref=e106]: See which products handle cold battery life best based on review evidence and price timing.
+          - link "Home Security No Subscription See which products handle no subscription best based on review evidence and price timing." [ref=e107] [cursor=pointer]:
+            - /url: /home-security/best-home-security-for-no-subscription
+            - paragraph [ref=e108]: Home Security
+            - heading "No Subscription" [level=3] [ref=e109]
+            - paragraph [ref=e110]: See which products handle no subscription best based on review evidence and price timing.
+          - link "Fitness Tech Apartment Noise See which products handle apartment noise best based on review evidence and price timing." [ref=e111] [cursor=pointer]:
+            - /url: /fitness-tech/best-fitness-tech-for-apartment-noise
+            - paragraph [ref=e112]: Fitness Tech
+            - heading "Apartment Noise" [level=3] [ref=e113]
+            - paragraph [ref=e114]: See which products handle apartment noise best based on review evidence and price timing.
+          - link "Fitness Tech Stall Force See which products handle stall force best based on review evidence and price timing." [ref=e115] [cursor=pointer]:
+            - /url: /fitness-tech/best-fitness-tech-for-stall-force
+            - paragraph [ref=e116]: Fitness Tech
+            - heading "Stall Force" [level=3] [ref=e117]
+            - paragraph [ref=e118]: See which products handle stall force best based on review evidence and price timing.
+      - generic [ref=e120]:
+        - paragraph [ref=e121]: Categories
+        - heading "Fourteen product areas where real-world testing beats spec sheets." [level=2] [ref=e122]
+        - generic [ref=e123]:
+          - link "Yard and Pool Automation Researching obstacle pathing logic | pool wall climbing | true water pressure and flow Boundary Free Navigation Pool Wall Climbing Real Water Pressure" [ref=e124] [cursor=pointer]:
+            - /url: /categories/yard-pool-automation
+            - generic [ref=e125]:
+              - heading "Yard and Pool Automation" [level=3] [ref=e126]
+              - generic [ref=e127]: Researching
+            - paragraph [ref=e128]: obstacle pathing logic | pool wall climbing | true water pressure and flow
+            - generic [ref=e129]:
+              - generic [ref=e130]: Boundary Free Navigation
+              - generic [ref=e131]: Pool Wall Climbing
+              - generic [ref=e132]: Real Water Pressure
+          - link "Impact Wrenches Researching real breakaway torque | stall behavior | cold-start discharge Rusty Lug Nuts Cold Weather Starts Battery Sag" [ref=e133] [cursor=pointer]:
+            - /url: /categories/impact-wrenches
+            - generic [ref=e134]:
+              - heading "Impact Wrenches" [level=3] [ref=e135]
+              - generic [ref=e136]: Researching
+            - paragraph [ref=e137]: real breakaway torque | stall behavior | cold-start discharge
+            - generic [ref=e138]:
+              - generic [ref=e139]: Rusty Lug Nuts
+              - generic [ref=e140]: Cold Weather Starts
+              - generic [ref=e141]: Battery Sag
+          - link "Smart Pet Gear Researching pinch sensor behavior | offline feeding | jam recovery Safety Sensors Offline Feeding Odor Control" [ref=e142] [cursor=pointer]:
+            - /url: /categories/smart-pet-gear
+            - generic [ref=e143]:
+              - heading "Smart Pet Gear" [level=3] [ref=e144]
+              - generic [ref=e145]: Researching
+            - paragraph [ref=e146]: pinch sensor behavior | offline feeding | jam recovery
+            - generic [ref=e147]:
+              - generic [ref=e148]: Safety Sensors
+              - generic [ref=e149]: Offline Feeding
+              - generic [ref=e150]: Odor Control
+          - link "Espresso Gear Researching warm-up time | grind retention | static mess Fast Warmup Low Static Grinding Temperature Stability" [ref=e151] [cursor=pointer]:
+            - /url: /categories/espresso-gear
+            - generic [ref=e152]:
+              - heading "Espresso Gear" [level=3] [ref=e153]
+              - generic [ref=e154]: Researching
+            - paragraph [ref=e155]: warm-up time | grind retention | static mess
+            - generic [ref=e156]:
+              - generic [ref=e157]: Fast Warmup
+              - generic [ref=e158]: Low Static Grinding
+              - generic [ref=e159]: Temperature Stability
+          - link "Power Stations Researching inverter efficiency | thermal derating | charge curve Real Runtime Hot Weather Use Solar Charging" [ref=e160] [cursor=pointer]:
+            - /url: /categories/power-stations
+            - generic [ref=e161]:
+              - heading "Power Stations" [level=3] [ref=e162]
+              - generic [ref=e163]: Researching
+            - paragraph [ref=e164]: inverter efficiency | thermal derating | charge curve
+            - generic [ref=e165]:
+              - generic [ref=e166]: Real Runtime
+              - generic [ref=e167]: Hot Weather Use
+              - generic [ref=e168]: Solar Charging
+          - link "Sim Racing Researching thermal fade | force feedback clipping | pedal repeatability Torque Fade Brake Consistency Quiet Mic" [ref=e169] [cursor=pointer]:
+            - /url: /categories/sim-racing
+            - generic [ref=e170]:
+              - heading "Sim Racing" [level=3] [ref=e171]
+              - generic [ref=e172]: Researching
+            - paragraph [ref=e173]: thermal fade | force feedback clipping | pedal repeatability
+            - generic [ref=e174]:
+              - generic [ref=e175]: Torque Fade
+              - generic [ref=e176]: Brake Consistency
+              - generic [ref=e177]: Quiet Mic
+          - link "Home Security Researching cold battery drop | person detection error | subscription lock-in Cold Battery Life No Subscription Person Detection" [ref=e178] [cursor=pointer]:
+            - /url: /categories/home-security
+            - generic [ref=e179]:
+              - heading "Home Security" [level=3] [ref=e180]
+              - generic [ref=e181]: Researching
+            - paragraph [ref=e182]: cold battery drop | person detection error | subscription lock-in
+            - generic [ref=e183]:
+              - generic [ref=e184]: Cold Battery Life
+              - generic [ref=e185]: No Subscription
+              - generic [ref=e186]: Person Detection
+          - link "Fitness Tech Researching floor resonance | stall force | heat output Apartment Noise Stall Force Heavy User Support" [ref=e187] [cursor=pointer]:
+            - /url: /categories/fitness-tech
+            - generic [ref=e188]:
+              - heading "Fitness Tech" [level=3] [ref=e189]
+              - generic [ref=e190]: Researching
+            - paragraph [ref=e191]: floor resonance | stall force | heat output
+            - generic [ref=e192]:
+              - generic [ref=e193]: Apartment Noise
+              - generic [ref=e194]: Stall Force
+              - generic [ref=e195]: Heavy User Support
+          - link "Personal Care Tech Researching measured air speed | contact temperature | noise level Fast Drying Skin Cooling Low Noise" [ref=e196] [cursor=pointer]:
+            - /url: /categories/personal-care-tech
+            - generic [ref=e197]:
+              - heading "Personal Care Tech" [level=3] [ref=e198]
+              - generic [ref=e199]: Researching
+            - paragraph [ref=e200]: measured air speed | contact temperature | noise level
+            - generic [ref=e201]:
+              - generic [ref=e202]: Fast Drying
+              - generic [ref=e203]: Skin Cooling
+              - generic [ref=e204]: Low Noise
+          - link "Air and Water Researching wastewater ratio | PM2.5 decay curve | filter cost Wildfire Smoke Low Waste Water Quiet Bedroom Use" [ref=e205] [cursor=pointer]:
+            - /url: /categories/air-water
+            - generic [ref=e206]:
+              - heading "Air and Water" [level=3] [ref=e207]
+              - generic [ref=e208]: Researching
+            - paragraph [ref=e209]: wastewater ratio | PM2.5 decay curve | filter cost
+            - generic [ref=e210]:
+              - generic [ref=e211]: Wildfire Smoke
+              - generic [ref=e212]: Low Waste Water
+              - generic [ref=e213]: Quiet Bedroom Use
+          - link "Bathroom Fixtures Researching flush reliability | bidet comfort | installation fit Flush Reliability Easy Install Bidet Comfort" [ref=e214] [cursor=pointer]:
+            - /url: /categories/bathroom-fixtures
+            - generic [ref=e215]:
+              - heading "Bathroom Fixtures" [level=3] [ref=e216]
+              - generic [ref=e217]: Researching
+            - paragraph [ref=e218]: flush reliability | bidet comfort | installation fit
+            - generic [ref=e219]:
+              - generic [ref=e220]: Flush Reliability
+              - generic [ref=e221]: Easy Install
+              - generic [ref=e222]: Bidet Comfort
+          - link "Maker Gear Researching tolerance | ringing | first layer failure High Speed Accuracy First Layer Reliability Low Fumes" [ref=e223] [cursor=pointer]:
+            - /url: /categories/maker-gear
+            - generic [ref=e224]:
+              - heading "Maker Gear" [level=3] [ref=e225]
+              - generic [ref=e226]: Researching
+            - paragraph [ref=e227]: tolerance | ringing | first layer failure
+            - generic [ref=e228]:
+              - generic [ref=e229]: High Speed Accuracy
+              - generic [ref=e230]: First Layer Reliability
+              - generic [ref=e231]: Low Fumes
+          - link "Baby Tech Researching cobblestone vibration | night vision clarity | disconnect alarms Rough Pavement Night Vision Disconnect Alerts" [ref=e232] [cursor=pointer]:
+            - /url: /categories/baby-tech
+            - generic [ref=e233]:
+              - heading "Baby Tech" [level=3] [ref=e234]
+              - generic [ref=e235]: Researching
+            - paragraph [ref=e236]: cobblestone vibration | night vision clarity | disconnect alarms
+            - generic [ref=e237]:
+              - generic [ref=e238]: Rough Pavement
+              - generic [ref=e239]: Night Vision
+              - generic [ref=e240]: Disconnect Alerts
+          - link "Travel Gear Researching drop test damage | zipper water ingress | wheel wobble Drop Resistance Real Waterproofing Quiet Wheels" [ref=e241] [cursor=pointer]:
+            - /url: /categories/travel-gear
+            - generic [ref=e242]:
+              - heading "Travel Gear" [level=3] [ref=e243]
+              - generic [ref=e244]: Researching
+            - paragraph [ref=e245]: drop test damage | zipper water ingress | wheel wobble
+            - generic [ref=e246]:
+              - generic [ref=e247]: Drop Resistance
+              - generic [ref=e248]: Real Waterproofing
+              - generic [ref=e249]: Quiet Wheels
+          - link "Remote Office Researching desk wobble | lumbar support fatigue | motor noise Desk Wobble Long Sitting Support Quiet Motors" [ref=e250] [cursor=pointer]:
+            - /url: /categories/remote-office
+            - generic [ref=e251]:
+              - heading "Remote Office" [level=3] [ref=e252]
+              - generic [ref=e253]: Researching
+            - paragraph [ref=e254]: desk wobble | lumbar support fatigue | motor noise
+            - generic [ref=e255]:
+              - generic [ref=e256]: Desk Wobble
+              - generic [ref=e257]: Long Sitting Support
+              - generic [ref=e258]: Quiet Motors
+      - generic [ref=e260]:
+        - generic [ref=e261]:
+          - paragraph [ref=e262]: Consensus Matrix
+          - heading "Real-world evidence, price timing, and the current winner in one table." [level=2] [ref=e263]
+        - table [ref=e265]:
+          - rowgroup [ref=e266]:
+            - row "Model Consensus Evidence Price/Value Hardcore Proof Action" [ref=e267]:
+              - columnheader "Model" [ref=e268]
+              - columnheader "Consensus" [ref=e269]
+              - columnheader "Evidence" [ref=e270]
+              - columnheader "Price/Value" [ref=e271]
+              - columnheader "Hardcore Proof" [ref=e272]
+              - columnheader "Action" [ref=e273]
+          - rowgroup [ref=e274]:
+            - row "Dolphin Nautilus Pool Wall Demo Yard and Pool Automation 8.0/10 Low confidence 1 reports 1 creator sources Below Average Price $499 | V 0.80 Low $449 | 90d avg $629 Check price (Affiliate Link)" [ref=e275]:
+              - cell "Dolphin Nautilus Pool Wall Demo Yard and Pool Automation" [ref=e276]:
+                - link "Dolphin Nautilus Pool Wall Demo" [ref=e277] [cursor=pointer]:
+                  - /url: /products/dolphin-nautilus-pool-wall-demo
+                - paragraph [ref=e278]: Yard and Pool Automation
+              - cell "8.0/10 Low confidence" [ref=e279]:
+                - generic [ref=e280]: 8.0/10
+                - paragraph [ref=e281]: Low confidence
+              - cell "1 reports 1 creator sources" [ref=e282]:
+                - paragraph [ref=e283]: 1 reports
+                - paragraph [ref=e284]: 1 creator sources
+              - cell "Below Average Price $499 | V 0.80 Low $449 | 90d avg $629" [ref=e285]:
+                - generic [ref=e286]:
+                  - generic [ref=e287]: Below Average Price
+                  - generic [ref=e288]: $499 | V 0.80
+                - paragraph [ref=e289]: Low $449 | 90d avg $629
+              - cell [ref=e290]:
+                - blockquote [ref=e292]:
+                  - text: Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.
+                  - link "Review by Pool Robot Demo Lab" [ref=e294] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=demoPoolWall001&t=428s
+              - cell "Check price (Affiliate Link)" [ref=e295]:
+                - link "Check price" [ref=e296] [cursor=pointer]:
+                  - /url: /go/1
+                - paragraph [ref=e297]: (Affiliate Link)
+            - row "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield Bathroom Fixtures 8.0/10 Low confidence 1 reports 1 creator sources Price Baseline Pending $746 | V 0.54 Low Price pending | 90d avg Price pending Check price (Affiliate Link)" [ref=e298]:
+              - cell "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield Bathroom Fixtures" [ref=e299]:
+                - link "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield" [ref=e300] [cursor=pointer]:
+                  - /url: /products/deervalley-dv-1s0442-v3-smart-toilet-with-all-season-adaptive-comfort-rotating-foam-shield
+                - paragraph [ref=e301]: Bathroom Fixtures
+              - cell "8.0/10 Low confidence" [ref=e302]:
+                - generic [ref=e303]: 8.0/10
+                - paragraph [ref=e304]: Low confidence
+              - cell "1 reports 1 creator sources" [ref=e305]:
+                - paragraph [ref=e306]: 1 reports
+                - paragraph [ref=e307]: 1 creator sources
+              - cell "Price Baseline Pending $746 | V 0.54 Low Price pending | 90d avg Price pending" [ref=e308]:
+                - generic [ref=e309]:
+                  - generic [ref=e310]: Price Baseline Pending
+                  - generic [ref=e311]: $746 | V 0.54
+                - paragraph [ref=e312]: Low Price pending | 90d avg Price pending
+              - cell [ref=e313]:
+                - blockquote [ref=e315]:
+                  - text: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.
+                  - link "Review by Prime Technology HD" [ref=e317] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=0llGzT57uV0&t=96s
+              - cell "Check price (Affiliate Link)" [ref=e318]:
+                - link "Check price" [ref=e319] [cursor=pointer]:
+                  - /url: /go/80
+                - paragraph [ref=e320]: (Affiliate Link)
+            - row "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White Bathroom Fixtures Researching Researching confidence Researching 0 reports 0 creator sources Price Baseline Pending $1,199 Low Price pending | 90d avg Price pending No verified quote yet. Product stays out of winner claims. Check price (Affiliate Link)" [ref=e321]:
+              - cell "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White Bathroom Fixtures" [ref=e322]:
+                - link "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White" [ref=e323] [cursor=pointer]:
+                  - /url: /products/deervalley-dv-1bv0520w-dv-1bv0520nw-60-fully-assembled-double-bathroom-vanity-with-engineered-marble-top-white-white
+                - paragraph [ref=e324]: Bathroom Fixtures
+              - cell "Researching Researching confidence Researching" [ref=e325]:
+                - generic [ref=e326]: Researching
+                - paragraph [ref=e327]: Researching confidence
+                - paragraph [ref=e328]: Researching
+              - cell "0 reports 0 creator sources" [ref=e329]:
+                - paragraph [ref=e330]: 0 reports
+                - paragraph [ref=e331]: 0 creator sources
+              - cell "Price Baseline Pending $1,199 Low Price pending | 90d avg Price pending" [ref=e332]:
+                - generic [ref=e333]:
+                  - generic [ref=e334]: Price Baseline Pending
+                  - generic [ref=e335]: $1,199
+                - paragraph [ref=e336]: Low Price pending | 90d avg Price pending
+              - cell "No verified quote yet. Product stays out of winner claims." [ref=e337]:
+                - paragraph [ref=e338]: No verified quote yet. Product stays out of winner claims.
+              - cell "Check price (Affiliate Link)" [ref=e339]:
+                - link "Check price" [ref=e340] [cursor=pointer]:
+                  - /url: /go/78
+                - paragraph [ref=e341]: (Affiliate Link)
+      - generic [ref=e343]:
+        - generic [ref=e344]:
+          - heading "What changed in Bes3?" [level=2] [ref=e345]
+          - paragraph [ref=e346]: Bes3 now focuses on hands-on review evidence, real buyer questions, and price-aware comparisons for products that are hard to judge from specs alone.
+        - generic [ref=e347]:
+          - heading "Why do some pages show limited coverage?" [level=2] [ref=e348]
+          - paragraph [ref=e349]: Bes3 does not invent winners. If exact product matching, trusted review evidence, store availability, or price history are still incomplete, the page says so clearly.
+    - generic [ref=e351]:
+      - generic [ref=e352]:
+        - paragraph [ref=e353]: Cookie controls
+        - paragraph [ref=e354]: Bes3 uses essential storage for site preferences and may use affiliate attribution links through PartnerBoost or YeahPromos. Nonessential tracking stays off unless you accept it.
+        - link "Privacy policy" [ref=e355] [cursor=pointer]:
+          - /url: /privacy
+      - generic [ref=e356]:
+        - button "Reject all" [ref=e357] [cursor=pointer]
+        - button "Accept essential" [ref=e358] [cursor=pointer]
+    - contentinfo [ref=e359]:
+      - generic [ref=e360]:
+        - generic [ref=e361]:
+          - paragraph [ref=e362]: Buyer-First Reviews
+          - heading "Bes3" [level=2] [ref=e363]
+          - paragraph [ref=e364]: Real testing insights for better buying decisions.
+        - navigation "Explore" [ref=e365]:
+          - link "Categories" [ref=e366] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e367] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e368] [cursor=pointer]:
+            - /url: /deals
+          - link "Sitemap" [ref=e369] [cursor=pointer]:
+            - /url: /site-map
+          - link "Contact" [ref=e370] [cursor=pointer]:
+            - /url: /contact
+        - navigation "Company" [ref=e371]:
+          - link "About" [ref=e372] [cursor=pointer]:
+            - /url: /about
+          - link "Trust" [ref=e373] [cursor=pointer]:
+            - /url: /trust
+          - link "Privacy" [ref=e374] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e375] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=e376]

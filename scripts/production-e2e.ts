@@ -231,23 +231,26 @@ async function fetchJson(context: BrowserContext, check: ApiCheck, timeout = req
 }
 
 async function login(page: Page) {
-  await page.goto(absoluteUrl('/admin'), { waitUntil: 'domcontentloaded' })
-  if (!page.url().includes('/login')) {
-    const me = await page.request.get(absoluteUrl('/api/auth/me'), { timeout: requestTimeoutMs })
-    if (me.status() === 200) return
-  }
   if (!adminPassword) throw new Error('DEFAULT_ADMIN_PASSWORD or PRODUCTION_E2E_ADMIN_PASSWORD is required')
-  await page.goto(absoluteUrl('/login'), { waitUntil: 'domcontentloaded' })
-  await page.locator('input[name="username"]').fill(adminUsername)
-  await page.locator('input[name="password"]').fill(adminPassword)
-  await Promise.all([
-    page.waitForURL((url) => url.pathname === '/admin' || url.pathname === '/change-password', { timeout: 20000 }),
-    page.locator('button[type="submit"]').click()
-  ])
+
+  const loginResponse = await page.request.post(absoluteUrl('/api/auth/login'), {
+    data: {
+      username: adminUsername,
+      password: adminPassword
+    },
+    timeout: requestTimeoutMs
+  })
+  if (loginResponse.status() !== 200) {
+    throw new Error(`/api/auth/login returned ${loginResponse.status()}`)
+  }
+
   const me = await page.request.get(absoluteUrl('/api/auth/me'), { timeout: requestTimeoutMs })
   if (me.status() !== 200) throw new Error(`/api/auth/me returned ${me.status()}`)
   const body = await me.json().catch(() => ({}))
   if (body?.user?.role !== 'admin') throw new Error('logged in user is not admin')
+
+  await page.goto(absoluteUrl('/admin'), { waitUntil: 'domcontentloaded', timeout: navigationTimeoutMs })
+  if (page.url().includes('/login')) throw new Error('/admin redirected to login after API authentication')
 }
 
 async function assertNoPageFailures(page: Page, check: PageCheck) {

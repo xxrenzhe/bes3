@@ -4,6 +4,7 @@ import './load-env'
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
+import { getEvidenceQualityIssues } from '@/lib/evidence-quality'
 
 type AuditStatus = 'passed' | 'failed'
 
@@ -340,7 +341,22 @@ async function auditYoutubeEvidence(evidenceAdmin: any, evidenceFeed: any) {
       Number.isFinite(Number(report?.timestamp_seconds)) &&
       Number(report?.evidence_confidence || 0) >= 0.65 &&
       Number(report?.is_advertorial || 0) === 0 &&
-      !looksSynthetic(`${report?.product_name} ${report?.youtube_id} ${report?.channel_name} ${report?.evidence_quote} ${report?.context_snippet}`)
+      !looksSynthetic(`${report?.product_name} ${report?.youtube_id} ${report?.channel_name} ${report?.evidence_quote} ${report?.context_snippet}`) &&
+      getEvidenceQualityIssues(
+        {
+          productName: report?.product_name,
+          brand: report?.brand,
+          productModel: report?.product_model,
+          modelNumber: report?.model_number
+        },
+        {
+          youtubeId: report?.youtube_id,
+          title: report?.video_title,
+          channelName: report?.channel_name,
+          evidenceQuote: report?.evidence_quote,
+          contextSnippet: report?.context_snippet
+        }
+      ).length === 0
     )
     requireCount('qualified YouTube evidence reports', qualified.length, minQualifiedEvidenceReports)
     return {

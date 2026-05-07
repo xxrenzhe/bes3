@@ -1,0 +1,112 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]: We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "B3 Independent Product Ratings Bes3" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: B3
+          - generic [ref=e9]:
+            - paragraph [ref=e10]: Independent Product Ratings
+            - paragraph [ref=e11]: Bes3
+        - navigation "Primary navigation" [ref=e12]:
+          - link "Categories" [ref=e13] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e14] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value" [ref=e15] [cursor=pointer]:
+            - /url: /deals
+          - link "Open Data" [ref=e16] [cursor=pointer]:
+            - /url: /data
+          - link "Trust" [ref=e17] [cursor=pointer]:
+            - /url: /trust
+          - link "About" [ref=e18] [cursor=pointer]:
+            - /url: /about
+          - group [ref=e19]:
+            - button "Change language, current language EN" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+              - generic [ref=e24]: EN
+              - generic [ref=e25]: ⌄
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]:
+          - paragraph [ref=e30]: Evidence Report
+          - heading "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield" [level=1] [ref=e31]
+          - paragraph [ref=e32]: "DeerValley DV-1S0360-V3 Smart Toilet: ADA Height, Auto Bidet Toilet with Foam Shield, Hands-Free Lid/Flush, Heated Seat, Night Light & 2-Year Warranty."
+          - generic [ref=e33]:
+            - link "Back to Bathroom Fixtures" [ref=e34] [cursor=pointer]:
+              - /url: /categories/bathroom-fixtures
+            - link "Check price" [ref=e35] [cursor=pointer]:
+              - /url: /go/80
+        - generic [ref=e36]:
+          - paragraph [ref=e37]: Current verdict
+          - paragraph [ref=e38]: 8.0/10
+          - paragraph [ref=e39]: Low confidence from 1 evidence reports.
+          - generic [ref=e41]:
+            - generic [ref=e42]: Price Baseline Pending
+            - generic [ref=e43]: $746 | V 0.54
+          - paragraph [ref=e44]: Current $746 | Historical low Price pending | 90-day avg Price pending
+          - generic [ref=e45]:
+            - text: Track price
+            - generic [ref=e46]:
+              - textbox "Track price" [ref=e47]:
+                - /placeholder: email@example.com
+              - button "Alert me" [ref=e48] [cursor=pointer]
+      - generic [ref=e53]:
+        - paragraph [ref=e54]: Scenario Evidence
+        - heading "What creators actually tested." [level=2] [ref=e55]
+        - article [ref=e57]:
+          - generic [ref=e58]:
+            - generic [ref=e59]: Good
+            - generic [ref=e60]: Bidet Comfort
+          - blockquote [ref=e61]: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.
+          - paragraph [ref=e62]: "Context: The reviewer walks through the DeerValley DV-1S0029-V3 smart toilet functions, focusing on automated flushing, seat heating, and lid operation during use."
+          - paragraph [ref=e63]:
+            - link "Review by Prime Technology HD" [ref=e64] [cursor=pointer]:
+              - /url: https://www.youtube.com/watch?v=0llGzT57uV0&t=96s
+          - generic [ref=e65]:
+            - button "Useful" [ref=e66] [cursor=pointer]:
+              - img [ref=e67]
+              - text: Useful
+            - button "Not accurate" [ref=e69] [cursor=pointer]:
+              - img [ref=e70]
+              - text: Not accurate
+    - generic [ref=e73]:
+      - generic [ref=e74]:
+        - paragraph [ref=e75]: Cookie controls
+        - paragraph [ref=e76]: Bes3 uses essential storage for site preferences and may use affiliate attribution links through PartnerBoost or YeahPromos. Nonessential tracking stays off unless you accept it.
+        - link "Privacy policy" [ref=e77] [cursor=pointer]:
+          - /url: /privacy
+      - generic [ref=e78]:
+        - button "Reject all" [ref=e79] [cursor=pointer]
+        - button "Accept essential" [ref=e80] [cursor=pointer]
+    - contentinfo [ref=e81]:
+      - generic [ref=e82]:
+        - generic [ref=e83]:
+          - paragraph [ref=e84]: Buyer-First Reviews
+          - heading "Bes3" [level=2] [ref=e85]
+          - paragraph [ref=e86]: Real testing insights for better buying decisions.
+        - navigation "Explore" [ref=e87]:
+          - link "Categories" [ref=e88] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e89] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e90] [cursor=pointer]:
+            - /url: /deals
+          - link "Sitemap" [ref=e91] [cursor=pointer]:
+            - /url: /site-map
+          - link "Contact" [ref=e92] [cursor=pointer]:
+            - /url: /contact
+        - navigation "Company" [ref=e93]:
+          - link "About" [ref=e94] [cursor=pointer]:
+            - /url: /about
+          - link "Trust" [ref=e95] [cursor=pointer]:
+            - /url: /trust
+          - link "Privacy" [ref=e96] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e97] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=e98]

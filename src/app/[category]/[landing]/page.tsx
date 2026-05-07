@@ -39,12 +39,17 @@ function buyerCategoryName(categorySlug: string, categoryName: string, tagLabel:
 }
 
 function currentPick(products: HardcoreProduct[]) {
-  return products.find((product) => product.consensus.evidenceCount > 0) || products[0] || null
+  return products.find((product) => product.consensus.evidenceCount > 0) || null
 }
 
 function productDisplayName(product: HardcoreProduct) {
   if (!product.brand) return product.name
-  return product.name.toLowerCase().startsWith(product.brand.toLowerCase()) ? product.name : `${product.brand} ${product.name}`
+  const normalizedName = product.name.toLowerCase()
+  const normalizedBrand = product.brand.toLowerCase()
+  const brandLead = normalizedBrand.split(/\s+/)[0]
+  return normalizedName.startsWith(normalizedBrand) || normalizedName.startsWith(brandLead)
+    ? product.name
+    : `${product.brand} ${product.name}`
 }
 
 function buildScenarioTitle({
@@ -63,6 +68,9 @@ function buildScenarioTitle({
   const count = Math.max(testedProductCount(products), 1)
   const buyerName = buyerCategoryName(categorySlug, categoryName, tagLabel)
   if (!isLiveScenario(status, products)) {
+    if (!currentPick(products)) {
+      return `Best ${buyerName} for ${tagLabel}: Evidence Still Researching`
+    }
     return `Best ${buyerName} for ${tagLabel}: Current Evidence-Backed Pick`
   }
   return `Best ${buyerName} for ${tagLabel}: ${count} Evidence-Checked Picks`
@@ -83,9 +91,11 @@ function buildBluf({
   const proof = winner?.consensus.bestQuote || winner?.evidence[0]
 
   if (!winner || !tested || !isLiveScenario(status, products)) {
+    if (!winner || !tested) {
+      return `Short answer: Bes3 has not found a public, model-safe YouTube evidence match for ${tagLabel} yet. This page stays in research mode and should be used to monitor the evidence gap, not to buy a claimed winner.`
+    }
     const proofText = proof?.evidenceQuote ? ` The source proof says: "${proof.evidenceQuote}"` : ''
-    const pickName = winner ? productDisplayName(winner) : 'No product'
-    return `Short answer: ${pickName} is the current evidence-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube evidence report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner.${proofText}`
+    return `Short answer: ${productDisplayName(winner)} is the current evidence-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube evidence report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner.${proofText}`
   }
 
   return `Decision summary: Bes3 analyzed ${evidenceCount} creator evidence reports across ${tested} tested products for ${tagLabel}. ${productDisplayName(winner)} is currently the strongest evidence-backed pick${proof ? ` because reviewers found: "${proof.evidenceQuote}"` : ''}.`
@@ -111,9 +121,9 @@ function buildAiRecommendationSummary({
       pick: null,
       summary: `Bes3 is still collecting source-backed evidence before naming a ${categoryName} pick for ${tagLabel}.`,
       bullets: [
-        'Use this page to monitor products that gain timestamped creator evidence.',
-        'Do not buy from this page until at least one product has a verified source quote.',
-        'Check category and product pages for broader alternatives.'
+        'Use this page to monitor products that gain timestamped, model-safe creator evidence.',
+        'Do not buy from this page until at least one product has a verified source quote for the exact product.',
+        'Check category and product pages for broader alternatives with stronger evidence.'
       ]
     }
   }
@@ -228,7 +238,9 @@ function DecisionFitSection({ products, tagLabel }: { products: HardcoreProduct[
     ? 'Use this as a shortlist, not a fake top-10.'
     : 'Who should act on this page, and who should wait.'
   const intro = decision.isResearching
-    ? `For ${tagLabel}, the current data is strong enough to name a practical evidence-backed starting point and too thin to pretend the whole market has been ranked. The useful decision is whether the quoted proof matches your pool, wall material, and cleaning expectations.`
+    ? decision.strongest
+      ? `For ${tagLabel}, the current data is strong enough to name a practical evidence-backed starting point and too thin to pretend the whole market has been ranked. The useful decision is whether the quoted proof matches your exact use case and model expectations.`
+      : `For ${tagLabel}, Bes3 is still missing a public, model-safe evidence match. The useful decision is to wait for verified source proof instead of trusting a thin or mismatched claim.`
     : `This summary converts evidence count, consensus score, creator proof, and price-value timing into a direct buying decision for ${tagLabel}.`
 
   return (

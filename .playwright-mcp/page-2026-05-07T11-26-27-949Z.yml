@@ -1,0 +1,204 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]: We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "B3 Independent Product Ratings Bes3" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: B3
+          - generic [ref=e9]:
+            - paragraph [ref=e10]: Independent Product Ratings
+            - paragraph [ref=e11]: Bes3
+        - navigation "Primary navigation" [ref=e12]:
+          - link "Categories" [ref=e13] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e14] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value" [ref=e15] [cursor=pointer]:
+            - /url: /deals
+          - link "Open Data" [ref=e16] [cursor=pointer]:
+            - /url: /data
+          - link "Trust" [ref=e17] [cursor=pointer]:
+            - /url: /trust
+          - link "About" [ref=e18] [cursor=pointer]:
+            - /url: /about
+          - group [ref=e19]:
+            - button "Change language, current language EN" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+              - generic [ref=e24]: EN
+              - generic [ref=e25]: ⌄
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: Current Recommendation
+        - 'heading "Best Bathroom Fixtures for Bidet Comfort: Current Evidence-Backed Pick" [level=1] [ref=e30]'
+        - paragraph [ref=e31]: "Short answer: DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield is the current evidence-backed pick for Bidet Comfort. Bes3 has 1 timestamped YouTube evidence report across 1 matching product, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner. The source proof says: \"The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.\""
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - paragraph [ref=e34]: Current evidence
+            - paragraph [ref=e35]: 1 product with usable creator evidence. DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield is the current shortlist pick.
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Confidence boundary
+            - paragraph [ref=e38]: Needs at least 3 independently evidenced products before this becomes a full ranked guide.
+          - generic [ref=e39]:
+            - paragraph [ref=e40]: How to use it
+            - paragraph [ref=e41]: Use the current pick as a shortlist, then check the quote, timestamp, and price window before buying.
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: AI Answer Summary
+        - heading "Recommend DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield first for Bidet Comfort." [level=2] [ref=e45]
+        - paragraph [ref=e46]: For buyers asking what to try first for Bidet Comfort, Bes3 would shortlist DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield because it has direct source evidence for the exact wall-climbing claim. Confidence is limited because the page has 1 independently evidenced product, below the 3-product threshold for a full ranking.
+        - generic [ref=e47]:
+          - paragraph [ref=e48]: "Why it is recommended: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade."
+          - paragraph [ref=e49]: "Price signal: Price Baseline Pending; verify the current price before buying."
+          - paragraph [ref=e50]: "Confidence limit: treat this as the best current shortlist item, not a definitive market-wide winner."
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Recommendation Guardrails
+          - heading "Use this as a shortlist, not a fake top-10." [level=2] [ref=e55]
+          - paragraph [ref=e56]: For Bidet Comfort, the current data is strong enough to name a practical evidence-backed starting point and too thin to pretend the whole market has been ranked. The useful decision is whether the quoted proof matches your pool, wall material, and cleaning expectations.
+          - blockquote [ref=e57]:
+            - text: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.
+            - generic [ref=e58]: Review by Prime Technology HD
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - heading "What is usable now" [level=3] [ref=e61]
+            - list [ref=e62]:
+              - listitem [ref=e63]: DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield is usable as a shortlist pick because it has matched evidence for Bidet Comfort.
+              - listitem [ref=e64]: DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield has a 8.0/10 source score from the matched creator proof.
+              - listitem [ref=e65]: DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield does not yet have a strong buy-window signal.
+          - generic [ref=e66]:
+            - heading "Do not over-read it" [level=3] [ref=e67]
+            - list [ref=e68]:
+              - listitem [ref=e69]: Do not treat this as a full category ranking until at least three products have useful evidence.
+              - listitem [ref=e70]: Do not assume one matched source covers every pool surface, waterline, or debris condition.
+              - listitem [ref=e71]: Skip buying immediately when the price window is normal or overpriced.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Evidence Matrix
+          - heading "Why this is the current shortlist pick, and what still needs proof." [level=2] [ref=e76]
+          - paragraph [ref=e77]: Use this table to verify the current recommendation against creator proof, source depth, and price context. The confidence warning stays visible because the page has not reached the full ranked-guide threshold.
+        - table [ref=e79]:
+          - rowgroup [ref=e80]:
+            - row "Model Source Score Evidence Price/Value Source Proof Action" [ref=e81]:
+              - columnheader "Model" [ref=e82]
+              - columnheader "Source Score" [ref=e83]
+              - columnheader "Evidence" [ref=e84]
+              - columnheader "Price/Value" [ref=e85]
+              - columnheader "Source Proof" [ref=e86]
+              - columnheader "Action" [ref=e87]
+          - rowgroup [ref=e88]:
+            - row "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield Bathroom Fixtures 8.0/10 Low confidence 1 reports 1 creator sources Price Baseline Pending $746 | V 0.54 Low Price pending | 90d avg Price pending Check price (Affiliate Link)" [ref=e89]:
+              - cell "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield Bathroom Fixtures" [ref=e90]:
+                - link "DeerValley Bath DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield" [ref=e91] [cursor=pointer]:
+                  - /url: /products/deervalley-dv-1s0442-v3-smart-toilet-with-all-season-adaptive-comfort-rotating-foam-shield
+                - paragraph [ref=e92]: Bathroom Fixtures
+              - cell "8.0/10 Low confidence" [ref=e93]:
+                - generic [ref=e94]: 8.0/10
+                - paragraph [ref=e95]: Low confidence
+              - cell "1 reports 1 creator sources" [ref=e96]:
+                - paragraph [ref=e97]: 1 reports
+                - paragraph [ref=e98]: 1 creator sources
+              - cell "Price Baseline Pending $746 | V 0.54 Low Price pending | 90d avg Price pending" [ref=e99]:
+                - generic [ref=e100]:
+                  - generic [ref=e101]: Price Baseline Pending
+                  - generic [ref=e102]: $746 | V 0.54
+                - paragraph [ref=e103]: Low Price pending | 90d avg Price pending
+              - cell [ref=e104]:
+                - blockquote [ref=e106]:
+                  - text: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.
+                  - link "Review by Prime Technology HD" [ref=e108] [cursor=pointer]:
+                    - /url: https://www.youtube.com/watch?v=0llGzT57uV0&t=96s
+              - cell "Check price (Affiliate Link)" [ref=e109]:
+                - link "Check price" [ref=e110] [cursor=pointer]:
+                  - /url: /go/80
+                - paragraph [ref=e111]: (Affiliate Link)
+            - row "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White Bathroom Fixtures Researching Researching confidence Researching 0 reports 0 creator sources Price Baseline Pending $1,199 Low Price pending | 90d avg Price pending No verified quote yet. Product stays out of winner claims. Check price (Affiliate Link)" [ref=e112]:
+              - cell "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White Bathroom Fixtures" [ref=e113]:
+                - link "DeerValley DeerValley DV-1BV0520W/DV-1BV0520NW 60\" Fully Assembled Double Bathroom Vanity with Engineered Marble Top, White - White" [ref=e114] [cursor=pointer]:
+                  - /url: /products/deervalley-dv-1bv0520w-dv-1bv0520nw-60-fully-assembled-double-bathroom-vanity-with-engineered-marble-top-white-white
+                - paragraph [ref=e115]: Bathroom Fixtures
+              - cell "Researching Researching confidence Researching" [ref=e116]:
+                - generic [ref=e117]: Researching
+                - paragraph [ref=e118]: Researching confidence
+                - paragraph [ref=e119]: Researching
+              - cell "0 reports 0 creator sources" [ref=e120]:
+                - paragraph [ref=e121]: 0 reports
+                - paragraph [ref=e122]: 0 creator sources
+              - cell "Price Baseline Pending $1,199 Low Price pending | 90d avg Price pending" [ref=e123]:
+                - generic [ref=e124]:
+                  - generic [ref=e125]: Price Baseline Pending
+                  - generic [ref=e126]: $1,199
+                - paragraph [ref=e127]: Low Price pending | 90d avg Price pending
+              - cell "No verified quote yet. Product stays out of winner claims." [ref=e128]:
+                - paragraph [ref=e129]: No verified quote yet. Product stays out of winner claims.
+              - cell "Check price (Affiliate Link)" [ref=e130]:
+                - link "Check price" [ref=e131] [cursor=pointer]:
+                  - /url: /go/78
+                - paragraph [ref=e132]: (Affiliate Link)
+      - generic [ref=e134]:
+        - paragraph [ref=e135]: Source Evidence
+        - heading "Timestamped YouTube proof and the gap it leaves." [level=2] [ref=e136]
+        - paragraph [ref=e137]: The current evidence can support one narrow claim from one source. It cannot support a category-wide winner until more products are tested against the same need.
+        - blockquote [ref=e139]:
+          - text: The smart toilet review highlights the auto flush, heated seat, and automatic open-close lid as daily comfort features for a bathroom upgrade.
+          - generic [ref=e140]:
+            - text: DeerValley DV-1S0442-V3 Smart Toilet with All-Season Adaptive Comfort, Rotating Foam Shield · Good ·
+            - link "Review by Prime Technology HD" [ref=e141] [cursor=pointer]:
+              - /url: https://www.youtube.com/watch?v=0llGzT57uV0&t=96s
+      - generic [ref=e144]:
+        - generic [ref=e145]:
+          - generic [ref=e146]:
+            - paragraph [ref=e147]: FAQ
+            - heading "Recommendation FAQ" [level=2] [ref=e148]
+          - paragraph [ref=e149]: These answers explain how to use the current shortlist recommendation without over-trusting a small evidence set.
+        - generic [ref=e150]:
+          - generic [ref=e151]:
+            - heading "Why does this page focus on Bidet Comfort?" [level=3] [ref=e152]
+            - paragraph [ref=e153]: Bidet Comfort is a core buyer need. Bes3 names the current evidence-backed shortlist pick now, while clearly marking that the evidence set is still below the full-ranking threshold.
+          - generic [ref=e154]:
+            - heading "Can I use this as a recommendation?" [level=3] [ref=e155]
+            - paragraph [ref=e156]: Yes, use it as the current shortlist recommendation. Bes3 requires at least three independently evidenced products before calling it a complete ranked guide.
+          - generic [ref=e157]:
+            - heading "What can I verify for Bidet Comfort?" [level=3] [ref=e158]
+            - paragraph [ref=e159]: You can verify the recommended product, Bidet Comfort quote, source link, source score, price window, and evidence count before deciding whether the claim fits your pool.
+      - generic [ref=e161]:
+        - paragraph [ref=e162]: Related Evidence
+        - heading "Looking for more options for Bidet Comfort?" [level=2] [ref=e163]
+        - generic [ref=e164]:
+          - link "Top Bathroom Fixtures list" [ref=e165] [cursor=pointer]:
+            - /url: /categories/bathroom-fixtures
+          - link "Bathroom Fixtures under $500" [ref=e166] [cursor=pointer]:
+            - /url: /deals/best-bathroom-fixtures-under-500
+          - link "Full evidence matrix" [ref=e167] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e168] [cursor=pointer]:
+            - /url: /deals
+    - contentinfo [ref=e169]:
+      - generic [ref=e170]:
+        - generic [ref=e171]:
+          - paragraph [ref=e172]: Buyer-First Reviews
+          - heading "Bes3" [level=2] [ref=e173]
+          - paragraph [ref=e174]: Real testing insights for better buying decisions.
+        - navigation "Explore" [ref=e175]:
+          - link "Categories" [ref=e176] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e177] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e178] [cursor=pointer]:
+            - /url: /deals
+          - link "Sitemap" [ref=e179] [cursor=pointer]:
+            - /url: /site-map
+          - link "Contact" [ref=e180] [cursor=pointer]:
+            - /url: /contact
+        - navigation "Company" [ref=e181]:
+          - link "About" [ref=e182] [cursor=pointer]:
+            - /url: /about
+          - link "Trust" [ref=e183] [cursor=pointer]:
+            - /url: /trust
+          - link "Privacy" [ref=e184] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e185] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=e186]

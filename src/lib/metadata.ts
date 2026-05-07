@@ -14,9 +14,9 @@ interface PageMetadataOptions {
   keywords?: string[]
   section?: string
   category?: string
-  publishedTime?: string | null
-  modifiedTime?: string | null
-  freshnessDate?: string | null
+  publishedTime?: string | Date | null
+  modifiedTime?: string | Date | null
+  freshnessDate?: string | Date | null
   freshnessInTitle?: boolean
 }
 
@@ -42,16 +42,22 @@ function escapeRegExp(value: string) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
 }
 
-function formatFreshnessDate(value: string | null | undefined, format: 'short' | 'long' = 'long') {
+function normalizeDateValue(value: string | Date | null | undefined) {
   if (!value) return ''
 
-  const parsed = new Date(value)
+  const parsed = value instanceof Date ? value : new Date(value)
   if (Number.isNaN(parsed.getTime())) return ''
+  return parsed.toISOString()
+}
+
+function formatFreshnessDate(value: string | Date | null | undefined, format: 'short' | 'long' = 'long') {
+  const normalized = normalizeDateValue(value)
+  if (!normalized) return ''
 
   return new Intl.DateTimeFormat('en-US', {
     month: format === 'short' ? 'short' : 'long',
     year: 'numeric'
-  }).format(parsed)
+  }).format(new Date(normalized))
 }
 
 export function sanitizeMetadataTitle(value: string) {
@@ -164,13 +170,16 @@ export function buildPageMetadata({
 }: PageMetadataOptions): Metadata {
   const localizedPath = addLocaleToPath(path, locale || 'en')
   const canonical = toAbsoluteUrl(localizedPath)
-  const normalizedTitle = freshnessInTitle ? buildFreshMetadataTitle(title, freshnessDate) : sanitizeMetadataTitle(title)
+  const normalizedPublishedTime = normalizeDateValue(publishedTime)
+  const normalizedModifiedTime = normalizeDateValue(modifiedTime)
+  const normalizedFreshnessDate = normalizeDateValue(freshnessDate)
+  const normalizedTitle = freshnessInTitle ? buildFreshMetadataTitle(title, normalizedFreshnessDate) : sanitizeMetadataTitle(title)
   const normalizedDescription = buildFreshMetadataDescription(
     buildIntentMetadataDescription({ title, description, pageType: type }),
-    freshnessDate
+    normalizedFreshnessDate
   )
   const imageUrl = image ? toAbsoluteUrl(image) : undefined
-  const resolvedModifiedTime = modifiedTime || publishedTime || freshnessDate || undefined
+  const resolvedModifiedTime = normalizedModifiedTime || normalizedPublishedTime || normalizedFreshnessDate || undefined
   const alternates = buildLanguageAlternatesWithDefault(path)
 
   const openGraphBase = {
@@ -207,7 +216,7 @@ export function buildPageMetadata({
         ? {
             ...openGraphBase,
             type: 'article',
-            publishedTime: publishedTime || freshnessDate || undefined,
+            publishedTime: normalizedPublishedTime || normalizedFreshnessDate || undefined,
             modifiedTime: resolvedModifiedTime,
             section,
             tags: keywords

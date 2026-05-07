@@ -1,4 +1,5 @@
 import { getDatabase } from '@/lib/db'
+import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { HARDCORE_CATEGORIES, type HardcoreCategory } from '@/lib/hardcore-catalog'
 import { slugify } from '@/lib/slug'
 
@@ -91,6 +92,8 @@ interface ProductRow {
   id: number
   slug: string | null
   brand: string | null
+  product_model: string | null
+  model_number: string | null
   product_name: string
   category: string | null
   category_slug: string | null
@@ -405,6 +408,8 @@ async function listProductRows(): Promise<ProductRow[]> {
         p.id,
         p.slug,
         p.brand,
+        p.product_model,
+        p.model_number,
         p.product_name,
         p.category,
         p.category_slug,
@@ -529,7 +534,24 @@ function tagsForProduct(allTags: HardcoreTag[], evidence: EvidenceReport[], cate
 function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceReport[]): HardcoreProduct | null {
   const category = findCategory(row.category_slug || row.category || row.evidence_category_slug)
   if (!category || !row.slug) return null
-  const consensus = summarizeConsensus(evidence)
+  const publicEvidence = evidence.filter((report) =>
+    isPublicEvidenceUsable(
+      {
+        productName: row.product_name,
+        brand: row.brand,
+        productModel: row.product_model,
+        modelNumber: row.model_number
+      },
+      {
+        youtubeId: report.youtubeId,
+        title: report.videoTitle,
+        channelName: report.channelName,
+        evidenceQuote: report.evidenceQuote,
+        contextSnippet: report.contextSnippet
+      }
+    )
+  )
+  const consensus = summarizeConsensus(publicEvidence)
   const currentPrice = row.current_price ?? row.price_amount
   const price = summarizePriceValue({
     currentPrice,
@@ -553,8 +575,8 @@ function mapProduct(row: ProductRow, tags: HardcoreTag[], evidence: EvidenceRepo
     affiliateStatus: row.affiliate_status || null,
     consensus,
     price,
-    topTags: tagsForProduct(tags, evidence, category),
-    evidence
+    topTags: tagsForProduct(tags, publicEvidence, category),
+    evidence: publicEvidence
   }
 }
 

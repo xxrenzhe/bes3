@@ -1,5 +1,6 @@
 import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/category'
 import { getDatabase } from '@/lib/db'
+import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { slugify } from '@/lib/slug'
 
 export interface ProductRecord {
@@ -318,7 +319,22 @@ function appendEvidenceMatrix(contentHtml: string, row: any) {
     report?.youtube_id &&
     report?.evidence_quote &&
     Number(report?.evidence_confidence || 0) >= 0.65 &&
-    Number(report?.is_advertorial || 0) === 0
+    Number(report?.is_advertorial || 0) === 0 &&
+    isPublicEvidenceUsable(
+      {
+        productName: row.product_name,
+        brand: row.brand,
+        productModel: row.product_model,
+        modelNumber: row.model_number
+      },
+      {
+        youtubeId: report.youtube_id,
+        title: report.video_title,
+        channelName: report.channel_name,
+        evidenceQuote: report.evidence_quote,
+        contextSnippet: report.context_snippet
+      }
+    )
   )
   if (!qualified.length) return contentHtml
 
@@ -540,6 +556,7 @@ function articleEvidenceJsonSql(dbType: 'postgres' | 'sqlite') {
             'evidence_confidence', ar.evidence_confidence,
             'is_advertorial', ar.is_advertorial,
             'channel_name', rv.channel_name,
+            'video_title', rv.title,
             'youtube_id', rv.youtube_id
           ) ORDER BY ar.evidence_confidence DESC, ar.created_at DESC)
           FROM analysis_reports ar
@@ -561,6 +578,7 @@ function articleEvidenceJsonSql(dbType: 'postgres' | 'sqlite') {
             'evidence_confidence', ar.evidence_confidence,
             'is_advertorial', ar.is_advertorial,
             'channel_name', rv.channel_name,
+            'video_title', rv.title,
             'youtube_id', rv.youtube_id
           ))
           FROM (

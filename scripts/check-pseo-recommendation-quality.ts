@@ -55,10 +55,12 @@ const expectations: FileExpectation[] = [
     label: 'Production post-deploy pSEO verifier',
     filePath: 'scripts/production-post-deploy-verify.ts',
     required: [
-      'Current Evidence-Backed Pick',
       'Current Recommendation',
       'AI Answer Summary',
       'Confidence boundary',
+      'Index quality gate',
+      'demoPoolWall001',
+      'expectPseoNoindex',
       'noindex',
       'indexable'
     ],

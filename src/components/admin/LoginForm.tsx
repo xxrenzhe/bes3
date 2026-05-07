@@ -15,7 +15,9 @@ export function LoginForm() {
 
   return (
     <form
+      action="/api/auth/login"
       className="w-full space-y-6 rounded-[2rem] border border-slate-200/80 bg-white/95 p-8 shadow-[0_28px_70px_-45px_rgba(15,23,42,0.4)]"
+      method="post"
       onSubmit={(event) => {
         event.preventDefault()
         startTransition(async () => {

@@ -1,0 +1,172 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]: We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "B3 Independent Product Ratings Bes3" [ref=e7] [cursor=pointer]:
+          - /url: /
+          - generic [ref=e8]: B3
+          - generic [ref=e9]:
+            - paragraph [ref=e10]: Independent Product Ratings
+            - paragraph [ref=e11]: Bes3
+        - navigation "Primary navigation" [ref=e12]:
+          - link "Categories" [ref=e13] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e14] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value" [ref=e15] [cursor=pointer]:
+            - /url: /deals
+          - link "Open Data" [ref=e16] [cursor=pointer]:
+            - /url: /data
+          - link "Trust" [ref=e17] [cursor=pointer]:
+            - /url: /trust
+          - link "About" [ref=e18] [cursor=pointer]:
+            - /url: /about
+          - group [ref=e19]:
+            - button "Change language, current language EN" [ref=e20] [cursor=pointer]:
+              - img [ref=e21]
+              - generic [ref=e24]: EN
+              - generic [ref=e25]: ⌄
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - paragraph [ref=e29]: Current Recommendation
+        - 'heading "Best Pool Robots for Pool Wall Climbing: Current Evidence-Backed Pick" [level=1] [ref=e30]'
+        - paragraph [ref=e31]: "Short answer: Dolphin Nautilus Pool Wall Demo is the current evidence-backed pick for Pool Wall Climbing. Bes3 has 1 timestamped YouTube evidence report across 1 matching product, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner. The source proof says: \"Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.\""
+        - generic [ref=e32]:
+          - generic [ref=e33]:
+            - paragraph [ref=e34]: Current evidence
+            - paragraph [ref=e35]: 1 product with usable creator evidence. Dolphin Nautilus Pool Wall Demo is the current shortlist pick.
+          - generic [ref=e36]:
+            - paragraph [ref=e37]: Confidence boundary
+            - paragraph [ref=e38]: Needs at least 3 independently evidenced products before this becomes a full ranked guide.
+          - generic [ref=e39]:
+            - paragraph [ref=e40]: How to use it
+            - paragraph [ref=e41]: Use the current pick as a shortlist, then check the quote, timestamp, and price window before buying.
+      - generic [ref=e43]:
+        - paragraph [ref=e44]: AI Answer Summary
+        - heading "Recommend Dolphin Nautilus Pool Wall Demo first for Pool Wall Climbing." [level=2] [ref=e45]
+        - paragraph [ref=e46]: For buyers asking what to try first for Pool Wall Climbing, Bes3 would shortlist Dolphin Nautilus Pool Wall Demo because it has direct source evidence for the exact wall-climbing claim. Confidence is limited because the page has 1 independently evidenced product, below the 3-product threshold for a full ranking.
+        - generic [ref=e47]:
+          - paragraph [ref=e48]: "Why it is recommended: Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down."
+          - paragraph [ref=e49]: "Buy-window signal: Below Average Price."
+          - paragraph [ref=e50]: "Confidence limit: treat this as the best current shortlist item, not a definitive market-wide winner."
+      - generic [ref=e52]:
+        - generic [ref=e53]:
+          - paragraph [ref=e54]: Recommendation Guardrails
+          - heading "Use this as a shortlist, not a fake top-10." [level=2] [ref=e55]
+          - paragraph [ref=e56]: For Pool Wall Climbing, the current data is strong enough to name a practical evidence-backed starting point and too thin to pretend the whole market has been ranked. The useful decision is whether the quoted proof matches your pool, wall material, and cleaning expectations.
+          - blockquote [ref=e57]:
+            - text: Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.
+            - generic [ref=e58]: Review by Pool Robot Demo Lab
+        - generic [ref=e59]:
+          - generic [ref=e60]:
+            - heading "What is usable now" [level=3] [ref=e61]
+            - list [ref=e62]:
+              - listitem [ref=e63]: Dolphin Nautilus Pool Wall Demo is usable as a shortlist pick because it has matched evidence for Pool Wall Climbing.
+              - listitem [ref=e64]: Dolphin Nautilus Pool Wall Demo has a 8.0/10 source score from the matched creator proof.
+              - listitem [ref=e65]: Dolphin Nautilus Pool Wall Demo has a below average price signal.
+          - generic [ref=e66]:
+            - heading "Do not over-read it" [level=3] [ref=e67]
+            - list [ref=e68]:
+              - listitem [ref=e69]: Do not treat this as a full category ranking until at least three products have useful evidence.
+              - listitem [ref=e70]: Do not assume one matched source covers every pool surface, waterline, or debris condition.
+              - listitem [ref=e71]: Skip buying immediately when the price window is normal or overpriced.
+      - generic [ref=e73]:
+        - generic [ref=e74]:
+          - paragraph [ref=e75]: Evidence Matrix
+          - heading "Why this is the current shortlist pick, and what still needs proof." [level=2] [ref=e76]
+          - paragraph [ref=e77]: Use this table to verify the current recommendation against creator proof, source depth, and price context. The confidence warning stays visible because the page has not reached the full ranked-guide threshold.
+        - table [ref=e79]:
+          - rowgroup [ref=e80]:
+            - row "Model Source Score Evidence Price/Value Source Proof Action" [ref=e81]:
+              - columnheader "Model" [ref=e82]
+              - columnheader "Source Score" [ref=e83]
+              - columnheader "Evidence" [ref=e84]
+              - columnheader "Price/Value" [ref=e85]
+              - columnheader "Source Proof" [ref=e86]
+              - columnheader "Action" [ref=e87]
+          - rowgroup [ref=e88]:
+            - row "Dolphin Nautilus Pool Wall Demo Yard and Pool Automation 8.0/10 Low confidence 1 reports 1 creator sources Below Average Price $499 | V 0.80 Low $449 | 90d avg $629 Check price (Affiliate Link)" [ref=e89]:
+              - cell "Dolphin Nautilus Pool Wall Demo Yard and Pool Automation" [ref=e90]
+              - cell "8.0/10 Low confidence" [ref=e93]
+              - cell "1 reports 1 creator sources" [ref=e96]
+              - cell "Below Average Price $499 | V 0.80 Low $449 | 90d avg $629" [ref=e99]
+              - cell [ref=e104]
+              - cell "Check price (Affiliate Link)" [ref=e109]
+      - generic [ref=e113]:
+        - paragraph [ref=e114]: Source Evidence
+        - heading "Timestamped YouTube proof and the gap it leaves." [level=2] [ref=e115]
+        - paragraph [ref=e116]: The current evidence can support one narrow claim from one source. It cannot support a category-wide winner until more products are tested against the same need.
+        - blockquote [ref=e118]:
+          - text: Reached the tile line repeatedly and scrubbed the waterline instead of sliding back down.
+          - generic [ref=e119]:
+            - text: Nautilus Pool Wall Demo · Good ·
+            - link "Review by Pool Robot Demo Lab" [ref=e120] [cursor=pointer]:
+              - /url: https://www.youtube.com/watch?v=demoPoolWall001&t=428s
+      - generic [ref=e123]:
+        - generic [ref=e124]:
+          - generic [ref=e125]:
+            - paragraph [ref=e126]: FAQ
+            - heading "Recommendation FAQ" [level=2] [ref=e127]
+          - paragraph [ref=e128]: These answers explain how to use the current shortlist recommendation without over-trusting a small evidence set.
+        - generic [ref=e129]:
+          - generic [ref=e130]:
+            - heading "Why does this page focus on Pool Wall Climbing?" [level=3] [ref=e131]
+            - paragraph [ref=e132]: Pool Wall Climbing is a core buyer need. Bes3 names the current evidence-backed shortlist pick now, while clearly marking that the evidence set is still below the full-ranking threshold.
+          - generic [ref=e133]:
+            - heading "Can I use this as a recommendation?" [level=3] [ref=e134]
+            - paragraph [ref=e135]: Yes, use it as the current shortlist recommendation. Bes3 requires at least three independently evidenced products before calling it a complete ranked guide.
+          - generic [ref=e136]:
+            - heading "What can I verify for Pool Wall Climbing?" [level=3] [ref=e137]
+            - paragraph [ref=e138]: You can verify the recommended product, Pool Wall Climbing quote, source link, source score, price window, and evidence count before deciding whether the claim fits your pool.
+      - generic [ref=e140]:
+        - paragraph [ref=e141]: Related Evidence
+        - heading "Looking for more options for Pool Wall Climbing?" [level=2] [ref=e142]
+        - generic [ref=e143]:
+          - link "Top Yard and Pool Automation list" [ref=e144] [cursor=pointer]:
+            - /url: /categories/yard-pool-automation
+          - link "Yard and Pool Automation under $500" [ref=e145] [cursor=pointer]:
+            - /url: /deals/best-yard-pool-automation-under-500
+          - link "Full evidence matrix" [ref=e146] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e147] [cursor=pointer]:
+            - /url: /deals
+    - generic [ref=e149]:
+      - generic [ref=e150]:
+        - paragraph [ref=e151]: Cookie controls
+        - paragraph [ref=e152]: Bes3 uses essential storage for site preferences and may use affiliate attribution links through PartnerBoost or YeahPromos. Nonessential tracking stays off unless you accept it.
+        - link "Privacy policy" [ref=e153] [cursor=pointer]:
+          - /url: /privacy
+      - generic [ref=e154]:
+        - button "Reject all" [ref=e155] [cursor=pointer]
+        - button "Accept essential" [ref=e156] [cursor=pointer]
+    - contentinfo [ref=e157]:
+      - generic [ref=e158]:
+        - generic [ref=e159]:
+          - paragraph [ref=e160]: Buyer-First Reviews
+          - heading "Bes3" [level=2] [ref=e161]
+          - paragraph [ref=e162]: Real testing insights for better buying decisions.
+        - navigation "Explore" [ref=e163]:
+          - link "Categories" [ref=e164] [cursor=pointer]:
+            - /url: /categories
+          - link "Evidence Matrix" [ref=e165] [cursor=pointer]:
+            - /url: /products
+          - link "Best Value Lab" [ref=e166] [cursor=pointer]:
+            - /url: /deals
+          - link "Sitemap" [ref=e167] [cursor=pointer]:
+            - /url: /site-map
+          - link "Contact" [ref=e168] [cursor=pointer]:
+            - /url: /contact
+        - navigation "Company" [ref=e169]:
+          - link "About" [ref=e170] [cursor=pointer]:
+            - /url: /about
+          - link "Trust" [ref=e171] [cursor=pointer]:
+            - /url: /trust
+          - link "Privacy" [ref=e172] [cursor=pointer]:
+            - /url: /privacy
+          - link "Terms" [ref=e173] [cursor=pointer]:
+            - /url: /terms
+  - region "Notifications alt+T"
+  - alert [ref=e174]

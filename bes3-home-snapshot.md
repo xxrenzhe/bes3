@@ -1,0 +1,43 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - link "Skip to main content" [ref=e3] [cursor=pointer]:
+      - /url: "#main-content"
+    - generic [ref=e4]: We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+    - banner [ref=e5]:
+      - generic [ref=e6]:
+        - link "B3 Independent Product Ratings Bes3" [ref=e7] [cursor=pointer]:
+          - /url: /
+        - navigation "Primary navigation" [ref=e12]
+    - main [ref=e26]:
+      - generic [ref=e28]:
+        - generic [ref=e29]
+        - generic [ref=e36]
+      - generic [ref=e50]:
+        - generic [ref=e51]
+        - generic [ref=e54]
+      - generic [ref=e120]:
+        - paragraph [ref=e121]: Categories
+        - heading "Fourteen product areas where real-world testing beats spec sheets." [level=2] [ref=e122]
+        - generic [ref=e123]
+      - generic [ref=e260]:
+        - generic [ref=e261]
+        - table [ref=e265]
+      - generic [ref=e343]:
+        - generic [ref=e344]
+        - generic [ref=e347]
+    - generic [ref=e351]:
+      - generic [ref=e352]:
+        - paragraph [ref=e353]: Cookie controls
+        - paragraph [ref=e354]: Bes3 uses essential storage for site preferences and may use affiliate attribution links through PartnerBoost or YeahPromos. Nonessential tracking stays off unless you accept it.
+        - link "Privacy policy" [ref=e355] [cursor=pointer]:
+          - /url: /privacy
+      - generic [ref=e356]:
+        - button "Reject all" [ref=e357] [cursor=pointer]
+        - button "Accept essential" [ref=e358] [cursor=pointer]
+    - contentinfo [ref=e359]:
+      - generic [ref=e360]:
+        - generic [ref=e361]
+        - navigation "Explore" [ref=e365]
+        - navigation "Company" [ref=e371]
+  - region "Notifications alt+T"
+  - alert [ref=e376]

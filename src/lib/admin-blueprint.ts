@@ -39,7 +39,8 @@ export async function getEvidenceOperationsSnapshot() {
     ),
     db.query(
       `
-        SELECT ar.id, ar.product_id, p.product_name, p.slug AS product_slug, ar.video_id, rv.youtube_id,
+        SELECT ar.id, ar.product_id, p.product_name, p.brand, p.product_model, p.model_number,
+               p.slug AS product_slug, ar.video_id, rv.youtube_id, rv.title AS video_title,
                rv.channel_name, tt.canonical_name AS tag_name, tt.category_slug, ar.rating,
                ar.evidence_quote, ar.timestamp_seconds, ar.context_snippet, ar.evidence_confidence,
                ar.evidence_type, ar.is_advertorial, ar.quality_flags_json, ar.created_at
