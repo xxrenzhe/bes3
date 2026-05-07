@@ -96,8 +96,15 @@ const expectations: FileExpectation[] = [
 const workflowExpectation: FileExpectation = {
   label: 'Release workflow quality gate',
   filePath: '.github/workflows/deploy.yml',
-  required: ['Run pSEO recommendation quality gate', 'npm run pseo:check-recommendation-quality'],
-  forbidden: []
+  required: ['Run pSEO recommendation quality gate', 'npm run pseo:check-recommendation-quality', 'NEXT_PUBLIC_APP_URL: https://www.bes3.com'],
+  forbidden: ['NEXT_PUBLIC_APP_URL: https://bes3.com']
+}
+
+const dockerfileExpectation: FileExpectation = {
+  label: 'Docker production URL default',
+  filePath: 'Dockerfile',
+  required: ['ENV NEXT_PUBLIC_APP_URL=https://www.bes3.com'],
+  forbidden: ['ENV NEXT_PUBLIC_APP_URL=https://bes3.com']
 }
 
 const packageExpectation: FileExpectation = {
@@ -133,7 +140,7 @@ function checkExpectation(expectation: FileExpectation) {
 
 const failures = [
   ...expectations.flatMap(checkExpectation),
-  ...[workflowExpectation, packageExpectation].flatMap(checkExpectation)
+  ...[workflowExpectation, dockerfileExpectation, packageExpectation].flatMap(checkExpectation)
 ]
 
 if (failures.length) {

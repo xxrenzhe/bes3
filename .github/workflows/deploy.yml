@@ -17,7 +17,7 @@ env:
   IMAGE_NAME: ${{ github.repository }}
   NODE_VERSION: '20'
   RUN_OPTIONAL_TESTS: ${{ vars.RUN_OPTIONAL_TESTS || 'false' }}
-  NEXT_PUBLIC_APP_URL: https://bes3.com
+  NEXT_PUBLIC_APP_URL: https://www.bes3.com
   BES3_ALLOWED_HOSTS: bes3.com,www.bes3.com,localhost,localhost:3000,127.0.0.1,127.0.0.1:3000,127.0.0.1:3100
 
 jobs:
