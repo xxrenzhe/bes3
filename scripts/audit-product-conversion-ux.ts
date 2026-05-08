@@ -62,6 +62,8 @@ const viewports: ViewportSpec[] = [
   { label: 'mobile', width: 390, height: 844 },
   { label: 'tablet-portrait', width: 768, height: 1024 },
   { label: 'web-tablet-breakpoint', width: 1024, height: 768 },
+  { label: 'web-narrow', width: 1100, height: 900 },
+  { label: 'web-before-xl', width: 1279, height: 900 },
   { label: 'laptop', width: 1280, height: 900 },
   { label: 'desktop', width: 1440, height: 1000 }
 ]
@@ -139,6 +141,7 @@ async function collectViewportEvidence(page: Page) {
     const evidenceLinks = links.filter((link) => link.visible && (link.href === '#decision-notes' || /view evidence|review proof|read evidence/i.test(link.text)))
     const h1 = rectFromElement(document.querySelector('h1'))
     const productImage = rectFromElement(document.querySelector('img[alt^="Product image"]'))
+    const decisionNotes = rectFromElement(document.querySelector('#decision-notes'))
     const decisionHeading = Array.from(document.querySelectorAll('h2')).find((heading) => /buy|compare|watch|skip|research|purchase-ready/i.test(heading.textContent || ''))
     const decisionHeadingRect = rectFromElement(decisionHeading || null)
     const bodyText = document.body.innerText
@@ -160,6 +163,7 @@ async function collectViewportEvidence(page: Page) {
       structuredDataCount,
       h1,
       productImage,
+      decisionNotes,
       decisionHeading: decisionHeading ? {
         text: (decisionHeading.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 180),
         rect: decisionHeadingRect
@@ -180,6 +184,7 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   const evidenceLink = evidence.evidenceLinks[0] as LinkSnapshot | undefined
   const h1 = evidence.h1 as RectSnapshot | null
   const image = evidence.productImage as RectSnapshot | null
+  const decisionNotes = evidence.decisionNotes as RectSnapshot | null
   const overflowWidth = Math.max(evidence.overflow.scrollWidth, evidence.overflow.bodyScrollWidth)
 
   if (!isVisible(h1)) throw new Error(`${viewport.label}: h1 is not visible`)
@@ -189,8 +194,14 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   if (!isInFirstViewport(cta.rect, viewport.height, 0.78)) throw new Error(`${viewport.label}: /go CTA is too low (${cta.rect.y}px)`)
   if (!isInFirstViewport(evidenceLink.rect, viewport.height, 0.9)) throw new Error(`${viewport.label}: evidence link is too low (${evidenceLink.rect.y}px)`)
   if (overflowWidth > viewport.width + 2) throw new Error(`${viewport.label}: horizontal overflow ${overflowWidth}px > ${viewport.width}px`)
-  if (viewport.width < 1280 && image && image.y < cta.rect.y) {
+  if (viewport.width < 1024 && image && image.y < cta.rect.y) {
     throw new Error(`${viewport.label}: product image appears before CTA (${image.y}px < ${cta.rect.y}px)`)
+  }
+  if (viewport.width >= 1024 && image && cta.rect.y - image.y > 340) {
+    throw new Error(`${viewport.label}: image and CTA are not in a responsive Web layout (image y=${image.y}px, CTA y=${cta.rect.y}px)`)
+  }
+  if (viewport.width >= 1024 && decisionNotes && decisionNotes.width < Math.round(viewport.width * 0.72)) {
+    throw new Error(`${viewport.label}: decision notes does not span the content grid (${decisionNotes.width}px)`)
   }
   if (!evidence.htmlHasDisclosure) throw new Error(`${viewport.label}: affiliate disclosure is missing`)
   if (!evidence.htmlHasDecisionNotes) throw new Error(`${viewport.label}: decision notes anchor is missing`)
@@ -201,6 +212,7 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
     h1Rect: h1,
     evidenceRect: evidenceLink.rect,
     imageRect: image,
+    decisionNotesRect: decisionNotes,
     structuredDataCount: evidence.structuredDataCount,
     overflowWidth
   }

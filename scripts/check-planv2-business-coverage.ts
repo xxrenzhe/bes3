@@ -527,6 +527,8 @@ const checks: PlanDocCheck[] = [
           'Valid affiliate handoff',
           '390x844',
           '1024x768',
+          '1100x900',
+          '1279x900',
           'SEO/GEO',
           'npm run product:optimization-gates'
         ]
@@ -541,7 +543,10 @@ const checks: PlanDocCheck[] = [
           'checkPurchaseCardOrdering',
           'checkReleaseGateIsBeforeBuild',
           'order-first overflow-hidden',
-          'product image must not be forced ahead of decision content'
+          'product image must not be forced ahead of decision content',
+          'Web layouts must not wait until 1280px before adapting',
+          'lg:row-start-1',
+          'lg:col-span-2'
         ]
       },
       {
@@ -551,12 +556,15 @@ const checks: PlanDocCheck[] = [
           'PRODUCT_UX_AUDIT_BASE_URL',
           '390',
           '1024',
+          'web-narrow',
+          'web-before-xl',
           'collectViewportEvidence',
           'assertViewportEvidence',
           'Visible /go CTA redirects to a commissionable merchant URL',
           'isCommissionableMerchantUrl',
           'console issues',
-          'horizontal overflow'
+          'horizontal overflow',
+          'decision notes does not span the content grid'
         ]
       },
       {

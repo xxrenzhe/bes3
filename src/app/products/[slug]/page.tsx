@@ -169,11 +169,11 @@ async function CommerceProductPage({ slug }: { slug: string }) {
         ]}
       />
       <section className="overflow-hidden border-b border-border bg-[radial-gradient(circle_at_top_left,#ecfdf5_0,#ffffff_38%,#f8fbff_100%)] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 xl:grid-cols-[minmax(0,0.9fr)_320px_minmax(360px,0.58fr)] xl:items-start">
-          <div className="space-y-6 xl:pt-6">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,0.96fr)_minmax(340px,0.74fr)] lg:items-start xl:grid-cols-[minmax(0,0.9fr)_minmax(260px,320px)_minmax(320px,0.58fr)]">
+          <div className="space-y-6 lg:pt-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Should you buy it?</p>
-              <h1 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950 sm:text-6xl xl:text-7xl">
+              <h1 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950 sm:text-6xl lg:text-6xl xl:text-7xl">
                 {compactProductName}
               </h1>
               {compactProductName !== product.productName ? (
@@ -182,7 +182,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 </p>
               ) : null}
 
-              <div className="mt-5 rounded-[1.75rem] border border-emerald-200/80 bg-white/90 p-4 shadow-[0_22px_70px_-50px_rgba(15,23,42,0.55)] xl:hidden">
+              <div className="mt-5 rounded-[1.75rem] border border-emerald-200/80 bg-white/90 p-4 shadow-[0_22px_70px_-50px_rgba(15,23,42,0.55)] lg:hidden">
                 <div className="grid grid-cols-2 gap-3 text-sm">
                   <div>
                     <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Current price</p>
@@ -250,15 +250,15 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[2rem] border border-border/70 bg-white shadow-panel xl:sticky xl:top-24">
-            <div className="relative aspect-[4/3] bg-[linear-gradient(135deg,#e5eeff,#dff8ea)] xl:aspect-[3/4]">
+          <div className="overflow-hidden rounded-[2rem] border border-border/70 bg-white shadow-panel lg:order-3 lg:col-span-2 xl:order-none xl:col-span-1 xl:sticky xl:top-24">
+            <div className="relative aspect-[4/3] bg-[linear-gradient(135deg,#e5eeff,#dff8ea)] lg:aspect-[3/4]">
               {product.heroImageUrl ? (
                 <Image
                   src={product.heroImageUrl}
                   alt={`Product image for ${compactProductName}`}
                   fill
-                  sizes="(max-width: 1279px) 100vw, 320px"
-                  className="object-contain p-5 xl:p-6"
+                  sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 38vw, 320px"
+                  className="object-contain p-5 lg:p-6"
                 />
               ) : (
                 <div className="bg-grid absolute inset-0" />
@@ -283,7 +283,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <aside className="flex flex-col gap-4 xl:sticky xl:top-24">
+          <aside className="flex flex-col gap-4 lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto">
             <PurchaseDecisionCard decision={purchaseDecision} stickyEligible compact />
           </aside>
         </div>
@@ -308,7 +308,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
             fallbackCurrency={bestOffer?.priceCurrency || product.priceCurrency}
           />
-          <div id="decision-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6">
+          <div id="decision-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6 lg:col-span-2">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Decision Notes</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {decisionModules.map((module) => (

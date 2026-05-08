@@ -69,6 +69,8 @@ const viewports: ViewportGate[] = [
   { label: 'mobile', width: 390, height: 844, requiredPolicy: ['390x844', '标题、价格、主 CTA 首屏可见'] },
   { label: 'tablet portrait', width: 768, height: 1024, requiredPolicy: ['768x1024', '决策优先于图片'] },
   { label: 'web-tablet breakpoint', width: 1024, height: 768, requiredPolicy: ['1024x768', '不能让商品图占满首屏'] },
+  { label: 'narrow web', width: 1100, height: 900, requiredPolicy: ['1100x900', '必须进入 Web 双栏过渡布局'] },
+  { label: 'pre-xl web', width: 1279, height: 900, requiredPolicy: ['1279x900', '不能停留在移动端纵向堆叠'] },
   { label: 'laptop', width: 1280, height: 900, requiredPolicy: ['1280x900', '三栏/双栏布局必须可点击'] },
   { label: 'desktop', width: 1440, height: 1000, requiredPolicy: ['1440x1000', '商品身份、图、购买决策、证据入口同屏'] }
 ]
@@ -84,6 +86,8 @@ const gates: Gate[] = [
       'Valid affiliate handoff',
       '390x844',
       '1024x768',
+      '1100x900',
+      '1279x900',
       'SEO/GEO',
       'npm run product:optimization-gates',
       '这套机制的目标是让 Bes3 主动发现'
@@ -95,12 +99,16 @@ const gates: Gate[] = [
     filePath: productPagePath,
     required: [
       'Should you buy it?',
-      'xl:grid-cols-[minmax(0,0.9fr)_320px_minmax(360px,0.58fr)]',
-      'xl:hidden',
+      'lg:grid-cols-[minmax(0,0.96fr)_minmax(340px,0.74fr)]',
+      'xl:grid-cols-[minmax(0,0.9fr)_minmax(260px,320px)_minmax(320px,0.58fr)]',
+      'lg:hidden',
+      'lg:order-3 lg:col-span-2 xl:order-none xl:col-span-1 xl:sticky xl:top-24',
+      'lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto',
+      'lg:col-span-2',
       'PurchaseDecisionCard decision={purchaseDecision} stickyEligible compact',
       'href="#decision-notes"',
       'showAffiliateDisclosure={false}',
-      'sizes="(max-width: 1279px) 100vw, 320px"',
+      'sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 38vw, 320px"',
       'Open machine payload for AI and search verification'
     ]
   },
@@ -182,6 +190,8 @@ const gates: Gate[] = [
       'Visible /go CTA redirects to a commissionable merchant URL',
       'isCommissionableMerchantUrl',
       'horizontal overflow',
+      'web-before-xl',
+      'decision notes does not span the content grid',
       'console issues'
     ]
   }
@@ -201,6 +211,14 @@ function checkProductPageOrdering() {
   assertBefore(content, productPagePath, 'PrimaryCta', '<Image', 'mobile/tablet hero CTA must appear before product image in source order')
   assertNotIncludes(content, productPagePath, ['order-first overflow-hidden'], 'product image must not be forced ahead of decision content')
   assertNotIncludes(content, productPagePath, ['priority\n                  sizes="(max-width: 1279px)'], 'below-fold product image should not keep priority preload')
+  assertNotIncludes(content, productPagePath, ['xl:hidden'], 'Web layouts must not wait until 1280px before adapting')
+  assertNotIncludes(content, productPagePath, ['xl:grid-cols-[minmax(0,0.9fr)_320px_minmax(360px,0.58fr)]'], 'desktop hero grid must use a fluid narrow-Web transition')
+  requireIncludes(content, productPagePath, [
+    'lg:grid-cols-[minmax(0,0.96fr)_minmax(340px,0.74fr)]',
+    'lg:order-3 lg:col-span-2 xl:order-none xl:col-span-1 xl:sticky xl:top-24',
+    'lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto',
+    'lg:col-span-2'
+  ])
 }
 
 function checkPurchaseCardOrdering() {
