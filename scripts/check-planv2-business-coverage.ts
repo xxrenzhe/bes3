@@ -546,7 +546,10 @@ const checks: PlanDocCheck[] = [
           'product image must not be forced ahead of decision content',
           'Web layouts must not wait until 1280px before adapting',
           'lg:row-start-1',
-          'lg:col-span-2'
+          'lg:col-span-2',
+          'data-product-ux="decision-shortcuts"',
+          'data-product-ux="decision-path"',
+          'data-product-ux="decision-notes-cta"'
         ]
       },
       {
@@ -564,7 +567,9 @@ const checks: PlanDocCheck[] = [
           'isCommissionableMerchantUrl',
           'console issues',
           'horizontal overflow',
-          'decision notes does not span the content grid'
+          'decision notes does not span the content grid',
+          'decision shortcuts are missing',
+          'decision notes CTA is missing'
         ]
       },
       {

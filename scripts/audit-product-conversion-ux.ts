@@ -142,6 +142,11 @@ async function collectViewportEvidence(page: Page) {
     const h1 = rectFromElement(document.querySelector('h1'))
     const productImage = rectFromElement(document.querySelector('img[alt^="Product image"]'))
     const decisionNotes = rectFromElement(document.querySelector('#decision-notes'))
+    const buyDecision = rectFromElement(document.querySelector('#buy-decision'))
+    const currentOffer = rectFromElement(document.querySelector('#current-offer'))
+    const decisionShortcuts = rectFromElement(document.querySelector('[data-product-ux="decision-shortcuts"]'))
+    const decisionPath = rectFromElement(document.querySelector('[data-product-ux="decision-path"]'))
+    const decisionNotesCta = rectFromElement(document.querySelector('[data-product-ux="decision-notes-cta"]'))
     const decisionHeading = Array.from(document.querySelectorAll('h2')).find((heading) => /buy|compare|watch|skip|research|purchase-ready/i.test(heading.textContent || ''))
     const decisionHeadingRect = rectFromElement(decisionHeading || null)
     const bodyText = document.body.innerText
@@ -164,6 +169,11 @@ async function collectViewportEvidence(page: Page) {
       h1,
       productImage,
       decisionNotes,
+      buyDecision,
+      currentOffer,
+      decisionShortcuts,
+      decisionPath,
+      decisionNotesCta,
       decisionHeading: decisionHeading ? {
         text: (decisionHeading.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 180),
         rect: decisionHeadingRect
@@ -174,6 +184,11 @@ async function collectViewportEvidence(page: Page) {
       htmlHasOpenProductJson: openLinks.some((link) => link.text.includes('Open product JSON') && !link.href.endsWith('/offers')),
       htmlHasOpenOfferJson: openLinks.some((link) => link.text.includes('Open offer JSON') && link.href.endsWith('/offers')),
       htmlHasDecisionNotes: Boolean(document.querySelector('#decision-notes')),
+      htmlHasBuyDecisionAnchor: Boolean(document.querySelector('#buy-decision')),
+      htmlHasCurrentOfferAnchor: Boolean(document.querySelector('#current-offer')),
+      htmlHasDecisionShortcuts: Boolean(document.querySelector('[data-product-ux="decision-shortcuts"]')),
+      htmlHasDecisionPath: Boolean(document.querySelector('[data-product-ux="decision-path"]')),
+      htmlHasDecisionNotesCta: Boolean(document.querySelector('[data-product-ux="decision-notes-cta"]')),
       htmlHasDisclosure: /affiliate disclosure|may earn/i.test(bodyText)
     }
   })()`)
@@ -185,6 +200,11 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   const h1 = evidence.h1 as RectSnapshot | null
   const image = evidence.productImage as RectSnapshot | null
   const decisionNotes = evidence.decisionNotes as RectSnapshot | null
+  const buyDecision = evidence.buyDecision as RectSnapshot | null
+  const currentOffer = evidence.currentOffer as RectSnapshot | null
+  const decisionShortcuts = evidence.decisionShortcuts as RectSnapshot | null
+  const decisionPath = evidence.decisionPath as RectSnapshot | null
+  const decisionNotesCta = evidence.decisionNotesCta as RectSnapshot | null
   const overflowWidth = Math.max(evidence.overflow.scrollWidth, evidence.overflow.bodyScrollWidth)
 
   if (!isVisible(h1)) throw new Error(`${viewport.label}: h1 is not visible`)
@@ -205,6 +225,11 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   }
   if (!evidence.htmlHasDisclosure) throw new Error(`${viewport.label}: affiliate disclosure is missing`)
   if (!evidence.htmlHasDecisionNotes) throw new Error(`${viewport.label}: decision notes anchor is missing`)
+  if (!evidence.htmlHasBuyDecisionAnchor) throw new Error(`${viewport.label}: buy decision anchor is missing`)
+  if (!evidence.htmlHasCurrentOfferAnchor) throw new Error(`${viewport.label}: current offer anchor is missing`)
+  if (!isVisible(decisionShortcuts)) throw new Error(`${viewport.label}: decision shortcuts are missing`)
+  if (!isVisible(decisionPath)) throw new Error(`${viewport.label}: decision path is missing`)
+  if (!isVisible(decisionNotesCta)) throw new Error(`${viewport.label}: decision notes CTA is missing`)
 
   return {
     ctaHref: cta.href,
@@ -212,7 +237,12 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
     h1Rect: h1,
     evidenceRect: evidenceLink.rect,
     imageRect: image,
+    buyDecisionRect: buyDecision,
+    currentOfferRect: currentOffer,
+    decisionShortcutsRect: decisionShortcuts,
+    decisionPathRect: decisionPath,
     decisionNotesRect: decisionNotes,
+    decisionNotesCtaRect: decisionNotesCta,
     structuredDataCount: evidence.structuredDataCount,
     overflowWidth
   }

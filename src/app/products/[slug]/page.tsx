@@ -130,6 +130,32 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     nextStepTitle: 'Check before checkout',
     nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
   })
+  const decisionShortcuts = [
+    { href: '#buy-decision', label: 'Buy decision', detail: purchaseDecision.stateLabel },
+    { href: '#decision-notes', label: 'Evidence notes', detail: `${purchaseDecision.evidenceCount} signals` },
+    { href: '#current-offer', label: 'Price & terms', detail: currentPriceLine },
+    { href: '#product-facts', label: 'Product facts', detail: attributeFacts.length ? `${attributeFacts.length} facts` : 'Tracking' }
+  ]
+  const decisionPathSteps = [
+    {
+      step: '1',
+      title: 'Confirm the fit',
+      description: 'Use Decision Notes to check sizing, use case, and risk flags before opening the merchant.',
+      href: '#decision-notes'
+    },
+    {
+      step: '2',
+      title: 'Verify the offer',
+      description: `Match the live store page against ${currentPriceLine}, stock, shipping, and return terms.`,
+      href: '#current-offer'
+    },
+    {
+      step: '3',
+      title: 'Leave only when ready',
+      description: 'Use the Bes3 merchant handoff only after the evidence and terms still match your intent.',
+      href: '#buy-decision'
+    }
+  ]
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: 'Products', path: '/products' },
@@ -226,6 +252,14 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                   {heroDescription}
                 </p>
               ) : null}
+              <div className="mt-4 hidden flex-wrap gap-3 lg:flex">
+                <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                  Review proof
+                </a>
+                <a href="#current-offer" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white/90 px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                  Check offer terms
+                </a>
+              </div>
             </div>
 
             <div className="grid gap-3 sm:grid-cols-3">
@@ -246,6 +280,40 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 <span key={item} className="rounded-full border border-emerald-200 bg-white/90 px-4 py-2 text-sm font-semibold text-emerald-950">
                   {item}
                 </span>
+              ))}
+            </div>
+
+            <nav
+              aria-label="Product decision shortcuts"
+              data-product-ux="decision-shortcuts"
+              className="rounded-[1.5rem] border border-slate-200/80 bg-white/85 p-3 shadow-[0_20px_70px_-55px_rgba(15,23,42,0.65)]"
+            >
+              <p className="px-1 text-[10px] font-black uppercase tracking-[0.22em] text-muted-foreground">Decision shortcuts</p>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                {decisionShortcuts.map((shortcut) => (
+                  <a
+                    key={shortcut.href}
+                    href={shortcut.href}
+                    className="group flex min-h-[48px] items-center justify-between gap-3 rounded-2xl border border-transparent bg-slate-50 px-3 py-2 text-sm transition hover:border-primary/30 hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    <span className="font-semibold text-foreground">{shortcut.label}</span>
+                    <span className="text-xs font-medium text-muted-foreground group-hover:text-primary">{shortcut.detail}</span>
+                  </a>
+                ))}
+              </div>
+            </nav>
+
+            <div data-product-ux="decision-path" className="grid grid-cols-3 gap-2 md:gap-3">
+              {decisionPathSteps.map((item) => (
+                <a
+                  key={item.step}
+                  href={item.href}
+                  className="rounded-[1.25rem] border border-emerald-100 bg-white/80 p-3 text-xs shadow-[0_18px_60px_-50px_rgba(15,23,42,0.75)] transition hover:-translate-y-0.5 hover:border-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 md:p-4 md:text-sm"
+                >
+                  <span className="inline-flex size-7 items-center justify-center rounded-full bg-emerald-950 text-xs font-black text-white">{item.step}</span>
+                  <span className="mt-3 block font-black text-foreground">{item.title}</span>
+                  <span className="mt-2 hidden leading-6 text-muted-foreground md:block">{item.description}</span>
+                </a>
               ))}
             </div>
           </div>
@@ -283,7 +351,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             </div>
           </div>
 
-          <aside className="flex flex-col gap-4 lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto">
+          <aside id="buy-decision" className="scroll-mt-24 flex flex-col gap-4 lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto">
             <PurchaseDecisionCard decision={purchaseDecision} stickyEligible compact />
           </aside>
         </div>
@@ -291,7 +359,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
 
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
-          <div className="rounded-md border border-border bg-slate-50 p-6">
+          <div id="current-offer" className="scroll-mt-24 rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current offer</p>
             <p className="mt-4 font-mono text-5xl font-black">
               {currentPriceLine}
@@ -301,6 +369,14 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             </p>
             <div className="mt-5">
               <DecisionReadinessCard readiness={decisionReadiness} />
+            </div>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <a href="#buy-decision" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                Back to buy decision
+              </a>
+              <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                Review proof first
+              </a>
             </div>
           </div>
           <PriceTrendSparkline
@@ -320,6 +396,42 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                   </ul>
                 </article>
               ))}
+            </div>
+            <div data-product-ux="decision-notes-cta" className="mt-6 rounded-[1.5rem] border border-emerald-200 bg-emerald-50/70 p-5">
+              <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-900">Proof checked?</p>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-emerald-950">Only leave Bes3 if the live store page still matches this decision.</h2>
+                  <p className="mt-2 max-w-3xl text-sm leading-7 text-emerald-900">
+                    Recheck price, stock, shipping, return terms, and product variant on the merchant page before checkout.
+                  </p>
+                </div>
+                <div className="lg:min-w-[260px]">
+                  {isMerchantCta ? (
+                    <PrimaryCta
+                      href={purchaseDecision.primaryActionHref}
+                      label={purchaseDecision.primaryActionLabel}
+                      productId={product.id}
+                      trackingSource="decision-notes-exit"
+                      trackingMetadata={{
+                        ...purchaseDecision.metadata,
+                        ctaVariant: `${purchaseDecision.ctaVariant}-decision-notes`
+                      }}
+                      trustBadge={`${purchaseDecision.evidenceCount} evidence signals reviewed on this page`}
+                      buttonClassName="w-full"
+                      showAffiliateDisclosure={false}
+                    />
+                  ) : (
+                    <PurchaseDecisionActionLink
+                      decision={purchaseDecision}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    />
+                  )}
+                  <a href="#buy-decision" className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center text-sm font-semibold text-emerald-950 underline-offset-4 hover:underline">
+                    Back to buy decision
+                  </a>
+                </div>
+              </div>
             </div>
           </div>
         </div>

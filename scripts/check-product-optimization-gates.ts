@@ -106,6 +106,13 @@ const gates: Gate[] = [
       'lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto',
       'lg:col-span-2',
       'PurchaseDecisionCard decision={purchaseDecision} stickyEligible compact',
+      'data-product-ux="decision-shortcuts"',
+      'data-product-ux="decision-path"',
+      'id="buy-decision"',
+      'id="current-offer"',
+      'data-product-ux="decision-notes-cta"',
+      'trackingSource="decision-notes-exit"',
+      'Back to buy decision',
       'href="#decision-notes"',
       'showAffiliateDisclosure={false}',
       'sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 38vw, 320px"',
@@ -192,6 +199,8 @@ const gates: Gate[] = [
       'horizontal overflow',
       'web-before-xl',
       'decision notes does not span the content grid',
+      'decision shortcuts are missing',
+      'decision notes CTA is missing',
       'console issues'
     ]
   }
@@ -217,7 +226,10 @@ function checkProductPageOrdering() {
     'lg:grid-cols-[minmax(0,0.96fr)_minmax(340px,0.74fr)]',
     'lg:order-3 lg:col-span-2 xl:order-none xl:col-span-1 xl:sticky xl:top-24',
     'lg:order-2 lg:sticky lg:top-24 lg:col-start-2 lg:row-start-1 xl:order-none xl:col-start-auto xl:row-start-auto',
-    'lg:col-span-2'
+    'lg:col-span-2',
+    'data-product-ux="decision-shortcuts"',
+    'data-product-ux="decision-path"',
+    'data-product-ux="decision-notes-cta"'
   ])
 }
 
