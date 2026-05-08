@@ -28,6 +28,7 @@ import {
 import { getArticlePath } from '@/lib/article-path'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { escapeHtml } from '@/lib/html'
+import { mediaPublicUrlSql } from '@/lib/media'
 import { getCommissionableMerchantUrl } from '@/lib/merchant-links'
 import { slugify } from '@/lib/slug'
 import { toAbsoluteUrl } from '@/lib/site-url'
@@ -1253,10 +1254,10 @@ async function loadProductArticleRow(productId: number): Promise<ProductArticleR
         ) AS active_affiliate_url,
         p.resolved_url,
         (
-          SELECT public_url
-          FROM product_media_assets
-          WHERE product_id = p.id AND is_public = 1
-          ORDER BY CASE asset_role WHEN 'hero' THEN 0 WHEN 'thumbnail' THEN 1 ELSE 2 END, id ASC
+          SELECT ${mediaPublicUrlSql('m')}
+          FROM product_media_assets m
+          WHERE m.product_id = p.id AND m.is_public = 1
+          ORDER BY CASE m.asset_role WHEN 'hero' THEN 0 WHEN 'thumbnail' THEN 1 ELSE 2 END, m.id ASC
           LIMIT 1
         ) AS hero_image_url
       FROM products p

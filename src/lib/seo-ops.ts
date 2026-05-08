@@ -4,6 +4,7 @@ import { getDatabase } from '@/lib/db'
 import { SUPPORTED_LOCALES } from '@/lib/i18n'
 import { getSettingValueOrEnv } from '@/lib/settings'
 import { getArticlePath } from '@/lib/article-path'
+import { mediaPublicUrlSql } from '@/lib/media'
 import { listPublishedArticles } from '@/lib/site-data'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
@@ -1211,7 +1212,7 @@ async function loadSyndicationPayloads(paths: string[]): Promise<SyndicationPage
         p.brand,
         p.category,
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = p.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC

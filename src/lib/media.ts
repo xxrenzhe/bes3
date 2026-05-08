@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import crypto from 'node:crypto'
-import { PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
+import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3'
 import { fetchWithBrowserProxy } from '@/lib/browser-proxy'
 import { getDatabase } from '@/lib/db'
 import { getSettingValueOrEnv } from '@/lib/settings'
@@ -50,8 +50,12 @@ function getS3PublicBaseUrl(config: MediaConfig): string {
   return `${endpoint}/${bucket}`
 }
 
-function buildPublicObjectUrl(baseUrl: string, storageKey: string): string {
-  return `${baseUrl.replace(/\/+$/, '')}/${storageKey.replace(/^\/+/, '')}`
+function buildMediaProxyUrl(storageKey: string): string {
+  return `/media/${storageKey.replace(/^\/+/, '')}`
+}
+
+export function mediaPublicUrlSql(alias = 'm'): string {
+  return `CASE WHEN ${alias}.storage_provider = 's3' THEN '/media/' || ${alias}.storage_key ELSE ${alias}.public_url END`
 }
 
 function sameHost(left: string, right: string) {
@@ -102,6 +106,25 @@ function guessExtension(contentType: string | null): string {
   return 'jpg'
 }
 
+function guessContentTypeFromKey(storageKey: string): string {
+  const extension = path.extname(storageKey).toLowerCase()
+  if (extension === '.png') return 'image/png'
+  if (extension === '.webp') return 'image/webp'
+  if (extension === '.gif') return 'image/gif'
+  if (extension === '.avif') return 'image/avif'
+  if (extension === '.svg') return 'image/svg+xml'
+  if (extension === '.jpg' || extension === '.jpeg') return 'image/jpeg'
+  return 'application/octet-stream'
+}
+
+function normalizeMediaStorageKey(storageKey: string): string | null {
+  const normalizedKey = storageKey.replace(/^\/+/, '')
+  if (!normalizedKey || path.isAbsolute(normalizedKey)) return null
+  const segments = normalizedKey.split('/').filter(Boolean)
+  if (!segments.length || segments.some((segment) => segment === '..')) return null
+  return segments.join('/')
+}
+
 export async function getResolvedLocalMediaRoot(): Promise<string> {
   const config = await getMediaConfig()
   return path.isAbsolute(config.localRoot) ? config.localRoot : path.join(process.cwd(), config.localRoot)
@@ -119,6 +142,65 @@ function createS3Client(config: MediaConfig): S3Client {
         }
       : undefined
   })
+}
+
+async function readS3Body(body: unknown): Promise<Uint8Array> {
+  if (!body) return new Uint8Array()
+  if (body instanceof Uint8Array) return body
+  if (body instanceof ArrayBuffer) return new Uint8Array(body)
+
+  const payload = body as {
+    transformToByteArray?: () => Promise<Uint8Array>
+    arrayBuffer?: () => Promise<ArrayBuffer>
+    [Symbol.asyncIterator]?: () => AsyncIterator<Uint8Array | Buffer | string>
+  }
+
+  if (payload.transformToByteArray) return payload.transformToByteArray()
+  if (payload.arrayBuffer) return new Uint8Array(await payload.arrayBuffer())
+  if (payload[Symbol.asyncIterator]) {
+    const chunks: Buffer[] = []
+    for await (const chunk of payload as AsyncIterable<Uint8Array | Buffer | string>) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
+    }
+    return Buffer.concat(chunks)
+  }
+
+  return new Uint8Array()
+}
+
+export async function readMediaAsset(storageKey: string): Promise<{
+  body: Uint8Array
+  contentType: string
+  cacheControl: string
+} | null> {
+  const config = await getMediaConfig()
+  const normalizedKey = normalizeMediaStorageKey(storageKey)
+  if (!normalizedKey) return null
+
+  if (config.driver === 's3') {
+    if (!config.s3Bucket) return null
+    const response = await createS3Client(config).send(
+      new GetObjectCommand({
+        Bucket: config.s3Bucket,
+        Key: normalizedKey
+      })
+    )
+    return {
+      body: await readS3Body(response.Body),
+      contentType: response.ContentType || 'application/octet-stream',
+      cacheControl: response.CacheControl || 'public, max-age=31536000, immutable'
+    }
+  }
+
+  const mediaRoot = path.resolve(await getResolvedLocalMediaRoot())
+  const filePath = path.resolve(mediaRoot, normalizedKey)
+  if (filePath !== mediaRoot && !filePath.startsWith(`${mediaRoot}${path.sep}`)) return null
+  const body = await fs.readFile(filePath)
+  return {
+    body,
+    contentType: guessContentTypeFromKey(normalizedKey),
+    cacheControl: 'public, max-age=31536000, immutable'
+  }
 }
 
 export async function persistMediaAsset(input: {
@@ -171,8 +253,7 @@ export async function persistMediaAsset(input: {
         ContentType: contentType || undefined
       })
     )
-    const baseUrl = getS3PublicBaseUrl(config)
-    publicUrl = baseUrl ? buildPublicObjectUrl(baseUrl, storageKey) : input.sourceUrl
+    publicUrl = buildMediaProxyUrl(storageKey)
   }
 
   const db = await getDatabase()

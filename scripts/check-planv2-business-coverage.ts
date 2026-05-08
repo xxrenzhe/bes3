@@ -545,18 +545,36 @@ const checks: PlanDocCheck[] = [
         ]
       },
       {
+        label: 'Dynamic product conversion UX audit',
+        filePath: 'scripts/audit-product-conversion-ux.ts',
+        required: [
+          'PRODUCT_UX_AUDIT_BASE_URL',
+          '390',
+          '1024',
+          'collectViewportEvidence',
+          'assertViewportEvidence',
+          'Visible /go CTA redirects to a commissionable merchant URL',
+          'isCommissionableMerchantUrl',
+          'console issues',
+          'horizontal overflow'
+        ]
+      },
+      {
         label: 'Release preflight product gate',
         filePath: 'scripts/preflight-release.sh',
         required: [
           'product optimization gates',
-          'npm run product:optimization-gates'
+          'npm run product:optimization-gates',
+          'BES3_PREFLIGHT_RUN_PRODUCT_UX_AUDIT',
+          'npm run product:conversion-ux-audit'
         ]
       },
       {
         label: 'Product optimization npm script',
         filePath: 'package.json',
         required: [
-          '"product:optimization-gates": "tsx scripts/check-product-optimization-gates.ts"'
+          '"product:optimization-gates": "tsx scripts/check-product-optimization-gates.ts"',
+          '"product:conversion-ux-audit": "tsx scripts/audit-product-conversion-ux.ts"'
         ]
       }
     ]
@@ -589,7 +607,8 @@ const expectedScripts = [
   'ops:smoke-e2e',
   'ops:browser-e2e',
   'planv2:check-business',
-  'product:optimization-gates'
+  'product:optimization-gates',
+  'product:conversion-ux-audit'
 ]
 for (const scriptName of expectedScripts) {
   if (!packageJson.scripts?.[scriptName]) failures.push(`package.json: missing script ${scriptName}`)

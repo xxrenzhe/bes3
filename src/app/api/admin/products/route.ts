@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAdmin } from '@/lib/auth'
 import { getDatabase } from '@/lib/db'
+import { mediaPublicUrlSql } from '@/lib/media'
 
 type AdminAffiliateInventoryRow = {
   id: number
@@ -180,7 +181,7 @@ export async function GET(request: NextRequest) {
         p.review_count,
         p.updated_at,
         (
-        SELECT public_url
+        SELECT ${mediaPublicUrlSql('m')}
         FROM product_media_assets m
         WHERE m.product_id = p.id AND m.asset_role = 'hero'
         ORDER BY m.id ASC
@@ -315,7 +316,7 @@ export async function GET(request: NextRequest) {
             LIMIT 1
           ) AS pipeline_stage,
           (
-            SELECT m.public_url
+            SELECT ${mediaPublicUrlSql('m')}
             FROM product_media_assets m
             WHERE m.product_id = p.id AND m.asset_role = 'hero'
             ORDER BY m.id ASC

@@ -1,6 +1,7 @@
 import { categoryMatches, getCategorySlug, normalizeCategoryName } from '@/lib/category'
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
+import { mediaPublicUrlSql } from '@/lib/media'
 import { getCommissionableMerchantUrl, hasMerchantExitTarget } from '@/lib/merchant-links'
 import { normalizeProductCategory } from '@/lib/product-category'
 import { sanitizePublicSnippetList } from '@/lib/public-text'
@@ -173,8 +174,8 @@ export async function getProductGalleryImageUrls(productId: number, limit: numbe
   const db = await getDatabase()
   const rows = await db.query<{ public_url: string }>(
     `
-      SELECT public_url
-      FROM product_media_assets
+      SELECT ${mediaPublicUrlSql('m')} AS public_url
+      FROM product_media_assets m
       WHERE product_id = ?
         AND is_public = 1
         AND asset_role IN ('hero', 'gallery')
@@ -720,7 +721,7 @@ const listPublishedArticlesCached = async (): Promise<ArticleRecord[]> => withCa
         ${activeAffiliateUrl},
         ${evidenceJsonSql},
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = p.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC
@@ -753,7 +754,7 @@ const getArticleBySlugCached = async (slug: string): Promise<ArticleRecord | nul
         ${activeAffiliateUrl},
         ${evidenceJsonSql},
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = p.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC
@@ -794,7 +795,7 @@ const listProductsCached = async (): Promise<ProductRecord[]> => withCachedPromi
         ${activeAffiliateUrl},
         ${publicEvidenceJson},
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = products.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC
@@ -826,7 +827,7 @@ const getProductBySlugCached = async (slug: string): Promise<ProductRecord | nul
         ${activeAffiliateUrl},
         ${publicEvidenceJson},
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = products.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC
@@ -864,7 +865,7 @@ export async function getProductById(productId: number): Promise<ProductRecord |
         ${activeAffiliateUrl},
         ${publicEvidenceJson},
         (
-          SELECT public_url
+          SELECT ${mediaPublicUrlSql('m')}
           FROM product_media_assets m
           WHERE m.product_id = products.id AND m.asset_role = 'hero'
           ORDER BY m.id ASC

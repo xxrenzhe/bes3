@@ -1,6 +1,7 @@
 import { getDatabase } from '@/lib/db'
 import { isPublicEvidenceUsable } from '@/lib/evidence-quality'
 import { HARDCORE_CATEGORIES, type HardcoreCategory } from '@/lib/hardcore-catalog'
+import { mediaPublicUrlSql } from '@/lib/media'
 import { getCommissionableMerchantUrl } from '@/lib/merchant-links'
 import { slugify } from '@/lib/slug'
 
@@ -417,10 +418,10 @@ async function listProductRows(): Promise<ProductRow[]> {
         p.description,
         COALESCE(p.asin, ap.asin) AS asin,
         (
-          SELECT public_url
-          FROM product_media_assets
-          WHERE product_id = p.id AND is_public = 1
-          ORDER BY CASE asset_role WHEN 'hero' THEN 0 WHEN 'thumbnail' THEN 1 ELSE 2 END, id ASC
+          SELECT ${mediaPublicUrlSql('m')}
+          FROM product_media_assets m
+          WHERE m.product_id = p.id AND m.is_public = 1
+          ORDER BY CASE m.asset_role WHEN 'hero' THEN 0 WHEN 'thumbnail' THEN 1 ELSE 2 END, m.id ASC
           LIMIT 1
         ) AS hero_image_url,
         p.source_affiliate_link,

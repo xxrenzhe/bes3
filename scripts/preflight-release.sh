@@ -9,6 +9,7 @@ SKIP_BUILD="${BES3_PREFLIGHT_SKIP_BUILD:-false}"
 RUN_HEALTH="${BES3_PREFLIGHT_RUN_HEALTH:-false}"
 RUN_SMOKE_E2E="${BES3_PREFLIGHT_RUN_SMOKE_E2E:-false}"
 RUN_BROWSER_E2E="${BES3_PREFLIGHT_RUN_BROWSER_E2E:-false}"
+RUN_PRODUCT_UX_AUDIT="${BES3_PREFLIGHT_RUN_PRODUCT_UX_AUDIT:-false}"
 HEALTH_URL="${BES3_PREFLIGHT_HEALTH_URL:-http://127.0.0.1/api/health}"
 HEALTH_TOKEN="${BES3_PREFLIGHT_HEALTH_TOKEN:-}"
 
@@ -45,6 +46,10 @@ fi
 
 if [[ "$RUN_BROWSER_E2E" == "true" ]]; then
   run_step "browser e2e" npm run ops:browser-e2e
+fi
+
+if [[ "$RUN_PRODUCT_UX_AUDIT" == "true" ]]; then
+  run_step "product conversion ux audit" npm run product:conversion-ux-audit
 fi
 
 if [[ "$RUN_HEALTH" == "true" ]]; then

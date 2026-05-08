@@ -157,7 +157,9 @@ const gates: Gate[] = [
     filePath: preflightPath,
     required: [
       'product optimization gates',
-      'npm run product:optimization-gates'
+      'npm run product:optimization-gates',
+      'BES3_PREFLIGHT_RUN_PRODUCT_UX_AUDIT',
+      'npm run product:conversion-ux-audit'
     ]
   },
   {
@@ -165,7 +167,22 @@ const gates: Gate[] = [
     name: 'Product optimization gate is executable from npm scripts',
     filePath: 'package.json',
     required: [
-      '"product:optimization-gates": "tsx scripts/check-product-optimization-gates.ts"'
+      '"product:optimization-gates": "tsx scripts/check-product-optimization-gates.ts"',
+      '"product:conversion-ux-audit": "tsx scripts/audit-product-conversion-ux.ts"'
+    ]
+  },
+  {
+    area: 'Dynamic audit',
+    name: 'Browser conversion audit checks real viewport and affiliate handoff behavior',
+    filePath: 'scripts/audit-product-conversion-ux.ts',
+    required: [
+      'PRODUCT_UX_AUDIT_BASE_URL',
+      'collectViewportEvidence',
+      'assertViewportEvidence',
+      'Visible /go CTA redirects to a commissionable merchant URL',
+      'isCommissionableMerchantUrl',
+      'horizontal overflow',
+      'console issues'
     ]
   }
 ]

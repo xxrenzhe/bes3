@@ -1,4 +1,5 @@
 import { getDatabase } from '@/lib/db'
+import { mediaPublicUrlSql } from '@/lib/media'
 import type { PipelineStage, PipelineStatus } from '@/lib/types'
 
 export interface AdminWorkspaceProduct {
@@ -276,7 +277,7 @@ export async function getAdminProductWorkspace(productId: number): Promise<Admin
       : Promise.resolve(undefined),
     db.query<MediaRow>(
       `
-        SELECT id, asset_role, public_url, source_url, mime_type, checksum, created_at
+        SELECT id, asset_role, ${mediaPublicUrlSql('product_media_assets')} AS public_url, source_url, mime_type, checksum, created_at
         FROM product_media_assets
         WHERE product_id = ?
         ORDER BY

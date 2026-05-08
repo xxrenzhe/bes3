@@ -5,7 +5,7 @@ import { generateComparisonCopy, generateKeywordIdeas, generateReviewCopy, gener
 import { updateAdminArticle } from '@/lib/admin-articles'
 import { getArticlePath } from '@/lib/article-path'
 import { escapeHtml } from '@/lib/html'
-import { persistMediaAsset } from '@/lib/media'
+import { mediaPublicUrlSql, persistMediaAsset } from '@/lib/media'
 import { getDecisionFunnelSummary } from '@/lib/decision-events'
 import { getMerchantClickSummary } from '@/lib/merchant-clicks'
 import { getAffiliateProductById, listAffiliateProducts, type AffiliateProductRecord, upsertManualAffiliateLink } from '@/lib/partnerboost'
@@ -1584,8 +1584,8 @@ async function loadPrimaryMediaUrl(productId: number): Promise<string | null> {
   const db = await getDatabase()
   const row = await db.queryOne<{ public_url: string }>(
     `
-      SELECT public_url
-      FROM product_media_assets
+      SELECT ${mediaPublicUrlSql('m')} AS public_url
+      FROM product_media_assets m
       WHERE product_id = ?
       ORDER BY
         CASE asset_role
