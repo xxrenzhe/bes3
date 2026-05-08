@@ -15,7 +15,8 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 import type { HardcoreProduct } from '@/lib/hardcore'
 
-export const revalidate = 86400
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export async function generateStaticParams() {
   const tags = await listHardcoreTags()

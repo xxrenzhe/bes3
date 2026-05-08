@@ -49,6 +49,7 @@ const PUBLIC_PATHS = [
   '/api/auth/logout',
   '/api/auth/me',
   '/api/auth/change-password',
+  '/api/decision-events',
   '/api/newsletter',
   '/api/open/buying-feed',
   '/api/open/coverage',
@@ -142,16 +143,12 @@ const PUBLIC_FAMILY_ALIASES: Array<{
     build: (brandSlug, categorySlug) => `/brands/${brandSlug}/categories/${categorySlug}`
   },
   {
-    pattern: /^\/deals\/([^/]+)$/i,
-    build: (categorySlug) => `/offers/${categorySlug}`
-  },
-  {
     pattern: /^\/deals\/category\/([^/]+)$/i,
-    build: (categorySlug) => `/offers/${categorySlug}`
+    build: (categorySlug) => `/categories/${categorySlug}`
   },
   {
     pattern: /^\/deals\/categories\/([^/]+)$/i,
-    build: (categorySlug) => `/offers/${categorySlug}`
+    build: (categorySlug) => `/categories/${categorySlug}`
   },
   {
     pattern: /^\/offers\/category\/([^/]+)$/i,

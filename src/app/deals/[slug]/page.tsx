@@ -13,7 +13,8 @@ import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 
-export const revalidate = 86400
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
 
 export function generateStaticParams() {
   return getValuePseoStaticParams()

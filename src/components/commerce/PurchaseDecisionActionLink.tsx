@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { isExternalCtaHref } from '@/lib/cta-link-behavior'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import type { PurchaseDecision } from '@/lib/purchase-decision'
 
@@ -14,6 +15,7 @@ export function PurchaseDecisionActionLink({
 }) {
   const [resolvedHref, setResolvedHref] = useState(decision.primaryActionHref)
   const metadataKey = JSON.stringify(decision.metadata || null)
+  const opensNewTab = isExternalCtaHref(resolvedHref)
 
   useEffect(() => {
     if (!decision.primaryActionHref) {
@@ -43,6 +45,9 @@ export function PurchaseDecisionActionLink({
   return (
     <Link
       href={resolvedHref}
+      target={opensNewTab ? '_blank' : undefined}
+      rel={opensNewTab ? 'noopener noreferrer' : undefined}
+      prefetch={false}
       className={className}
       onClick={() => {
         if (resolvedHref.startsWith('/go/')) {
@@ -64,6 +69,7 @@ export function PurchaseDecisionActionLink({
       }}
     >
       {decision.primaryActionLabel}
+      {opensNewTab ? <span aria-hidden="true">↗</span> : null}
     </Link>
   )
 }

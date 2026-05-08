@@ -9,6 +9,9 @@ import { getRequestLocale } from '@/lib/request-locale'
 import { listOpenCommerceProducts } from '@/lib/site-data'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Bes3 Best Picks',

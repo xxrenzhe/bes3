@@ -245,7 +245,10 @@ const checks: PlanDocCheck[] = [
           "'use client'",
           "eventType: 'purchase_decision_cta_click'",
           'trackDecisionEvent',
-          'metadata: decision.metadata'
+          'metadata: decision.metadata',
+          'isExternalCtaHref(resolvedHref)',
+          "target={opensNewTab ? '_blank' : undefined}",
+          "rel={opensNewTab ? 'noopener noreferrer' : undefined}"
         ]
       },
       {
@@ -296,6 +299,7 @@ const checks: PlanDocCheck[] = [
         required: [
           'PurchaseDecisionCard',
           'buildCommercePurchaseDecision',
+          'Should you buy it?',
           "trackingSource: article.type === 'comparison' ? 'compare-decision-card' : 'review-decision-card'"
         ]
       },
@@ -398,6 +402,26 @@ const checks: PlanDocCheck[] = [
           "'purchase_decision_view'",
           "'purchase_decision_cta_click'",
           "'merchant_cta_click'"
+        ]
+      },
+      {
+        label: 'Purchase decision view delivery is confirmable',
+        filePath: 'src/lib/decision-tracking.ts',
+        required: [
+          "eventType === 'purchase_decision_view'",
+          'shouldConfirmDelivery',
+          "fetch('/api/decision-events'",
+          'keepalive: true'
+        ]
+      },
+      {
+        label: 'Anonymous purchase decision events are public',
+        filePath: 'src/proxy.ts',
+        required: [
+          "'/api/decision-events'",
+          "'/api/newsletter'",
+          'isPublic(basePath)',
+          "const token = request.cookies.get('auth_token')?.value"
         ]
       },
       {
@@ -581,6 +605,39 @@ const checks: PlanDocCheck[] = [
         ]
       },
       {
+        label: 'Plan13 full browser E2E coverage',
+        filePath: 'scripts/browser-planv2-e2e.ts',
+        required: [
+          'ensurePlan13LocalFixtureData',
+          'findPlan13TestRoutes',
+          'assertDecisionSurface',
+          'assertSinglePrimaryCtaSemantics',
+          'assertBuyNowMerchantHandoff',
+          'assertPurchaseDecisionViewTracked',
+          'Plan13 home purchase task routes',
+          'Plan13 category Top 3 decisions',
+          'Plan13 product purchase decision',
+          'Plan13 review purchase decision',
+          'Plan13 deals buy window',
+          'Plan13 deal detail decision cards',
+          'Plan13 scenario Top buying decisions',
+          'Plan13 compare default winner',
+          'purchase_decision_view',
+          'No visible /go CTA for non-buy state',
+          'application/ld+json'
+        ]
+      },
+      {
+        label: 'Purchase task pages are runtime data-driven',
+        filePath: 'scripts/check-product-optimization-gates.ts',
+        required: [
+          'dynamicDecisionPagePaths',
+          'checkDecisionPagesAreDynamic',
+          "export const dynamic = 'force-dynamic'",
+          'export const revalidate = 0'
+        ]
+      },
+      {
         label: 'Release preflight product gate',
         filePath: 'scripts/preflight-release.sh',
         required: [
@@ -588,6 +645,15 @@ const checks: PlanDocCheck[] = [
           'npm run product:optimization-gates',
           'BES3_PREFLIGHT_RUN_PRODUCT_UX_AUDIT',
           'npm run product:conversion-ux-audit'
+        ]
+      },
+      {
+        label: 'Deal detail route proxy safety',
+        filePath: 'scripts/check-product-optimization-gates.ts',
+        required: [
+          'checkDealDetailRoutesAreNotAliased',
+          'deal detail pSEO pages must route to src/app/deals/[slug]/page.tsx',
+          'Deal pSEO detail routes are not swallowed by legacy offer aliases'
         ]
       },
       {

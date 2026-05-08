@@ -76,7 +76,10 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
             </div>
             <aside>
               {purchaseDecision ? (
-                <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+                <div>
+                  <p className="mb-3 text-xs font-bold uppercase tracking-[0.22em] text-primary">Should you buy it?</p>
+                  <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+                </div>
               ) : (
                 <div className="rounded-md border border-border bg-slate-50 p-6">
                   <p className="text-xs font-bold uppercase text-muted-foreground">Decision snapshot</p>

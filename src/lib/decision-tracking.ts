@@ -60,6 +60,19 @@ export function trackDecisionEvent({
     productId: Number.isInteger(productId) && Number(productId) > 0 ? Number(productId) : undefined,
     metadata
   })
+  const shouldConfirmDelivery = eventType === 'purchase_decision_view'
+
+  if (shouldConfirmDelivery) {
+    void fetch('/api/decision-events', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: payload,
+      keepalive: true
+    }).catch(() => undefined)
+    return
+  }
 
   if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
     const succeeded = navigator.sendBeacon(

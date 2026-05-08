@@ -62,11 +62,26 @@ function assertNotIncludes(content: string, filePath: string, forbidden: string[
 const proactiveDoc = 'docs/planv2/14.Bes3 主动产品优化与转化门禁机制 (Proactive Product Optimization & Conversion Gates).md'
 const productPagePath = 'src/app/products/[slug]/page.tsx'
 const purchaseCardPath = 'src/components/commerce/PurchaseDecisionCard.tsx'
+const purchaseActionLinkPath = 'src/components/commerce/PurchaseDecisionActionLink.tsx'
 const primaryCtaPath = 'src/components/site/PrimaryCta.tsx'
 const stickyMobileCtaPath = 'src/components/site/StickyMobileCta.tsx'
 const ctaLinkBehaviorPath = 'src/lib/cta-link-behavior.ts'
 const goRoutePath = 'src/app/go/[productId]/route.ts'
+const proxyPath = 'src/proxy.ts'
 const preflightPath = 'scripts/preflight-release.sh'
+const browserE2ePath = 'scripts/browser-planv2-e2e.ts'
+const dynamicDecisionPagePaths = [
+  'src/app/page.tsx',
+  'src/app/categories/page.tsx',
+  'src/app/categories/[slug]/page.tsx',
+  'src/app/deals/page.tsx',
+  'src/app/deals/[slug]/page.tsx',
+  'src/app/[category]/[landing]/page.tsx',
+  'src/app/compare/page.tsx',
+  'src/app/reviews/[slug]/page.tsx',
+  'src/app/compare/[slug]/page.tsx',
+  'src/app/products/[slug]/page.tsx'
+]
 
 const viewports: ViewportGate[] = [
   { label: 'mobile', width: 390, height: 844, requiredPolicy: ['390x844', '标题、价格、主 CTA 首屏可见'] },
@@ -146,6 +161,20 @@ const gates: Gate[] = [
   },
   {
     area: 'CTA behavior',
+    name: 'Purchase decision action links preserve safe merchant exit semantics',
+    filePath: purchaseActionLinkPath,
+    required: [
+      'isExternalCtaHref(resolvedHref)',
+      "target={opensNewTab ? '_blank' : undefined}",
+      "rel={opensNewTab ? 'noopener noreferrer' : undefined}",
+      'prefetch={false}',
+      "{opensNewTab ? <span aria-hidden=\"true\">↗</span> : null}",
+      "eventType: 'merchant_cta_click'",
+      "eventType: 'purchase_decision_cta_click'"
+    ]
+  },
+  {
+    area: 'CTA behavior',
     name: 'CTA links open new tabs only for merchant or external exits',
     filePath: ctaLinkBehaviorPath,
     required: [
@@ -194,6 +223,26 @@ const gates: Gate[] = [
     ]
   },
   {
+    area: 'Routing',
+    name: 'Deal pSEO detail routes are not swallowed by legacy offer aliases',
+    filePath: proxyPath,
+    required: [
+      "pattern: /^\\/deals\\/category\\/([^/]+)$/i",
+      "build: (categorySlug) => `/categories/${categorySlug}`",
+      "pathname.startsWith('/deals/')"
+    ]
+  },
+  {
+    area: 'Routing',
+    name: 'Anonymous decision events stay public for conversion funnel tracking',
+    filePath: proxyPath,
+    required: [
+      "'/api/decision-events'",
+      "'/api/newsletter'",
+      "pathname.startsWith('/api/open/')"
+    ]
+  },
+  {
     area: 'SEO/GEO',
     name: 'Product page keeps crawler and AI-readable decision payloads',
     filePath: productPagePath,
@@ -217,6 +266,31 @@ const gates: Gate[] = [
       'npm run product:optimization-gates',
       'BES3_PREFLIGHT_RUN_PRODUCT_UX_AUDIT',
       'npm run product:conversion-ux-audit'
+    ]
+  },
+  {
+    area: 'Browser E2E',
+    name: 'Plan13 purchase task surfaces are verified in browser automation',
+    filePath: browserE2ePath,
+    required: [
+      'ensurePlan13LocalFixtureData',
+      'findPlan13TestRoutes',
+      'assertDecisionSurface',
+      'assertSinglePrimaryCtaSemantics',
+      'assertBuyNowMerchantHandoff',
+      'assertSeoGeoPayload',
+      'Plan13 home purchase task routes',
+      'Plan13 category Top 3 decisions',
+      'Plan13 product purchase decision',
+      'Plan13 review purchase decision',
+      'Plan13 deals buy window',
+      'Plan13 deal detail decision cards',
+      'Plan13 scenario Top buying decisions',
+      'Plan13 compare default winner',
+      'purchase_decision_view',
+      'Commission availability never changes the evidence score or recommendation order.',
+      'application/ld+json',
+      'No visible /go CTA for non-buy state'
     ]
   },
   {
@@ -293,14 +367,36 @@ function checkReleaseGateIsBeforeBuild() {
   assertBefore(content, preflightPath, 'npm run product:optimization-gates', 'npm run build', 'product optimization gates must run before production build in preflight')
 }
 
+function checkDecisionPagesAreDynamic() {
+  for (const filePath of dynamicDecisionPagePaths) {
+    const content = read(filePath)
+    requireIncludes(content, filePath, ["export const dynamic = 'force-dynamic'", 'export const revalidate = 0'])
+  }
+}
+
+function checkDealDetailRoutesAreNotAliased() {
+  const content = read(proxyPath)
+  assertNotIncludes(content, proxyPath, ['pattern: /^\\/deals\\/([^/]+)$/i'], 'deal detail pSEO pages must route to src/app/deals/[slug]/page.tsx')
+  assertNotIncludes(content, proxyPath, ['pattern: /^\\/deals\\/([^/]+)$/i,\n    build: (categorySlug) => `/offers/${categorySlug}`'], 'legacy deal aliases must not redirect commercial deal pages to offers')
+}
+
+function checkDecisionEventsArePublic() {
+  const content = read(proxyPath)
+  assertBefore(content, proxyPath, "'/api/decision-events'", "'/api/newsletter'", 'anonymous purchase decision events must be public before authenticated API handling')
+  assertBefore(content, proxyPath, "'/api/decision-events'", "const token = request.cookies.get('auth_token')?.value", 'purchase decision denominator events must not require auth')
+}
+
 function main() {
   const passed = gates.map(runGate)
   const viewportCoverage = checkViewportPolicy()
   checkProductPageOrdering()
   checkPurchaseCardOrdering()
   checkReleaseGateIsBeforeBuild()
+  checkDecisionPagesAreDynamic()
+  checkDealDetailRoutesAreNotAliased()
+  checkDecisionEventsArePublic()
 
-  console.log(`Product optimization gates passed (${passed.length} artifact gates, ${viewportCoverage.length} viewport policies)`)
+  console.log(`Product optimization gates passed (${passed.length} artifact gates, ${viewportCoverage.length} viewport policies, ${dynamicDecisionPagePaths.length} dynamic decision pages)`)
 }
 
 main()

@@ -7,6 +7,9 @@ import { buildPageMetadata, buildIntentMetadataDescription } from '@/lib/metadat
 import { getRequestLocale } from '@/lib/request-locale'
 import { getArticleBySlug } from '@/lib/site-data'
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const article = await getArticleBySlug((await params).slug)
   if (!article || article.type !== 'review') {
