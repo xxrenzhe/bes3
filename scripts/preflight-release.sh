@@ -26,6 +26,7 @@ run_step "runtime env validation" node scripts/check-runtime-env.js "$ENV_FILE"
 run_step "dependency audit governance" npm run ops:check-dependency-audit
 run_step "purchase decision behavior" npm run planv2:check-purchase-decision
 run_step "planv2 business coverage" npm run planv2:check-business
+run_step "product optimization gates" npm run product:optimization-gates
 run_step "planv2 seo evidence surface" npm run hardcore:check-planv2-seo
 run_step "pSEO recommendation quality gate" npm run pseo:check-recommendation-quality
 run_step "commercial loop integration" npm run commercial-loop:check

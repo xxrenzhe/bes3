@@ -514,6 +514,52 @@ const checks: PlanDocCheck[] = [
         ]
       }
     ]
+  },
+  {
+    doc: '14. Proactive product optimization and conversion gates',
+    requirement: 'Bes3 has an executable proactive optimization mechanism that catches viewport, CTA, affiliate handoff, SEO/GEO, and release preflight regressions before users report them.',
+    artifacts: [
+      {
+        label: 'Proactive optimization policy',
+        filePath: 'docs/planv2/14.Bes3 主动产品优化与转化门禁机制 (Proactive Product Optimization & Conversion Gates).md',
+        required: [
+          'Buy-ready CTA visibility',
+          'Valid affiliate handoff',
+          '390x844',
+          '1024x768',
+          'SEO/GEO',
+          'npm run product:optimization-gates'
+        ]
+      },
+      {
+        label: 'Executable product optimization gates',
+        filePath: 'scripts/check-product-optimization-gates.ts',
+        required: [
+          'Product optimization gates passed',
+          'checkViewportPolicy',
+          'checkProductPageOrdering',
+          'checkPurchaseCardOrdering',
+          'checkReleaseGateIsBeforeBuild',
+          'order-first overflow-hidden',
+          'product image must not be forced ahead of decision content'
+        ]
+      },
+      {
+        label: 'Release preflight product gate',
+        filePath: 'scripts/preflight-release.sh',
+        required: [
+          'product optimization gates',
+          'npm run product:optimization-gates'
+        ]
+      },
+      {
+        label: 'Product optimization npm script',
+        filePath: 'package.json',
+        required: [
+          '"product:optimization-gates": "tsx scripts/check-product-optimization-gates.ts"'
+        ]
+      }
+    ]
   }
 ]
 
@@ -542,7 +588,8 @@ const expectedScripts = [
   'ops:check-env:local',
   'ops:smoke-e2e',
   'ops:browser-e2e',
-  'planv2:check-business'
+  'planv2:check-business',
+  'product:optimization-gates'
 ]
 for (const scriptName of expectedScripts) {
   if (!packageJson.scripts?.[scriptName]) failures.push(`package.json: missing script ${scriptName}`)
