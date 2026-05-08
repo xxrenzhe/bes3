@@ -123,7 +123,7 @@ async function main() {
     const routePath = withCacheBust(`/products/${productSlug}`)
     const { body } = await fetchText(routePath)
     requireExcludes(body, ['NEXT_HTTP_ERROR_FALLBACK;404'])
-    requireIncludes(body, ['LOMON', 'Product Brief', 'Current offer', 'Open machine payload'])
+    requireIncludes(body, ['LOMON', 'Should you buy it?', 'Current offer', 'Open machine payload'])
     if (!/Check (current )?price|merchant|Merchant|Buy Signals|Open Commerce/i.test(body)) {
       throw new Error('product page is missing merchant or buying CTA copy')
     }

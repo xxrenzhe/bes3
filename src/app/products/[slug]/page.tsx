@@ -92,7 +92,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
           buildProductAggregateSchema({
             path,
             name: product.productName,
-            description: product.description || `${product.productName} product brief from Bes3.`,
+            description: product.description || `${product.productName} buying decision with offer, price, and buyer-fit context from Bes3.`,
             image: product.heroImageUrl,
             ratingValue: product.rating,
             reviewCount: product.reviewCount,
@@ -199,6 +199,20 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               ))}
             </div>
           </div>
+          <div className="rounded-md border border-border bg-white p-6 lg:col-span-2">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Open machine payload</p>
+            <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
+              AI crawlers and verification tools can read the same decision readiness, offer, price, and product-fact payload used by this page.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-3">
+              <Link href={`/api/open/commerce/products/${product.id}`} className="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
+                Open product JSON
+              </Link>
+              <Link href={`/api/open/commerce/products/${product.id}/offers`} className="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
+                Open offer JSON
+              </Link>
+            </div>
+          </div>
         </div>
       </section>
     </PublicShell>
@@ -212,10 +226,10 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
     const commerceProduct = await getOpenCommerceProductBySlug(slug)
     if (commerceProduct) {
       return buildPageMetadata({
-        title: `${commerceProduct.productName} Product Brief`,
+        title: `Should You Buy ${commerceProduct.productName}?`,
         description: buildIntentMetadataDescription({
           title: commerceProduct.productName,
-          description: commerceProduct.description || `${commerceProduct.productName} product brief with offer, price, and buyer-fit context.`,
+          description: commerceProduct.description || `${commerceProduct.productName} buying decision with offer, price, and buyer-fit context.`,
           pageType: 'product'
         }),
         path: `/products/${commerceProduct.slug}`,
@@ -227,7 +241,8 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
           commerceProduct.productName,
           commerceProduct.brand || '',
           commerceProduct.category || '',
-          'product brief',
+          'should you buy',
+          'buying decision',
           'price check'
         ].filter(Boolean)
       })
