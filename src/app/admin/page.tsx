@@ -105,6 +105,11 @@ export default async function AdminDashboardPage() {
 
   const funnelCards = [
     {
+      label: '购买卡曝光',
+      value: decisionFunnel.purchaseDecisionViewVisitors,
+      description: `${decisionFunnel.purchaseDecisionViewEvents} 次 purchase decision view`
+    },
+    {
       label: '收藏访客',
       value: decisionFunnel.shortlistVisitors,
       description: `${decisionFunnel.lookbackDays} 天内 ${decisionFunnel.shortlistEvents} 次收藏动作`
@@ -127,6 +132,11 @@ export default async function AdminDashboardPage() {
   ]
 
   const profitabilityCards = [
+    {
+      label: 'buy-ready 有效 CTR',
+      value: `${decisionFunnel.buyReadyValidAffiliateCtr}%`,
+      description: `${decisionFunnel.buyReadyMerchantExitEvents} 次 buy-ready 跳转 / ${decisionFunnel.buyReadyDecisionViewEvents} 次 buy-ready 曝光。`
+    },
     {
       label: '证据跳转',
       value: profitabilityKpis.evidenceBackedOutboundClicks,
@@ -232,9 +242,9 @@ export default async function AdminDashboardPage() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div>
             <p className="text-overline font-semibold text-primary">盈利质量 KPI</p>
-            <h2 className="card-title mt-1">北极星是 evidence-backed outbound clicks</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
-              这里不看虚荣流量，优先看有证据、有购买路径、能被归因的商家跳转，以及高分但无法变现的缺口。
+          <h2 className="card-title mt-1">北极星是 evidence-backed outbound clicks</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              这里不看虚荣流量，优先看 buy-ready 页面有效推广点击率、有证据购买路径、能被归因的商家跳转，以及高分但无法变现的缺口。
             </p>
           </div>
           <StatusBadge value={profitabilityKpis.highScoreProductsMissingAffiliatePath === 0 ? 'configured' : 'partial'} />
@@ -270,16 +280,16 @@ export default async function AdminDashboardPage() {
           </div>
           <div className="mt-4 grid gap-3 sm:grid-cols-3">
             <div className="rounded-md bg-slate-950 p-3 text-white">
-              <p className="text-xs font-semibold text-blue-200">收藏到对比</p>
-              <p className="mt-1 text-xl font-bold">{formatPercent(decisionFunnel.shortlistToCompareRate)}</p>
+              <p className="text-xs font-semibold text-blue-200">buy-ready 有效 CTR</p>
+              <p className="mt-1 text-xl font-bold">{formatPercent(decisionFunnel.buyReadyValidAffiliateCtr)}</p>
             </div>
             <div className="rounded-md border bg-white p-3">
-              <p className="text-xs font-semibold text-slate-500">对比到跳转</p>
-              <p className="mt-1 text-xl font-bold text-slate-950">{formatPercent(decisionFunnel.compareToVerifiedMerchantRate)}</p>
+              <p className="text-xs font-semibold text-slate-500">购买卡曝光</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">{decisionFunnel.purchaseDecisionViewEvents}</p>
             </div>
             <div className="rounded-md border bg-white p-3">
-              <p className="text-xs font-semibold text-slate-500">助手影响对比</p>
-              <p className="mt-1 text-xl font-bold text-slate-950">{formatPercent(decisionFunnel.coachInfluencedCompareRate)}</p>
+              <p className="text-xs font-semibold text-slate-500">buy-ready 跳转</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">{decisionFunnel.buyReadyMerchantExitEvents}</p>
             </div>
           </div>
         </div>
@@ -301,6 +311,37 @@ export default async function AdminDashboardPage() {
               </div>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="rounded-lg border bg-card p-4 shadow-sm">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-widest text-blue-600">Commercial Command Center</p>
+            <h2 className="mt-2 text-xl font-black tracking-tight text-slate-950">先修复阻碍购买闭环的问题</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-muted-foreground">
+              队列按证据强度、评分和聚焦品类排序，优先处理高证据无链接、高意图无 CTA、无法进入 buy-ready 的商品。
+            </p>
+          </div>
+          <StatusBadge value={profitabilityKpis.commercialRepairQueue.length ? 'partial' : 'configured'} />
+        </div>
+        <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          {profitabilityKpis.commercialRepairQueue.length ? profitabilityKpis.commercialRepairQueue.slice(0, 6).map((item) => (
+            <Link key={`${item.productId}-${item.issueType}`} href={`/admin/products/${item.productId}`} className="rounded-md border bg-muted/40 p-4 transition-colors hover:border-primary hover:bg-white">
+              <p className="text-xs font-bold uppercase tracking-[0.18em] text-primary">{item.issueType.replace(/_/g, ' ')}</p>
+              <p className="mt-2 text-lg font-black text-slate-950">Product #{item.productId}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{item.categorySlug || 'unknown category'}</p>
+              <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold">
+                <span className="rounded-full bg-white px-2.5 py-1 text-slate-700">{item.evidenceCount} evidence</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-slate-700">{item.averageRatingScore == null ? 'no score' : `${item.averageRatingScore.toFixed(1)} avg score`}</span>
+                <span className="rounded-full bg-white px-2.5 py-1 text-slate-700">priority {Math.round(item.priorityScore)}</span>
+              </div>
+            </Link>
+          )) : (
+            <div className="rounded-md border border-dashed bg-muted/40 p-6 text-sm text-muted-foreground md:col-span-2 xl:col-span-3">
+              当前没有阻塞购买闭环的高优先级商业修复项。
+            </div>
+          )}
         </div>
       </section>
 

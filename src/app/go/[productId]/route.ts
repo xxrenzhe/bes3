@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getDatabase } from '@/lib/db'
 import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/decision-visitor'
 import { recordMerchantClick } from '@/lib/merchant-clicks'
-import { getCommissionableMerchantUrl, normalizeMerchantSource } from '@/lib/merchant-links'
+import { getCommissionableMerchantUrl, getMerchantExitContextFromSearchParams, normalizeMerchantSource } from '@/lib/merchant-links'
 import { toAbsoluteUrl } from '@/lib/site-url'
 
 function getFallbackPath(product: { slug: string | null } | null) {
@@ -72,11 +72,13 @@ export async function GET(
   }
 
   try {
+    const metadata = getMerchantExitContextFromSearchParams(request.nextUrl.searchParams)
     await recordMerchantClick({
       productId: product.id,
       visitorId: normalizeDecisionVisitorId(request.nextUrl.searchParams.get(DECISION_VISITOR_QUERY_PARAM)),
       source: normalizeMerchantSource(request.nextUrl.searchParams.get('source')),
       targetUrl: destination,
+      metadata,
       referer: request.headers.get('referer'),
       userAgent: request.headers.get('user-agent')
     })

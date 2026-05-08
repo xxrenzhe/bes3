@@ -836,6 +836,7 @@ const SQLITE_SCHEMA = [
       visitor_id TEXT,
       source TEXT NOT NULL DEFAULT 'site',
       target_url TEXT NOT NULL,
+      metadata_json TEXT,
       referer TEXT,
       user_agent TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
@@ -1631,10 +1632,12 @@ async function ensureNewsletterSubscriberSchema(db: DatabaseAdapter): Promise<vo
 }
 
 async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
+  const jsonType = db.type === 'postgres' ? 'JSONB' : 'TEXT'
   const timestampWithDefaultType = db.type === 'postgres' ? 'TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP' : 'TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP'
   await ensureColumn(db, 'merchant_click_events', 'visitor_id', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'source', "TEXT NOT NULL DEFAULT 'site'")
   await ensureColumn(db, 'merchant_click_events', 'target_url', 'TEXT')
+  await ensureColumn(db, 'merchant_click_events', 'metadata_json', jsonType)
   await ensureColumn(db, 'merchant_click_events', 'referer', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'user_agent', 'TEXT')
   await ensureColumn(db, 'merchant_click_events', 'created_at', timestampWithDefaultType)
@@ -1653,6 +1656,13 @@ async function ensureMerchantClickSchema(db: DatabaseAdapter): Promise<void> {
     'idx_merchant_click_events_visitor_created_at',
     'CREATE INDEX idx_merchant_click_events_visitor_created_at ON merchant_click_events (visitor_id, created_at)'
   )
+  if (db.type === 'postgres') {
+    await ensureIndex(
+      db,
+      'idx_merchant_click_events_metadata_json_gin',
+      'CREATE INDEX idx_merchant_click_events_metadata_json_gin ON merchant_click_events USING GIN (metadata_json)'
+    )
+  }
 }
 
 async function ensureLinkInspectorSchema(db: DatabaseAdapter): Promise<void> {

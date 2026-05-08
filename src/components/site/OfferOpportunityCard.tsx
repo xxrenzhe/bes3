@@ -1,10 +1,11 @@
 import Link from 'next/link'
+import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { getCategoryLabel, getFreshnessLabel } from '@/lib/editorial'
-import { buildMerchantExitPath } from '@/lib/merchant-links'
 import { buildNewsletterPath } from '@/lib/newsletter-path'
 import { buildOffersPath, type OfferOpportunity } from '@/lib/offers'
+import { buildCommercePurchaseDecision } from '@/lib/purchase-decision'
 import { toShortlistItem } from '@/lib/shortlist'
 import { formatPriceSnapshot } from '@/lib/utils'
 
@@ -21,6 +22,13 @@ export function OfferOpportunityCard({
   opportunity: OfferOpportunity
   source?: string
 }) {
+  const purchaseDecision = buildCommercePurchaseDecision(opportunity.product, {
+    pageType: 'deal',
+    trackingSource: source,
+    categoryHref: buildOffersPath(opportunity.product.category),
+    alternativeHref: buildOffersPath(opportunity.product.category),
+    userIntent: opportunity.signal.title
+  })
   const alertHref = buildNewsletterPath({
     intent: opportunity.product.category ? 'price-alert' : 'offers',
     category: opportunity.product.category || '',
@@ -130,12 +138,15 @@ export function OfferOpportunityCard({
 
         <ShortlistActionBar item={toShortlistItem(opportunity.product)} compact source={source} />
 
-        <Link
-          href={buildMerchantExitPath(opportunity.product.id, source)}
-          className="inline-flex min-h-[46px] items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground transition-transform hover:-translate-y-0.5"
-        >
-          Check current price
-        </Link>
+        <PrimaryCta
+          href={purchaseDecision.primaryActionHref}
+          label={purchaseDecision.primaryActionLabel}
+          productId={opportunity.product.id}
+          trackingSource={source}
+          trackingMetadata={purchaseDecision.metadata}
+          note="Affiliate disclosure stays attached to the store handoff."
+          trustBadge={`${purchaseDecision.stateLabel} · ${purchaseDecision.confidenceLine}`}
+        />
       </div>
     </article>
   )

@@ -1,7 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
-import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getHardcoreHome } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
@@ -10,12 +9,12 @@ import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Independent Product Ratings',
+    title: 'Bes3 Best Picks',
     description:
-      'Bes3 turns YouTube hardware teardowns into scenario-driven comparison matrices with consensus scores, source quotes, and price-value timing.',
+      'Bes3 turns evidence, price timing, and affiliate link health into direct buy, compare, wait, or skip decisions.',
     path: '/',
     locale: await getRequestLocale(),
-    keywords: ['hardware teardown reviews', 'real specs', 'Reddit consensus', 'product evidence matrix']
+    keywords: ['best picks', 'buying decisions', 'product reviews', 'best value deals']
   })
 }
 
@@ -40,8 +39,8 @@ export default async function HomePage() {
         data={[
           buildCollectionPageSchema({
             path: '/',
-            title: 'Independent Product Ratings',
-            description: 'Comparison pages built from hands-on review evidence.',
+            title: 'Bes3 Best Picks',
+            description: 'Buying decision pages built from evidence, price timing, and verified merchant paths.',
             items: home.categories.map((item) => ({
               name: item.category.name,
               path: `/categories/${item.category.slug}`
@@ -53,27 +52,39 @@ export default async function HomePage() {
       <section className="border-b border-border bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buyer-First Ratings</p>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buying Decisions</p>
             <h1 className="mt-5 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              Real testing insights for better buying decisions.
+              Know what to buy, compare, wait on, or skip.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Bes3 converts long-form video reviews, real buyer concerns, exact product matching, and price history into clearer comparisons for products that are hard to judge from specs alone.
+              Bes3 turns review evidence, current price context, risk checks, and verified merchant paths into one clear next action before you leave for a store.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/categories" className="rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                Browse categories
+              <Link href="/categories" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                Find Best Picks
               </Link>
-              <Link href="/deals" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
-                Check best value windows
+              <Link href="/deals" className="inline-flex min-h-[48px] items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
+                See Deals
               </Link>
+            </div>
+            <div className="mt-8 grid gap-3 sm:grid-cols-3">
+              {[
+                ['Evidence first', 'Creator evidence and buyer signals explain every recommendation.'],
+                ['Price aware', 'Deal pages distinguish buy windows from wait states.'],
+                ['Commission neutral', 'Affiliate availability never changes recommendation order.']
+              ].map(([title, note]) => (
+                <div key={title} className="rounded-2xl border border-border bg-slate-50 p-4">
+                  <p className="text-sm font-black text-foreground">{title}</p>
+                  <p className="mt-2 text-xs leading-6 text-muted-foreground">{note}</p>
+                </div>
+              ))}
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             {[
               ['Categories tracked', String(home.categories.length), 'Product areas where hands-on testing matters most.'],
-              ['Live comparisons', String(liveCategories), 'Categories with enough verified review coverage.'],
-              ['Review excerpts', String(evidenceCount), 'Source-backed quotes currently available.']
+              ['Buy-ready areas', String(liveCategories), 'Categories with enough coverage to start from a Top 3.'],
+              ['Evidence signals', String(evidenceCount), 'Source-backed facts behind the buying calls.']
             ].map(([label, value, note]) => (
               <div key={label} className="rounded-md border border-border bg-slate-50 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
@@ -88,27 +99,24 @@ export default async function HomePage() {
       <section className="border-b border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Pain-Point Selector</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Start From The Task</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
-              Start with the failure mode you actually care about.
+              Pick the page that matches your buying question.
             </h2>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-            {home.categories.slice(0, 8).flatMap((item) =>
-              item.coreTags.slice(0, 2).map((tag) => (
-                <Link
-                  key={`${item.category.slug}-${tag.slug}`}
-                  href={`/${item.category.slug}/best-${item.category.slug}-for-${tag.slug}`}
-                  className="rounded-md border border-border bg-white p-5 hover:border-primary"
-                >
-                  <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{item.category.name}</p>
-                  <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{tag.name}</h3>
-                  <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                    See which products handle {tag.name.toLowerCase()} best based on review evidence and price timing.
-                  </p>
-                </Link>
-              ))
-            )}
+            {[
+              ['Best Picks', '/categories', 'Start with the current Top 3 in a category.'],
+              ['Deals', '/deals', 'Find buy windows and price-watch states.'],
+              ['Reviews', '/reviews', 'Check whether a specific product is safe to buy.'],
+              ['Trust', '/trust', 'See how evidence, links, and commission neutrality work.']
+            ].map(([title, href, note]) => (
+              <Link key={href} href={href} className="rounded-md border border-border bg-white p-5 hover:border-primary">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Shopping path</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{title}</h3>
+                <p className="mt-3 text-sm leading-6 text-muted-foreground">{note}</p>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
@@ -139,8 +147,6 @@ export default async function HomePage() {
           </div>
         </div>
       </section>
-
-      <HardcoreEvidenceMatrix products={home.products.slice(0, 8)} />
 
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2">

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -7,6 +8,7 @@ import { ValueMap } from '@/components/site/ValueMap'
 import { HARDCORE_CATEGORIES, getHardcoreHome } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildValuePseoPath } from '@/lib/pseo'
+import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
@@ -23,6 +25,15 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default async function DealsPage() {
   const home = await getHardcoreHome()
+  const dealDecisions = home.bestValueProducts.slice(0, 3).map((product) =>
+    buildEvidencePurchaseDecision(product, {
+      pageType: 'deal',
+      trackingSource: 'deal-decision-card',
+      categoryHref: `/categories/${product.categorySlug}`,
+      alternativeHref: `/categories/${product.categorySlug}`,
+      userIntent: 'best current buy window'
+    })
+  )
   const faqEntries = [
     {
       question: 'How does Bes3 decide whether something is a deal?',
@@ -52,12 +63,12 @@ export default async function DealsPage() {
       />
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Price-Value Entry Point</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Buy Window</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Deals are meaningless without teardown scores.
+            The best deal is the one worth buying now.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The old offers hub is gone. Bes3 now treats price as one input inside a harder question: is this tested product cheap enough to buy right now?
+            Bes3 ranks deals by purchase readiness: evidence strength, current price, stock/link health, and whether a safer alternative is close.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {HARDCORE_CATEGORIES.slice(0, 6).map((category) => (
@@ -72,6 +83,18 @@ export default async function DealsPage() {
           </div>
         </div>
       </section>
+      {dealDecisions.length ? (
+        <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top buy windows</p>
+            <div className="mt-6 grid gap-5 lg:grid-cols-3">
+              {dealDecisions.map((decision) => (
+                <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
       <ValueMap products={home.products} />
       <HardcoreEvidenceMatrix products={home.bestValueProducts} emptyTitle="No value-ranked products are ready yet." />
       <section className="px-4 py-14 sm:px-6 lg:px-8">

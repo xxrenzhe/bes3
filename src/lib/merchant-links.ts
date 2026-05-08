@@ -2,6 +2,21 @@ import { DECISION_VISITOR_QUERY_PARAM, normalizeDecisionVisitorId } from '@/lib/
 
 const MAX_SOURCE_LENGTH = 80
 const PARTNERBOOST_HOSTS = new Set(['pboost.me', 'app.partnerboost.com'])
+const MERCHANT_CONTEXT_QUERY_PARAMS = {
+  pageType: 'pageType',
+  purchaseDecisionState: 'pdState',
+  priceStatus: 'priceStatus',
+  evidenceCount: 'evidenceCount',
+  ctaVariant: 'ctaVariant'
+} as const
+
+export interface MerchantExitContext {
+  pageType?: string | null
+  purchaseDecisionState?: string | null
+  priceStatus?: string | null
+  evidenceCount?: number | string | null
+  ctaVariant?: string | null
+}
 
 function parseUrl(value: string | null | undefined) {
   if (!value) return null
@@ -58,7 +73,27 @@ export function normalizeMerchantSource(source: string | null | undefined) {
   return normalized.slice(0, MAX_SOURCE_LENGTH) || 'site'
 }
 
-export function buildMerchantExitPath(productId: number, source: string, visitorId?: string | null, offerId?: number | null) {
+export function normalizeMerchantExitContext(context?: MerchantExitContext | Record<string, unknown> | null): MerchantExitContext | null {
+  if (!context) return null
+  const normalized: MerchantExitContext = {}
+  if (context.pageType) normalized.pageType = normalizeMerchantSource(String(context.pageType))
+  if (context.purchaseDecisionState) normalized.purchaseDecisionState = normalizeMerchantSource(String(context.purchaseDecisionState))
+  if (context.priceStatus) normalized.priceStatus = normalizeMerchantSource(String(context.priceStatus))
+  if (context.ctaVariant) normalized.ctaVariant = normalizeMerchantSource(String(context.ctaVariant))
+  const evidenceCount = Number(context.evidenceCount)
+  if (Number.isFinite(evidenceCount) && evidenceCount >= 0) {
+    normalized.evidenceCount = Math.round(evidenceCount)
+  }
+  return Object.keys(normalized).length ? normalized : null
+}
+
+export function buildMerchantExitPath(
+  productId: number,
+  source: string,
+  visitorId?: string | null,
+  offerId?: number | null,
+  context?: MerchantExitContext | null
+) {
   const params = new URLSearchParams({ source: normalizeMerchantSource(source) })
   const normalizedVisitorId = normalizeDecisionVisitorId(visitorId)
   if (normalizedVisitorId) {
@@ -67,7 +102,25 @@ export function buildMerchantExitPath(productId: number, source: string, visitor
   if (Number.isInteger(offerId) && Number(offerId) > 0) {
     params.set('offerId', String(offerId))
   }
+  const normalizedContext = normalizeMerchantExitContext(context)
+  if (normalizedContext?.pageType) params.set(MERCHANT_CONTEXT_QUERY_PARAMS.pageType, normalizedContext.pageType)
+  if (normalizedContext?.purchaseDecisionState) params.set(MERCHANT_CONTEXT_QUERY_PARAMS.purchaseDecisionState, normalizedContext.purchaseDecisionState)
+  if (normalizedContext?.priceStatus) params.set(MERCHANT_CONTEXT_QUERY_PARAMS.priceStatus, normalizedContext.priceStatus)
+  if (normalizedContext?.ctaVariant) params.set(MERCHANT_CONTEXT_QUERY_PARAMS.ctaVariant, normalizedContext.ctaVariant)
+  if (normalizedContext?.evidenceCount != null) {
+    params.set(MERCHANT_CONTEXT_QUERY_PARAMS.evidenceCount, String(normalizedContext.evidenceCount))
+  }
   return `/go/${productId}?${params.toString()}`
+}
+
+export function getMerchantExitContextFromSearchParams(searchParams: URLSearchParams): MerchantExitContext | null {
+  return normalizeMerchantExitContext({
+    pageType: searchParams.get(MERCHANT_CONTEXT_QUERY_PARAMS.pageType),
+    purchaseDecisionState: searchParams.get(MERCHANT_CONTEXT_QUERY_PARAMS.purchaseDecisionState),
+    priceStatus: searchParams.get(MERCHANT_CONTEXT_QUERY_PARAMS.priceStatus),
+    evidenceCount: searchParams.get(MERCHANT_CONTEXT_QUERY_PARAMS.evidenceCount),
+    ctaVariant: searchParams.get(MERCHANT_CONTEXT_QUERY_PARAMS.ctaVariant)
+  })
 }
 
 export function formatMerchantSource(source: string | null | undefined) {

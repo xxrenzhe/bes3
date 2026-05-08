@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound, redirect } from 'next/navigation'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { StructuredData } from '@/components/site/StructuredData'
@@ -8,6 +9,7 @@ import { getValueLandingPage } from '@/lib/hardcore'
 import { getPriceAlertLabel } from '@/lib/hardcore-ops'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildValuePseoPath, getValuePseoStaticParams, normalizeValuePseoSlug, parseValuePseoSlug } from '@/lib/pseo'
+import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 
@@ -32,6 +34,15 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const priceAlertPrefix = page.products.some((product) => getPriceAlertLabel(product.price.entryStatus, product.consensus.score5))
     ? '[Price Drop Alert] '
     : ''
+  const purchaseDecisions = page.products.slice(0, 3).map((product) =>
+    buildEvidencePurchaseDecision(product, {
+      pageType: 'deal',
+      trackingSource: 'deal-decision-card',
+      categoryHref: `/categories/${product.categorySlug}`,
+      alternativeHref: `/categories/${product.categorySlug}`,
+      userIntent: `${page.category.name} under $${page.priceLimit}`
+    })
+  )
 
   return buildPageMetadata({
     title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
@@ -56,6 +67,15 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
   const priceAlertPrefix = page.products.some((product) => getPriceAlertLabel(product.price.entryStatus, product.consensus.score5))
     ? '[Price Drop Alert] '
     : ''
+  const purchaseDecisions = page.products.slice(0, 3).map((product) =>
+    buildEvidencePurchaseDecision(product, {
+      pageType: 'deal',
+      trackingSource: 'deal-decision-card',
+      categoryHref: `/categories/${product.categorySlug}`,
+      alternativeHref: `/categories/${product.categorySlug}`,
+      userIntent: `${page.category.name} under $${page.priceLimit}`
+    })
+  )
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: 'Deals', path: '/deals' },
@@ -118,11 +138,21 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Best Value</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            {priceAlertPrefix}Best value {page.category.name} under ${page.priceLimit}.
+            {priceAlertPrefix}Should you buy {page.category.name} under ${page.priceLimit} right now?
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Formula: value score equals consensus score times 100 divided by current price. Pages stay unpublished until enough products have both review evidence and price history.
+            The first screen ranks by buying action, not formula curiosity: buy now, compare first, watch price, or skip.
           </p>
+        </div>
+      </section>
+      <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top 3 decision cards</p>
+          <div className="mt-6 grid gap-5 lg:grid-cols-3">
+            {purchaseDecisions.map((decision) => (
+              <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
+            ))}
+          </div>
         </div>
       </section>
       <HardcoreEvidenceMatrix products={page.products} emptyTitle={`Not enough ${page.category.name} under $${page.priceLimit} are fully scored yet.`} />

@@ -781,6 +781,7 @@ CREATE TABLE IF NOT EXISTS merchant_click_events (
       visitor_id TEXT,
       source TEXT NOT NULL DEFAULT 'site',
       target_url TEXT NOT NULL,
+      metadata_json TEXT,
       referer TEXT,
       user_agent TEXT,
       created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,

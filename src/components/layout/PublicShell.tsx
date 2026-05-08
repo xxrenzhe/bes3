@@ -10,12 +10,10 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const locale = await getRequestLocale()
   const displayPath = await getRequestDisplayPath()
   const navItems = [
-    { href: '/categories', label: 'Categories' },
-    { href: '/products', label: 'Evidence Matrix' },
-    { href: '/deals', label: 'Best Value' },
-    { href: '/data', label: 'Open Data' },
-    { href: '/trust', label: 'Trust' },
-    { href: '/about', label: 'About' }
+    { href: '/categories', label: 'Best Picks' },
+    { href: '/deals', label: 'Deals' },
+    { href: '/reviews', label: 'Reviews' },
+    { href: '/trust', label: 'Trust' }
   ]
 
   return (
@@ -87,15 +85,18 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
           </div>
           <nav aria-label="Explore" className="flex flex-col gap-3 text-sm text-slate-300">
-            <Link href={addLocaleToPath('/categories', locale)}>Categories</Link>
-            <Link href={addLocaleToPath('/products', locale)}>Evidence Matrix</Link>
-            <Link href={addLocaleToPath('/deals', locale)}>Best Value Lab</Link>
+            <Link href={addLocaleToPath('/categories', locale)}>Best Picks</Link>
+            <Link href={addLocaleToPath('/deals', locale)}>Deals</Link>
+            <Link href={addLocaleToPath('/reviews', locale)}>Reviews</Link>
             <Link href={addLocaleToPath('/site-map', locale)}>Sitemap</Link>
             <Link href={addLocaleToPath('/contact', locale)}>Contact</Link>
           </nav>
           <nav aria-label="Company" className="flex flex-col gap-3 text-sm text-slate-300">
-            <Link href={addLocaleToPath('/about', locale)}>About</Link>
             <Link href={addLocaleToPath('/trust', locale)}>Trust</Link>
+            <Link href={addLocaleToPath('/products', locale)}>Evidence Matrix</Link>
+            <Link href={addLocaleToPath('/data', locale)}>Open Data</Link>
+            <Link href={addLocaleToPath('/tools', locale)}>Tools</Link>
+            <Link href={addLocaleToPath('/about', locale)}>About</Link>
             <Link href={addLocaleToPath('/privacy', locale)}>Privacy</Link>
             <Link href={addLocaleToPath('/terms', locale)}>Terms</Link>
           </nav>

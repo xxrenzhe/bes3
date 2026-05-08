@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { SeoFaqSection } from '@/components/site/SeoFaqSection'
@@ -8,6 +9,7 @@ import { StructuredData } from '@/components/site/StructuredData'
 import { getMultiConstraintLandingPage, getScenarioLandingPage, listHardcoreTags } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { buildScenarioPseoPath, buildValuePseoPath, getScenarioPseoStaticParams } from '@/lib/pseo'
+import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getScenarioIndexEligibility } from '@/lib/recommendation-quality'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildCollectionPageSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
@@ -429,6 +431,16 @@ export default async function ScenarioLandingPage({
   const title = buildScenarioTitle({ categorySlug, categoryName, tagLabel, products, status })
   const bluf = buildBluf({ products, tagLabel, status })
   const recommended = currentPick(products)
+  const topDecisions = products.slice(0, 3).map((product, index) =>
+    buildEvidencePurchaseDecision(product, {
+      pageType: 'scenario',
+      trackingSource: 'scenario-decision-card',
+      categoryHref: `/categories/${categorySlug}`,
+      alternativeHref: `/categories/${categorySlug}`,
+      hasAlternatives: index > 0 || products.length > 1,
+      userIntent: tagLabel
+    })
+  )
   const breadcrumbItems = [
     { name: 'Home', path: '/' },
     { name: 'Categories', path: '/categories' },
@@ -547,6 +559,18 @@ export default async function ScenarioLandingPage({
           ) : null}
         </div>
       </section>
+      {topDecisions.length ? (
+        <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top buying decisions for this scenario</p>
+            <div className="mt-6 grid gap-5 lg:grid-cols-3">
+              {topDecisions.map((decision) => (
+                <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
+              ))}
+            </div>
+          </div>
+        </section>
+      ) : null}
       <AiRecommendationBox categoryName={categoryName} tagLabel={tagLabel} products={products} status={status} />
       <DecisionFitSection products={products} tagLabel={tagLabel} />
       <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the evidence threshold.`} isResearching={isResearching} />

@@ -163,6 +163,14 @@ export interface AdminDashboardSummary {
     focusCategoryProducts: number
     focusCategoryEvidenceProducts: number
     focusCategoryCommercialProducts: number
+    commercialRepairQueue: Array<{
+      productId: number
+      categorySlug: string | null
+      issueType: 'high_score_no_link' | 'high_evidence_no_review' | 'focus_category_no_link'
+      priorityScore: number
+      evidenceCount: number
+      averageRatingScore: number | null
+    }>
   }
   brandQuality: {
     trackedBrands: number
@@ -205,6 +213,13 @@ export interface AdminDashboardSummary {
       merchantIntentEvents: number
       verifiedMerchantVisitors: number
       verifiedMerchantEvents: number
+      purchaseDecisionViewVisitors: number
+      purchaseDecisionViewEvents: number
+      buyReadyDecisionViewVisitors: number
+      buyReadyDecisionViewEvents: number
+      buyReadyMerchantExitVisitors: number
+      buyReadyMerchantExitEvents: number
+      buyReadyValidAffiliateCtr: number
       shortlistToCompareRate: number
       compareToMerchantRate: number
       coachInfluencedCompareRate: number
@@ -2837,6 +2852,28 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
   const focusCategoryProducts = commercialEvidenceRows.filter((row) => focusCategorySlugs.has(String(row.category_slug || '')))
   const focusCategoryEvidenceProducts = focusCategoryProducts.filter((row) => Number(row.evidence_count || 0) > 0)
   const focusCategoryCommercialProducts = focusCategoryEvidenceProducts.filter(hasAffiliatePath)
+  const commercialRepairQueue = commercialEvidenceRows
+    .flatMap((row) => {
+      const evidenceCount = Number(row.evidence_count || 0)
+      const averageRatingScore = row.average_rating_score == null ? null : Number(row.average_rating_score)
+      const highScoreNoLink = averageRatingScore != null && averageRatingScore >= 4 && evidenceCount >= 3 && !hasAffiliatePath(row)
+      const focusNoLink = focusCategorySlugs.has(String(row.category_slug || '')) && evidenceCount > 0 && !hasAffiliatePath(row)
+      const highEvidenceNoReview = evidenceCount >= 3 && Number(publishedReviewPages?.count || 0) === 0
+      const issues: Array<'high_score_no_link' | 'high_evidence_no_review' | 'focus_category_no_link'> = []
+      if (highScoreNoLink) issues.push('high_score_no_link')
+      if (focusNoLink) issues.push('focus_category_no_link')
+      if (highEvidenceNoReview) issues.push('high_evidence_no_review')
+      return issues.map((issueType) => ({
+        productId: row.id,
+        categorySlug: row.category_slug,
+        issueType,
+        priorityScore: evidenceCount * 10 + (averageRatingScore || 0) * 8 + (focusCategorySlugs.has(String(row.category_slug || '')) ? 20 : 0),
+        evidenceCount,
+        averageRatingScore
+      }))
+    })
+    .sort((left, right) => right.priorityScore - left.priorityScore || right.evidenceCount - left.evidenceCount)
+    .slice(0, 10)
   const brandQualityRows = brands.map((brand) => {
     const hasPolicy = brandPolicySlugs.has(brand.slug)
     const compatibilityFactCount = compatibilityFactCounts.get(brand.slug) || 0
@@ -2917,7 +2954,8 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
       ).length,
       focusCategoryProducts: focusCategoryProducts.length,
       focusCategoryEvidenceProducts: focusCategoryEvidenceProducts.length,
-      focusCategoryCommercialProducts: focusCategoryCommercialProducts.length
+      focusCategoryCommercialProducts: focusCategoryCommercialProducts.length,
+      commercialRepairQueue
     },
     brandQuality: {
       trackedBrands: brands.length,
@@ -2956,6 +2994,13 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         merchantIntentEvents: decisionFunnel.merchantIntentClicks.events,
         verifiedMerchantVisitors: decisionFunnel.verifiedMerchantExits.visitors,
         verifiedMerchantEvents: decisionFunnel.verifiedMerchantExits.events,
+        purchaseDecisionViewVisitors: decisionFunnel.purchaseDecisionViews.visitors,
+        purchaseDecisionViewEvents: decisionFunnel.purchaseDecisionViews.events,
+        buyReadyDecisionViewVisitors: decisionFunnel.buyReadyDecisionViews.visitors,
+        buyReadyDecisionViewEvents: decisionFunnel.buyReadyDecisionViews.events,
+        buyReadyMerchantExitVisitors: decisionFunnel.buyReadyMerchantExits.visitors,
+        buyReadyMerchantExitEvents: decisionFunnel.buyReadyMerchantExits.events,
+        buyReadyValidAffiliateCtr: decisionFunnel.buyReadyValidAffiliateCtr,
         shortlistToCompareRate: decisionFunnel.shortlistToCompareRate,
         compareToMerchantRate: decisionFunnel.compareToMerchantRate,
         coachInfluencedCompareRate: decisionFunnel.coachInfluencedCompareRate,

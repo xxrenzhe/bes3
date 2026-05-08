@@ -10,6 +10,7 @@ export function PrimaryCta({
   note,
   productId,
   trackingSource = 'site',
+  trackingMetadata,
   trustBadge = 'Hand-tested by Alex | Ad-free independent review'
 }: {
   href?: string | null
@@ -17,9 +18,11 @@ export function PrimaryCta({
   note?: string
   productId?: number | null
   trackingSource?: string
+  trackingMetadata?: Record<string, unknown>
   trustBadge?: string
 }) {
   const [resolvedHref, setResolvedHref] = useState(href)
+  const metadataKey = JSON.stringify(trackingMetadata || null)
 
   useEffect(() => {
     if (!href) {
@@ -32,8 +35,8 @@ export function PrimaryCta({
       return
     }
 
-    setResolvedHref(buildTrackedMerchantExitPath(productId, trackingSource))
-  }, [href, productId, trackingSource])
+    setResolvedHref(buildTrackedMerchantExitPath(productId, trackingSource, null, trackingMetadata))
+  }, [href, productId, trackingSource, metadataKey, trackingMetadata])
 
   return (
     <div className="space-y-2">
@@ -48,7 +51,8 @@ export function PrimaryCta({
             trackDecisionEvent({
               eventType: 'merchant_cta_click',
               source: trackingSource,
-              productId
+              productId,
+              metadata: trackingMetadata
             })
           }}
           className="inline-flex min-h-[52px] items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-transform hover:-translate-y-0.5"

@@ -39,6 +39,7 @@ const COACH_PRIMARY_TYPES: DecisionEventType[] = ['decision_coach_primary_click'
 
 const COACH_SECONDARY_TYPES: DecisionEventType[] = ['decision_coach_secondary_click']
 
+const PURCHASE_DECISION_VIEW_TYPES: DecisionEventType[] = ['purchase_decision_view']
 const MERCHANT_INTENT_TYPES: DecisionEventType[] = ['merchant_cta_click', 'merchant_offer_select']
 const SHORTLIST_DECISION_COACH_SOURCE = normalizeMerchantSource('shortlist-decision-coach')
 const ASSISTANT_SESSION_TYPES: DecisionEventType[] = ['assistant_session_start']
@@ -78,12 +79,14 @@ type RecentDecisionEventRow = {
 type MerchantClickRow = {
   visitor_id: string | null
   source: string
+  metadata_json: string | null
   created_at: string | null
 }
 
 type AttributedMerchantClickRow = {
   visitor_id: string
   source: string
+  metadata: Record<string, unknown> | null
 }
 
 export interface DecisionEventCounter {
@@ -104,6 +107,10 @@ export interface DecisionFunnelSummary {
   coachCompareLoads: DecisionEventCounter
   merchantIntentClicks: DecisionEventCounter
   verifiedMerchantExits: DecisionEventCounter
+  purchaseDecisionViews: DecisionEventCounter
+  buyReadyDecisionViews: DecisionEventCounter
+  buyReadyMerchantExits: DecisionEventCounter
+  buyReadyValidAffiliateCtr: number
   shortlistToCompareRate: number
   compareToMerchantRate: number
   coachInfluencedCompareRate: number
@@ -228,6 +235,7 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     db.query<MerchantClickRow>(
       `
         SELECT visitor_id, source, created_at
+          , metadata_json
         FROM merchant_click_events
       `
     )
@@ -255,7 +263,8 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     })
     .map((row) => ({
       visitor_id: normalizeDecisionVisitorId(row.visitor_id),
-      source: normalizeMerchantSource(row.source)
+      source: normalizeMerchantSource(row.source),
+      metadata: parseMetadata(row.metadata_json)
     }))
     .filter((row): row is AttributedMerchantClickRow => Boolean(row.visitor_id))
 
@@ -270,8 +279,15 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
   const coachCompareLoads = buildVisitorCounter(
     recentRows.filter((row) => row.event_type === 'shortlist_compare_load' && row.source === SHORTLIST_DECISION_COACH_SOURCE)
   )
+  const purchaseDecisionViews = buildCounter(recentRows, PURCHASE_DECISION_VIEW_TYPES)
+  const buyReadyDecisionViews = buildVisitorCounter(
+    recentRows.filter((row) => row.event_type === 'purchase_decision_view' && row.metadata?.purchaseDecisionState === 'buy_now')
+  )
   const merchantIntentClicks = buildCounter(recentRows, MERCHANT_INTENT_TYPES)
   const verifiedMerchantExits = buildVisitorCounter(recentMerchantRows)
+  const buyReadyMerchantExits = buildVisitorCounter(
+    recentMerchantRows.filter((row) => row.metadata?.purchaseDecisionState === 'buy_now')
+  )
   const assistantSessions = buildCounter(recentRows, ASSISTANT_SESSION_TYPES)
   const assistantConstraints = buildCounter(recentRows, ASSISTANT_CONSTRAINT_TYPES)
   const assistantAccepts = buildCounter(recentRows, ASSISTANT_ACCEPT_TYPES)
@@ -329,6 +345,10 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     coachCompareLoads,
     merchantIntentClicks,
     verifiedMerchantExits,
+    purchaseDecisionViews,
+    buyReadyDecisionViews,
+    buyReadyMerchantExits,
+    buyReadyValidAffiliateCtr: toPercent(buyReadyMerchantExits.events, buyReadyDecisionViews.events),
     shortlistToCompareRate: toPercent(compareActivations.visitors, shortlistActivations.visitors),
     compareToMerchantRate: toPercent(merchantIntentClicks.visitors, compareActivations.visitors),
     coachInfluencedCompareRate: toPercent(coachCompareLoads.visitors, compareActivations.visitors),

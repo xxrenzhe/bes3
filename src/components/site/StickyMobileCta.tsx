@@ -11,6 +11,7 @@ export function StickyMobileCta({
   label = 'Check Current Price',
   productId,
   trackingSource = 'site',
+  trackingMetadata,
   triggerOffset = 520,
   eyebrow = 'Ready to buy?',
   trustBadge = 'Hand-tested by Alex | Ad-free independent review'
@@ -19,6 +20,7 @@ export function StickyMobileCta({
   label?: string
   productId?: number | null
   trackingSource?: string
+  trackingMetadata?: Record<string, unknown>
   triggerOffset?: number
   eyebrow?: string
   trustBadge?: string
@@ -26,6 +28,7 @@ export function StickyMobileCta({
   const [resolvedHref, setResolvedHref] = useState(href)
   const [isVisible, setIsVisible] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const metadataKey = JSON.stringify(trackingMetadata || null)
 
   useEffect(() => {
     if (!href) {
@@ -38,8 +41,8 @@ export function StickyMobileCta({
       return
     }
 
-    setResolvedHref(buildTrackedMerchantExitPath(productId, trackingSource))
-  }, [href, productId, trackingSource])
+    setResolvedHref(buildTrackedMerchantExitPath(productId, trackingSource, null, trackingMetadata))
+  }, [href, productId, trackingSource, metadataKey, trackingMetadata])
 
   useEffect(() => {
     if (typeof window === 'undefined' || !resolvedHref) return
@@ -95,7 +98,8 @@ export function StickyMobileCta({
             trackDecisionEvent({
               eventType: 'merchant_cta_click',
               source: trackingSource,
-              productId
+              productId,
+              metadata: trackingMetadata
             })
           }}
           className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10"

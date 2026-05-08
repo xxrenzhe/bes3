@@ -22,10 +22,10 @@ const responseBodyLimit = Number.parseInt(process.env.SMOKE_E2E_RESPONSE_BODY_LI
 
 const checks: SmokeCheck[] = [
   {
-    label: 'public home renders evidence positioning',
+    label: 'public home routes buyers to purchase tasks',
     path: '/',
     expectStatus: 200,
-    requiredText: ['Buyer-First Ratings', 'Real testing insights']
+    requiredText: ['Buying Decisions', 'Find Best Picks', 'See Deals']
   },
   {
     label: 'public product directory is accessible',

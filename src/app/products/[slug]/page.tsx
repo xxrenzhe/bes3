@@ -1,12 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReadinessCard } from '@/components/site/DecisionReadinessCard'
 import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { PriceAlertForm } from '@/components/site/PriceAlertForm'
 import { EvidenceFeedbackButtons } from '@/components/site/EvidenceFeedbackButtons'
-import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
 import { StructuredData } from '@/components/site/StructuredData'
 import { buildCommerceDecisionReadiness, buildEvidenceDecisionReadiness } from '@/lib/decision-readiness'
@@ -14,7 +14,8 @@ import { buildProductDecisionContent } from '@/lib/decision-content'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { formatHardcorePrice, getHardcoreProductBySlug, listHardcoreProducts } from '@/lib/hardcore'
 import { buildIntentMetadataDescription, buildPageMetadata } from '@/lib/metadata'
-import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { hasMerchantExitTarget } from '@/lib/merchant-links'
+import { buildCommercePurchaseDecision, buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
 import {
@@ -54,8 +55,13 @@ async function CommerceProductPage({ slug }: { slug: string }) {
   ])
   const bestOffer = product.bestOffer || offers[0] || null
   const path = `/products/${product.slug}`
-  const merchantHref = hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, 'product-detail') : null
   const decisionReadiness = buildCommerceDecisionReadiness(product)
+  const purchaseDecision = buildCommercePurchaseDecision(product, {
+    pageType: 'product',
+    trackingSource: 'product-decision-card',
+    categoryHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+    alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories'
+  })
   const decisionModules = buildProductDecisionContent(product, 'product', {
     nextStepTitle: 'Choose the next action from current evidence',
     nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
@@ -90,7 +96,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             image: product.heroImageUrl,
             ratingValue: product.rating,
             reviewCount: product.reviewCount,
-            offerUrl: merchantHref,
+            offerUrl: purchaseDecision.primaryActionHref?.startsWith('/go/') ? purchaseDecision.primaryActionHref : null,
             price: bestOffer?.priceAmount || product.priceAmount,
             priceCurrency: bestOffer?.priceCurrency || product.priceCurrency,
             availabilityStatus: bestOffer?.availabilityStatus
@@ -114,14 +120,19 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               <span>{getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)}</span>
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/products" className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
-                Back to products
-              </Link>
-              <Link href={`/api/open/commerce/products/${product.id}`} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
-                Open machine payload
-              </Link>
+              {purchaseDecision.proofBullets.slice(0, 3).map((item) => (
+                <span key={item} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground">
+                  {item}
+                </span>
+              ))}
             </div>
           </div>
+          <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <div className="rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current offer</p>
             <p className="mt-4 font-mono text-5xl font-black">
@@ -133,21 +144,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             <div className="mt-5">
               <DecisionReadinessCard readiness={decisionReadiness} />
             </div>
-            <div className="mt-6">
-              <PrimaryCta
-                href={merchantHref}
-                productId={product.id}
-                trackingSource="product-detail"
-                note="Verify live price, stock, shipping, and promotion terms on the merchant page before ordering."
-                trustBadge={`${product.evidenceCount} product facts tracked by Bes3`}
-              />
-            </div>
           </div>
-        </div>
-      </section>
-
-      <section className="px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr]">
           <PriceTrendSparkline
             priceHistory={priceHistory}
             fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
@@ -280,6 +277,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           item.affiliateStatus !== 'broken'
         )
         .slice(0, 3)
+  const purchaseDecision = buildEvidencePurchaseDecision(product, {
+    pageType: 'product',
+    trackingSource: 'product-decision-card',
+    categoryHref: `/categories/${product.categorySlug}`,
+    alternativeHref: monetizedAlternatives[0]?.slug ? `/products/${monetizedAlternatives[0].slug}` : `/categories/${product.categorySlug}`,
+    hasAlternatives: monetizedAlternatives.length > 0
+  })
   const faqEntries = [
     {
       question: 'Why might the score still be researching?',
@@ -318,7 +322,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.75fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Evidence Report</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Should you buy it?</p>
             <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
               {product.brand ? `${product.brand} ` : ''}
               {product.name}
@@ -330,11 +334,6 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <Link href={`/categories/${product.categorySlug}`} className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
                 Back to {product.categoryName}
               </Link>
-              {hasCommissionableExit ? (
-                <a href={`/go/${product.id}`} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                  Check price
-                </a>
-              ) : null}
             </div>
             {!hasCommissionableExit ? (
               <div className="mt-6 max-w-3xl rounded-md border border-amber-200 bg-amber-50 p-4">
@@ -345,6 +344,12 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             ) : null}
           </div>
+          <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+        </div>
+      </section>
+
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.72fr_1.28fr]">
           <div className="rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current verdict</p>
             <p className="mt-4 font-mono text-5xl font-black">{formatScore(product.consensus.score10)}</p>
@@ -367,6 +372,8 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             <div className="mt-5">
               <DecisionReadinessCard readiness={decisionReadiness} />
             </div>
+          </div>
+          <div>
             {!hasCommissionableExit ? (
               <div className="mt-5 rounded-md border border-border bg-white p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buying path</p>
@@ -376,7 +383,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                 {monetizedAlternatives.length ? (
                   <div className="mt-4 space-y-3">
                     <p className="text-sm font-semibold">Commissionable alternatives in {product.categoryName}</p>
-                    {monetizedAlternatives.map((alternative) => (
+                    {monetizedAlternatives.map((alternative) => {
+                      const alternativeDecision = buildEvidencePurchaseDecision(alternative, {
+                        pageType: 'product',
+                        trackingSource: 'product-decision-card',
+                        categoryHref: `/categories/${alternative.categorySlug}`,
+                        alternativeHref: `/categories/${alternative.categorySlug}`,
+                        userIntent: `alternative for ${product.name}`
+                      })
+                      const alternativeMerchantHref = alternativeDecision.primaryActionHref?.startsWith('/go/')
+                        ? alternativeDecision.primaryActionHref
+                        : null
+
+                      return (
                       <div key={alternative.id} className="rounded-md bg-slate-50 p-3">
                         <Link href={`/products/${alternative.slug}`} className="block text-sm font-semibold text-foreground hover:text-primary">
                           {alternative.brand ? `${alternative.brand} ` : ''}{alternative.name}
@@ -384,12 +403,14 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           <span>{formatScore(alternative.consensus.score10)}</span>
                           <span>{alternative.consensus.evidenceCount} evidence reports</span>
-                          <a href={`/go/${alternative.id}`} className="font-semibold text-primary hover:underline">
-                            Check affiliate price
-                          </a>
+                          {alternativeMerchantHref ? (
+                            <a href={alternativeMerchantHref} className="font-semibold text-primary hover:underline">
+                              {alternativeDecision.primaryActionLabel}
+                            </a>
+                          ) : null}
                         </div>
                       </div>
-                    ))}
+                    )})}
                   </div>
                 ) : (
                   <Link href={`/categories/${product.categorySlug}`} className="mt-4 inline-flex rounded-md border border-border px-3 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
@@ -402,7 +423,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         </div>
       </section>
 
-      <section className="px-4 py-14 sm:px-6 lg:px-8">
+      <section className="border-t border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Scenario Evidence</p>
           <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight">

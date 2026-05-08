@@ -41,7 +41,7 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Hardcore category roster', filePath: 'src/lib/hardcore-catalog.ts', required: ['HARDCORE_CATEGORIES', 'yard-pool-automation'] },
       { label: 'Commercial focus quality rules', filePath: 'src/lib/recommendation-quality.ts', required: ['COMMERCIAL_FOCUS_CATEGORY_SLUGS', 'PSEO_INDEX_QUALITY_GATE', 'auditCommissionBlindCandidateOrder'] },
-      { label: 'Public evidence homepage', filePath: 'src/app/page.tsx', required: ['HardcoreEvidenceMatrix', 'real buyer concerns'] },
+      { label: 'Buyer decision homepage', filePath: 'src/app/page.tsx', required: ['Find Best Picks', 'See Deals', 'Commission neutral'] },
       { label: 'Commercial loop monetization', filePath: 'src/lib/commercial-loop.ts', required: ['listAffiliateReviewCandidates', 'rel="nofollow sponsored"', '/go/${product.id}?source=evidence-review'] },
       { label: 'FTC and cookie shell', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
     ]
@@ -185,6 +185,249 @@ const checks: PlanDocCheck[] = [
       { label: 'Commercial loop live readiness', filePath: 'scripts/check-commercial-loop-live-readiness.ts', required: ['recommendedSampleSize', 'nextCommand', 'runCommercialLoop'] },
       { label: 'Affiliate redirect route', filePath: 'src/app/go/[productId]/route.ts', required: ['recordMerchantClick', 'NextResponse.redirect'] },
       { label: 'Review route', filePath: 'src/app/reviews/[slug]/page.tsx', required: ['getArticleBySlug', 'article.type !=='] }
+    ]
+  },
+  {
+    doc: '13. Purchase decision and affiliate conversion loop',
+    requirement: 'One-shot purchase decision conversion loop is implemented across decision logic, public pages, tracking, merchant handoff, and admin repair operations.',
+    artifacts: [
+      {
+        label: 'Purchase decision core',
+        filePath: 'src/lib/purchase-decision.ts',
+        required: [
+          'export type PurchaseDecisionState',
+          "'buy_now'",
+          "'compare_first'",
+          "'watch_price'",
+          "'skip'",
+          "'researching'",
+          "'link_unavailable'",
+          'export function buildPurchaseDecision',
+          'export function buildCommercePurchaseDecision',
+          'export function buildEvidencePurchaseDecision',
+          'buildDecisionMetadata',
+          'buildMerchantExitPath(input.id, context.trackingSource, context.visitorId, context.offerId, buildDecisionMetadata'
+        ]
+      },
+      {
+        label: 'Purchase decision card',
+        filePath: 'src/components/commerce/PurchaseDecisionCard.tsx',
+        required: [
+          'export function PurchaseDecisionCard',
+          'PurchaseDecisionTracker',
+          'PrimaryCta',
+          'StickyMobileCta',
+          'trackingMetadata={decision.metadata}',
+          'mobile-sticky-decision',
+          'Affiliate disclosure:',
+          'Commission availability never changes the evidence score or recommendation order.'
+        ]
+      },
+      {
+        label: 'Purchase decision view tracker',
+        filePath: 'src/components/commerce/PurchaseDecisionTracker.tsx',
+        required: [
+          "'use client'",
+          "eventType: 'purchase_decision_view'",
+          'trackDecisionEvent',
+          'metadata: decision.metadata'
+        ]
+      },
+      {
+        label: 'Primary nav convergence',
+        filePath: 'src/components/layout/PublicShell.tsx',
+        required: [
+          "{ href: '/categories', label: 'Best Picks' }",
+          "{ href: '/deals', label: 'Deals' }",
+          "{ href: '/reviews', label: 'Reviews' }",
+          "{ href: '/trust', label: 'Trust' }",
+          "aria-label=\"Primary navigation\""
+        ]
+      },
+      {
+        label: 'Product page decision-first hero',
+        filePath: 'src/app/products/[slug]/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildCommercePurchaseDecision',
+          'buildEvidencePurchaseDecision',
+          'Should you buy it?',
+          'DecisionReadinessCard'
+        ]
+      },
+      {
+        label: 'Homepage routes to purchase tasks',
+        filePath: 'src/app/page.tsx',
+        required: [
+          'Know what to buy, compare, wait on, or skip.',
+          'Find Best Picks',
+          'See Deals',
+          'Commission neutral'
+        ]
+      },
+      {
+        label: 'Review article decision card',
+        filePath: 'src/components/site/EditorialArticlePage.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildCommercePurchaseDecision',
+          "trackingSource: article.type === 'comparison' ? 'compare-decision-card' : 'review-decision-card'"
+        ]
+      },
+      {
+        label: 'Compare page default winner',
+        filePath: 'src/app/compare/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'ComparisonSummaryMatrix',
+          'Default winner',
+          'compare-decision-card',
+          'Start with a default winner'
+        ]
+      },
+      {
+        label: 'Deals index buy-window cards',
+        filePath: 'src/app/deals/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildEvidencePurchaseDecision',
+          'Buy Window',
+          'Top buy windows'
+        ]
+      },
+      {
+        label: 'Deal detail decision cards',
+        filePath: 'src/app/deals/[slug]/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildEvidencePurchaseDecision',
+          'Top 3 decision cards',
+          'buy now, compare first, watch price, or skip'
+        ]
+      },
+      {
+        label: 'Category top decisions',
+        filePath: 'src/app/categories/[slug]/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildEvidencePurchaseDecision',
+          'Top 3 decisions',
+          'Best Picks'
+        ]
+      },
+      {
+        label: 'Matrix row CTA decision metadata',
+        filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx',
+        required: [
+          'buildEvidencePurchaseDecision',
+          "pageType: 'matrix'",
+          "trackingSource: 'matrix-row-cta'",
+          'purchaseDecision.primaryActionHref'
+        ]
+      },
+      {
+        label: 'Scenario page top buying decisions',
+        filePath: 'src/app/[category]/[landing]/page.tsx',
+        required: [
+          'PurchaseDecisionCard',
+          'buildEvidencePurchaseDecision',
+          'Top buying decisions',
+          'scenario-decision-card'
+        ]
+      },
+      {
+        label: 'Merchant exit context serialization',
+        filePath: 'src/lib/merchant-links.ts',
+        required: [
+          'export interface MerchantExitContext',
+          "purchaseDecisionState: 'pdState'",
+          'normalizeMerchantExitContext',
+          'getMerchantExitContextFromSearchParams',
+          'params.set(MERCHANT_CONTEXT_QUERY_PARAMS.purchaseDecisionState'
+        ]
+      },
+      {
+        label: 'Merchant click metadata persistence',
+        filePath: 'src/lib/merchant-clicks.ts',
+        required: [
+          'metadata_json',
+          'serializeMetadata',
+          'normalizeMerchantExitContext',
+          'INSERT INTO merchant_click_events'
+        ]
+      },
+      {
+        label: 'Affiliate redirect records decision context',
+        filePath: 'src/app/go/[productId]/route.ts',
+        required: [
+          'getMerchantExitContextFromSearchParams',
+          'metadata,',
+          'recordMerchantClick',
+          'NextResponse.redirect'
+        ]
+      },
+      {
+        label: 'Decision event type for purchase views',
+        filePath: 'src/lib/decision-event-types.ts',
+        required: [
+          "'purchase_decision_view'",
+          "'merchant_cta_click'"
+        ]
+      },
+      {
+        label: 'Buy-ready CTR aggregation',
+        filePath: 'src/lib/decision-events.ts',
+        required: [
+          'PURCHASE_DECISION_VIEW_TYPES',
+          'buyReadyDecisionViews',
+          'buyReadyMerchantExits',
+          'buyReadyValidAffiliateCtr',
+          "row.metadata?.purchaseDecisionState === 'buy_now'",
+          'SELECT visitor_id, source, created_at'
+        ]
+      },
+      {
+        label: 'Merchant click schema metadata',
+        filePath: 'src/lib/db/schema.ts',
+        required: [
+          'CREATE TABLE IF NOT EXISTS merchant_click_events',
+          'metadata_json TEXT',
+          "await ensureColumn(db, 'merchant_click_events', 'metadata_json'",
+          'idx_merchant_click_events_metadata_json_gin'
+        ]
+      },
+      {
+        label: 'Admin commercial command center',
+        filePath: 'src/app/admin/page.tsx',
+        required: [
+          'Commercial Command Center',
+          'buy-ready 有效 CTR',
+          'purchaseDecisionViewEvents',
+          'commercialRepairQueue',
+          '阻碍购买闭环'
+        ]
+      },
+      {
+        label: 'Pipeline repair queue and buy-ready metrics',
+        filePath: 'src/lib/pipeline.ts',
+        required: [
+          'commercialRepairQueue',
+          'buyReadyValidAffiliateCtr',
+          'buyReadyDecisionViewEvents',
+          'buyReadyMerchantExitEvents',
+          'high_score_no_link'
+        ]
+      },
+      {
+        label: 'Commercial loop metadata integration check',
+        filePath: 'scripts/check-commercial-loop-integration.ts',
+        required: [
+          'purchase decision metadata reaches merchant click attribution',
+          'pdState=buy_now',
+          'decisionMetadataClick?.metadata_json',
+          'metadata?.purchaseDecisionState ==='
+        ]
+      }
     ]
   }
 ]

@@ -1,11 +1,13 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { HardcoreEvidenceMatrix } from '@/components/site/HardcoreEvidenceMatrix'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getHardcoreCategory } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
+import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
@@ -63,6 +65,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
     .map(([channelName, stats]) => ({ channelName, ...stats }))
     .sort((left, right) => right.maxRank - left.maxRank || right.evidenceCount - left.evidenceCount)
     .slice(0, 4)
+  const topDecisions = page.products.slice(0, 3).map((product, index) =>
+    buildEvidencePurchaseDecision(product, {
+      pageType: 'category',
+      trackingSource: 'category-decision-card',
+      categoryHref: `/categories/${page.category.slug}`,
+      alternativeHref: `/categories/${page.category.slug}`,
+      hasAlternatives: index > 0,
+      userIntent: `best ${page.category.name}`
+    })
+  )
 
   return (
     <PublicShell>
@@ -83,12 +95,12 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.8fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Category Matrix</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Best Picks</p>
             <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              {page.category.name}: tested against real pain points.
+              The {page.category.name} picks that matter first.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Official specs are stored as context, but the matrix is driven by creator tests: {page.category.metrics.join(', ')}.
+              Start with the current Top 3 buying decisions. Full evidence, source quality, and scenario matrices stay below for verification.
             </p>
           </div>
           <div className="rounded-md border border-border bg-white p-6">
@@ -100,6 +112,16 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 </Link>
               ))}
             </div>
+          </div>
+        </div>
+      </section>
+      <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top 3 decisions</p>
+          <div className="mt-6 grid gap-5 lg:grid-cols-3">
+            {topDecisions.map((decision) => (
+              <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
+            ))}
           </div>
         </div>
       </section>

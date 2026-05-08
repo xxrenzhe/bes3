@@ -1,9 +1,10 @@
 import Link from 'next/link'
+import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { StructuredData } from '@/components/site/StructuredData'
 import { getArticlePath } from '@/lib/article-path'
 import { prepareEditorialHtmlWithToc } from '@/lib/editorial-html'
-import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { buildCommercePurchaseDecision } from '@/lib/purchase-decision'
 import { buildArticleSchema, buildBreadcrumbSchema, buildProductSchema, buildReviewSchema } from '@/lib/structured-data'
 import type { ArticleRecord } from '@/lib/site-data'
 
@@ -23,6 +24,15 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
   const product = article.product
   const description = getDescription(article)
   const label = getArticleLabel(article.type)
+  const purchaseDecision = product
+    ? buildCommercePurchaseDecision(product, {
+        pageType: article.type === 'comparison' ? 'compare' : 'review',
+        trackingSource: article.type === 'comparison' ? 'compare-decision-card' : 'review-decision-card',
+        categoryHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+        alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+        userIntent: article.keyword || article.title
+      })
+    : null
   const structuredData = [
     buildBreadcrumbSchema(path, [
       { name: 'Home', path: '/' },
@@ -62,14 +72,24 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
                     View evidence report
                   </Link>
                 ) : null}
-                {product && hasMerchantExitTarget(product) ? (
-                  <a href={buildMerchantExitPath(product.id, 'editorial-article')} className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground">
-                    Check price
-                  </a>
-                ) : null}
               </div>
             </div>
-            <aside className="rounded-md border border-border bg-slate-50 p-6">
+            <aside>
+              {purchaseDecision ? (
+                <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+              ) : (
+                <div className="rounded-md border border-border bg-slate-50 p-6">
+                  <p className="text-xs font-bold uppercase text-muted-foreground">Decision snapshot</p>
+                  <p className="mt-4 text-sm leading-7 text-muted-foreground">This article is published before a full product rating page is ready.</p>
+                </div>
+              )}
+            </aside>
+          </div>
+        </section>
+
+        <section className="border-b border-border bg-slate-50 px-4 py-10 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
+            <div className="rounded-md border border-border bg-white p-6">
               <p className="text-xs font-bold uppercase text-muted-foreground">Decision snapshot</p>
               <dl className="mt-5 space-y-4 text-sm">
                 <div>
@@ -111,7 +131,7 @@ export function EditorialArticlePage({ article }: { article: ArticleRecord }) {
                   </div>
                 )}
               </dl>
-            </aside>
+            </div>
           </div>
         </section>
 

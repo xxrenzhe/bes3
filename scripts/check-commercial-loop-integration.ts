@@ -456,9 +456,10 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
     source: string
     visitor_id: string | null
     target_url: string | null
+    metadata_json: string | null
   }>(
     `
-      SELECT id, source, visitor_id, target_url
+      SELECT id, source, visitor_id, target_url, metadata_json
       FROM merchant_click_events
       WHERE product_id = ?
       ORDER BY id DESC
@@ -466,6 +467,37 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
     `,
     [fixture.productId]
   )
+  const decisionMetadataResponse = await merchantExitRoute.GET(
+    new NextRequest(
+      `http://localhost:3000/go/${fixture.productId}?source=product-decision-card&visitor=commercial-loop-pd-visitor&pageType=product&pdState=buy_now&priceStatus=great-value&evidenceCount=7&ctaVariant=buy-now-product`,
+      {
+        headers: {
+          referer: `http://localhost:3000/products/aquaproof-wall-climb-pool-robot`,
+          'user-agent': 'Bes3CommercialLoopIntegration/1.0'
+        }
+      }
+    ),
+    { params: Promise.resolve({ productId: String(fixture.productId) }) }
+  )
+  const decisionMetadataClick = await db.queryOne<{
+    id: number
+    source: string
+    visitor_id: string | null
+    target_url: string | null
+    metadata_json: string | null
+  }>(
+    `
+      SELECT id, source, visitor_id, target_url, metadata_json
+      FROM merchant_click_events
+      WHERE product_id = ? AND visitor_id = ?
+      ORDER BY id DESC
+      LIMIT 1
+    `,
+    [fixture.productId, 'commercial-loop-pd-visitor']
+  )
+  const metadata = decisionMetadataClick?.metadata_json
+    ? JSON.parse(decisionMetadataClick.metadata_json) as Record<string, unknown>
+    : null
 
   return [
     {
@@ -589,6 +621,20 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
           merchantClick.target_url === 'https://pboost.me/commercial-loop-test'
       ),
       detail: merchantClick ? `${merchantClick.source} -> ${merchantClick.target_url}` : 'missing merchant click'
+    },
+    {
+      label: 'purchase decision metadata reaches merchant click attribution',
+      ok: Boolean(
+        decisionMetadataResponse.status === 307 &&
+          decisionMetadataClick?.source === 'product-decision-card' &&
+          decisionMetadataClick.visitor_id === 'commercial-loop-pd-visitor' &&
+          metadata?.pageType === 'product' &&
+          metadata?.purchaseDecisionState === 'buy_now' &&
+          metadata?.priceStatus === 'great-value' &&
+          metadata?.evidenceCount === 7 &&
+          metadata?.ctaVariant === 'buy-now-product'
+      ),
+      detail: decisionMetadataClick?.metadata_json || 'missing purchase decision metadata'
     }
   ]
 }

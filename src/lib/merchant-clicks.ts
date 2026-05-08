@@ -1,12 +1,20 @@
 import { getDatabase } from '@/lib/db'
 import { normalizeDecisionVisitorId } from '@/lib/decision-visitor'
-import { normalizeMerchantSource } from '@/lib/merchant-links'
+import { normalizeMerchantExitContext, normalizeMerchantSource, type MerchantExitContext } from '@/lib/merchant-links'
+
+function serializeMetadata(metadata?: Record<string, unknown> | MerchantExitContext | null) {
+  if (!metadata) return null
+  const normalized = normalizeMerchantExitContext(metadata as MerchantExitContext)
+  if (!normalized) return null
+  return JSON.stringify(normalized)
+}
 
 export async function recordMerchantClick({
   productId,
   visitorId,
   source,
   targetUrl,
+  metadata,
   referer,
   userAgent
 }: {
@@ -14,20 +22,22 @@ export async function recordMerchantClick({
   visitorId?: string | null
   source: string
   targetUrl: string
+  metadata?: Record<string, unknown> | MerchantExitContext | null
   referer?: string | null
   userAgent?: string | null
 }) {
   const db = await getDatabase()
   await db.exec(
     `
-      INSERT INTO merchant_click_events (product_id, visitor_id, source, target_url, referer, user_agent)
-      VALUES (?, ?, ?, ?, ?, ?)
+      INSERT INTO merchant_click_events (product_id, visitor_id, source, target_url, metadata_json, referer, user_agent)
+      VALUES (?, ?, ?, ?, ?, ?, ?)
     `,
     [
       productId,
       normalizeDecisionVisitorId(visitorId) || null,
       normalizeMerchantSource(source),
       targetUrl,
+      serializeMetadata(metadata),
       referer || null,
       userAgent || null
     ]

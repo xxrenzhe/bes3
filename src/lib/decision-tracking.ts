@@ -1,5 +1,5 @@
 import { type DecisionEventType } from '@/lib/decision-event-types'
-import { buildMerchantExitPath, normalizeMerchantSource } from '@/lib/merchant-links'
+import { buildMerchantExitPath, normalizeMerchantSource, type MerchantExitContext } from '@/lib/merchant-links'
 
 const DECISION_VISITOR_ID_KEY = 'bes3-decision-visitor-id'
 
@@ -33,8 +33,8 @@ export function getDecisionVisitorId() {
   }
 }
 
-export function buildTrackedMerchantExitPath(productId: number, source: string, offerId?: number | null) {
-  return buildMerchantExitPath(productId, source, getDecisionVisitorId(), offerId)
+export function buildTrackedMerchantExitPath(productId: number, source: string, offerId?: number | null, context?: MerchantExitContext | null) {
+  return buildMerchantExitPath(productId, source, getDecisionVisitorId(), offerId, context)
 }
 
 export function trackDecisionEvent({
