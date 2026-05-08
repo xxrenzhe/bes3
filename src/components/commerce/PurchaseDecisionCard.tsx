@@ -64,13 +64,63 @@ export function PurchaseDecisionCard({
 }) {
   const styles = STATE_STYLES[decision.state]
   const isPrimaryMerchant = isMerchantHref(decision.primaryActionHref)
+  const summary = <p className={cn('text-sm text-muted-foreground', compact ? 'mt-4 border-t border-white/80 pt-3 leading-6' : 'mt-3 leading-7')}>{decision.summary}</p>
+  const priceConfidence = (
+    <div className={cn('grid gap-3 rounded-2xl border border-white/80 bg-white/80 text-sm', compact ? 'mt-4 grid-cols-2 p-3' : 'mt-5 p-4 sm:grid-cols-2')}>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Current price</p>
+        <p className={cn('mt-1 font-mono font-black text-foreground', compact ? 'text-lg' : 'text-xl')}>{decision.priceLine}</p>
+      </div>
+      <div>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Confidence</p>
+        <p className="mt-1 font-semibold text-foreground">{decision.confidenceLine}</p>
+      </div>
+    </div>
+  )
+  const primaryAction = (
+    <div className={cn('flex flex-wrap items-center gap-3', compact ? 'mt-4' : 'mt-6')}>
+      {isPrimaryMerchant ? (
+        <PrimaryCta
+          href={decision.primaryActionHref}
+          label={decision.primaryActionLabel}
+          productId={decision.productId}
+          trackingSource={decision.trackingSource}
+          trackingMetadata={decision.metadata}
+          note="Bes3 may earn from qualifying purchases at no extra cost to you."
+          trustBadge={`${decision.evidenceCount} evidence signal${decision.evidenceCount === 1 ? '' : 's'} checked before this CTA`}
+          buttonClassName={compact ? 'w-full' : undefined}
+          showAffiliateDisclosure={!compact}
+        />
+      ) : (
+        <PurchaseDecisionActionLink
+          decision={decision}
+          className={cn(
+            'inline-flex min-h-[52px] items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+            compact ? 'w-full' : '',
+            styles.action
+          )}
+        />
+      )}
+      {decision.secondaryActionHref ? (
+        <Link
+          href={decision.secondaryActionHref}
+          className={cn(
+            'inline-flex min-h-[44px] items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline',
+            compact ? 'w-full justify-center' : ''
+          )}
+        >
+          {decision.secondaryActionLabel}
+        </Link>
+      ) : null}
+    </div>
+  )
 
   return (
     <section
       aria-labelledby={`purchase-decision-${decision.productId}`}
       className={cn(
         'rounded-[1.75rem] border shadow-[0_22px_70px_-45px_rgba(15,23,42,0.55)]',
-        compact ? 'p-5 sm:p-6' : 'p-6',
+        compact ? 'p-4 sm:p-5' : 'p-6',
         styles.card,
         className
       )}
@@ -88,69 +138,59 @@ export function PurchaseDecisionCard({
         id={`purchase-decision-${decision.productId}`}
         className={cn(
           'mt-5 font-[var(--font-display)] font-black tracking-tight',
-          compact ? 'text-2xl sm:text-3xl' : 'text-3xl',
+          compact ? 'text-2xl leading-tight' : 'text-3xl',
           styles.accent
         )}
       >
         {decision.headline}
       </h2>
-      <p className="mt-3 text-sm leading-7 text-muted-foreground">{decision.summary}</p>
+      {compact ? (
+        <>
+          {priceConfidence}
+          {primaryAction}
+          {summary}
+        </>
+      ) : (
+        <>
+          {summary}
+          {priceConfidence}
+          {primaryAction}
+        </>
+      )}
 
-      <div className={cn('mt-5 grid gap-3 rounded-2xl border border-white/80 bg-white/80 p-4 text-sm', compact ? 'grid-cols-2' : 'sm:grid-cols-2')}>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Current price</p>
-          <p className="mt-1 font-mono text-xl font-black text-foreground">{decision.priceLine}</p>
+      {compact ? (
+        <div className="mt-4 space-y-3">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
+            <ul className="mt-2 space-y-2 text-sm leading-6 text-foreground">
+              {decision.proofBullets.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+          <details className="rounded-2xl border border-white/80 bg-white/60 px-4 py-3">
+            <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
+              Risks to check
+            </summary>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+              {decision.riskBullets.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </details>
         </div>
-        <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Confidence</p>
-          <p className="mt-1 font-semibold text-foreground">{decision.confidenceLine}</p>
+      ) : (
+        <div className="mt-6 grid gap-4 md:grid-cols-2">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground">
+              {decision.proofBullets.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Risks to check</p>
+            <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
+              {decision.riskBullets.map((item) => <li key={item}>{item}</li>)}
+            </ul>
+          </div>
         </div>
-      </div>
-
-      <div className="mt-6 flex flex-wrap items-center gap-3">
-        {isPrimaryMerchant ? (
-          <PrimaryCta
-            href={decision.primaryActionHref}
-            label={decision.primaryActionLabel}
-            productId={decision.productId}
-            trackingSource={decision.trackingSource}
-            trackingMetadata={decision.metadata}
-            note="Bes3 may earn from qualifying purchases at no extra cost to you."
-            trustBadge={`${decision.evidenceCount} evidence signal${decision.evidenceCount === 1 ? '' : 's'} checked before this CTA`}
-            buttonClassName={compact ? 'w-full sm:w-auto' : undefined}
-            showAffiliateDisclosure={!compact}
-          />
-        ) : (
-          <PurchaseDecisionActionLink
-            decision={decision}
-            className={cn(
-              'inline-flex min-h-[52px] items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
-              compact ? 'w-full sm:w-auto' : '',
-              styles.action
-            )}
-          />
-        )}
-        {decision.secondaryActionHref ? (
-          <Link href={decision.secondaryActionHref} className="inline-flex min-h-[44px] items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline">
-            {decision.secondaryActionLabel}
-          </Link>
-        ) : null}
-      </div>
-
-      <div className={cn('mt-6 grid gap-4', compact ? 'md:grid-cols-1 xl:grid-cols-2' : 'md:grid-cols-2')}>
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
-          <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground">
-            {decision.proofBullets.map((item) => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Risks to check</p>
-          <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
-            {decision.riskBullets.map((item) => <li key={item}>{item}</li>)}
-          </ul>
-        </div>
-      </div>
+      )}
 
       {!compact ? (
         <p className="mt-5 border-t border-white/80 pt-4 text-xs leading-6 text-muted-foreground">
