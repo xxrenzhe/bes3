@@ -37,6 +37,17 @@ function buildProductPriceContext(product?: ProductRecord | null) {
   return `Current listed price is ${formatPriceSnapshot(product.priceAmount, product.priceCurrency || 'USD')}.`
 }
 
+function buildCompactProductName(product?: ProductRecord | null) {
+  if (!product) return 'This product'
+
+  const model = product.productModel || product.modelNumber || product.productType
+  if (product.brand && model) return `${product.brand} ${model}`.trim()
+  if (product.brand && product.productType) return `${product.brand} ${product.productType}`.trim()
+
+  const words = product.productName.split(/\s+/).filter(Boolean)
+  return words.length > 8 ? `${words.slice(0, 8).join(' ')}...` : product.productName
+}
+
 export function buildProductDecisionContent(
   product?: ProductRecord | null,
   articleType: 'review' | 'comparison' | 'product' = 'product',
@@ -46,6 +57,7 @@ export function buildProductDecisionContent(
   }
 ): DecisionContentModule[] {
   const productName = product?.productName || 'This product'
+  const compactProductName = buildCompactProductName(product)
   const categoryLabel = getCategoryLabel(product?.category)
   const reviewHighlights = compactItems(product?.reviewHighlights || [], 3)
   const confidenceSignals = compactItems(buildConfidenceSignals(product), 3)
@@ -59,7 +71,7 @@ export function buildProductDecisionContent(
     {
       id: 'takeaways',
       eyebrow: 'Takeaways',
-      title: `${productName} in one short pass`,
+      title: `${compactProductName} in one short pass`,
       items: compactItems(
         [
           ...nonPriceConfidenceSignals,
@@ -72,11 +84,11 @@ export function buildProductDecisionContent(
     {
       id: 'buyer-fit',
       eyebrow: 'Buyer fit',
-      title: `Who this ${categoryLabel} pick suits`,
+      title: 'Buy if this matches you',
       items: compactItems(
         [
           bestFor,
-          product ? `${productName} already has enough signal to act as a serious ${categoryLabel} finalist.` : null
+          product ? `Treat it as a serious ${categoryLabel} finalist if the live offer and fit notes match your use case.` : null
         ],
         2
       )
@@ -84,7 +96,7 @@ export function buildProductDecisionContent(
     {
       id: 'watch-outs',
       eyebrow: 'Watch-outs',
-      title: 'What should still slow the decision down',
+      title: 'Skip or compare if',
       items: compactItems(
         [
           notFor,
@@ -97,7 +109,7 @@ export function buildProductDecisionContent(
     {
       id: 'next-step',
       eyebrow: 'Next step',
-      title: options?.nextStepTitle || 'Use the next action, not another random tab',
+      title: options?.nextStepTitle || 'Check before checkout',
       items: compactItems(
         [
           options?.nextStepDescription,

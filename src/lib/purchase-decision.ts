@@ -26,6 +26,8 @@ export interface PurchaseDecisionContext {
   userIntent?: string | null
   visitorId?: string | null
   offerId?: number | null
+  displayName?: string | null
+  evidenceHref?: string | null
 }
 
 export interface PurchaseDecisionInput {
@@ -132,7 +134,8 @@ function stateLabel(state: PurchaseDecisionState) {
 }
 
 function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContext, state: PurchaseDecisionState) {
-  const name = input.name
+  const name = context.displayName || input.name
+  const evidenceHref = context.evidenceHref || input.href
   switch (state) {
     case 'buy_now':
       return {
@@ -140,7 +143,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
         summary: 'Evidence, price context, and the verified merchant handoff are strong enough for a purchase decision.',
         primaryActionLabel: 'Check current price',
         secondaryActionLabel: 'View evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
     case 'compare_first':
       return {
@@ -150,7 +153,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
           : 'This product is credible, but nearby alternatives or incomplete fit signals make comparison the safer next step.',
         primaryActionLabel: 'Compare alternatives',
         secondaryActionLabel: 'View evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
     case 'watch_price':
       return {
@@ -158,7 +161,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
         summary: 'The product can stay on the shortlist, but current price timing does not justify a strong buy CTA.',
         primaryActionLabel: 'Track price drop',
         secondaryActionLabel: 'View evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
     case 'skip':
       return {
@@ -166,7 +169,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
         summary: input.criticalRisk || 'Current evidence or readiness signals are too weak to support a purchase recommendation.',
         primaryActionLabel: 'See safer pick',
         secondaryActionLabel: 'Read evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
     case 'researching':
       return {
@@ -174,7 +177,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
         summary: 'Bes3 has some useful context, but not enough validated evidence and price data for a direct purchase recommendation.',
         primaryActionLabel: 'Browse category',
         secondaryActionLabel: 'Read evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
     case 'link_unavailable':
       return {
@@ -186,7 +189,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
             : 'The evidence may be useful, but no verified commissionable merchant handoff is available.',
         primaryActionLabel: 'See available alternatives',
         secondaryActionLabel: 'Read evidence',
-        secondaryActionHref: input.href
+        secondaryActionHref: evidenceHref
       }
   }
 }

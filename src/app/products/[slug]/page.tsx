@@ -1,6 +1,8 @@
 import type { Metadata } from 'next'
+import Image from 'next/image'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
+import { PurchaseDecisionActionLink } from '@/components/commerce/PurchaseDecisionActionLink'
 import { PurchaseDecisionCard } from '@/components/commerce/PurchaseDecisionCard'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { DecisionReadinessCard } from '@/components/site/DecisionReadinessCard'
@@ -8,13 +10,13 @@ import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { PriceAlertForm } from '@/components/site/PriceAlertForm'
 import { EvidenceFeedbackButtons } from '@/components/site/EvidenceFeedbackButtons'
 import { PriceTrendSparkline } from '@/components/site/PriceTrendSparkline'
+import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { StructuredData } from '@/components/site/StructuredData'
 import { buildCommerceDecisionReadiness, buildEvidenceDecisionReadiness } from '@/lib/decision-readiness'
 import { buildProductDecisionContent } from '@/lib/decision-content'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
 import { formatHardcorePrice, getHardcoreProductBySlug, listHardcoreProducts } from '@/lib/hardcore'
 import { buildIntentMetadataDescription, buildPageMetadata } from '@/lib/metadata'
-import { hasMerchantExitTarget } from '@/lib/merchant-links'
 import { buildCommercePurchaseDecision, buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
 import { getRequestLocale } from '@/lib/request-locale'
 import { buildBreadcrumbSchema, buildFaqSchema, buildProductAggregateSchema } from '@/lib/structured-data'
@@ -41,6 +43,57 @@ function timestampUrl(youtubeId: string | null, seconds: number | null) {
   return `https://www.youtube.com/watch?v=${youtubeId}${seconds ? `&t=${seconds}s` : ''}`
 }
 
+function truncateText(value: string | null | undefined, maxLength: number) {
+  const normalized = String(value || '').replace(/\s+/g, ' ').trim()
+  if (!normalized || normalized.length <= maxLength) return normalized
+
+  const sliced = normalized.slice(0, maxLength + 1)
+  const lastSpace = sliced.lastIndexOf(' ')
+  return `${sliced.slice(0, lastSpace > maxLength * 0.55 ? lastSpace : maxLength).trim().replace(/[.,;:]+$/g, '')}...`
+}
+
+function escapeRegExp(value: string) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+}
+
+function getCompactCommerceName(product: {
+  brand: string | null
+  productModel: string | null
+  modelNumber: string | null
+  productType: string | null
+  category: string | null
+  productName: string
+}) {
+  const brand = product.brand?.trim()
+  const model = product.productModel?.trim() || product.modelNumber?.trim()
+  const type = product.productType?.trim() || product.category?.trim()
+
+  if (brand && model) {
+    const modelAlreadyIncludesBrand = model.toLowerCase().includes(brand.toLowerCase())
+    return modelAlreadyIncludesBrand ? truncateText(model, 64) : truncateText(`${brand} ${model}`, 64)
+  }
+
+  if (brand && type) return truncateText(`${brand} ${type}`, 54)
+  if (brand) {
+    const remainder = product.productName
+      .replace(new RegExp(`^${escapeRegExp(brand)}\\b`, 'i'), '')
+      .trim()
+      .split(/\s+/)
+      .slice(0, 5)
+      .join(' ')
+    return truncateText(`${brand} ${remainder}`.trim(), 58)
+  }
+
+  return truncateText(product.productName.split(/\s+/).slice(0, 8).join(' '), 64)
+}
+
+function formatBuyerRating(rating: number | null, reviewCount: number | null) {
+  if (rating && reviewCount) return `${rating.toFixed(1)}/5 from ${reviewCount.toLocaleString()} reviews`
+  if (rating) return `${rating.toFixed(1)}/5 buyer rating`
+  if (reviewCount) return `${reviewCount.toLocaleString()} buyer reviews`
+  return 'Buyer rating pending'
+}
+
 async function CommerceProductPage({ slug }: { slug: string }) {
   const product = await getOpenCommerceProductBySlug(slug)
   if (!product) notFound()
@@ -55,15 +108,26 @@ async function CommerceProductPage({ slug }: { slug: string }) {
   ])
   const bestOffer = product.bestOffer || offers[0] || null
   const path = `/products/${product.slug}`
+  const compactProductName = getCompactCommerceName(product)
+  const currentPriceLine = formatPriceSnapshot(bestOffer?.priceAmount || product.priceAmount, bestOffer?.priceCurrency || product.priceCurrency || 'USD')
+  const freshnessLine = getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)
+  const heroDescription = truncateText(
+    product.description || 'Bes3 is tracking this product with offer, attribute, freshness, and merchant handoff context.',
+    190
+  )
   const decisionReadiness = buildCommerceDecisionReadiness(product)
   const purchaseDecision = buildCommercePurchaseDecision(product, {
     pageType: 'product',
     trackingSource: 'product-decision-card',
     categoryHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
-    alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories'
+    alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+    offerId: bestOffer?.id || null,
+    displayName: compactProductName,
+    evidenceHref: '#decision-notes'
   })
+  const isMerchantCta = purchaseDecision.primaryActionHref?.startsWith('/go/')
   const decisionModules = buildProductDecisionContent(product, 'product', {
-    nextStepTitle: 'Choose the next action from current evidence',
+    nextStepTitle: 'Check before checkout',
     nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
   })
   const breadcrumbItems = [
@@ -104,30 +168,109 @@ async function CommerceProductPage({ slug }: { slug: string }) {
           buildFaqSchema(path, faqEntries)
         ]}
       />
-      <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.72fr] lg:items-start">
-          <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Should you buy it?</p>
-            <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              {product.productName}
-            </h1>
-            <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              {product.description || 'Bes3 is tracking this product with offer, attribute, freshness, and merchant handoff context.'}
-            </p>
-            <div className="mt-6 flex flex-wrap items-center gap-3 text-sm font-semibold text-muted-foreground">
-              {product.brand ? <span>{product.brand}</span> : null}
-              {product.category ? <span>{product.category}</span> : null}
-              <span>{getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)}</span>
+      <section className="overflow-hidden border-b border-border bg-[radial-gradient(circle_at_top_left,#ecfdf5_0,#ffffff_38%,#f8fbff_100%)] px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,0.95fr)_minmax(360px,0.62fr)] lg:items-start">
+          <div className="space-y-6">
+            <div>
+              <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Should you buy it?</p>
+              <h1 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight text-slate-950 sm:text-6xl">
+                {compactProductName}
+              </h1>
+              {compactProductName !== product.productName ? (
+                <p className="mt-3 max-w-3xl text-sm leading-6 text-muted-foreground">
+                  Full listing name: {product.productName}
+                </p>
+              ) : null}
+
+              <div className="mt-5 rounded-[1.75rem] border border-emerald-200/80 bg-white/90 p-4 shadow-[0_22px_70px_-50px_rgba(15,23,42,0.55)] lg:hidden">
+                <div className="grid grid-cols-2 gap-3 text-sm">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Current price</p>
+                    <p className="mt-1 font-mono text-xl font-black text-foreground">{currentPriceLine}</p>
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Buyer signal</p>
+                    <p className="mt-1 text-sm font-semibold text-foreground">{formatBuyerRating(product.rating, product.reviewCount)}</p>
+                  </div>
+                </div>
+                <div className="mt-4">
+                  {isMerchantCta ? (
+                    <PrimaryCta
+                      href={purchaseDecision.primaryActionHref}
+                      label={purchaseDecision.primaryActionLabel}
+                      productId={product.id}
+                      trackingSource="mobile-hero-decision"
+                      trackingMetadata={{
+                        ...purchaseDecision.metadata,
+                        ctaVariant: `${purchaseDecision.ctaVariant}-mobile-hero`
+                      }}
+                      trustBadge={`${purchaseDecision.evidenceCount} evidence signals checked before checkout`}
+                      buttonClassName="w-full"
+                      showAffiliateDisclosure={false}
+                    />
+                  ) : (
+                    <PurchaseDecisionActionLink
+                      decision={purchaseDecision}
+                      className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                    />
+                  )}
+                </div>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <span>Affiliate disclosure: Bes3 may earn from qualifying purchases.</span>
+                  <a href="#decision-notes" className="font-semibold text-foreground underline-offset-4 hover:underline">Review proof</a>
+                </div>
+              </div>
+
+              {heroDescription ? (
+                <p className="mt-5 max-w-3xl text-base leading-7 text-muted-foreground sm:text-lg sm:leading-8">
+                  {heroDescription}
+                </p>
+              ) : null}
             </div>
-            <div className="mt-8 flex flex-wrap gap-3">
+
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                ['Offer', currentPriceLine],
+                ['Buyer rating', formatBuyerRating(product.rating, product.reviewCount)],
+                ['Freshness', freshnessLine]
+              ].map(([label, value]) => (
+                <div key={label} className="rounded-[1.25rem] border border-border/70 bg-white/80 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">{label}</p>
+                  <p className="mt-2 text-sm font-black text-foreground">{value}</p>
+                </div>
+              ))}
+            </div>
+
+            <div className="flex flex-wrap gap-3">
               {purchaseDecision.proofBullets.slice(0, 3).map((item) => (
-                <span key={item} className="rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground">
+                <span key={item} className="rounded-full border border-emerald-200 bg-white/90 px-4 py-2 text-sm font-semibold text-emerald-950">
                   {item}
                 </span>
               ))}
             </div>
           </div>
-          <PurchaseDecisionCard decision={purchaseDecision} stickyEligible />
+          <aside className="flex flex-col gap-4">
+            <PurchaseDecisionCard decision={purchaseDecision} stickyEligible compact />
+            <div className="order-first overflow-hidden rounded-[2rem] border border-border/70 bg-white shadow-panel lg:order-none">
+              <div className="relative aspect-[4/3] bg-[linear-gradient(135deg,#e5eeff,#dff8ea)]">
+                {product.heroImageUrl ? (
+                  <Image
+                    src={product.heroImageUrl}
+                    alt={`Product image for ${compactProductName}`}
+                    fill
+                    priority
+                    sizes="(max-width: 1024px) 100vw, 420px"
+                    className="object-contain p-5"
+                  />
+                ) : (
+                  <div className="bg-grid absolute inset-0" />
+                )}
+                <div className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-primary shadow-sm">
+                  {product.category || 'Tracked product'}
+                </div>
+              </div>
+            </div>
+          </aside>
         </div>
       </section>
 
@@ -136,7 +279,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
           <div className="rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current offer</p>
             <p className="mt-4 font-mono text-5xl font-black">
-              {formatPriceSnapshot(bestOffer?.priceAmount || product.priceAmount, bestOffer?.priceCurrency || product.priceCurrency || 'USD')}
+              {currentPriceLine}
             </p>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
               {bestOffer?.merchantName ? `${bestOffer.merchantName} offer` : 'Merchant offer'} · checked {formatEditorialDate(bestOffer?.lastCheckedAt || product.offerLastCheckedAt || product.updatedAt, 'Tracking soon')}.
@@ -150,7 +293,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
             fallbackCurrency={bestOffer?.priceCurrency || product.priceCurrency}
           />
-          <div className="rounded-md border border-border bg-white p-6">
+          <div id="decision-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Decision Notes</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {decisionModules.map((module) => (
@@ -167,7 +310,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section className="border-t border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
+      <section id="product-facts" className="scroll-mt-24 border-t border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
           <div className="rounded-md border border-border bg-white p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Product Facts</p>
@@ -199,8 +342,10 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               ))}
             </div>
           </div>
-          <div className="rounded-md border border-border bg-white p-6 lg:col-span-2">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Open machine payload</p>
+          <details className="rounded-md border border-border bg-white p-6 lg:col-span-2">
+            <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
+              Open machine payload for AI and search verification
+            </summary>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
               AI crawlers and verification tools can read the same decision readiness, offer, price, and product-fact payload used by this page.
             </p>
@@ -212,7 +357,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 Open offer JSON
               </Link>
             </div>
-          </div>
+          </details>
         </div>
       </section>
     </PublicShell>

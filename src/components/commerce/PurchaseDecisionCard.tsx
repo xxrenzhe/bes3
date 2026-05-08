@@ -4,6 +4,7 @@ import { PurchaseDecisionTracker } from '@/components/commerce/PurchaseDecisionT
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { StickyMobileCta } from '@/components/site/StickyMobileCta'
 import type { PurchaseDecision } from '@/lib/purchase-decision'
+import { cn } from '@/lib/utils'
 
 const STATE_STYLES: Record<PurchaseDecision['state'], { card: string; badge: string; accent: string; action: string }> = {
   buy_now: {
@@ -52,12 +53,14 @@ export function PurchaseDecisionCard({
   decision,
   className = '',
   showTracker = true,
-  stickyEligible = false
+  stickyEligible = false,
+  compact = false
 }: {
   decision: PurchaseDecision
   className?: string
   showTracker?: boolean
   stickyEligible?: boolean
+  compact?: boolean
 }) {
   const styles = STATE_STYLES[decision.state]
   const isPrimaryMerchant = isMerchantHref(decision.primaryActionHref)
@@ -65,7 +68,12 @@ export function PurchaseDecisionCard({
   return (
     <section
       aria-labelledby={`purchase-decision-${decision.productId}`}
-      className={`rounded-[1.75rem] border p-6 shadow-[0_22px_70px_-45px_rgba(15,23,42,0.55)] ${styles.card} ${className}`}
+      className={cn(
+        'rounded-[1.75rem] border shadow-[0_22px_70px_-45px_rgba(15,23,42,0.55)]',
+        compact ? 'p-5 sm:p-6' : 'p-6',
+        styles.card,
+        className
+      )}
     >
       {showTracker ? <PurchaseDecisionTracker decision={decision} /> : null}
       <div className="flex flex-wrap items-center gap-3">
@@ -76,12 +84,19 @@ export function PurchaseDecisionCard({
           {decision.pageType} decision
         </span>
       </div>
-      <h2 id={`purchase-decision-${decision.productId}`} className={`mt-5 font-[var(--font-display)] text-3xl font-black tracking-tight ${styles.accent}`}>
+      <h2
+        id={`purchase-decision-${decision.productId}`}
+        className={cn(
+          'mt-5 font-[var(--font-display)] font-black tracking-tight',
+          compact ? 'text-2xl sm:text-3xl' : 'text-3xl',
+          styles.accent
+        )}
+      >
         {decision.headline}
       </h2>
       <p className="mt-3 text-sm leading-7 text-muted-foreground">{decision.summary}</p>
 
-      <div className="mt-5 grid gap-3 rounded-2xl border border-white/80 bg-white/80 p-4 text-sm sm:grid-cols-2">
+      <div className={cn('mt-5 grid gap-3 rounded-2xl border border-white/80 bg-white/80 p-4 text-sm', compact ? 'grid-cols-2' : 'sm:grid-cols-2')}>
         <div>
           <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Current price</p>
           <p className="mt-1 font-mono text-xl font-black text-foreground">{decision.priceLine}</p>
@@ -92,7 +107,7 @@ export function PurchaseDecisionCard({
         </div>
       </div>
 
-      <div className="mt-6">
+      <div className="mt-6 flex flex-wrap items-center gap-3">
         {isPrimaryMerchant ? (
           <PrimaryCta
             href={decision.primaryActionHref}
@@ -102,21 +117,27 @@ export function PurchaseDecisionCard({
             trackingMetadata={decision.metadata}
             note="Bes3 may earn from qualifying purchases at no extra cost to you."
             trustBadge={`${decision.evidenceCount} evidence signal${decision.evidenceCount === 1 ? '' : 's'} checked before this CTA`}
+            buttonClassName={compact ? 'w-full sm:w-auto' : undefined}
+            showAffiliateDisclosure={!compact}
           />
         ) : (
           <PurchaseDecisionActionLink
             decision={decision}
-            className={`inline-flex min-h-[52px] items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 ${styles.action}`}
+            className={cn(
+              'inline-flex min-h-[52px] items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2',
+              compact ? 'w-full sm:w-auto' : '',
+              styles.action
+            )}
           />
         )}
         {decision.secondaryActionHref ? (
-          <Link href={decision.secondaryActionHref} className="ml-3 inline-flex min-h-[44px] items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline">
+          <Link href={decision.secondaryActionHref} className="inline-flex min-h-[44px] items-center text-sm font-semibold text-foreground underline-offset-4 hover:underline">
             {decision.secondaryActionLabel}
           </Link>
         ) : null}
       </div>
 
-      <div className="mt-6 grid gap-4 md:grid-cols-2">
+      <div className={cn('mt-6 grid gap-4', compact ? 'md:grid-cols-1 xl:grid-cols-2' : 'md:grid-cols-2')}>
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
           <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground">
@@ -131,9 +152,11 @@ export function PurchaseDecisionCard({
         </div>
       </div>
 
-      <p className="mt-5 border-t border-white/80 pt-4 text-xs leading-6 text-muted-foreground">
-        Affiliate disclosure: Bes3 may earn from qualifying purchases. Commission availability never changes the evidence score or recommendation order.
-      </p>
+      {!compact ? (
+        <p className="mt-5 border-t border-white/80 pt-4 text-xs leading-6 text-muted-foreground">
+          Affiliate disclosure: Bes3 may earn from qualifying purchases. Commission availability never changes the evidence score or recommendation order.
+        </p>
+      ) : null}
       {stickyEligible ? (
         <StickyMobileCta
           href={decision.primaryActionHref}
@@ -146,7 +169,7 @@ export function PurchaseDecisionCard({
           }}
           actionTone={decision.state}
           eyebrow={decision.stateLabel}
-          trustBadge={decision.summary}
+          trustBadge={`${decision.priceLine} · ${decision.confidenceLine}`}
         />
       ) : null}
     </section>
