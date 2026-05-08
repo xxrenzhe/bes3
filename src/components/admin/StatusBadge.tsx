@@ -74,7 +74,19 @@ const STYLES: Record<string, string> = {
   llms_missing_reference: 'bg-amber-100 text-amber-800',
   trust_origin_unreachable: 'bg-amber-100 text-amber-800',
   render_timeout: 'bg-amber-100 text-amber-800',
-  render_audit_error: 'bg-rose-100 text-rose-800'
+  render_audit_error: 'bg-rose-100 text-rose-800',
+  'buy-ready': 'bg-emerald-100 text-emerald-800',
+  'blocked-no-link': 'bg-rose-100 text-rose-800',
+  'blocked-price': 'bg-amber-100 text-amber-800',
+  'blocked-evidence': 'bg-orange-100 text-orange-800',
+  'blocked-stock': 'bg-rose-100 text-rose-800',
+  'blocked-risk': 'bg-red-100 text-red-800',
+  high_intent_no_cta: 'bg-amber-100 text-amber-800',
+  high_score_no_link: 'bg-rose-100 text-rose-800',
+  broken_go_path: 'bg-rose-100 text-rose-800',
+  weak_evidence_buy_cta: 'bg-orange-100 text-orange-800',
+  overpriced_buy_cta: 'bg-amber-100 text-amber-800',
+  out_of_stock_buy_cta: 'bg-rose-100 text-rose-800'
 }
 
 const LABELS: Record<string, string> = {
@@ -156,7 +168,19 @@ const LABELS: Record<string, string> = {
   llms_missing_reference: 'LLMS 引用缺失',
   trust_origin_unreachable: '信任源不可达',
   render_timeout: '渲染超时',
-  render_audit_error: '渲染审计错误'
+  render_audit_error: '渲染审计错误',
+  'buy-ready': 'buy-ready',
+  'blocked-no-link': 'blocked-no-link',
+  'blocked-price': 'blocked-price',
+  'blocked-evidence': 'blocked-evidence',
+  'blocked-stock': 'blocked-stock',
+  'blocked-risk': 'blocked-risk',
+  high_intent_no_cta: '高意图无 CTA',
+  high_score_no_link: '高分无链接',
+  broken_go_path: '断裂跳转',
+  weak_evidence_buy_cta: '弱证据购买 CTA',
+  overpriced_buy_cta: '高价购买 CTA',
+  out_of_stock_buy_cta: '缺货购买 CTA'
 }
 
 function formatValue(value: string) {

@@ -67,6 +67,15 @@ type Product = {
   hero_image_url: string | null
   last_run_status: string | null
   last_run_stage: string | null
+  conversion_readiness: ConversionReadiness
+  conversion_blockers: string[]
+  conversion_blocker_count: number
+  evidence_count: number
+  active_affiliate_links: number
+  available_affiliate_links: number
+  risk_evidence_count: number
+  out_of_stock_link_issues: number
+  broken_link_issues: number
   updated_at: string
 }
 
@@ -93,6 +102,14 @@ type PlatformFilter = 'all' | 'partnerboost' | 'manual' | 'other'
 type LinkStateFilter = 'all' | 'linked' | 'inventory_only'
 type CountryFilter = 'all' | 'US' | 'GB' | 'CA' | 'AU' | 'DE' | 'FR' | 'ROW' | 'unknown'
 type WorkspaceActionId = 'contentPack' | 'mineKeywords' | 'generateReview' | 'generateComparison' | 'refreshSeo'
+type ConversionReadiness =
+  | 'buy-ready'
+  | 'blocked-no-link'
+  | 'blocked-price'
+  | 'blocked-evidence'
+  | 'blocked-stock'
+  | 'blocked-risk'
+type ConversionReadinessFilter = 'all' | ConversionReadiness
 
 const WORKSPACE_ACTIONS: Array<{
   id: WorkspaceActionId
@@ -168,6 +185,10 @@ function renderLinkState(item: AffiliateInventoryItem) {
   )
 }
 
+function renderConversionReadiness(value: ConversionReadiness) {
+  return <StatusBadge value={value} />
+}
+
 export function ProductsConsole() {
   const router = useRouter()
   const [affiliateProducts, setAffiliateProducts] = useState<AffiliateInventoryItem[]>([])
@@ -202,6 +223,7 @@ export function ProductsConsole() {
   const [linkStateFilter, setLinkStateFilter] = useState<LinkStateFilter>('all')
   const [countryFilter, setCountryFilter] = useState<CountryFilter>('all')
   const [sortMode, setSortMode] = useState<SortMode>('updated_desc')
+  const [conversionReadinessFilter, setConversionReadinessFilter] = useState<ConversionReadinessFilter>('all')
   const [isPending, startTransition] = useTransition()
 
   const load = async () => {
@@ -324,6 +346,36 @@ export function ProductsConsole() {
     ],
     [affiliateProducts, selectedIds]
   )
+
+  const filteredProducts = useMemo(() => {
+    if (conversionReadinessFilter === 'all') return products
+    return products.filter((product) => product.conversion_readiness === conversionReadinessFilter)
+  }, [conversionReadinessFilter, products])
+
+  const conversionReadinessSummary = useMemo(() => {
+    return products.reduce(
+      (accumulator, product) => {
+        accumulator.total += 1
+        if (product.conversion_readiness === 'buy-ready') accumulator.buyReady += 1
+        else accumulator.blocked += 1
+        accumulator.byState[product.conversion_readiness] += 1
+        return accumulator
+      },
+      {
+        total: 0,
+        buyReady: 0,
+        blocked: 0,
+        byState: {
+          'buy-ready': 0,
+          'blocked-no-link': 0,
+          'blocked-price': 0,
+          'blocked-evidence': 0,
+          'blocked-stock': 0,
+          'blocked-risk': 0
+        } as Record<ConversionReadiness, number>
+      }
+    )
+  }, [products])
 
   const trigger = (path: string, options?: {
     body?: unknown
@@ -1075,7 +1127,38 @@ export function ProductsConsole() {
             <p className="text-overline font-semibold text-primary">标准化商品库</p>
             <h2 className="card-title mt-1">已经进入 Bes3 内容工作台的商品</h2>
           </div>
-          <p className="text-sm text-muted-foreground">共 {products.length} 个标准化商品</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <p className="text-sm text-muted-foreground">共 {products.length} 个标准化商品</p>
+            <Select value={conversionReadinessFilter} onValueChange={(value) => setConversionReadinessFilter(value as ConversionReadinessFilter)}>
+              <SelectItem value="all">全部转化状态</SelectItem>
+              <SelectItem value="buy-ready">buy-ready</SelectItem>
+              <SelectItem value="blocked-no-link">blocked-no-link</SelectItem>
+              <SelectItem value="blocked-price">blocked-price</SelectItem>
+              <SelectItem value="blocked-evidence">blocked-evidence</SelectItem>
+              <SelectItem value="blocked-stock">blocked-stock</SelectItem>
+              <SelectItem value="blocked-risk">blocked-risk</SelectItem>
+            </Select>
+          </div>
+        </div>
+
+        <div className="mt-4 grid gap-3 md:grid-cols-3 xl:grid-cols-6">
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground">Conversion readiness</p>
+            <p className="mt-1 text-2xl font-semibold">{formatNumber(conversionReadinessSummary.buyReady)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">buy-ready 商品</p>
+          </Card>
+          <Card className="p-3">
+            <p className="text-xs text-muted-foreground">商业阻塞</p>
+            <p className="mt-1 text-2xl font-semibold">{formatNumber(conversionReadinessSummary.blocked)}</p>
+            <p className="mt-1 text-xs text-muted-foreground">需要修复后才能主推</p>
+          </Card>
+          {(['blocked-no-link', 'blocked-price', 'blocked-evidence', 'blocked-stock'] as ConversionReadiness[]).map((state) => (
+            <Card key={state} className="p-3">
+              <p className="text-xs text-muted-foreground">{state}</p>
+              <p className="mt-1 text-2xl font-semibold">{formatNumber(conversionReadinessSummary.byState[state])}</p>
+              <p className="mt-1 text-xs text-muted-foreground">转化阻塞</p>
+            </Card>
+          ))}
         </div>
 
         {products.length === 0 ? (
@@ -1091,9 +1174,20 @@ export function ProductsConsole() {
               inCard={false}
             />
           </div>
+        ) : filteredProducts.length === 0 ? (
+          <div className="mt-4">
+            <EmptyState
+              variant="no-results"
+              title="当前转化状态下没有商品"
+              description="切换 Conversion readiness 筛选，或先修复推广链接、价格、证据和库存阻塞。"
+              actionLabel="查看全部转化状态"
+              onAction={() => setConversionReadinessFilter('all')}
+              inCard={false}
+            />
+          </div>
         ) : (
           <div className="mt-4 grid grid-cols-1 gap-3 lg:grid-cols-2">
-            {products.map((product) => (
+            {filteredProducts.map((product) => (
               <div key={product.id} className="rounded-md border bg-muted/40 p-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
                   <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl border border-border bg-white">
@@ -1117,8 +1211,23 @@ export function ProductsConsole() {
                       {[product.category || product.category_slug || '未分类', product.product_model || product.model_number, product.product_type].filter(Boolean).join(' · ')}
                     </p>
                     <div className="mt-2 flex flex-wrap gap-2">
+                      {renderConversionReadiness(product.conversion_readiness)}
                       {product.last_run_status ? <StatusBadge value={product.last_run_status} /> : null}
                       {product.last_run_stage ? <StatusBadge value={product.last_run_stage} /> : null}
+                    </div>
+                    <div className="mt-3 grid gap-2 text-xs text-muted-foreground sm:grid-cols-2">
+                      <div>
+                        <span className="font-medium text-foreground">Conversion readiness:</span> {product.conversion_readiness}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">Evidence:</span> {formatNumber(product.evidence_count)}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">Affiliate links:</span> {formatNumber(product.available_affiliate_links || product.active_affiliate_links)}
+                      </div>
+                      <div>
+                        <span className="font-medium text-foreground">Blockers:</span> {product.conversion_blockers.length ? product.conversion_blockers.join(', ') : 'none'}
+                      </div>
                     </div>
                   </div>
                   <div className="text-sm text-muted-foreground sm:ml-auto sm:text-right">

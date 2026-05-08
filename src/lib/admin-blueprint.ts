@@ -287,14 +287,109 @@ export async function runPriceValueAction(input: {
 
 export async function getRiskOperationsSnapshot() {
   const db = await getDatabase()
-  const [summary, riskAlerts, linkIssues, evidenceRisks, seoRisks, priceRisks] = await Promise.all([
+  const [summary, riskAlerts, linkIssues, evidenceRisks, seoRisks, priceRisks, commercialRisks] = await Promise.all([
     db.queryOne(
       `
-        SELECT
-          (SELECT COUNT(*) FROM admin_risk_alerts WHERE status = 'open') AS open_risks,
-          (SELECT COUNT(*) FROM link_inspector_results WHERE issue_type IS NOT NULL) AS link_issues,
-          (SELECT COUNT(*) FROM analysis_reports WHERE evidence_confidence < 0.65 OR is_advertorial = 1) AS evidence_risks,
-          (SELECT COUNT(*) FROM products WHERE price_status IS NULL OR price_status = 'unknown') AS price_risks
+        SELECT *
+        FROM (
+          SELECT
+            (SELECT COUNT(*) FROM admin_risk_alerts WHERE status = 'open') AS open_risks,
+            (SELECT COUNT(*) FROM link_inspector_results WHERE issue_type IS NOT NULL) AS link_issues,
+            (SELECT COUNT(*) FROM analysis_reports WHERE evidence_confidence < 0.65 OR is_advertorial = 1) AS evidence_risks,
+            (SELECT COUNT(*) FROM products WHERE price_status IS NULL OR price_status = 'unknown') AS price_risks,
+            (
+              SELECT COUNT(*)
+              FROM (
+                SELECT p.id
+                FROM products p
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM seo_pages sp
+                    WHERE sp.status = 'published'
+                      AND (sp.pathname LIKE '%/' || p.slug OR sp.pathname LIKE '%/' || p.slug || '/%')
+                  )
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM affiliate_links al
+                    WHERE al.product_id = p.id
+                      AND al.status IN ('active', 'unknown')
+                  )
+                  AND COALESCE(p.source_affiliate_link, p.resolved_url) IS NULL
+                UNION ALL
+                SELECT p.id
+                FROM products p
+                WHERE (
+                    SELECT COUNT(*)
+                    FROM analysis_reports ar
+                    WHERE ar.product_id = p.id
+                      AND ar.rating IN ('Excellent', 'Good')
+                      AND ar.evidence_confidence >= 0.65
+                  ) >= 3
+                  AND NOT EXISTS (
+                    SELECT 1
+                    FROM affiliate_links al
+                    WHERE al.product_id = p.id
+                      AND al.status IN ('active', 'unknown')
+                  )
+                  AND COALESCE(p.source_affiliate_link, p.resolved_url) IS NULL
+                UNION ALL
+                SELECT p.id
+                FROM products p
+                WHERE EXISTS (
+                    SELECT 1
+                    FROM link_inspector_results lir
+                    WHERE lir.product_id = p.id
+                      AND lir.issue_type IS NOT NULL
+                  )
+                UNION ALL
+                SELECT p.id
+                FROM products p
+                WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+                    SELECT 1
+                    FROM affiliate_links al
+                    WHERE al.product_id = p.id
+                      AND al.status IN ('active', 'unknown')
+                  ))
+                  AND EXISTS (
+                    SELECT 1
+                    FROM analysis_reports ar
+                    WHERE ar.product_id = p.id
+                      AND (ar.evidence_confidence < 0.65 OR ar.is_advertorial = 1)
+                  )
+                UNION ALL
+                SELECT p.id
+                FROM products p
+                WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+                    SELECT 1
+                    FROM affiliate_links al
+                    WHERE al.product_id = p.id
+                      AND al.status IN ('active', 'unknown')
+                  ))
+                  AND (p.price_status = 'overpriced' OR (
+                    SELECT pvs.entry_status
+                    FROM price_value_snapshots pvs
+                    WHERE pvs.product_id = p.id
+                    ORDER BY pvs.captured_at DESC, pvs.id DESC
+                    LIMIT 1
+                  ) = 'overpriced')
+                UNION ALL
+                SELECT p.id
+                FROM products p
+                WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+                    SELECT 1
+                    FROM affiliate_links al
+                    WHERE al.product_id = p.id
+                      AND al.status IN ('active', 'unknown')
+                  ))
+                  AND EXISTS (
+                    SELECT 1
+                    FROM link_inspector_results lir
+                    WHERE lir.product_id = p.id
+                      AND lir.issue_type = 'out_of_stock'
+                  )
+              ) commercial_risk_rows
+            ) AS commercial_risks
+        ) summary_counts
       `
     ),
     db.query(
@@ -355,9 +450,190 @@ export async function getRiskOperationsSnapshot() {
         ORDER BY updated_at DESC
         LIMIT 80
       `
+    ),
+    db.query(
+      `
+        SELECT *
+        FROM (
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'high_intent_no_cta' AS risk_type,
+            'high' AS severity,
+            'Published high-intent page has no safe merchant CTA' AS title,
+            'Published SEO/review surface exists, but no active affiliate handoff is available.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE EXISTS (
+              SELECT 1
+              FROM seo_pages sp
+              WHERE sp.status = 'published'
+                AND (sp.pathname LIKE '%/' || p.slug OR sp.pathname LIKE '%/' || p.slug || '/%')
+            )
+            AND NOT EXISTS (
+              SELECT 1
+              FROM affiliate_links al
+              WHERE al.product_id = p.id
+                AND al.status IN ('active', 'unknown')
+            )
+            AND COALESCE(p.source_affiliate_link, p.resolved_url) IS NULL
+          UNION ALL
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'high_score_no_link' AS risk_type,
+            'critical' AS severity,
+            'High-scoring evidence product has no affiliate path' AS title,
+            'Evidence supports a recommendation, but the page cannot convert through /go.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+                AND ar.rating IN ('Excellent', 'Good')
+                AND ar.evidence_confidence >= 0.65
+            ) >= 3
+            AND NOT EXISTS (
+              SELECT 1
+              FROM affiliate_links al
+              WHERE al.product_id = p.id
+                AND al.status IN ('active', 'unknown')
+            )
+            AND COALESCE(p.source_affiliate_link, p.resolved_url) IS NULL
+          UNION ALL
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'broken_go_path' AS risk_type,
+            'critical' AS severity,
+            'Merchant handoff path is broken' AS title,
+            'Link inspector found a broken or invalid merchant destination for a product with buying intent.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE EXISTS (
+              SELECT 1
+              FROM link_inspector_results lir
+              WHERE lir.product_id = p.id
+                AND lir.issue_type IS NOT NULL
+                AND lir.issue_type <> 'out_of_stock'
+            )
+          UNION ALL
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'weak_evidence_buy_cta' AS risk_type,
+            'high' AS severity,
+            'Buy CTA is available while evidence is weak' AS title,
+            'The product has a merchant path, but evidence confidence is too weak for a strong buy CTA.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+              SELECT 1
+              FROM affiliate_links al
+              WHERE al.product_id = p.id
+                AND al.status IN ('active', 'unknown')
+          ))
+            AND EXISTS (
+              SELECT 1
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+                AND (ar.evidence_confidence < 0.65 OR ar.is_advertorial = 1)
+            )
+          UNION ALL
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'overpriced_buy_cta' AS risk_type,
+            'high' AS severity,
+            'Buy CTA conflicts with overpriced signal' AS title,
+            'The product has a merchant path, but the latest price-value status says to wait.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+              SELECT 1
+              FROM affiliate_links al
+              WHERE al.product_id = p.id
+                AND al.status IN ('active', 'unknown')
+          ))
+            AND (p.price_status = 'overpriced' OR (
+              SELECT pvs.entry_status
+              FROM price_value_snapshots pvs
+              WHERE pvs.product_id = p.id
+              ORDER BY pvs.captured_at DESC, pvs.id DESC
+              LIMIT 1
+            ) = 'overpriced')
+          UNION ALL
+          SELECT
+            p.id,
+            p.product_name,
+            p.slug,
+            'out_of_stock_buy_cta' AS risk_type,
+            'critical' AS severity,
+            'Buy CTA points to an out-of-stock merchant path' AS title,
+            'Link inspection indicates the handoff destination is unavailable or out of stock.' AS message,
+            (
+              SELECT COUNT(*)
+              FROM analysis_reports ar
+              WHERE ar.product_id = p.id
+            ) AS evidence_count,
+            p.price_status,
+            p.updated_at
+          FROM products p
+          WHERE (p.source_affiliate_link IS NOT NULL OR p.resolved_url IS NOT NULL OR EXISTS (
+              SELECT 1
+              FROM affiliate_links al
+              WHERE al.product_id = p.id
+                AND al.status IN ('active', 'unknown')
+          ))
+            AND EXISTS (
+              SELECT 1
+              FROM link_inspector_results lir
+              WHERE lir.product_id = p.id
+                AND lir.issue_type = 'out_of_stock'
+            )
+        ) commercial_risks
+        ORDER BY CASE severity WHEN 'critical' THEN 0 WHEN 'high' THEN 1 WHEN 'warning' THEN 2 ELSE 3 END, updated_at DESC, id DESC
+        LIMIT 120
+      `
     )
   ])
-  return { summary, riskAlerts, linkIssues, evidenceRisks, seoRisks, priceRisks }
+  return { summary, riskAlerts, linkIssues, evidenceRisks, seoRisks, priceRisks, commercialRisks }
 }
 
 export async function updateRiskAlertStatus(input: {

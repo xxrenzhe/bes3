@@ -408,6 +408,63 @@ const checks: PlanDocCheck[] = [
         ]
       },
       {
+        label: 'Products conversion readiness',
+        filePath: 'src/app/api/admin/products/route.ts',
+        required: [
+          'type ConversionReadiness',
+          "'buy-ready'",
+          "'blocked-no-link'",
+          "'blocked-price'",
+          "'blocked-evidence'",
+          "'blocked-stock'",
+          "'blocked-risk'",
+          'buildConversionReadiness',
+          'conversion_readiness',
+          'conversion_blockers',
+          'active_affiliate_links',
+          'evidence_count'
+        ]
+      },
+      {
+        label: 'Products console conversion readiness filter',
+        filePath: 'src/components/admin/ProductsConsole.tsx',
+        required: [
+          'ConversionReadinessFilter',
+          'conversionReadinessFilter',
+          'Conversion readiness',
+          'renderConversionReadiness',
+          'blocked-no-link',
+          'blocked-price',
+          'blocked-evidence',
+          'blocked-stock',
+          'blocked-risk'
+        ]
+      },
+      {
+        label: 'Risk center commercial risks',
+        filePath: 'src/lib/admin-blueprint.ts',
+        required: [
+          'commercialRisks',
+          'commercial_risks',
+          'high_intent_no_cta',
+          'high_score_no_link',
+          'broken_go_path',
+          'weak_evidence_buy_cta',
+          'overpriced_buy_cta',
+          'out_of_stock_buy_cta'
+        ]
+      },
+      {
+        label: 'Risk console commercial risk section',
+        filePath: 'src/components/admin/RiskConsole.tsx',
+        required: [
+          '商业风险',
+          'commercial_risks',
+          'commercialRisks',
+          'risk_type'
+        ]
+      },
+      {
         label: 'Pipeline repair queue and buy-ready metrics',
         filePath: 'src/lib/pipeline.ts',
         required: [

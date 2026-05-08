@@ -49,6 +49,50 @@ type AdminProductsSummaryRow = {
   other_products: number | string | null
 }
 
+type ConversionReadiness =
+  | 'buy-ready'
+  | 'blocked-no-link'
+  | 'blocked-price'
+  | 'blocked-evidence'
+  | 'blocked-stock'
+  | 'blocked-risk'
+
+type AdminProductRow = {
+  id: number
+  affiliate_product_id: number | null
+  source_platform: string
+  source_affiliate_link: string | null
+  resolved_url: string | null
+  canonical_url: string | null
+  slug: string | null
+  brand: string | null
+  product_model: string | null
+  model_number: string | null
+  product_type: string | null
+  category_slug: string | null
+  product_name: string
+  category: string | null
+  description: string | null
+  price_amount: number | null
+  current_price: number | null
+  price_currency: string | null
+  price_status: string | null
+  rating: number | null
+  review_count: number | null
+  updated_at: string
+  hero_image_url: string | null
+  last_run_status: string | null
+  last_run_stage: string | null
+  active_affiliate_links: number | string | null
+  available_affiliate_links: number | string | null
+  evidence_count: number | string | null
+  risk_evidence_count: number | string | null
+  advertorial_evidence_count: number | string | null
+  out_of_stock_link_issues: number | string | null
+  broken_link_issues: number | string | null
+  latest_price_entry_status: string | null
+}
+
 function parseLimit(value: string | null, fallback: number, maximum: number) {
   if (!value) return fallback
   if (value === 'all' || value === 'full') return maximum
@@ -61,6 +105,47 @@ function toNumber(value: number | string | null | undefined) {
   return Number(value || 0)
 }
 
+function hasText(value: string | null | undefined) {
+  return Boolean(String(value || '').trim())
+}
+
+function buildConversionReadiness(row: AdminProductRow): {
+  conversion_readiness: ConversionReadiness
+  conversion_blockers: string[]
+  conversion_blocker_count: number
+} {
+  const activeAffiliateLinks = toNumber(row.active_affiliate_links)
+  const availableAffiliateLinks = toNumber(row.available_affiliate_links)
+  const evidenceCount = toNumber(row.evidence_count)
+  const riskEvidenceCount = toNumber(row.risk_evidence_count)
+  const advertorialEvidenceCount = toNumber(row.advertorial_evidence_count)
+  const outOfStockIssues = toNumber(row.out_of_stock_link_issues)
+  const brokenLinkIssues = toNumber(row.broken_link_issues)
+  const priceStatus = String(row.price_status || row.latest_price_entry_status || '').trim()
+  const hasAffiliatePath = hasText(row.source_affiliate_link) || hasText(row.resolved_url) || activeAffiliateLinks > 0 || availableAffiliateLinks > 0
+  const hasPrice = row.current_price != null || row.price_amount != null
+  const blockers: string[] = []
+
+  if (!hasAffiliatePath) blockers.push('no-link')
+  if (outOfStockIssues > 0 || brokenLinkIssues > 0) blockers.push(outOfStockIssues > 0 ? 'stock' : 'broken-link')
+  if (!hasPrice || priceStatus === 'unknown' || priceStatus === 'overpriced') blockers.push(!hasPrice ? 'missing-price' : priceStatus)
+  if (evidenceCount <= 0) blockers.push('no-evidence')
+  if (riskEvidenceCount > 0 || advertorialEvidenceCount > 0) blockers.push(advertorialEvidenceCount > 0 ? 'advertorial-evidence' : 'weak-evidence')
+
+  let conversionReadiness: ConversionReadiness = 'buy-ready'
+  if (!hasAffiliatePath) conversionReadiness = 'blocked-no-link'
+  else if (outOfStockIssues > 0 || brokenLinkIssues > 0) conversionReadiness = 'blocked-stock'
+  else if (!hasPrice || priceStatus === 'unknown' || priceStatus === 'overpriced') conversionReadiness = 'blocked-price'
+  else if (evidenceCount <= 0) conversionReadiness = 'blocked-evidence'
+  else if (riskEvidenceCount > 0 || advertorialEvidenceCount > 0) conversionReadiness = 'blocked-risk'
+
+  return {
+    conversion_readiness: conversionReadiness,
+    conversion_blockers: blockers,
+    conversion_blocker_count: blockers.length
+  }
+}
+
 export async function GET(request: NextRequest) {
   await requireAdmin()
   const db = await getDatabase()
@@ -69,7 +154,7 @@ export async function GET(request: NextRequest) {
   const productLimit = fullPayload ? 1000 : parseLimit(searchParams.get('productLimit'), 120, 1000)
   const affiliateLimit = fullPayload ? 5000 : parseLimit(searchParams.get('affiliateLimit'), 300, 5000)
 
-  const products = await db.query(
+  const productRows = await db.query<AdminProductRow>(
     `
       SELECT
         p.id,
@@ -90,6 +175,7 @@ export async function GET(request: NextRequest) {
         p.price_amount,
         p.current_price,
         p.price_currency,
+        p.price_status,
         p.rating,
         p.review_count,
         p.updated_at,
@@ -114,12 +200,73 @@ export async function GET(request: NextRequest) {
         ORDER BY r.updated_at DESC, r.id DESC
         LIMIT 1
       ) AS last_run_stage
+        ,
+      (
+        SELECT COUNT(*)
+        FROM affiliate_links al
+        WHERE al.product_id = p.id
+          AND al.status = 'active'
+      ) AS active_affiliate_links,
+      (
+        SELECT COUNT(*)
+        FROM affiliate_links al
+        WHERE al.product_id = p.id
+          AND al.status IN ('active', 'unknown')
+      ) AS available_affiliate_links,
+      (
+        SELECT COUNT(*)
+        FROM analysis_reports ar
+        WHERE ar.product_id = p.id
+      ) AS evidence_count,
+      (
+        SELECT COUNT(*)
+        FROM analysis_reports ar
+        WHERE ar.product_id = p.id
+          AND (ar.evidence_confidence < 0.65 OR ar.is_advertorial = 1)
+      ) AS risk_evidence_count,
+      (
+        SELECT COUNT(*)
+        FROM analysis_reports ar
+        WHERE ar.product_id = p.id
+          AND ar.is_advertorial = 1
+      ) AS advertorial_evidence_count,
+      (
+        SELECT COUNT(*)
+        FROM link_inspector_results lir
+        WHERE lir.product_id = p.id
+          AND lir.issue_type = 'out_of_stock'
+      ) AS out_of_stock_link_issues,
+      (
+        SELECT COUNT(*)
+        FROM link_inspector_results lir
+        WHERE lir.product_id = p.id
+          AND lir.issue_type IS NOT NULL
+          AND lir.issue_type <> 'out_of_stock'
+      ) AS broken_link_issues,
+      (
+        SELECT pvs.entry_status
+        FROM price_value_snapshots pvs
+        WHERE pvs.product_id = p.id
+        ORDER BY pvs.captured_at DESC, pvs.id DESC
+        LIMIT 1
+      ) AS latest_price_entry_status
       FROM products p
       ORDER BY p.updated_at DESC, p.id DESC
       LIMIT ?
     `,
     [productLimit]
   )
+  const products = productRows.map((row) => ({
+    ...row,
+    active_affiliate_links: toNumber(row.active_affiliate_links),
+    available_affiliate_links: toNumber(row.available_affiliate_links),
+    evidence_count: toNumber(row.evidence_count),
+    risk_evidence_count: toNumber(row.risk_evidence_count),
+    advertorial_evidence_count: toNumber(row.advertorial_evidence_count),
+    out_of_stock_link_issues: toNumber(row.out_of_stock_link_issues),
+    broken_link_issues: toNumber(row.broken_link_issues),
+    ...buildConversionReadiness(row)
+  }))
   const [affiliateProducts, summaryRow] = await Promise.all([
     db.query<AdminAffiliateInventoryRow>(
       `

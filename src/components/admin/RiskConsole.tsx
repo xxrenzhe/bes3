@@ -13,7 +13,8 @@ export function RiskConsole() {
         { label: '未处理风险', key: 'open_risks' },
         { label: '链接问题', key: 'link_issues' },
         { label: '证据风险', key: 'evidence_risks' },
-        { label: '价格风险', key: 'price_risks' }
+        { label: '价格风险', key: 'price_risks' },
+        { label: '商业风险', key: 'commercial_risks' }
       ]}
       sections={[
         {
@@ -36,6 +37,19 @@ export function RiskConsole() {
             { label: 'HTTP', key: 'http_status' },
             { label: '详情', key: 'issue_detail' },
             { label: '检查时间', key: 'checked_at', date: true }
+          ]
+        },
+        {
+          title: '商业风险',
+          key: 'commercialRisks',
+          columns: [
+            { label: '商品', key: 'product_name' },
+            { label: '风险类型', key: 'risk_type', badge: true },
+            { label: '严重度', key: 'severity', badge: true },
+            { label: '说明', key: 'message' },
+            { label: '证据数', key: 'evidence_count' },
+            { label: '价格状态', key: 'price_status', badge: true },
+            { label: '更新时间', key: 'updated_at', date: true }
           ]
         },
         {
