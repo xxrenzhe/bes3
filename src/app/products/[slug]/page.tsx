@@ -437,7 +437,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
         </div>
       </section>
 
-      <section id="product-facts" className="scroll-mt-24 border-t border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
+      <section id="product-facts" className="scroll-mt-24 border-t border-border bg-slate-50 px-4 py-14 pb-36 sm:px-6 sm:pb-14 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-2">
           <div className="rounded-md border border-border bg-white p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Product Facts</p>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { isExternalCtaHref } from '@/lib/cta-link-behavior'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import type { PurchaseDecisionState } from '@/lib/purchase-decision'
 
@@ -41,6 +42,7 @@ export function StickyMobileCta({
   const [isVisible, setIsVisible] = useState(false)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const metadataKey = JSON.stringify(trackingMetadata || null)
+  const opensNewTab = isExternalCtaHref(resolvedHref)
 
   useEffect(() => {
     if (!href) {
@@ -93,7 +95,7 @@ export function StickyMobileCta({
   return (
     <div
       className={`fixed inset-x-0 bottom-0 z-50 px-3 pb-4 pt-3 transition-transform duration-200 sm:hidden ${
-        isVisible ? (isCollapsed ? 'translate-y-14' : 'translate-y-0') : 'translate-y-full'
+        isVisible ? (isCollapsed ? 'translate-y-[calc(100%-3.25rem)]' : 'translate-y-0') : 'translate-y-full'
       }`}
       style={{ paddingBottom: 'calc(env(safe-area-inset-bottom) + 0.75rem)' }}
     >
@@ -102,8 +104,8 @@ export function StickyMobileCta({
         <p className="mt-2 text-xs text-muted-foreground">{trustBadge}</p>
         <Link
           href={resolvedHref}
-          target="_blank"
-          rel="noopener noreferrer"
+          target={opensNewTab ? '_blank' : undefined}
+          rel={opensNewTab ? 'noopener noreferrer' : undefined}
           prefetch={false}
           onClick={() => {
             if (!productId) return
@@ -117,7 +119,7 @@ export function StickyMobileCta({
           className={`mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold ${ACTION_TONES[actionTone]}`}
         >
           {label}
-          {resolvedHref.startsWith('/go/') ? <span aria-hidden="true">↗</span> : null}
+          {opensNewTab ? <span aria-hidden="true">↗</span> : null}
         </Link>
       </div>
     </div>

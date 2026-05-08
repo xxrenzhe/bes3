@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
+import { isExternalCtaHref } from '@/lib/cta-link-behavior'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import { cn } from '@/lib/utils'
 
@@ -30,6 +31,8 @@ export function PrimaryCta({
 }) {
   const [resolvedHref, setResolvedHref] = useState(href)
   const metadataKey = JSON.stringify(trackingMetadata || null)
+  const opensNewTab = isExternalCtaHref(resolvedHref)
+  const isMerchantExit = Boolean(resolvedHref?.startsWith('/go/'))
 
   useEffect(() => {
     if (!href) {
@@ -50,13 +53,13 @@ export function PrimaryCta({
       {resolvedHref ? (
         <Link
           href={resolvedHref}
-          target="_blank"
-          rel="noopener noreferrer"
+          target={opensNewTab ? '_blank' : undefined}
+          rel={opensNewTab ? 'noopener noreferrer' : undefined}
           prefetch={false}
           onClick={() => {
             if (!productId) return
             trackDecisionEvent({
-              eventType: 'merchant_cta_click',
+              eventType: isMerchantExit ? 'merchant_cta_click' : 'purchase_decision_cta_click',
               source: trackingSource,
               productId,
               metadata: trackingMetadata
@@ -68,7 +71,7 @@ export function PrimaryCta({
           )}
         >
           {label}
-          <span aria-hidden="true">↗</span>
+          {opensNewTab ? <span aria-hidden="true">↗</span> : null}
         </Link>
       ) : (
         <div

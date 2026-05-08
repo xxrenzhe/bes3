@@ -147,6 +147,7 @@ async function collectViewportEvidence(page: Page) {
     const decisionShortcuts = rectFromElement(document.querySelector('[data-product-ux="decision-shortcuts"]'))
     const decisionPath = rectFromElement(document.querySelector('[data-product-ux="decision-path"]'))
     const decisionNotesCta = rectFromElement(document.querySelector('[data-product-ux="decision-notes-cta"]'))
+    const productFacts = rectFromElement(document.querySelector('#product-facts'))
     const decisionHeading = Array.from(document.querySelectorAll('h2')).find((heading) => /buy|compare|watch|skip|research|purchase-ready/i.test(heading.textContent || ''))
     const decisionHeadingRect = rectFromElement(decisionHeading || null)
     const bodyText = document.body.innerText
@@ -174,6 +175,7 @@ async function collectViewportEvidence(page: Page) {
       decisionShortcuts,
       decisionPath,
       decisionNotesCta,
+      productFacts,
       decisionHeading: decisionHeading ? {
         text: (decisionHeading.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 180),
         rect: decisionHeadingRect
@@ -189,6 +191,7 @@ async function collectViewportEvidence(page: Page) {
       htmlHasDecisionShortcuts: Boolean(document.querySelector('[data-product-ux="decision-shortcuts"]')),
       htmlHasDecisionPath: Boolean(document.querySelector('[data-product-ux="decision-path"]')),
       htmlHasDecisionNotesCta: Boolean(document.querySelector('[data-product-ux="decision-notes-cta"]')),
+      htmlHasMobileStickyReserve: Boolean(document.querySelector('#product-facts.pb-36')),
       htmlHasDisclosure: /affiliate disclosure|may earn/i.test(bodyText)
     }
   })()`)
@@ -205,6 +208,7 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   const decisionShortcuts = evidence.decisionShortcuts as RectSnapshot | null
   const decisionPath = evidence.decisionPath as RectSnapshot | null
   const decisionNotesCta = evidence.decisionNotesCta as RectSnapshot | null
+  const productFacts = evidence.productFacts as RectSnapshot | null
   const overflowWidth = Math.max(evidence.overflow.scrollWidth, evidence.overflow.bodyScrollWidth)
 
   if (!isVisible(h1)) throw new Error(`${viewport.label}: h1 is not visible`)
@@ -230,6 +234,7 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   if (!isVisible(decisionShortcuts)) throw new Error(`${viewport.label}: decision shortcuts are missing`)
   if (!isVisible(decisionPath)) throw new Error(`${viewport.label}: decision path is missing`)
   if (!isVisible(decisionNotesCta)) throw new Error(`${viewport.label}: decision notes CTA is missing`)
+  if (viewport.width < 640 && !evidence.htmlHasMobileStickyReserve) throw new Error(`${viewport.label}: sticky mobile CTA is not reserved above the final content`)
 
   return {
     ctaHref: cta.href,
@@ -243,6 +248,7 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
     decisionPathRect: decisionPath,
     decisionNotesRect: decisionNotes,
     decisionNotesCtaRect: decisionNotesCta,
+    productFactsRect: productFacts,
     structuredDataCount: evidence.structuredDataCount,
     overflowWidth
   }

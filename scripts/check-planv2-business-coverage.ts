@@ -549,7 +549,9 @@ const checks: PlanDocCheck[] = [
           'lg:col-span-2',
           'data-product-ux="decision-shortcuts"',
           'data-product-ux="decision-path"',
-          'data-product-ux="decision-notes-cta"'
+          'data-product-ux="decision-notes-cta"',
+          'isExternalCtaHref',
+          'sticky mobile CTA can collapse'
         ]
       },
       {
@@ -569,7 +571,8 @@ const checks: PlanDocCheck[] = [
           'horizontal overflow',
           'decision notes does not span the content grid',
           'decision shortcuts are missing',
-          'decision notes CTA is missing'
+          'decision notes CTA is missing',
+          'sticky mobile CTA is not reserved above the final content'
         ]
       },
       {

@@ -62,6 +62,9 @@ function assertNotIncludes(content: string, filePath: string, forbidden: string[
 const proactiveDoc = 'docs/planv2/14.Bes3 主动产品优化与转化门禁机制 (Proactive Product Optimization & Conversion Gates).md'
 const productPagePath = 'src/app/products/[slug]/page.tsx'
 const purchaseCardPath = 'src/components/commerce/PurchaseDecisionCard.tsx'
+const primaryCtaPath = 'src/components/site/PrimaryCta.tsx'
+const stickyMobileCtaPath = 'src/components/site/StickyMobileCta.tsx'
+const ctaLinkBehaviorPath = 'src/lib/cta-link-behavior.ts'
 const goRoutePath = 'src/app/go/[productId]/route.ts'
 const preflightPath = 'scripts/preflight-release.sh'
 
@@ -113,6 +116,7 @@ const gates: Gate[] = [
       'data-product-ux="decision-notes-cta"',
       'trackingSource="decision-notes-exit"',
       'Back to buy decision',
+      'pb-36 sm:px-6 sm:pb-14',
       'href="#decision-notes"',
       'showAffiliateDisclosure={false}',
       'sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 38vw, 320px"',
@@ -134,6 +138,40 @@ const gates: Gate[] = [
       '<details className="rounded-2xl',
       'Risks to check',
       'StickyMobileCta'
+    ]
+  },
+  {
+    area: 'CTA behavior',
+    name: 'CTA links open new tabs only for merchant or external exits',
+    filePath: ctaLinkBehaviorPath,
+    required: [
+      'isExternalCtaHref',
+      "href.startsWith('/go/')",
+      "href.startsWith('http://')",
+      "href.startsWith('https://')"
+    ]
+  },
+  {
+    area: 'CTA behavior',
+    name: 'Primary CTA preserves current tab for internal product operations',
+    filePath: primaryCtaPath,
+    required: [
+      'isExternalCtaHref(resolvedHref)',
+      "eventType: isMerchantExit ? 'merchant_cta_click' : 'purchase_decision_cta_click'",
+      "target={opensNewTab ? '_blank' : undefined}",
+      "rel={opensNewTab ? 'noopener noreferrer' : undefined}",
+      "{opensNewTab ? <span aria-hidden=\"true\">↗</span> : null}"
+    ]
+  },
+  {
+    area: 'Mobile UX',
+    name: 'sticky mobile CTA can collapse without blocking page actions',
+    filePath: stickyMobileCtaPath,
+    required: [
+      'isExternalCtaHref(resolvedHref)',
+      "translate-y-[calc(100%-3.25rem)]",
+      "target={opensNewTab ? '_blank' : undefined}",
+      "{opensNewTab ? <span aria-hidden=\"true\">↗</span> : null}"
     ]
   },
   {
@@ -201,6 +239,7 @@ const gates: Gate[] = [
       'decision notes does not span the content grid',
       'decision shortcuts are missing',
       'decision notes CTA is missing',
+      'sticky mobile CTA is not reserved above the final content',
       'console issues'
     ]
   }
