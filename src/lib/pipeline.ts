@@ -215,6 +215,8 @@ export interface AdminDashboardSummary {
       verifiedMerchantEvents: number
       purchaseDecisionViewVisitors: number
       purchaseDecisionViewEvents: number
+      purchaseDecisionCtaVisitors: number
+      purchaseDecisionCtaEvents: number
       buyReadyDecisionViewVisitors: number
       buyReadyDecisionViewEvents: number
       buyReadyMerchantExitVisitors: number
@@ -2996,6 +2998,8 @@ export async function getAdminDashboardSummary(): Promise<AdminDashboardSummary>
         verifiedMerchantEvents: decisionFunnel.verifiedMerchantExits.events,
         purchaseDecisionViewVisitors: decisionFunnel.purchaseDecisionViews.visitors,
         purchaseDecisionViewEvents: decisionFunnel.purchaseDecisionViews.events,
+        purchaseDecisionCtaVisitors: decisionFunnel.purchaseDecisionCtaClicks.visitors,
+        purchaseDecisionCtaEvents: decisionFunnel.purchaseDecisionCtaClicks.events,
         buyReadyDecisionViewVisitors: decisionFunnel.buyReadyDecisionViews.visitors,
         buyReadyDecisionViewEvents: decisionFunnel.buyReadyDecisionViews.events,
         buyReadyMerchantExitVisitors: decisionFunnel.buyReadyMerchantExits.visitors,

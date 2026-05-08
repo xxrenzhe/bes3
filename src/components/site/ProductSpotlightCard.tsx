@@ -1,9 +1,10 @@
 import Image from 'next/image'
 import Link from 'next/link'
+import { PurchaseDecisionActionLink } from '@/components/commerce/PurchaseDecisionActionLink'
 import { PrimaryCta } from '@/components/site/PrimaryCta'
 import { ShortlistActionBar } from '@/components/site/ShortlistActionBar'
 import { formatEditorialDate, getFreshnessLabel } from '@/lib/editorial'
-import { buildMerchantExitPath, hasMerchantExitTarget } from '@/lib/merchant-links'
+import { buildCommercePurchaseDecision } from '@/lib/purchase-decision'
 import { toShortlistItem } from '@/lib/shortlist'
 import type { ProductRecord } from '@/lib/site-data'
 import { cn, formatPriceSnapshot } from '@/lib/utils'
@@ -23,7 +24,13 @@ export function ProductSpotlightCard({
 }) {
   const freshnessDate = product.updatedAt || product.publishedAt
   const productHref = product.slug ? `/products/${product.slug}` : supportingHref || null
-  const merchantHref = hasMerchantExitTarget(product) ? buildMerchantExitPath(product.id, source) : null
+  const purchaseDecision = buildCommercePurchaseDecision(product, {
+    pageType: 'category',
+    trackingSource: source,
+    categoryHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+    alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
+    userIntent: 'spotlight recommendation'
+  })
   const shortlistItem = toShortlistItem(product)
 
   return (
@@ -89,12 +96,26 @@ export function ProductSpotlightCard({
 
         <ShortlistActionBar item={shortlistItem} compact source={source} />
 
-        <PrimaryCta
-          href={merchantHref}
-          productId={product.id}
-          trackingSource={source}
-          note="Use the full Bes3 product page first if you still need to verify fit, specs, or tradeoffs."
-        />
+        {purchaseDecision.primaryActionHref?.startsWith('/go/') ? (
+          <PrimaryCta
+            href={purchaseDecision.primaryActionHref}
+            label={purchaseDecision.primaryActionLabel}
+            productId={product.id}
+            trackingSource={source}
+            trackingMetadata={purchaseDecision.metadata}
+            note="Use the full Bes3 product page first if you still need to verify fit, specs, or tradeoffs."
+            trustBadge={`${purchaseDecision.stateLabel} · ${purchaseDecision.confidenceLine}`}
+          />
+        ) : (
+          <div className="space-y-2">
+            <PurchaseDecisionActionLink
+              decision={purchaseDecision}
+              className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+            />
+            <p className="text-xs text-muted-foreground">This action follows the current purchase decision instead of forcing a merchant click.</p>
+            <p className="text-xs font-medium text-muted-foreground">{purchaseDecision.stateLabel} · {purchaseDecision.confidenceLine}</p>
+          </div>
+        )}
       </div>
     </article>
   )

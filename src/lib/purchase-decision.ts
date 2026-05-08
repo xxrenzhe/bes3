@@ -82,8 +82,12 @@ function hasEvidenceBlocker(input: PurchaseDecisionInput) {
   return input.readiness.state === 'not-ready' || input.criticalRisk || input.scoreLabel.toLowerCase().includes('do not buy')
 }
 
+function buildCtaVariant(state: PurchaseDecisionState, pageType: PurchaseDecisionPageType) {
+  return `${state.replace(/_/g, '-')}-${pageType}`
+}
+
 function buildDecisionMetadata(input: PurchaseDecisionInput, context: PurchaseDecisionContext, state: PurchaseDecisionState) {
-  const ctaVariant = `${state}-${context.pageType}`
+  const ctaVariant = buildCtaVariant(state, context.pageType)
   return {
     pageType: context.pageType,
     purchaseDecisionState: state,
@@ -188,7 +192,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
 }
 
 function buildPrimaryFallbackHref(context: PurchaseDecisionContext, state: PurchaseDecisionState) {
-  if (state === 'watch_price') return context.categoryHref || '#price-alert'
+  if (state === 'watch_price') return '#price-alert'
   if (state === 'compare_first' || state === 'skip' || state === 'link_unavailable') {
     return context.alternativeHref || context.categoryHref || '/categories'
   }
@@ -205,7 +209,7 @@ export function buildPurchaseDecision(input: PurchaseDecisionInput, context: Pur
     : ['Verify live price, stock, return terms, and seller details before checkout.']
   const proofBullets = firstItems(input.proofSignals, 3, input.readiness.reasons)
   const riskBullets = firstItems(input.riskSignals, 2, input.readiness.blockers.length ? input.readiness.blockers : riskFallback)
-  const ctaVariant = `${state}-${context.pageType}`
+  const ctaVariant = buildCtaVariant(state, context.pageType)
   const metadata = buildDecisionMetadata(input, context, state)
 
   return {

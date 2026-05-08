@@ -110,6 +110,11 @@ export default async function AdminDashboardPage() {
       description: `${decisionFunnel.purchaseDecisionViewEvents} 次 purchase decision view`
     },
     {
+      label: '决策 CTA',
+      value: decisionFunnel.purchaseDecisionCtaVisitors,
+      description: `${decisionFunnel.purchaseDecisionCtaEvents} 次非商家购买决策 CTA 点击`
+    },
+    {
       label: '收藏访客',
       value: decisionFunnel.shortlistVisitors,
       description: `${decisionFunnel.lookbackDays} 天内 ${decisionFunnel.shortlistEvents} 次收藏动作`
@@ -286,6 +291,10 @@ export default async function AdminDashboardPage() {
             <div className="rounded-md border bg-white p-3">
               <p className="text-xs font-semibold text-slate-500">购买卡曝光</p>
               <p className="mt-1 text-xl font-bold text-slate-950">{decisionFunnel.purchaseDecisionViewEvents}</p>
+            </div>
+            <div className="rounded-md border bg-white p-3">
+              <p className="text-xs font-semibold text-slate-500">决策 CTA 点击</p>
+              <p className="mt-1 text-xl font-bold text-slate-950">{decisionFunnel.purchaseDecisionCtaEvents}</p>
             </div>
             <div className="rounded-md border bg-white p-3">
               <p className="text-xs font-semibold text-slate-500">buy-ready 跳转</p>

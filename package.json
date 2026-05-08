@@ -36,6 +36,7 @@
     "hardcore:evaluate-price-alerts": "tsx scripts/evaluate-price-alerts.ts",
     "hardcore:dispatch-price-alerts": "tsx scripts/dispatch-price-alert-notifications.ts",
     "hardcore:export-planv2-ops": "tsx scripts/export-planv2-ops-manifest.ts",
+    "planv2:check-purchase-decision": "tsx scripts/check-purchase-decision-behavior.ts",
     "planv2:check-business": "tsx scripts/check-planv2-business-coverage.ts",
     "hardcore:check-planv2-seo": "tsx scripts/check-planv2-seo-surface.ts",
     "pseo:check-recommendation-quality": "tsx scripts/check-pseo-recommendation-quality.ts",

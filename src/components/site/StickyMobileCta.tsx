@@ -3,8 +3,18 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
+import type { PurchaseDecisionState } from '@/lib/purchase-decision'
 
 const SCROLL_DELTA = 18
+
+const ACTION_TONES: Record<PurchaseDecisionState, string> = {
+  buy_now: 'bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] text-primary-foreground shadow-lg shadow-emerald-950/10',
+  compare_first: 'bg-sky-950 text-white shadow-lg shadow-sky-950/10',
+  watch_price: 'bg-amber-950 text-white shadow-lg shadow-amber-950/10',
+  skip: 'bg-white text-rose-950 ring-1 ring-rose-200',
+  researching: 'bg-slate-950 text-white shadow-lg shadow-slate-950/10',
+  link_unavailable: 'bg-white text-zinc-950 ring-1 ring-zinc-300'
+}
 
 export function StickyMobileCta({
   href,
@@ -12,6 +22,7 @@ export function StickyMobileCta({
   productId,
   trackingSource = 'site',
   trackingMetadata,
+  actionTone = 'buy_now',
   triggerOffset = 520,
   eyebrow = 'Ready to buy?',
   trustBadge = 'Hand-tested by Alex | Ad-free independent review'
@@ -21,6 +32,7 @@ export function StickyMobileCta({
   productId?: number | null
   trackingSource?: string
   trackingMetadata?: Record<string, unknown>
+  actionTone?: PurchaseDecisionState
   triggerOffset?: number
   eyebrow?: string
   trustBadge?: string
@@ -96,16 +108,16 @@ export function StickyMobileCta({
           onClick={() => {
             if (!productId) return
             trackDecisionEvent({
-              eventType: 'merchant_cta_click',
+              eventType: resolvedHref.startsWith('/go/') ? 'merchant_cta_click' : 'purchase_decision_cta_click',
               source: trackingSource,
               productId,
               metadata: trackingMetadata
             })
           }}
-          className="mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full bg-[linear-gradient(135deg,hsl(var(--primary)),#00855d)] px-6 py-3 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10"
+          className={`mt-3 inline-flex min-h-[52px] w-full items-center justify-center gap-2 rounded-full px-6 py-3 text-sm font-semibold ${ACTION_TONES[actionTone]}`}
         >
           {label}
-          <span aria-hidden="true">↗</span>
+          {resolvedHref.startsWith('/go/') ? <span aria-hidden="true">↗</span> : null}
         </Link>
       </div>
     </div>

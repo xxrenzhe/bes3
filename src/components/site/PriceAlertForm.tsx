@@ -38,7 +38,7 @@ export function PriceAlertForm({
   }
 
   return (
-    <form onSubmit={submit} className="mt-5 rounded-md border border-border bg-white p-4">
+    <form id="price-alert" onSubmit={submit} className="mt-5 scroll-mt-24 rounded-md border border-border bg-white p-4">
       <label htmlFor={`price-alert-${productId}`} className="text-xs font-bold uppercase tracking-[0.18em] text-muted-foreground">
         Track price
       </label>

@@ -192,6 +192,19 @@ const checks: PlanDocCheck[] = [
     requirement: 'One-shot purchase decision conversion loop is implemented across decision logic, public pages, tracking, merchant handoff, and admin repair operations.',
     artifacts: [
       {
+        label: 'Purchase decision behavior check',
+        filePath: 'scripts/check-purchase-decision-behavior.ts',
+        required: [
+          'buy-ready product maps to buy_now',
+          'close alternative maps to compare_first',
+          'overpriced maps to watch_price',
+          'critical risk maps to skip',
+          'thin evidence maps to researching',
+          'missing merchant handoff maps to link_unavailable',
+          'non-buy state must not use /go'
+        ]
+      },
+      {
         label: 'Purchase decision core',
         filePath: 'src/lib/purchase-decision.ts',
         required: [
@@ -215,12 +228,24 @@ const checks: PlanDocCheck[] = [
         required: [
           'export function PurchaseDecisionCard',
           'PurchaseDecisionTracker',
+          'PurchaseDecisionActionLink',
           'PrimaryCta',
           'StickyMobileCta',
           'trackingMetadata={decision.metadata}',
           'mobile-sticky-decision',
+          'actionTone={decision.state}',
           'Affiliate disclosure:',
           'Commission availability never changes the evidence score or recommendation order.'
+        ]
+      },
+      {
+        label: 'Purchase decision action link',
+        filePath: 'src/components/commerce/PurchaseDecisionActionLink.tsx',
+        required: [
+          "'use client'",
+          "eventType: 'purchase_decision_cta_click'",
+          'trackDecisionEvent',
+          'metadata: decision.metadata'
         ]
       },
       {
@@ -371,6 +396,7 @@ const checks: PlanDocCheck[] = [
         filePath: 'src/lib/decision-event-types.ts',
         required: [
           "'purchase_decision_view'",
+          "'purchase_decision_cta_click'",
           "'merchant_cta_click'"
         ]
       },
@@ -381,6 +407,7 @@ const checks: PlanDocCheck[] = [
           'PURCHASE_DECISION_VIEW_TYPES',
           'buyReadyDecisionViews',
           'buyReadyMerchantExits',
+          'purchaseDecisionCtaClicks',
           'buyReadyValidAffiliateCtr',
           "row.metadata?.purchaseDecisionState === 'buy_now'",
           'SELECT visitor_id, source, created_at'
@@ -471,6 +498,7 @@ const checks: PlanDocCheck[] = [
           'commercialRepairQueue',
           'buyReadyValidAffiliateCtr',
           'buyReadyDecisionViewEvents',
+          'purchaseDecisionCtaEvents',
           'buyReadyMerchantExitEvents',
           'high_score_no_link'
         ]

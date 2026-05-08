@@ -21,6 +21,7 @@ export const DECISION_EVENT_TYPES = [
   'decision_coach_primary_click',
   'decision_coach_secondary_click',
   'purchase_decision_view',
+  'purchase_decision_cta_click',
   'merchant_cta_click',
   'exit_intent_prompt_view',
   'exit_intent_prompt_dismiss',

@@ -40,6 +40,7 @@ const COACH_PRIMARY_TYPES: DecisionEventType[] = ['decision_coach_primary_click'
 const COACH_SECONDARY_TYPES: DecisionEventType[] = ['decision_coach_secondary_click']
 
 const PURCHASE_DECISION_VIEW_TYPES: DecisionEventType[] = ['purchase_decision_view']
+const PURCHASE_DECISION_CTA_TYPES: DecisionEventType[] = ['purchase_decision_cta_click']
 const MERCHANT_INTENT_TYPES: DecisionEventType[] = ['merchant_cta_click', 'merchant_offer_select']
 const SHORTLIST_DECISION_COACH_SOURCE = normalizeMerchantSource('shortlist-decision-coach')
 const ASSISTANT_SESSION_TYPES: DecisionEventType[] = ['assistant_session_start']
@@ -108,6 +109,7 @@ export interface DecisionFunnelSummary {
   merchantIntentClicks: DecisionEventCounter
   verifiedMerchantExits: DecisionEventCounter
   purchaseDecisionViews: DecisionEventCounter
+  purchaseDecisionCtaClicks: DecisionEventCounter
   buyReadyDecisionViews: DecisionEventCounter
   buyReadyMerchantExits: DecisionEventCounter
   buyReadyValidAffiliateCtr: number
@@ -280,6 +282,7 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     recentRows.filter((row) => row.event_type === 'shortlist_compare_load' && row.source === SHORTLIST_DECISION_COACH_SOURCE)
   )
   const purchaseDecisionViews = buildCounter(recentRows, PURCHASE_DECISION_VIEW_TYPES)
+  const purchaseDecisionCtaClicks = buildCounter(recentRows, PURCHASE_DECISION_CTA_TYPES)
   const buyReadyDecisionViews = buildVisitorCounter(
     recentRows.filter((row) => row.event_type === 'purchase_decision_view' && row.metadata?.purchaseDecisionState === 'buy_now')
   )
@@ -346,6 +349,7 @@ export async function getDecisionFunnelSummary(days: number = 7): Promise<Decisi
     merchantIntentClicks,
     verifiedMerchantExits,
     purchaseDecisionViews,
+    purchaseDecisionCtaClicks,
     buyReadyDecisionViews,
     buyReadyMerchantExits,
     buyReadyValidAffiliateCtr: toPercent(buyReadyMerchantExits.events, buyReadyDecisionViews.events),
