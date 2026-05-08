@@ -2,9 +2,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { PublicShell } from '@/components/layout/PublicShell'
 import { StructuredData } from '@/components/site/StructuredData'
+import { buildCommerceDecisionReadiness } from '@/lib/decision-readiness'
 import { getHardcoreHome } from '@/lib/hardcore'
 import { buildPageMetadata } from '@/lib/metadata'
 import { getRequestLocale } from '@/lib/request-locale'
+import { listOpenCommerceProducts } from '@/lib/site-data'
 import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
@@ -19,9 +21,25 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function HomePage() {
-  const home = await getHardcoreHome()
-  const liveCategories = home.categories.filter((item) => item.status === 'Live matrix').length
-  const evidenceCount = home.products.reduce((total, product) => total + product.consensus.evidenceCount, 0)
+  const [home, commerceProducts] = await Promise.all([
+    getHardcoreHome(),
+    listOpenCommerceProducts()
+  ])
+  const trackedCategoryKeys = new Set(home.categories.map((item) => item.category.slug))
+  let commerceBuyReadyProducts = 0
+  let commerceEvidenceSignals = 0
+
+  for (const product of commerceProducts) {
+    if (buildCommerceDecisionReadiness(product).state === 'buy-ready') {
+      commerceBuyReadyProducts += 1
+    }
+    commerceEvidenceSignals += Number(product.evidenceCount || 0) + Number(product.publicEvidenceCount || 0)
+
+    const categoryKey = product.categorySlug || product.category
+    if (categoryKey) trackedCategoryKeys.add(categoryKey)
+  }
+
+  const evidenceCount = home.products.reduce((total, product) => total + product.consensus.evidenceCount, commerceEvidenceSignals)
   const faqEntries = [
     {
       question: 'What changed in Bes3?',
@@ -82,9 +100,9 @@ export default async function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             {[
-              ['Categories tracked', String(home.categories.length), 'Product areas where hands-on testing matters most.'],
-              ['Buy-ready areas', String(liveCategories), 'Categories with enough coverage to start from a Top 3.'],
-              ['Evidence signals', String(evidenceCount), 'Source-backed facts behind the buying calls.']
+              ['Categories tracked', String(trackedCategoryKeys.size), 'Public category surfaces with buying or evidence coverage.'],
+              ['Buy-ready products', String(commerceBuyReadyProducts), 'Published products with verified commissionable merchant paths.'],
+              ['Evidence signals', String(evidenceCount), 'Review reports and product facts behind the buying calls.']
             ].map(([label, value, note]) => (
               <div key={label} className="rounded-md border border-border bg-slate-50 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
@@ -125,7 +143,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Categories</p>
           <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight">
-            Fourteen product areas where real-world testing beats spec sheets.
+            Focused product areas where real-world testing beats spec sheets.
           </h2>
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {home.categories.map((item) => (
