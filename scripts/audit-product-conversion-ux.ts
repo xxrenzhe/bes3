@@ -42,6 +42,8 @@ type RectSnapshot = {
 type LinkSnapshot = {
   text: string
   href: string
+  target: string
+  rel: string
   visible: boolean
   rect: RectSnapshot
 }
@@ -132,6 +134,8 @@ async function collectViewportEvidence(page: Page) {
       return {
         text: (anchor.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 120),
         href: anchor.getAttribute('href') || '',
+        target: anchor.getAttribute('target') || '',
+        rel: anchor.getAttribute('rel') || '',
         visible: Boolean(rect && rect.width > 0 && rect.height > 0),
         rect: rect || { x: 0, y: 0, width: 0, height: 0, bottom: 0 }
       }
@@ -149,6 +153,10 @@ async function collectViewportEvidence(page: Page) {
     const decisionNotesCta = rectFromElement(document.querySelector('[data-product-ux="decision-notes-cta"]'))
     const productFacts = rectFromElement(document.querySelector('#product-facts'))
     const finalDecisionRecovery = rectFromElement(document.querySelector('[data-product-ux="final-decision-recovery"]'))
+    const finalDecisionLinks = links.filter((link) => {
+      const anchor = Array.from(document.querySelectorAll('[data-product-ux="final-decision-recovery"] a[href]')).find((item) => item.getAttribute('href') === link.href && (item.textContent || '').trim().replace(/\s+/g, ' ').slice(0, 120) === link.text)
+      return Boolean(anchor)
+    })
     const decisionHeading = Array.from(document.querySelectorAll('h2')).find((heading) => /buy|compare|watch|skip|research|purchase-ready/i.test(heading.textContent || ''))
     const decisionHeadingRect = rectFromElement(decisionHeading || null)
     const bodyText = document.body.innerText
@@ -184,6 +192,8 @@ async function collectViewportEvidence(page: Page) {
       } : null,
       mainCtas,
       evidenceLinks,
+      internalOperationLinks: links.filter((link) => link.visible && ['#buy-decision', '#current-offer', '#decision-notes', '#product-facts'].includes(link.href)),
+      finalDecisionLinks,
       overflow,
       htmlHasOpenProductJson: openLinks.some((link) => link.text.includes('Open product JSON') && !link.href.endsWith('/offers')),
       htmlHasOpenOfferJson: openLinks.some((link) => link.text.includes('Open offer JSON') && link.href.endsWith('/offers')),
@@ -213,10 +223,15 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   const decisionNotesCta = evidence.decisionNotesCta as RectSnapshot | null
   const productFacts = evidence.productFacts as RectSnapshot | null
   const finalDecisionRecovery = evidence.finalDecisionRecovery as RectSnapshot | null
+  const internalOperationLinks = evidence.internalOperationLinks as LinkSnapshot[]
+  const finalDecisionLinks = evidence.finalDecisionLinks as LinkSnapshot[]
   const overflowWidth = Math.max(evidence.overflow.scrollWidth, evidence.overflow.bodyScrollWidth)
 
   if (!isVisible(h1)) throw new Error(`${viewport.label}: h1 is not visible`)
   if (!cta) throw new Error(`${viewport.label}: visible /go CTA is missing`)
+  if (cta.target !== '_blank' || !cta.rel.includes('noopener') || !cta.rel.includes('noreferrer')) {
+    throw new Error(`${viewport.label}: visible /go CTA must open safely in a new tab`)
+  }
   if (!evidenceLink) throw new Error(`${viewport.label}: visible evidence link is missing`)
   if (!isInFirstViewport(h1, viewport.height, 0.55)) throw new Error(`${viewport.label}: h1 is too low (${h1.y}px)`)
   if (!isInFirstViewport(cta.rect, viewport.height, 0.78)) throw new Error(`${viewport.label}: /go CTA is too low (${cta.rect.y}px)`)
@@ -239,6 +254,18 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
   if (!isVisible(decisionPath)) throw new Error(`${viewport.label}: decision path is missing`)
   if (!isVisible(decisionNotesCta)) throw new Error(`${viewport.label}: decision notes CTA is missing`)
   if (!isVisible(finalDecisionRecovery) || !evidence.htmlHasFinalDecisionRecovery) throw new Error(`${viewport.label}: final decision recovery is missing`)
+  const wrongInternalLink = internalOperationLinks.find((link) => link.target || link.rel)
+  if (wrongInternalLink) throw new Error(`${viewport.label}: internal operation link should stay in current tab: ${wrongInternalLink.href}`)
+  const finalGoLink = finalDecisionLinks.find((link) => link.href.startsWith('/go/'))
+  if (!finalGoLink) throw new Error(`${viewport.label}: final decision recovery is missing merchant CTA`)
+  if (finalGoLink.target !== '_blank' || !finalGoLink.rel.includes('noopener') || !finalGoLink.rel.includes('noreferrer')) {
+    throw new Error(`${viewport.label}: final decision recovery merchant CTA must open safely in a new tab`)
+  }
+  for (const requiredHref of ['#buy-decision', '#current-offer']) {
+    const link = finalDecisionLinks.find((item) => item.href === requiredHref)
+    if (!link) throw new Error(`${viewport.label}: final decision recovery missing ${requiredHref}`)
+    if (link.target || link.rel) throw new Error(`${viewport.label}: final decision recovery internal link should stay in current tab: ${requiredHref}`)
+  }
   if (viewport.width < 640 && !evidence.htmlHasMobileStickyReserve) throw new Error(`${viewport.label}: sticky mobile CTA is not reserved above the final content`)
 
   return {
@@ -255,6 +282,17 @@ function assertViewportEvidence(viewport: ViewportSpec, evidence: Awaited<Return
     decisionNotesCtaRect: decisionNotesCta,
     productFactsRect: productFacts,
     finalDecisionRecoveryRect: finalDecisionRecovery,
+    linkSemantics: {
+      visibleGoTarget: cta.target,
+      visibleGoRel: cta.rel,
+      internalOperationLinks: internalOperationLinks.length,
+      finalDecisionLinks: finalDecisionLinks.map((link) => ({
+        text: link.text,
+        href: link.href,
+        target: link.target,
+        rel: link.rel
+      }))
+    },
     structuredDataCount: evidence.structuredDataCount,
     overflowWidth
   }

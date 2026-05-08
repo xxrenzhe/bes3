@@ -244,6 +244,9 @@ const gates: Gate[] = [
       'decision shortcuts are missing',
       'decision notes CTA is missing',
       'final decision recovery is missing',
+      'visible /go CTA must open safely in a new tab',
+      'internal operation link should stay in current tab',
+      'final decision recovery merchant CTA must open safely in a new tab',
       'sticky mobile CTA is not reserved above the final content',
       'console issues'
     ]
