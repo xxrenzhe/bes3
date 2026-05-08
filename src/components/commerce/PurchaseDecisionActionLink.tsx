@@ -1,7 +1,8 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { trackDecisionEvent } from '@/lib/decision-tracking'
+import { buildTrackedMerchantExitPath, trackDecisionEvent } from '@/lib/decision-tracking'
 import type { PurchaseDecision } from '@/lib/purchase-decision'
 
 export function PurchaseDecisionActionLink({
@@ -11,7 +12,24 @@ export function PurchaseDecisionActionLink({
   decision: PurchaseDecision
   className: string
 }) {
-  if (!decision.primaryActionHref) {
+  const [resolvedHref, setResolvedHref] = useState(decision.primaryActionHref)
+  const metadataKey = JSON.stringify(decision.metadata || null)
+
+  useEffect(() => {
+    if (!decision.primaryActionHref) {
+      setResolvedHref(null)
+      return
+    }
+
+    if (!decision.primaryActionHref.startsWith('/go/')) {
+      setResolvedHref(decision.primaryActionHref)
+      return
+    }
+
+    setResolvedHref(buildTrackedMerchantExitPath(decision.productId, decision.trackingSource, null, decision.metadata))
+  }, [decision.primaryActionHref, decision.productId, decision.trackingSource, metadataKey, decision.metadata])
+
+  if (!resolvedHref) {
     return (
       <div
         aria-disabled="true"
@@ -24,9 +42,19 @@ export function PurchaseDecisionActionLink({
 
   return (
     <Link
-      href={decision.primaryActionHref}
+      href={resolvedHref}
       className={className}
       onClick={() => {
+        if (resolvedHref.startsWith('/go/')) {
+          trackDecisionEvent({
+            eventType: 'merchant_cta_click',
+            source: decision.trackingSource,
+            productId: decision.productId,
+            metadata: decision.metadata
+          })
+          return
+        }
+
         trackDecisionEvent({
           eventType: 'purchase_decision_cta_click',
           source: decision.trackingSource,

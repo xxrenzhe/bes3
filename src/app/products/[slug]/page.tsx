@@ -107,7 +107,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
       <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[1fr_0.72fr] lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Product Brief</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Should you buy it?</p>
             <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
               {product.productName}
             </h1>

@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { PurchaseDecisionActionLink } from '@/components/commerce/PurchaseDecisionActionLink'
 import { PriceValueBadge } from '@/components/site/PriceValueBadge'
 import { formatHardcorePrice, type HardcoreProduct } from '@/lib/hardcore'
 import { buildEvidencePurchaseDecision } from '@/lib/purchase-decision'
@@ -87,7 +88,7 @@ export function HardcoreEvidenceMatrix({
               hasAlternatives: Boolean(alternative),
               userIntent: `${product.categoryName} evidence matrix`
             })
-            const merchantHref = purchaseDecision.primaryActionHref?.startsWith('/go/') ? purchaseDecision.primaryActionHref : null
+            const matrixActionHref = purchaseDecision.primaryActionHref
             return (
               <article key={product.id} className="rounded-[1.5rem] border border-border/70 bg-white p-4 shadow-sm">
                 <div className="flex flex-wrap items-start justify-between gap-3">
@@ -147,13 +148,11 @@ export function HardcoreEvidenceMatrix({
                 </div>
 
                 <div className="mt-4">
-                  {product.affiliateUrl && canBuy(product.affiliateStatus) ? (
-                    <a
-                      href={merchantHref || `/products/${product.slug}`}
+                  {matrixActionHref && product.affiliateUrl && canBuy(product.affiliateStatus) ? (
+                    <PurchaseDecisionActionLink
+                      decision={purchaseDecision}
                       className="inline-flex min-h-11 w-full touch-manipulation items-center justify-center rounded-full bg-primary px-4 text-sm font-semibold text-primary-foreground"
-                    >
-                      {merchantHref ? purchaseDecision.primaryActionLabel : 'View decision'}
-                    </a>
+                    />
                   ) : product.affiliateStatus === 'out_of_stock' ? (
                     <div className="space-y-2">
                       <span className="inline-flex min-h-11 w-full items-center justify-center rounded-full border border-amber-300 bg-amber-50 px-4 text-sm font-semibold text-amber-900">
@@ -201,7 +200,7 @@ export function HardcoreEvidenceMatrix({
                   hasAlternatives: Boolean(alternative),
                   userIntent: `${product.categoryName} evidence matrix`
                 })
-                const merchantHref = purchaseDecision.primaryActionHref?.startsWith('/go/') ? purchaseDecision.primaryActionHref : null
+                const matrixActionHref = purchaseDecision.primaryActionHref
                 return (
                   <tr key={product.id} className="border-b border-border/70 align-top">
                     <td className="py-5 pr-6">
@@ -260,13 +259,11 @@ export function HardcoreEvidenceMatrix({
                       )}
                     </td>
                     <td className="py-5 pl-4">
-                      {product.affiliateUrl && canBuy(product.affiliateStatus) ? (
-                        <a
-                          href={merchantHref || `/products/${product.slug}`}
+                      {matrixActionHref && product.affiliateUrl && canBuy(product.affiliateStatus) ? (
+                        <PurchaseDecisionActionLink
+                          decision={purchaseDecision}
                           className="inline-flex rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground"
-                        >
-                          {merchantHref ? purchaseDecision.primaryActionLabel : 'View decision'}
-                        </a>
+                        />
                       ) : product.affiliateStatus === 'out_of_stock' ? (
                         <div className="max-w-[220px] space-y-2">
                           <span className="inline-flex rounded-md border border-amber-300 bg-amber-50 px-4 py-2 text-sm font-semibold text-amber-900">
