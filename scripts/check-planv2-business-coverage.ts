@@ -166,7 +166,7 @@ const checks: PlanDocCheck[] = [
     requirement: 'Release preflight, runtime env validation, health checks, deployment, backup/restore, and alerting surfaces are available.',
     artifacts: [
       { label: 'Release preflight', filePath: 'scripts/preflight-release.sh', required: ['check-runtime-env.js', 'planv2:check-business', 'hardcore:check-planv2-seo', 'commercial-loop:check', 'ops:check-planv2-security', 'db:check-drift', 'type-check', 'ops:smoke-e2e', 'ops:browser-e2e'] },
-      { label: 'Browser E2E', filePath: 'scripts/browser-planv2-e2e.ts', required: ['playwright', 'Buyer-First Ratings', 'DEFAULT_ADMIN_USERNAME', 'DEFAULT_ADMIN_PASSWORD'] },
+      { label: 'Browser E2E', filePath: 'scripts/browser-planv2-e2e.ts', required: ['playwright', 'Buying Decisions', 'Find Best Picks', 'DEFAULT_ADMIN_USERNAME', 'DEFAULT_ADMIN_PASSWORD'] },
       { label: 'Runtime E2E smoke', filePath: 'scripts/smoke-planv2-e2e.ts', required: ['coverage-manifest-v1', '/go/999999999', '/reviews/non-existent-commercial-loop-smoke', 'x-bes3-blocked-reason'] },
       { label: 'Runtime env validation', filePath: 'scripts/check-runtime-env.js', required: ['JWT_SECRET', 'ENCRYPTION_KEY', 'BROWSER_PROXY_URLS_JSON'] },
       { label: 'Health endpoint', filePath: 'src/app/api/health/route.ts', required: ['status', 'database'] },

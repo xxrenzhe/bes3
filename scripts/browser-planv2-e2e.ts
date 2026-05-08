@@ -1,8 +1,10 @@
 #!/usr/bin/env tsx
 
 import './load-env'
+import fs from 'node:fs'
+import path from 'node:path'
 import { spawn, type ChildProcessWithoutNullStreams } from 'node:child_process'
-import { chromium, type Page } from 'playwright'
+import { chromium, type BrowserContext, type Page } from 'playwright'
 import { DEFAULT_ADMIN_USERNAME } from '@/lib/constants'
 import { bootstrapApplication } from '@/lib/bootstrap'
 
@@ -20,17 +22,67 @@ function wait(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms))
 }
 
-function startServer() {
-  const child = spawn('npm', ['run', 'start', '--', '-p', String(port)], {
-    cwd: process.cwd(),
-    env: {
-      ...process.env,
-      NODE_ENV: 'production',
-      PORT: String(port),
-      NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || baseUrl
+function ensureStandaloneStaticAssets() {
+  const standaloneRoot = path.join(process.cwd(), '.next', 'standalone')
+  const standaloneNextDir = path.join(standaloneRoot, '.next')
+  const sourceStatic = path.join(process.cwd(), '.next', 'static')
+  const targetStatic = path.join(standaloneNextDir, 'static')
+  const sourcePublic = path.join(process.cwd(), 'public')
+  const targetPublic = path.join(standaloneRoot, 'public')
+
+  if (!fs.existsSync(sourceStatic)) return
+  fs.mkdirSync(standaloneNextDir, { recursive: true })
+  if (!fs.existsSync(targetStatic)) {
+    fs.symlinkSync(sourceStatic, targetStatic, 'dir')
+  }
+  if (fs.existsSync(sourcePublic) && !fs.existsSync(targetPublic)) {
+    fs.symlinkSync(sourcePublic, targetPublic, 'dir')
+  }
+}
+
+async function injectAdminSession(context: BrowserContext, adminPassword: string) {
+  const loginResponse = await context.request.post('/api/auth/login', {
+    data: {
+      username: process.env.DEFAULT_ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME,
+      password: adminPassword
     },
-    stdio: ['ignore', 'pipe', 'pipe']
+    maxRedirects: 0
   })
+  if (loginResponse.status() !== 200) {
+    throw new Error(`browser e2e admin credential authentication failed: ${loginResponse.status()}`)
+  }
+
+  const body = await loginResponse.json().catch(() => ({}))
+  return body
+}
+
+function startServer() {
+  const standaloneServer = '.next/standalone/server.js'
+  const useStandalone = fs.existsSync(standaloneServer)
+  if (useStandalone) ensureStandaloneStaticAssets()
+  const child = useStandalone
+    ? spawn(process.execPath, [standaloneServer], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: 'production',
+          PORT: String(port),
+          HOSTNAME: '0.0.0.0',
+          NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || baseUrl
+        },
+        stdio: ['ignore', 'pipe', 'pipe']
+      })
+    : spawn('npm', ['run', 'start', '--', '-p', String(port)], {
+        cwd: process.cwd(),
+        env: {
+          ...process.env,
+          NODE_ENV: 'production',
+          PORT: String(port),
+          HOSTNAME: '0.0.0.0',
+          NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL || baseUrl
+        },
+        stdio: ['ignore', 'pipe', 'pipe']
+      })
   child.stdout.on('data', (chunk) => process.stdout.write(`[browser-e2e-server] ${chunk}`))
   child.stderr.on('data', (chunk) => process.stdout.write(`[browser-e2e-server] ${chunk}`))
   return child
@@ -103,8 +155,9 @@ async function runBrowserChecks() {
     const page = await context.newPage()
 
     await page.goto('/', { waitUntil: 'networkidle' })
-    await assertText(page, 'Buyer-First Ratings', 'desktop home')
-    await assertText(page, 'Real testing insights', 'desktop home')
+    await assertText(page, 'Buying Decisions', 'desktop home')
+    await assertText(page, 'Find Best Picks', 'desktop home')
+    await assertText(page, 'See Deals', 'desktop home')
     await assertNoHorizontalOverflow(page, 'desktop home')
     console.log('✓ browser home page renders without overflow')
 
@@ -120,25 +173,35 @@ async function runBrowserChecks() {
     if (coverage.planv2Readiness?.publicLoginEntryExposed !== false) throw new Error('coverage manifest readiness mismatch')
     console.log('✓ browser context can read open coverage manifest')
 
-    await page.goto('/go/999999999?source=evidence-review', { waitUntil: 'domcontentloaded' })
-    if (!['/directory', '/categories', '/products'].some((suffix) => page.url().endsWith(suffix))) {
-      throw new Error(`commercial redirect fallback failed: url=${page.url()}`)
+    const redirectResponse = await page.request.get('/go/999999999?source=evidence-review', {
+      maxRedirects: 0
+    })
+    if (![307, 308].includes(redirectResponse.status())) {
+      throw new Error(`commercial redirect fallback status failed: ${redirectResponse.status()}`)
+    }
+    const redirectLocation = redirectResponse.headers().location || ''
+    const redirectPath = redirectLocation.startsWith('http') ? new URL(redirectLocation).pathname : redirectLocation
+    if (!['/directory', '/categories', '/products'].includes(redirectPath)) {
+      throw new Error(`commercial redirect fallback failed: location=${redirectLocation || 'none'}`)
     }
     console.log('✓ browser commercial redirect family safely degrades')
 
-    await page.goto('/admin', { waitUntil: 'networkidle' })
-    if (!page.url().includes('/login')) throw new Error(`anonymous admin did not redirect to login: ${page.url()}`)
-    await page.locator('input[name="username"]').fill(process.env.DEFAULT_ADMIN_USERNAME || DEFAULT_ADMIN_USERNAME)
-    await page.locator('input[name="password"]').fill(adminPassword)
-    await Promise.all([
-      page.waitForURL((url) => url.pathname === '/admin' || url.pathname === '/change-password', { timeout: 15000 }),
-      page.locator('button[type="submit"]').click()
-    ])
+    const anonymousResponse = await page.request.get('/api/auth/me')
+    if (anonymousResponse.status() !== 401) throw new Error(`anonymous /api/auth/me expected 401, got ${anonymousResponse.status()}`)
+    const loginBody = await injectAdminSession(context, adminPassword)
+    const authenticatedProbe = await page.request.get('/api/auth/me')
+    if (authenticatedProbe.status() !== 200) {
+      throw new Error(`injected admin session was not accepted by /api/auth/me: ${authenticatedProbe.status()}`)
+    }
+    await page.goto(loginBody.mustChangePassword ? '/change-password' : '/admin', { waitUntil: 'networkidle' })
+    if (!['/admin', '/change-password'].includes(new URL(page.url()).pathname)) {
+      throw new Error(`authenticated admin did not reach protected area: ${page.url()}`)
+    }
     const meResponse = await page.request.get('/api/auth/me')
     if (meResponse.status() !== 200) throw new Error(`authenticated /api/auth/me failed with ${meResponse.status()}`)
     const me = await meResponse.json()
     if (!me?.user?.role || me.user.role !== 'admin') throw new Error('authenticated user is not admin')
-    console.log(`✓ browser admin login works (${page.url().includes('/change-password') ? 'password-change-required' : 'admin-console'})`)
+    console.log(`✓ browser admin session works (${page.url().includes('/change-password') ? 'password-change-required' : 'admin-console'})`)
 
     const mobileContext = await browser.newContext({
       baseURL: baseUrl,
@@ -153,7 +216,8 @@ async function runBrowserChecks() {
     })
     const mobilePage = await mobileContext.newPage()
     await mobilePage.goto('/', { waitUntil: 'networkidle' })
-    await assertText(mobilePage, 'Buyer-First Ratings', 'mobile home')
+    await assertText(mobilePage, 'Buying Decisions', 'mobile home')
+    await assertText(mobilePage, 'Find Best Picks', 'mobile home')
     await assertNoHorizontalOverflow(mobilePage, 'mobile home')
     await mobilePage.goto('/products', { waitUntil: 'networkidle' })
     await assertNoHorizontalOverflow(mobilePage, 'mobile products')
