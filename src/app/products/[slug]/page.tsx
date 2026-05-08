@@ -485,6 +485,47 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               </Link>
             </div>
           </details>
+          <div data-product-ux="final-decision-recovery" className="rounded-[1.75rem] border border-emerald-200 bg-white p-5 shadow-[0_26px_80px_-55px_rgba(15,23,42,0.65)] lg:col-span-2 lg:p-6">
+            <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Finished checking the facts?</p>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Return to the buying decision before you leave Bes3.</h2>
+                <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
+                  Use the merchant link only if the live offer still matches this page on price, variant, stock, shipping, and return terms.
+                </p>
+              </div>
+              <div className="flex flex-col gap-3 lg:min-w-[280px]">
+                {isMerchantCta ? (
+                  <PrimaryCta
+                    href={purchaseDecision.primaryActionHref}
+                    label={purchaseDecision.primaryActionLabel}
+                    productId={product.id}
+                    trackingSource="final-decision-recovery"
+                    trackingMetadata={{
+                      ...purchaseDecision.metadata,
+                      ctaVariant: `${purchaseDecision.ctaVariant}-final-recovery`
+                    }}
+                    trustBadge={`${purchaseDecision.evidenceCount} evidence signals and product facts reviewed`}
+                    buttonClassName="w-full"
+                    showAffiliateDisclosure={false}
+                  />
+                ) : (
+                  <PurchaseDecisionActionLink
+                    decision={purchaseDecision}
+                    className="inline-flex min-h-[52px] w-full items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  />
+                )}
+                <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                  <a href="#buy-decision" className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-slate-50 px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                    Review buy decision
+                  </a>
+                  <a href="#current-offer" className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                    Recheck offer terms
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </PublicShell>

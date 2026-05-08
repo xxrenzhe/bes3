@@ -114,8 +114,12 @@ const gates: Gate[] = [
       'id="buy-decision"',
       'id="current-offer"',
       'data-product-ux="decision-notes-cta"',
+      'data-product-ux="final-decision-recovery"',
       'trackingSource="decision-notes-exit"',
+      'trackingSource="final-decision-recovery"',
       'Back to buy decision',
+      'Review buy decision',
+      'Recheck offer terms',
       'pb-36 sm:px-6 sm:pb-14',
       'href="#decision-notes"',
       'showAffiliateDisclosure={false}',
@@ -239,6 +243,7 @@ const gates: Gate[] = [
       'decision notes does not span the content grid',
       'decision shortcuts are missing',
       'decision notes CTA is missing',
+      'final decision recovery is missing',
       'sticky mobile CTA is not reserved above the final content',
       'console issues'
     ]
@@ -268,7 +273,8 @@ function checkProductPageOrdering() {
     'lg:col-span-2',
     'data-product-ux="decision-shortcuts"',
     'data-product-ux="decision-path"',
-    'data-product-ux="decision-notes-cta"'
+    'data-product-ux="decision-notes-cta"',
+    'data-product-ux="final-decision-recovery"'
   ])
 }
 
