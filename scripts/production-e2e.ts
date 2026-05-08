@@ -50,7 +50,7 @@ const mutationTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_MUTATION_TI
 const results: StepResult[] = []
 
 const publicPages: PageCheck[] = [
-  { area: 'Public positioning', name: 'Home buyer-first positioning', path: '/', requiredText: ['Buyer-First Ratings', 'Real testing insights'], safeInteractions: true },
+  { area: 'Public positioning', name: 'Home buyer-first positioning', path: '/', requiredText: ['Buying Decisions', 'verified merchant paths'], safeInteractions: true },
   { area: 'Public catalog', name: 'Products directory', path: '/products', requiredText: ['Products'], safeInteractions: true },
   { area: 'Public catalog', name: 'Deals directory', path: '/deals', safeInteractions: true },
   { area: 'Public catalog', name: 'Categories directory', path: '/categories', safeInteractions: true },
@@ -114,11 +114,24 @@ const publicApiChecks: ApiCheck[] = [
   { area: 'Public API', name: 'Commerce intent', path: '/api/open/commerce/intent?intent=best%20pool%20robot', expectedStatus: 200 },
   {
     area: 'Public API',
-    name: 'Decision event accepts safe test signal',
+    name: 'Decision event accepts anonymous purchase decision view',
     method: 'POST',
     path: '/api/decision-events',
     expectedStatus: [200, 201],
-    body: { eventType: 'qa_e2e_ping', source: 'production-e2e', metadata: { safe: true } }
+    body: {
+      visitorId: `production-e2e-${Date.now()}`,
+      eventType: 'purchase_decision_view',
+      source: 'production-e2e',
+      productId: 54,
+      metadata: {
+        pageType: 'product',
+        purchaseDecisionState: 'buy_now',
+        priceStatus: 'great-value',
+        ctaVariant: 'buy-now-product',
+        evidenceCount: 1,
+        hasMerchantHandoff: true
+      }
+    }
   },
   {
     area: 'Public API',
