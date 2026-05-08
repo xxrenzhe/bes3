@@ -363,14 +363,14 @@ async function checkPage(context: BrowserContext, check: PageCheck) {
     if (message.type() === 'error') pageErrors.push(message.text())
   })
   try {
-    await page.goto(absoluteUrl(check.path), { waitUntil: 'networkidle', timeout: navigationTimeoutMs })
+    await page.goto(absoluteUrl(check.path), { waitUntil: 'domcontentloaded', timeout: navigationTimeoutMs })
     if (check.authenticated && page.url().includes('/login')) throw new Error(`${check.path} redirected to login`)
     const status = await assertNoPageFailures(page, check)
     const mainVisible = await page.locator('main, body').first().isVisible({ timeout: 5000 })
     if (!mainVisible) throw new Error('main content is not visible')
+    const visibleText = (await page.locator('body').innerText({ timeout: 10000 })).toLocaleLowerCase()
     for (const text of check.requiredText || []) {
-      const count = await page.getByText(text, { exact: false }).count()
-      if (count === 0) throw new Error(`missing text "${text}"`)
+      if (!visibleText.includes(text.toLocaleLowerCase())) throw new Error(`missing visible text "${text}"`)
     }
     const inventory = await collectInteractiveInventory(page)
     const clicked = check.safeInteractions ? await clickSafeUi(page, check) : []
@@ -1027,7 +1027,8 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
 async function checkAdminNavigation(context: BrowserContext) {
   const page = await context.newPage()
   try {
-    await page.goto(absoluteUrl('/admin'), { waitUntil: 'networkidle', timeout: navigationTimeoutMs })
+    await page.goto(absoluteUrl('/admin'), { waitUntil: 'domcontentloaded', timeout: navigationTimeoutMs })
+    await page.locator('body').waitFor({ state: 'visible', timeout: 10000 })
     const navLinks = await page.locator('a[href^="/admin"]').evaluateAll((links) => Array.from(new Set(links.map((link) => (link as HTMLAnchorElement).getAttribute('href') || '').filter(Boolean))))
     const expected = adminPages.map((pageCheck) => pageCheck.path)
     const missing = expected.filter((href) => !navLinks.includes(href))
