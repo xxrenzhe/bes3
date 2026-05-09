@@ -73,6 +73,22 @@ export default async function OpenDataPage() {
         </div>
       </section>
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-8 grid max-w-7xl gap-5 lg:grid-cols-2">
+          <div className="rounded-md border border-border bg-slate-950 p-6 text-white">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Architecture loop</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Intent signals become auditable decisions.</h2>
+            <p className="mt-4 text-sm leading-7 text-slate-300">
+              Intent signals {'->'} Taxonomy tags {'->'} Product candidates {'->'} Evidence extraction {'->'} Consensus and risk {'->'} Price-value {'->'} Purchase decision {'->'} Merchant handoff {'->'} Decision events {'->'} Admin repair queue.
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">pSEO automation loop</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Long-tail pages are earned, not sprayed.</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Search/log/import signals {'->'} pending taxonomy tags {'->'} promoted intents {'->'} scenario and value pSEO pages {'->'} render audit {'->'} indexing/syndication {'->'} clicks and merchant exits {'->'} repair queue.
+            </p>
+          </div>
+        </div>
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-3">
           {entries.map((entry) => (
             <Link key={entry.path} href={entry.path} className="rounded-md border border-border bg-white p-6 hover:border-primary">

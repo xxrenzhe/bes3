@@ -60,11 +60,34 @@ export default async function TrustPage() {
             Trust is enforced by evidence constraints.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 ranks products using review quality, source consistency, use-case fit, and price history. It does not hide commercial disclosure behind neutral-looking buttons.
+            Bes3 ranks products using review quality, source consistency, use-case fit, and price history. It earns affiliate commission at no extra cost when a reader uses a merchant handoff, but it does not hide commercial disclosure behind neutral-looking buttons.
           </p>
         </div>
       </section>
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
+        <div className="mx-auto mb-8 grid max-w-7xl gap-5 lg:grid-cols-3">
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buyer-first affiliate model</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Revenue model follows the decision.</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Bes3 can earn affiliate commission after a valid `/go` merchant exit, but the page still has to justify buy / compare / wait / skip with evidence, price, and risk context.
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Commission-blind ranking</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Payout cannot become the winner.</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Commercial candidates are audited with commission excluded from the ranking score. A product can be monetizable and still lose if evidence, fit, price, or risk is weaker.
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">pSEO quality gate</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">No indexable fake certainty.</h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Programmatic pages need eligible products, independent evidence, price context, and merchant-path health. Otherwise they remain researching, noindex, or visibly bounded.
+            </p>
+          </div>
+        </div>
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[
             ['FTC disclosure', 'Affiliate disclosure appears globally and near outbound purchase actions.'],

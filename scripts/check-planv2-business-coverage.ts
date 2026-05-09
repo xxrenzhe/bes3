@@ -665,6 +665,71 @@ const checks: PlanDocCheck[] = [
         ]
       }
     ]
+  },
+  {
+    doc: '15. 10-round product and business optimization audit',
+    requirement: 'Bes3 has an explicit product/business strategy layer covering positioning, personas, pain points, business functions, architecture, monetization, UX, and pSEO automation.',
+    artifacts: [
+      {
+        label: '10-round strategy audit',
+        filePath: 'docs/planv2/15.Bes3 十轮产品与商业优化审计 (10-Round Product & Business Optimization Audit).md',
+        required: [
+          'Round 1 - 产品定位',
+          'Round 2 - 用户画像',
+          'Round 3 - 真实痛点',
+          'Round 4 - 业务功能',
+          'Round 5 - 系统架构',
+          'Round 6 - 盈利模式',
+          'Round 7 - 用户体验',
+          'Round 8 - 自动化 pSEO',
+          'Round 9 - 运营与风控',
+          'Round 10 - 下一阶段产品策略'
+        ]
+      },
+      {
+        label: 'Product strategy gate',
+        filePath: 'scripts/check-product-strategy-gates.ts',
+        required: [
+          'Product strategy gates passed',
+          'Buyer decision engine',
+          'businessModel',
+          'pseoAutomationLoop'
+        ]
+      },
+      {
+        label: 'Homepage strategy surface',
+        filePath: 'src/app/page.tsx',
+        required: [
+          'Buyer decision engine',
+          'For anxious buyers',
+          'For comparison buyers',
+          'For deal-timing buyers',
+          'Decision loop',
+          'Admin repair queue'
+        ]
+      },
+      {
+        label: 'Trust business model surface',
+        filePath: 'src/app/trust/page.tsx',
+        required: [
+          'Buyer-first affiliate model',
+          'Revenue model',
+          'Commission-blind ranking',
+          'pSEO quality gate'
+        ]
+      },
+      {
+        label: 'Open coverage strategy manifest',
+        filePath: 'src/app/api/open/coverage/route.ts',
+        required: [
+          'productPositioning',
+          'buyerPersonas',
+          'businessModel',
+          'architectureLoop',
+          'pseoAutomationLoop'
+        ]
+      }
+    ]
   }
 ]
 
@@ -694,6 +759,7 @@ const expectedScripts = [
   'ops:smoke-e2e',
   'ops:browser-e2e',
   'planv2:check-business',
+  'product:strategy-gates',
   'product:optimization-gates',
   'product:conversion-ux-audit'
 ]

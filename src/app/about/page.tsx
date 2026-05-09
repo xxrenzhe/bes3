@@ -9,7 +9,7 @@ import { buildAboutPageSchema, buildFaqSchema } from '@/lib/structured-data'
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'About Bes3',
-    description: 'Bes3 helps people compare products using hands-on reviews, real buyer questions, and price history.',
+    description: 'Bes3 is a buyer decision engine for hard-to-judge products, built around evidence, price timing, risk, and verified merchant paths.',
     path: '/about',
     locale: await getRequestLocale(),
     keywords: ['about Bes3', 'hardware teardown evidence', 'consensus scoring', 'price value analysis']
@@ -20,7 +20,7 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 now?',
-      answer: 'Bes3 is a product decision site for categories where hands-on testing matters. It turns long-form review evidence into clearer comparisons.'
+      answer: 'Bes3 is a buyer decision engine for categories where hands-on testing matters. It turns review evidence, price context, and merchant-path health into buy, compare, wait, or skip decisions.'
     },
     {
       question: 'What does Bes3 refuse to do?',
@@ -45,6 +45,33 @@ export default async function AboutPage() {
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
             Bes3 focuses on products where the difference between marketing specs and physical reality can cost serious money: robot vacuums, power stations, security devices, creator gear, air and water systems, maker tools, and other hard-to-judge equipment.
           </p>
+        </div>
+      </section>
+      <section className="px-4 pb-8 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-3">
+          <div className="rounded-md border border-border bg-white p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Who Bes3 is for</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">High-anxiety purchase tasks.</h2>
+            <div className="mt-5 space-y-4 text-sm leading-7 text-muted-foreground">
+              <p><span className="font-semibold text-foreground">Anxious buyer:</span> needs confidence that a hard-to-return product will work in real life.</p>
+              <p><span className="font-semibold text-foreground">Comparison buyer:</span> needs a default winner and a reason to choose the runner-up.</p>
+              <p><span className="font-semibold text-foreground">Deal-timing buyer:</span> needs to know whether today is a buy window or a wait state.</p>
+            </div>
+          </div>
+          <div className="rounded-md border border-border bg-slate-50 p-6">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Who Bes3 is not for</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Not a generic ad list.</h2>
+            <p className="mt-5 text-sm leading-7 text-muted-foreground">
+              Bes3 is not for users looking for random coupons, paid placements, vendor brochures, or fake certainty on thin evidence. If evidence, price, or link health is weak, the page should say so.
+            </p>
+          </div>
+          <div className="rounded-md border border-border bg-slate-950 p-6 text-white">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Product promise</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">No evidence, no strong recommendation.</h2>
+            <p className="mt-5 text-sm leading-7 text-slate-300">
+              No commission-ranked winners. No buy CTA without an executable merchant path. No pSEO page that pretends weak evidence is a confident decision.
+            </p>
+          </div>
         </div>
       </section>
       <section className="px-4 pb-16 sm:px-6 lg:px-8">

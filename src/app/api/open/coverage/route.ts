@@ -37,6 +37,52 @@ export async function GET(request: Request) {
       guides: articles.filter((article) => article.type === 'guide').length
     },
     localeFootprint: SUPPORTED_LOCALES,
+    productPositioning: {
+      summary: 'Bes3 is a buyer decision engine for hard-to-judge products.',
+      decisionPromise: 'Turn evidence, price timing, risk, and merchant-path health into buy / compare / wait / skip decisions.',
+      not: ['generic review feed', 'coupon wall', 'commission-ranked ad list']
+    },
+    buyerPersonas: [
+      {
+        name: 'Anxious buyer',
+        need: 'Needs confidence that a costly, hard-to-return product will work in real life.'
+      },
+      {
+        name: 'Comparison buyer',
+        need: 'Needs a default winner, best alternative, and clear reversal conditions.'
+      },
+      {
+        name: 'Deal-timing buyer',
+        need: 'Needs to know whether the current price is a buy window or a wait state.'
+      }
+    ],
+    businessModel: {
+      primaryRevenue: 'affiliate commission after compliant merchant handoff',
+      rankingPolicy: 'commission-blind ranking; payout data cannot decide public recommendation order',
+      conversionRequirement: 'strong buy CTAs require evidence, price context, risk checks, and a commissionable /go path'
+    },
+    architectureLoop: [
+      'Intent signals',
+      'Taxonomy tags',
+      'Product candidates',
+      'Evidence extraction',
+      'Consensus and risk',
+      'Price-value',
+      'Purchase decision',
+      'Merchant handoff',
+      'Decision events',
+      'Admin repair queue'
+    ],
+    pseoAutomationLoop: [
+      'Search/log/import signals',
+      'pending taxonomy tags',
+      'promoted intents',
+      'scenario and value pSEO pages',
+      'render audit',
+      'indexing/syndication',
+      'clicks and merchant exits',
+      'repair queue'
+    ],
     topCategories: categories.slice(0, 24),
     topBrands: brands.slice(0, 24).map((brand) => ({
       name: brand.name,

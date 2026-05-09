@@ -14,9 +14,9 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Bes3 Best Picks',
+    title: 'Bes3 Buyer Decision Engine',
     description:
-      'Bes3 turns evidence, price timing, and affiliate link health into direct buy, compare, wait, or skip decisions.',
+      'Bes3 turns evidence, price timing, risk, and affiliate link health into direct buy, compare, wait, or skip decisions.',
     path: '/',
     locale: await getRequestLocale(),
     keywords: ['best picks', 'buying decisions', 'product reviews', 'best value deals']
@@ -73,12 +73,12 @@ export default async function HomePage() {
       <section className="border-b border-border bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buying Decisions</p>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buyer decision engine</p>
             <h1 className="mt-5 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
               Know what to buy, compare, wait on, or skip.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Bes3 turns review evidence, current price context, risk checks, and verified merchant paths into one clear next action before you leave for a store.
+              Bes3 turns review evidence, current price context, risk checks, and verified merchant paths into a buy / compare / wait / skip decision before you leave for a store.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link href="/categories" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
@@ -137,6 +137,60 @@ export default async function HomePage() {
                 <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{title}</h3>
                 <p className="mt-3 text-sm leading-6 text-muted-foreground">{note}</p>
               </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Who this is for</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
+              Start with the anxiety behind the purchase.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-muted-foreground">
+              Bes3 is built for high-intent shoppers who already care enough to search, compare, and verify. Not an ad list, not a coupon wall, and not a generic review feed.
+            </p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {[
+              ['For anxious buyers', 'I am close to buying, but I need to know if this product is safe, durable, and worth the money today.'],
+              ['For comparison buyers', 'I have a shortlist and need a default winner, the strongest alternative, and the condition that would reverse the decision.'],
+              ['For deal-timing buyers', 'I like the product, but I need to know whether the current price is a buy window or a wait state.']
+            ].map(([title, note]) => (
+              <div key={title} className="rounded-md border border-border bg-slate-50 p-5">
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Persona path</p>
+                <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-muted-foreground">{note}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-b border-border bg-slate-950 px-4 py-14 text-white sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Decision loop</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
+              Every page should shorten the path from doubt to a defensible next step.
+            </h2>
+            <p className="mt-4 text-sm leading-7 text-slate-300">
+              Revenue comes from compliant merchant exits, but the loop only works if the recommendation is trusted enough to earn the click.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-2">
+            {[
+              ['High-intent question', 'The user arrives with a product, category, scenario, or price-timing problem.'],
+              ['Evidence and price check', 'Bes3 checks creator evidence, risk flags, current price, historical context, and offer health.'],
+              ['buy / compare / wait / skip', 'The page gives one primary decision state instead of another wall of review prose.'],
+              ['Admin repair queue', 'Broken links, thin evidence, overpriced CTAs, and blocked pSEO pages flow back to operators.']
+            ].map(([title, note]) => (
+              <div key={title} className="rounded-md border border-white/10 bg-white/5 p-5">
+                <h3 className="font-[var(--font-display)] text-2xl font-black">{title}</h3>
+                <p className="mt-3 text-sm leading-7 text-slate-300">{note}</p>
+              </div>
             ))}
           </div>
         </div>
