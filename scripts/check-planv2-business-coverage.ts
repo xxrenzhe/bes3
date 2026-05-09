@@ -691,9 +691,24 @@ const checks: PlanDocCheck[] = [
         filePath: 'scripts/check-product-strategy-gates.ts',
         required: [
           'Product strategy gates passed',
+          '10 independent cycles',
+          'checkIndependentCycles',
           'Buyer decision engine',
           'businessModel',
           'pseoAutomationLoop'
+        ]
+      },
+      {
+        label: 'Product strategy SSOT',
+        filePath: 'src/lib/product-strategy.ts',
+        required: [
+          'export const PRODUCT_OPTIMIZATION_CYCLES',
+          'cycle: 1',
+          'cycle: 10',
+          'inputEvidence',
+          'landedChange',
+          'nextCycleInput',
+          'getProductStrategySnapshot'
         ]
       },
       {
@@ -726,7 +741,8 @@ const checks: PlanDocCheck[] = [
           'buyerPersonas',
           'businessModel',
           'architectureLoop',
-          'pseoAutomationLoop'
+          'pseoAutomationLoop',
+          'optimizationCycles'
         ]
       }
     ]

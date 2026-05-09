@@ -26,6 +26,31 @@ function checkGate(gate: Gate) {
   return gate
 }
 
+function checkIndependentCycles() {
+  const content = read('src/lib/product-strategy.ts')
+  const cycleMatches = Array.from(content.matchAll(/cycle:\s*(\d+)/g)).map((match) => Number(match[1]))
+  const uniqueCycles = new Set(cycleMatches)
+  assert(cycleMatches.length === 10, `src/lib/product-strategy.ts must define exactly 10 cycles, found ${cycleMatches.length}`)
+  assert(uniqueCycles.size === 10, 'src/lib/product-strategy.ts cycle numbers must be unique')
+  for (let cycle = 1; cycle <= 10; cycle += 1) {
+    assert(uniqueCycles.has(cycle), `src/lib/product-strategy.ts missing cycle ${cycle}`)
+  }
+
+  const objectBlocks = content.split(/\n\s*\{\n\s*cycle:\s*/).slice(1).map((block) => `cycle: ${block}`)
+  assert(objectBlocks.length === 10, `src/lib/product-strategy.ts must contain 10 independent cycle objects, found ${objectBlocks.length}`)
+  for (const block of objectBlocks) {
+    const numberMatch = block.match(/cycle:\s*(\d+)/)
+    const cycleNumber = numberMatch ? Number(numberMatch[1]) : 0
+    for (const field of ['focus', 'inputEvidence', 'finding', 'landedChange', 'verification', 'outcome', 'nextCycleInput']) {
+      assert(block.includes(`${field}:`), `cycle ${cycleNumber} missing ${field}`)
+    }
+    const evidenceEntries = block.match(/inputEvidence:\s*\[([\s\S]*?)\]/)?.[1].match(/'/g)?.length || 0
+    const verificationEntries = block.match(/verification:\s*\[([\s\S]*?)\]/)?.[1].match(/'/g)?.length || 0
+    assert(evidenceEntries >= 2, `cycle ${cycleNumber} must cite at least two input evidence items`)
+    assert(verificationEntries >= 1, `cycle ${cycleNumber} must cite at least one verification item`)
+  }
+}
+
 const strategyDoc = 'docs/planv2/15.Bes3 十轮产品与商业优化审计 (10-Round Product & Business Optimization Audit).md'
 
 const gates: Gate[] = [
@@ -46,7 +71,28 @@ const gates: Gate[] = [
       'buy / compare / wait / skip',
       'commission-blind',
       'Search/log/import signals -> pending taxonomy tags -> promoted intents',
-      'Intent signals -> Taxonomy tags -> Product candidates -> Evidence extraction'
+      'Intent signals -> Taxonomy tags -> Product candidates -> Evidence extraction',
+      'Cycle 1 independent iteration',
+      'Cycle 10 independent iteration',
+      '输入证据',
+      '落地改动',
+      '验证',
+      '下一轮输入'
+    ]
+  },
+  {
+    area: 'Independent cycle SSOT',
+    filePath: 'src/lib/product-strategy.ts',
+    required: [
+      'export const PRODUCT_OPTIMIZATION_CYCLES',
+      'cycle: 1',
+      'cycle: 10',
+      'inputEvidence',
+      'landedChange',
+      'nextCycleInput',
+      'getProductStrategySnapshot',
+      'buy / compare / wait / skip',
+      'commission-blind'
     ]
   },
   {
@@ -114,8 +160,8 @@ const gates: Gate[] = [
       'businessModel',
       'architectureLoop',
       'pseoAutomationLoop',
-      'buy / compare / wait / skip',
-      'commission-blind'
+      'optimizationCycles',
+      'getProductStrategySnapshot'
     ]
   },
   {
@@ -137,5 +183,6 @@ const gates: Gate[] = [
 ]
 
 for (const gate of gates) checkGate(gate)
+checkIndependentCycles()
 
-console.log(`Product strategy gates passed (${gates.length} gates)`)
+console.log(`Product strategy gates passed (${gates.length} gates, 10 independent cycles)`)
