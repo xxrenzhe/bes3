@@ -15,6 +15,8 @@ concurrency:
 env:
   GHCR_REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
+  TENCENT_CCR_REGISTRY: sgccr.ccs.tencentyun.com
+  TENCENT_CCR_IMAGE_NAME: autobb/bes3
   NODE_VERSION: '20'
   RUN_OPTIONAL_TESTS: ${{ vars.RUN_OPTIONAL_TESTS || 'false' }}
   NEXT_PUBLIC_APP_URL: https://www.bes3.com
@@ -84,6 +86,7 @@ jobs:
     outputs:
       short_sha: ${{ steps.vars.outputs.short_sha }}
       deploy_image: ${{ steps.tags.outputs.deploy_image }}
+      tencent_deploy_image: ${{ steps.tags.outputs.tencent_deploy_image }}
       all_tags: ${{ steps.tags.outputs.tags }}
 
     steps:
@@ -107,6 +110,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Login to Tencent CCR
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.TENCENT_CCR_REGISTRY }}
+          username: ${{ secrets.TENCENT_CCR_USERNAME }}
+          password: ${{ secrets.TENCENT_CCR_PASSWORD }}
+
       - name: Generate image tags
         id: tags
         run: |
@@ -127,15 +137,23 @@ jobs:
           fi
 
           DEPLOY_IMAGE="${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${PRIMARY_TAG}"
-          ALL_TAGS="${DEPLOY_IMAGE}"
+          TENCENT_DEPLOY_IMAGE="${{ env.TENCENT_CCR_REGISTRY }}/${{ env.TENCENT_CCR_IMAGE_NAME }}:${PRIMARY_TAG}"
+          GHCR_TAGS="${DEPLOY_IMAGE}"
+          TENCENT_CCR_TAGS="${TENCENT_DEPLOY_IMAGE}"
           if [[ -n "${EXTRA_TAG}" ]]; then
-            ALL_TAGS="${ALL_TAGS},${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${EXTRA_TAG}"
+            GHCR_TAGS="${GHCR_TAGS},${{ env.GHCR_REGISTRY }}/${{ env.IMAGE_NAME }}:${EXTRA_TAG}"
+            TENCENT_CCR_TAGS="${TENCENT_CCR_TAGS},${{ env.TENCENT_CCR_REGISTRY }}/${{ env.TENCENT_CCR_IMAGE_NAME }}:${EXTRA_TAG}"
           fi
+          ALL_TAGS="${GHCR_TAGS},${TENCENT_CCR_TAGS}"
 
           echo "deploy_image=${DEPLOY_IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "tencent_deploy_image=${TENCENT_DEPLOY_IMAGE}" >> "$GITHUB_OUTPUT"
           echo "tags=${ALL_TAGS}" >> "$GITHUB_OUTPUT"
+          echo "ghcr_tags=${GHCR_TAGS}" >> "$GITHUB_OUTPUT"
+          echo "tencent_ccr_tags=${TENCENT_CCR_TAGS}" >> "$GITHUB_OUTPUT"
 
-          echo "Primary image: ${DEPLOY_IMAGE}"
+          echo "Primary GHCR image: ${DEPLOY_IMAGE}"
+          echo "Primary Tencent CCR image: ${TENCENT_DEPLOY_IMAGE}"
           echo "All tags:"
           echo "${ALL_TAGS}" | tr ',' '\n'
 
@@ -156,12 +174,17 @@ jobs:
 
       - name: Print image summary
         run: |
-          echo "Release image:"
+          echo "GHCR release image:"
           echo "  ${{ steps.tags.outputs.deploy_image }}"
-          echo "Published tags:"
-          echo "${{ steps.tags.outputs.tags }}" | tr ',' '\n' | sed 's/^/  - /'
+          echo "Tencent CCR release image:"
+          echo "  ${{ steps.tags.outputs.tencent_deploy_image }}"
+          echo "GHCR tags:"
+          echo "${{ steps.tags.outputs.ghcr_tags }}" | tr ',' '\n' | sed 's/^/  - /'
+          echo "Tencent CCR tags:"
+          echo "${{ steps.tags.outputs.tencent_ccr_tags }}" | tr ',' '\n' | sed 's/^/  - /'
 
 # Bes3 release flow from MustKnowV1:
 # - Push to main: build and publish ghcr.io/xxrenzhe/bes3:prod-latest and prod-<commitid>
 # - Push version tag v*.*.*: build and publish prod-<version> and prod-<commitid>
+# - The same production tags are also pushed to sgccr.ccs.tencentyun.com/autobb/bes3
 # - ClawCloud deployment stays manual: pull from GHCR and start the container on the server
