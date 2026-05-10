@@ -1,0 +1,79 @@
+name: Audit Bes3 Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      public_app_url:
+        description: Public production app URL.
+        required: true
+        default: https://www.bes3.com
+        type: string
+      expected_sha:
+        description: Expected /api/health build SHA. Defaults to the selected ref SHA.
+        required: false
+        type: string
+      fetch_public:
+        description: Verify public HTTPS pages and deployment health.
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: bes3-production-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PLANV3_DATABASE_URL: ${{ secrets.PLANV3_DATABASE_URL }}
+      NEXT_PUBLIC_APP_URL: ${{ inputs.public_app_url }}
+      BES3_EXPECTED_BUILD_SHA: ${{ inputs.expected_sha || github.sha }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: true
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate production Postgres secret
+        run: |
+          set -euo pipefail
+          if [[ -z "${DATABASE_URL:-}" && -z "${PLANV3_DATABASE_URL:-}" ]]; then
+            echo "DATABASE_URL or PLANV3_DATABASE_URL repository secret is required; production audit will not fall back to SQLite." >&2
+            exit 64
+          fi
+          export DATABASE_URL="${DATABASE_URL:-$PLANV3_DATABASE_URL}"
+          node -e "const url = new URL(process.env.DATABASE_URL); if (url.protocol !== 'postgres:' && url.protocol !== 'postgresql:') throw new Error('DATABASE_URL must be postgres:// or postgresql://')"
+
+      - name: Run PlanV3 production audit
+        run: |
+          set -euo pipefail
+          export DATABASE_URL="${DATABASE_URL:-$PLANV3_DATABASE_URL}"
+          if [[ "${{ inputs.fetch_public }}" == "true" ]]; then
+            npm run commercial-loop:audit-production-db -- --fetch-public
+          else
+            npm run commercial-loop:audit-production-db
+          fi
+
+      - name: Upload production audit report
+        if: ${{ always() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: planv3-production-db-audit
+          path: qa-results/planv3-production-db-audit-*.json
+          if-no-files-found: error

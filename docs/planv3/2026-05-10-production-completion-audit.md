@@ -95,6 +95,16 @@ The repository has no GitHub deployment records, no deployment webhook, and no l
 
 ## Required Production Deploy Action
 
+Production audit secret status:
+
+```text
+DATABASE_URL: configured in GitHub Actions secrets
+BES3_INTERNAL_REVALIDATE_TOKEN: configured in GitHub Actions secrets
+CLAWCLOUD_SSH_HOST / CLAWCLOUD_SSH_USER / CLAWCLOUD_SSH_PRIVATE_KEY: still missing
+```
+
+The manual GitHub Actions workflow `Audit Bes3 Production` can now run the PlanV3 audit against production Postgres without relying on local shell state. Use `fetch_public=false` for a DB/business-only audit, or `fetch_public=true` for final public HTTPS acceptance.
+
 Preferred path: run the manual GitHub Actions workflow `Deploy Bes3 Production` after configuring the required repository secrets:
 
 ```text
