@@ -122,7 +122,7 @@ export function buildCommerceActions(product: CommerceProductRecord, options?: {
       label: 'Check current price',
       href: toAbsoluteUrl(buildMerchantExitPath(product.id, source, options?.visitorId)),
       method: 'GET',
-      description: 'Send the buyer to the merchant handoff page for live price and stock confirmation.'
+      description: 'Send the buyer to the store page for live price and stock confirmation.'
     })
   }
 
@@ -141,7 +141,7 @@ export function buildCommerceActions(product: CommerceProductRecord, options?: {
     method: 'GET',
     description: isHardcoreCategorySlug(product.categorySlug || product.category)
       ? 'Return to the nearby category coverage when the shortlist is not final yet.'
-      : 'Return to the public product index when the category does not have a dedicated evidence matrix yet.'
+      : 'Return to the public product index when the category does not have a dedicated reviewed-products page yet.'
   })
 
   return actions

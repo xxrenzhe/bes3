@@ -14,7 +14,7 @@ export function OfferTransparencyPanel({
       eyebrow: 'How we rank',
       title: 'User value first',
       description:
-        'Bes3 ranks live opportunities by verified savings, tracked low distance, freshness, and evidence strength. Commission is only an eligibility gate, not a public ranking factor.'
+        'Bes3 ranks live opportunities by verified savings, tracked low distance, freshness, and review strength. Commission is only an eligibility gate, not a public ranking factor.'
     },
     {
       eyebrow: 'What counts as a promotion',

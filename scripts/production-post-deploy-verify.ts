@@ -123,7 +123,7 @@ async function main() {
     const routePath = withCacheBust(`/products/${productSlug}`)
     const { body } = await fetchText(routePath)
     requireExcludes(body, ['NEXT_HTTP_ERROR_FALLBACK;404'])
-    requireIncludes(body, ['LOMON', 'Should you buy it?', 'Current offer', 'Open machine payload'])
+    requireIncludes(body, ['LOMON', 'Should you buy it?', 'Current offer', 'For verification tools'])
     if (!/Check (current )?price|merchant|Merchant|Buy Signals|Open Commerce/i.test(body)) {
       throw new Error('product page is missing merchant or buying CTA copy')
     }
@@ -162,9 +162,9 @@ async function main() {
     const { body } = await fetchText(routePath)
     requireIncludes(body, [
       'Current Recommendation',
-      'AI Answer Summary',
-      'Confidence boundary',
-      'Index quality gate'
+      'Quick Shopping Summary',
+      'Coverage limit',
+      'Why this page is still limited'
     ])
     requireExcludes(body, [
       'Reddit Consensus: The 1 Best',

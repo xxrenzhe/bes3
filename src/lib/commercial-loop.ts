@@ -1409,15 +1409,15 @@ function buildEvidenceArticleHtml({
   }).join('')
 
   return [
-    `<p><strong>BLUF:</strong> ${escapeHtml(summary)}</p>`,
-    '<h2>Evidence Verdict</h2>',
-    `<p>${escapeHtml(product.product_name)} currently has a Bes3 consensus score of <strong>${escapeHtml(score)}</strong> from ${evidence.length} validated YouTube evidence reports. The buying window is <strong>${escapeHtml(price.label)}</strong>: ${escapeHtml(price.explanation)}</p>`,
+    `<p><strong>Quick answer:</strong> ${escapeHtml(summary)}</p>`,
+    '<h2>Review Verdict</h2>',
+    `<p>${escapeHtml(product.product_name)} currently has a Bes3 review score of <strong>${escapeHtml(score)}</strong> from ${evidence.length} validated YouTube review report${evidence.length === 1 ? '' : 's'}. The buying window is <strong>${escapeHtml(price.label)}</strong>: ${escapeHtml(price.explanation)}</p>`,
     '<h2>Why This Product Was Worth Reviewing</h2>',
     '<ul>',
     ...candidate.reasons.slice(0, 8).map((reason) => `<li>${escapeHtml(reason)}</li>`),
     `<li>Review-value score: ${candidate.reviewValueScore}/100.</li>`,
     '</ul>',
-    '<h2>YouTube Evidence Matrix</h2>',
+    '<h2>YouTube Review Proof</h2>',
     '<table><thead><tr><th>Scenario</th><th>Verdict</th><th>Creator proof</th><th>Source</th></tr></thead><tbody>',
     rows || '<tr><td colspan="4">Bes3 has not validated a quote yet, so this page should stay in research mode.</td></tr>',
     '</tbody></table>',
@@ -1425,18 +1425,18 @@ function buildEvidenceArticleHtml({
     '<ul>',
     `<li>Buy if your use case matches the strongest tested scenarios: ${escapeHtml(topEvidence.slice(0, 3).map((item) => item.tagName).join(', ') || keyword)}.</li>`,
     `<li>Buy if ${escapeHtml(price.label.toLowerCase())} makes the current price acceptable for your budget.</li>`,
-    '<li>Buy if timestamped creator proof matters more to you than merchant spec sheets.</li>',
+    '<li>Buy if timestamped creator proof matters more to you than store spec sheets.</li>',
     '</ul>',
     '<h2>Who Should Skip</h2>',
     '<ul>',
-    '<li>Skip if the evidence quotes do not cover your exact use case.</li>',
+    '<li>Skip if the review quotes do not cover your exact use case.</li>',
     '<li>Skip if the price window is normal or overpriced and you can wait for a sale.</li>',
-    '<li>Skip if you need a product with broader creator agreement than the current evidence set.</li>',
+    '<li>Skip if you need a product with broader creator agreement than the current review set.</li>',
     '</ul>',
     '<h2>Price and Affiliate Link</h2>',
     ctaPath
-      ? `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 may earn a commission if you buy through the link, but the article is generated from evidence, not commission rank.</p>`
-      : `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 is not showing a purchase button because no verified commissionable merchant link is attached yet.</p>`,
+      ? `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 may earn a commission if you buy through the link, but the article is generated from review proof, not commission rank.</p>`
+      : `<p>Current tracked price: <strong>${escapeHtml(formatHardcorePrice(currentPrice, price.currency))}</strong>. Bes3 is not showing a purchase button because no verified store link is attached yet.</p>`,
     ctaPath ? `<p><a href="${escapeHtml(ctaPath)}" rel="nofollow sponsored">Check current price</a></p>` : ''
   ].join('\n')
 }
@@ -1458,10 +1458,10 @@ async function upsertEvidenceArticle(productId: number, candidate: CommercialLoo
   const consensus = summarizeConsensus(evidence)
   const primaryTag = evidence[0]?.tagName || 'real-world tests'
   const keyword = `${product.product_name} review after YouTube tests`
-  const title = `${product.product_name} Review: YouTube Evidence, Price Window, and Buyer Fit`
-  const slug = slugify(`${product.product_name} youtube evidence review`)
+  const title = `${product.product_name} Review: YouTube Proof, Price Window, and Buyer Fit`
+  const slug = slugify(`${product.product_name} youtube proof review`)
   const hasCommissionableLink = Boolean(getCommissionableMerchantUrl(product.source_affiliate_link, product.active_affiliate_url, product.resolved_url))
-  const summary = `${product.product_name} is reviewed from ${evidence.length} timestamped YouTube evidence reports, with ${primaryTag} proof, a ${consensus.confidence.toLowerCase()} confidence score${hasCommissionableLink ? ', and a direct affiliate price check.' : ', with purchase handoff held until a commissionable merchant link is verified.'}`
+  const summary = `${product.product_name} is reviewed from ${evidence.length} timestamped YouTube review report${evidence.length === 1 ? '' : 's'}, with ${primaryTag} proof, a ${consensus.confidence.toLowerCase()} confidence score${hasCommissionableLink ? ', and a direct affiliate price check.' : ', with store handoff held until a verified merchant link is available.'}`
   const contentHtml = buildEvidenceArticleHtml({ product, candidate, evidence, keyword, summary })
   const contentMd = buildEvidenceArticleMarkdown(contentHtml)
   const pathName = getArticlePath('review', slug)

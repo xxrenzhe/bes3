@@ -47,11 +47,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return buildPageMetadata({
     title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
-    description: `Bes3 ranks ${page.category.name} under $${page.priceLimit} by teardown consensus score, current price, 90-day average, and historical low.`,
+    description: `Bes3 ranks ${page.category.name} under $${page.priceLimit} by review score, current price, 90-day average, and historical low.`,
     path: buildValuePseoPath(page.category.slug, page.priceLimit),
     locale: await getRequestLocale(),
     robots: page.status === 'researching' ? { index: false, follow: true } : undefined,
-    keywords: [`best value ${page.category.name}`, `${page.category.name} under ${page.priceLimit}`, 'teardown consensus']
+    keywords: [`best value ${page.category.name}`, `${page.category.name} under ${page.priceLimit}`, 'review score']
   })
 }
 
@@ -86,7 +86,7 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
   const faqEntries = [
     {
       question: `How does Bes3 rank ${page.category.name} under $${page.priceLimit}?`,
-      answer: 'Products are sorted by value score, which combines creator consensus score with current price. Products without enough price and evidence data stay behind fully scored options.'
+      answer: 'Products are sorted by value score, which combines review score with current price. Products without enough price and review data stay behind fully scored options.'
     },
     {
       question: 'Why can a cheap product lose this page?',
@@ -105,10 +105,10 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
           buildCollectionPageSchema({
             path,
             title: `${priceAlertPrefix}Best Value ${page.category.name} Under $${page.priceLimit}`,
-            description: 'Ranked by value score: consensus score multiplied by 100 and divided by current price.',
+            description: 'Ranked by value score: review score multiplied by 100 and divided by current price.',
             about: [
               { '@type': 'Thing', name: page.category.name },
-              { '@type': 'Thing', name: 'price-value ranking' },
+              { '@type': 'Thing', name: 'price-value review ranking' },
               { '@type': 'Thing', name: `under $${page.priceLimit}` }
             ],
             breadcrumbItems,
@@ -121,7 +121,7 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
             buildProductAggregateSchema({
               path: `/products/${product.slug}`,
               name: product.name,
-              description: `${product.name} is included in this best-value page using consensus score, current price, and 90-day price baselines.`,
+              description: `${product.name} is included in this best-value page using review score, current price, and 90-day price baselines.`,
               image: product.imageUrl,
               ratingValue: product.consensus.score5,
               reviewCount: product.consensus.evidenceCount,
@@ -142,13 +142,13 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
             {priceAlertPrefix}Should you buy {page.category.name} under ${page.priceLimit} right now?
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The first screen ranks by buying action, not formula curiosity: buy now, compare first, watch price, or skip.
+            The first screen shows whether the price is worth checking today, what could go wrong, and which alternative to compare.
           </p>
         </div>
       </section>
       <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top 3 decision cards</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top checked picks</p>
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
             {purchaseDecisions.map((decision) => (
               <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
@@ -184,7 +184,7 @@ export default async function BestValuePage({ params }: { params: Promise<{ slug
               href="/products"
               className="rounded-md border border-border bg-white px-4 py-2 text-sm font-semibold text-muted-foreground hover:border-primary hover:text-primary"
             >
-              Full evidence matrix
+              Reviewed products
             </Link>
             <Link
               href="/deals"

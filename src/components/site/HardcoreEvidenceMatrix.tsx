@@ -50,7 +50,7 @@ export function HardcoreEvidenceMatrix({
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Bes3 refuses to fabricate winners. This page waits until product matching, review evidence, store availability, and price baselines are all in place.
+            Bes3 refuses to fabricate winners. This page waits until product matching, review proof, store availability, and price baselines are all in place.
           </p>
         </div>
       </section>
@@ -67,11 +67,11 @@ export function HardcoreEvidenceMatrix({
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
             {isResearching
               ? 'Why this is the current shortlist pick, and what still needs proof.'
-              : 'Real-world evidence, price timing, and the current winner in one table.'}
+              : 'Real-world review proof, price timing, and the current lead in one table.'}
           </h2>
           {isResearching ? (
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Use this table to verify the current recommendation against creator proof, source depth, and price context. The confidence warning stays visible because the page has not reached the full ranked-guide threshold.
+              Use this table to verify the current recommendation against creator proof, source depth, and price context. The coverage warning stays visible because the page has not reached the full ranked-guide mark.
             </p>
           ) : null}
         </div>
@@ -86,7 +86,7 @@ export function HardcoreEvidenceMatrix({
               categoryHref: `/categories/${product.categorySlug}`,
               alternativeHref: alternative?.slug ? `/products/${alternative.slug}` : `/categories/${product.categorySlug}`,
               hasAlternatives: Boolean(alternative),
-              userIntent: `${product.categoryName} evidence matrix`
+              userIntent: `${product.categoryName} reviewed products`
             })
             const matrixActionHref = purchaseDecision.primaryActionHref
             return (
@@ -101,7 +101,7 @@ export function HardcoreEvidenceMatrix({
                   </div>
                   <div className="rounded-2xl bg-slate-950 px-3 py-2 text-right text-white">
                     <p className="text-[10px] font-bold uppercase tracking-[0.16em] text-slate-300">
-                      {isResearching ? 'Source Score' : 'Consensus'}
+                      Review score
                     </p>
                     <p className="font-mono text-lg font-black">{formatScore(product.consensus.score10)}</p>
                   </div>
@@ -109,7 +109,7 @@ export function HardcoreEvidenceMatrix({
 
                 <div className="mt-4 grid gap-3">
                   <div className="rounded-2xl bg-muted/60 p-3">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Evidence</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">Review proof</p>
                     <p className="mt-1 text-sm font-semibold text-foreground">
                       {product.consensus.evidenceCount} reports · {product.consensus.sourceCount} creator sources
                     </p>
@@ -126,7 +126,7 @@ export function HardcoreEvidenceMatrix({
                   </div>
                   <div className="rounded-2xl bg-muted/60 p-3">
                     <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">
-                      {isResearching ? 'Source Proof' : 'Hardcore Proof'}
+                      Review proof
                     </p>
                     {report ? (
                       <blockquote className="mt-2 border-l-2 border-primary pl-3 text-xs leading-6 text-muted-foreground">
@@ -180,10 +180,10 @@ export function HardcoreEvidenceMatrix({
             <thead>
               <tr className="border-b border-border text-xs uppercase tracking-[0.18em] text-muted-foreground">
                 <th className="py-4 pr-6">Model</th>
-                <th className="px-4 py-4">{isResearching ? 'Source Score' : 'Consensus'}</th>
-                <th className="px-4 py-4">Evidence</th>
+                <th className="px-4 py-4">Review score</th>
+                <th className="px-4 py-4">Review proof</th>
                 <th className="px-4 py-4">Price/Value</th>
-                <th className="px-4 py-4">{isResearching ? 'Source Proof' : 'Hardcore Proof'}</th>
+                <th className="px-4 py-4">Review proof</th>
                 <th className="py-4 pl-4">Action</th>
               </tr>
             </thead>
@@ -198,7 +198,7 @@ export function HardcoreEvidenceMatrix({
                   categoryHref: `/categories/${product.categorySlug}`,
                   alternativeHref: alternative?.slug ? `/products/${alternative.slug}` : `/categories/${product.categorySlug}`,
                   hasAlternatives: Boolean(alternative),
-                  userIntent: `${product.categoryName} evidence matrix`
+                  userIntent: `${product.categoryName} reviewed products`
                 })
                 const matrixActionHref = purchaseDecision.primaryActionHref
                 return (

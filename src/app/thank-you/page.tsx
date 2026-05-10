@@ -500,7 +500,7 @@ export default async function ThankYouPage({
         </section>
 
         <DecisionSummaryPanel
-          eyebrow="Decision Summary"
+          eyebrow="Review Summary"
           title="Sending a message should not end the buying journey."
           description="A strong confirmation page should answer four things fast: what task should resume now, who should keep the task alive, why the page exists, and what to avoid next."
           items={[

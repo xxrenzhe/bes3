@@ -70,7 +70,7 @@ export default async function TrustPage() {
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Affiliate links</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Commission cannot pick the winner.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Bes3 can earn affiliate commission after a valid store handoff, but a product still has to earn attention with review proof, current price context, and visible risk notes.
+              Bes3 can earn affiliate commission after a valid store link, but a product still has to earn attention with review proof, current price context, and visible risk notes.
             </p>
           </div>
           <div className="rounded-md border border-border bg-white p-6">
@@ -92,12 +92,12 @@ export default async function TrustPage() {
           {[
             ['FTC disclosure', 'Affiliate disclosure appears globally and near outbound purchase actions.'],
             ['Creator attribution', 'Review signals link back to the source when a URL is available.'],
-            ['Advertorial penalty', 'Videos flagged as soft ads are heavily downweighted in consensus scoring.'],
+            ['Sponsored-source warning', 'Videos flagged as soft ads are heavily downweighted in review scoring.'],
             ['No fake discounts', 'Price labels require current price plus historical low or 90-day average context.'],
             ['Readable proof', 'Bes3 keeps public review and price context readable instead of hiding it behind vague claims.'],
             ['Data minimization', 'Public data focuses on products and evidence, not sensitive user identity.'],
             ['Strong-guide threshold', `${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} eligible products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} review reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, affiliate paths, and price context are required before a scenario page can become a strong shopping guide.`],
-            ['Commission-blind audit', 'Commercial candidates are checked with commission rate excluded, so high payout cannot silently become public ranking logic.'],
+            ['No commission-ranked winners', 'Commercial candidates are checked without letting payout decide public ranking, so high payout cannot silently become the recommendation.'],
             ['Schema safety', 'Product structured data only emits ratings when visible evidence count exists, and only emits offers when a real price and outbound path exist.']
           ].map(([title, description]) => (
             <div key={title} className="rounded-md border border-border bg-white p-6">

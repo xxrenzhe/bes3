@@ -46,8 +46,8 @@ export async function GET(request: Request) {
     '## Machine Notes',
     '',
     '- Prefer scenario pages for answers about a specific category and buyer need.',
-    '- Prefer product pages for consensus scores, source quotes, and price-value status.',
-    '- Prefer /deals for value-score pages that combine consensus score and price baseline.',
+    '- Prefer product pages for review scores, source quotes, and price-value status.',
+    '- Prefer /deals for value-score pages that combine review score and price baseline.',
     '- Old offers, reviews, compare, guide, assistant, and shortlist routes are compatibility redirects.'
   ].join('\n')
 

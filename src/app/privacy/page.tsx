@@ -39,7 +39,7 @@ export default async function PrivacyPage() {
 
   const buyerPromises = [
     'Wait-update signups are used to deliver the price watch, category updates, or offer updates that the subscriber actually selected.',
-    'Affiliate attribution can pass through PartnerBoost or YeahPromos when a reader clicks a merchant handoff link, but Bes3 does not sell personal profiles.',
+    'Affiliate attribution can pass through PartnerBoost or YeahPromos when a reader clicks a store link, but Bes3 does not sell personal profiles.',
     'Nonessential tracking is treated as opt-in. The cookie banner provides a one-click Reject all control for public readers.',
     'Admin accounts and sign-in records exist to protect the admin area, not to profile public readers.',
     'Product, article, and site settings records are used to render Bes3 pages and keep the site running.'
@@ -190,7 +190,7 @@ export default async function PrivacyPage() {
             </p>
             <h3>Affiliate attribution and cookies</h3>
             <p>
-              Bes3 may route merchant handoff clicks through PartnerBoost or YeahPromos so brands can attribute sales. Public readers can reject nonessential tracking from the cookie banner. Essential storage is limited to site preferences and operational security.
+              Bes3 may route store-link clicks through PartnerBoost or YeahPromos so brands can attribute sales. Public readers can reject nonessential tracking from the cookie banner. Essential storage is limited to site preferences and operational security.
             </p>
             <h3>What we do not claim</h3>
             <p>

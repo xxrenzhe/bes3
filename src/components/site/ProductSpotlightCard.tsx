@@ -112,7 +112,7 @@ export function ProductSpotlightCard({
               decision={purchaseDecision}
               className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             />
-            <p className="text-xs text-muted-foreground">This action follows the current purchase decision instead of forcing a merchant click.</p>
+            <p className="text-xs text-muted-foreground">This action follows the current product check instead of forcing a store click.</p>
             <p className="text-xs font-medium text-muted-foreground">{purchaseDecision.stateLabel} · {purchaseDecision.confidenceLine}</p>
           </div>
         )}

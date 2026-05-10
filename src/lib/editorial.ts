@@ -56,7 +56,7 @@ export function buildBestFor(product?: ProductRecord | null, articleType: 'revie
     return `${product.productName} fits buyers who already narrowed the field and now want product-level confidence before clicking through.`
   }
 
-  return `${product.productName} fits shoppers who want dependable performance, strong buyer signal, and a straightforward purchase decision.`
+  return `${product.productName} fits shoppers who want dependable performance, strong buyer signal, and a straightforward buy/no-buy check.`
 }
 
 export function buildNotFor(product?: ProductRecord | null, articleType: 'review' | 'comparison' | 'product' = 'review') {

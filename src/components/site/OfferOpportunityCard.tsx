@@ -146,7 +146,7 @@ export function OfferOpportunityCard({
             productId={opportunity.product.id}
             trackingSource={source}
             trackingMetadata={purchaseDecision.metadata}
-            note="Affiliate disclosure stays attached to the store handoff."
+            note="Affiliate disclosure stays attached to the store link."
             trustBadge={`${purchaseDecision.stateLabel} · ${purchaseDecision.confidenceLine}`}
           />
         ) : (
@@ -155,7 +155,7 @@ export function OfferOpportunityCard({
               decision={purchaseDecision}
               className="inline-flex min-h-[52px] items-center justify-center rounded-full bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
             />
-            <p className="text-xs text-muted-foreground">Bes3 keeps non-buy states out of the merchant handoff until the decision is purchase-ready.</p>
+            <p className="text-xs text-muted-foreground">Bes3 keeps non-buy states away from store links until the product is ready to check out.</p>
             <p className="text-xs font-medium text-muted-foreground">{purchaseDecision.stateLabel} · {purchaseDecision.confidenceLine}</p>
           </div>
         )}

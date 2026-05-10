@@ -352,7 +352,7 @@ function youtubeTimestampUrl(youtubeId: string | null, timestampSeconds: number 
 
 function appendEvidenceMatrix(contentHtml: string, row: any) {
   if (row.article_type !== 'review' || !row.product_id || !row.evidence_json) return contentHtml
-  if (/YouTube Evidence Matrix/i.test(contentHtml)) return contentHtml
+  if (/YouTube Evidence Matrix|YouTube Review Proof/i.test(contentHtml)) return contentHtml
 
   const evidence = parseEvidenceReports(row.evidence_json)
   const qualified = evidence.filter((report) => isUsablePublicEvidence(row, report))
@@ -372,8 +372,8 @@ function appendEvidenceMatrix(contentHtml: string, row: any) {
 
   return [
     contentHtml,
-    '<h2>YouTube Evidence Matrix</h2>',
-    `<p>Bes3 links this review to ${qualified.length} timestamped YouTube evidence report${qualified.length === 1 ? '' : 's'} for this product.</p>`,
+    '<h2>YouTube Review Proof</h2>',
+    `<p>Bes3 links this review to ${qualified.length} timestamped YouTube review report${qualified.length === 1 ? '' : 's'} for this product.</p>`,
     '<table><thead><tr><th>Scenario</th><th>Verdict</th><th>Creator proof</th><th>Source</th></tr></thead><tbody>',
     rows,
     '</tbody></table>'

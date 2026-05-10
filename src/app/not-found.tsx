@@ -22,7 +22,7 @@ export default async function NotFound() {
               Browse categories
             </Link>
             <Link href="/products" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
-              Open evidence matrix
+              Open reviewed products
             </Link>
             <Link href="/deals" className="rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
               Open best value lab

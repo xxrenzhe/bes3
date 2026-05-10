@@ -64,7 +64,7 @@ export function ComparisonSummaryMatrix({
       </div>
       <div className="grid gap-3 md:hidden">
         <div className="rounded-[1.5rem] border border-emerald-200 bg-emerald-50 p-4">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Default winner</p>
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">Current lead</p>
           <p className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{winner}</p>
         </div>
         {rows.map((row) => (
@@ -92,7 +92,7 @@ export function ComparisonSummaryMatrix({
               const isWinner = title === winner
               return (
                 <div key={title} className={`px-5 py-4 ${isWinner ? 'bg-emerald-50' : ''}`}>
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{isWinner ? 'Winner' : 'Alternative'}</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-primary">{isWinner ? 'Current lead' : 'Compare against'}</p>
                   <p className="mt-2 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{title}</p>
                 </div>
               )
@@ -116,12 +116,12 @@ export function ComparisonSummaryMatrix({
       {normalizedScenarios.length ? (
         <div className="mt-8 rounded-[2rem] bg-[linear-gradient(135deg,#f8fbff_0%,#ffffff_45%,#eefaf5_100%)] p-6">
           <div className="max-w-3xl">
-            <p className="editorial-kicker">Scenario Lens</p>
+            <p className="editorial-kicker">What changes the pick?</p>
             <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
               Who wins if you care about one thing most?
             </h3>
             <p className="mt-3 text-sm leading-7 text-muted-foreground">
-              Use these scenario calls when the headline winner is close, but your real decision depends on the one priority you refuse to compromise on.
+              Use these calls when the lead is close, but your real choice depends on the one priority you refuse to compromise on.
             </p>
           </div>
 
@@ -162,10 +162,10 @@ export function ComparisonSummaryMatrix({
 
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
                 <div className="rounded-[1.5rem] border border-border/60 bg-slate-50/80 p-5">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Default winner</p>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Current lead</p>
                   <p className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-foreground">{winner}</p>
                   <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                    This is the main page recommendation before switching into a more specific buyer lens.
+                    This is the main page recommendation before switching into a more specific buyer priority.
                   </p>
                 </div>
                 <div className="rounded-[1.5rem] border border-border/60 bg-slate-50/80 p-5">

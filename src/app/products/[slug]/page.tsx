@@ -112,7 +112,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
   const currentPriceLine = formatPriceSnapshot(bestOffer?.priceAmount || product.priceAmount, bestOffer?.priceCurrency || product.priceCurrency || 'USD')
   const freshnessLine = getFreshnessLabel(product.offerLastCheckedAt || product.priceLastCheckedAt || product.updatedAt)
   const heroDescription = truncateText(
-    product.description || 'Bes3 is tracking this product with offer, attribute, freshness, and merchant handoff context.',
+    product.description || 'Bes3 is tracking this product with offer, attribute, freshness, and store-link context.',
     190
   )
   const decisionReadiness = buildCommerceDecisionReadiness(product)
@@ -123,16 +123,16 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
     offerId: bestOffer?.id || null,
     displayName: compactProductName,
-    evidenceHref: '#decision-notes'
+    evidenceHref: '#review-notes'
   })
   const isMerchantCta = purchaseDecision.primaryActionHref?.startsWith('/go/')
   const decisionModules = buildProductDecisionContent(product, 'product', {
     nextStepTitle: 'Check before checkout',
-    nextStepDescription: 'Open the merchant only after the price, attributes, and fit notes match what you need.'
+    nextStepDescription: 'Open the store only after the price, attributes, and fit notes match what you need.'
   })
   const decisionShortcuts = [
-    { href: '#buy-decision', label: 'Buy decision', detail: purchaseDecision.stateLabel },
-    { href: '#decision-notes', label: 'Evidence notes', detail: `${purchaseDecision.evidenceCount} signals` },
+    { href: '#buy-decision', label: 'Price check', detail: purchaseDecision.stateLabel },
+    { href: '#review-notes', label: 'Review notes', detail: `${purchaseDecision.evidenceCount} signals` },
     { href: '#current-offer', label: 'Price & terms', detail: currentPriceLine },
     { href: '#product-facts', label: 'Product facts', detail: attributeFacts.length ? `${attributeFacts.length} facts` : 'Tracking' }
   ]
@@ -140,8 +140,8 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     {
       step: '1',
       title: 'Confirm the fit',
-      description: 'Use Decision Notes to check sizing, use case, and risk flags before opening the merchant.',
-      href: '#decision-notes'
+      description: 'Use Review Notes to check sizing, use case, and risk flags before opening the store.',
+      href: '#review-notes'
     },
     {
       step: '2',
@@ -152,7 +152,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     {
       step: '3',
       title: 'Leave only when ready',
-      description: 'Use the Bes3 merchant handoff only after the evidence and terms still match your intent.',
+      description: 'Use the Bes3 store link only after the review notes and terms still match your intent.',
       href: '#buy-decision'
     }
   ]
@@ -165,12 +165,12 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     {
       question: `Is ${product.productName} ready to buy from this page?`,
       answer: bestOffer
-        ? 'Use this page to confirm the current offer, product attributes, freshness, and merchant handoff before checkout.'
+        ? 'Use this page to confirm the current offer, product attributes, freshness, and store link before checkout.'
         : 'Bes3 has a product record, but no active offer is attached yet, so use it for research rather than checkout.'
     },
     {
       question: 'Does Bes3 change recommendations for affiliate commission?',
-      answer: 'No. Affiliate links only make a product purchasable from Bes3. The page keeps price, evidence, and freshness signals visible so the decision can be audited.'
+      answer: 'No. Affiliate links only make a product purchasable from Bes3. The page keeps price, review proof, and freshness signals visible so the recommendation can be checked.'
     }
   ]
 
@@ -182,7 +182,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
           buildProductAggregateSchema({
             path,
             name: product.productName,
-            description: product.description || `${product.productName} buying decision with offer, price, and buyer-fit context from Bes3.`,
+            description: product.description || `${product.productName} price check with offer, review notes, and buyer-fit context from Bes3.`,
             image: product.heroImageUrl,
             ratingValue: product.rating,
             reviewCount: product.reviewCount,
@@ -230,7 +230,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                         ...purchaseDecision.metadata,
                         ctaVariant: `${purchaseDecision.ctaVariant}-mobile-hero`
                       }}
-                      trustBadge={`${purchaseDecision.evidenceCount} evidence signals checked before checkout`}
+                      trustBadge={`${purchaseDecision.evidenceCount} review signal${purchaseDecision.evidenceCount === 1 ? '' : 's'} checked before checkout`}
                       buttonClassName="w-full"
                       showAffiliateDisclosure={false}
                     />
@@ -243,7 +243,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span>Affiliate disclosure: Bes3 may earn from qualifying purchases.</span>
-                  <a href="#decision-notes" className="font-semibold text-foreground underline-offset-4 hover:underline">Review proof</a>
+                  <a href="#review-notes" className="font-semibold text-foreground underline-offset-4 hover:underline">Review proof</a>
                 </div>
               </div>
 
@@ -253,7 +253,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 </p>
               ) : null}
               <div className="mt-4 hidden flex-wrap gap-3 lg:flex">
-                <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                <a href="#review-notes" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                   Review proof
                 </a>
                 <a href="#current-offer" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white/90 px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
@@ -372,9 +372,9 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             </div>
             <div className="mt-5 flex flex-wrap gap-3">
               <a href="#buy-decision" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                Back to buy decision
+                Back to price check
               </a>
-              <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <a href="#review-notes" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 Review proof first
               </a>
             </div>
@@ -384,8 +384,8 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
             fallbackCurrency={bestOffer?.priceCurrency || product.priceCurrency}
           />
-          <div id="decision-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6 lg:col-span-2">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Decision Notes</p>
+          <div id="review-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6 lg:col-span-2">
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Review Notes</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {decisionModules.map((module) => (
                 <article key={module.id} className="rounded-md bg-slate-50 p-4">
@@ -401,7 +401,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-900">Proof checked?</p>
-                  <h2 className="mt-2 text-2xl font-black tracking-tight text-emerald-950">Only leave Bes3 if the live store page still matches this decision.</h2>
+                  <h2 className="mt-2 text-2xl font-black tracking-tight text-emerald-950">Only leave Bes3 if the live store page still matches this review.</h2>
                   <p className="mt-2 max-w-3xl text-sm leading-7 text-emerald-900">
                     Recheck price, stock, shipping, return terms, and product variant on the merchant page before checkout.
                   </p>
@@ -412,12 +412,12 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                       href={purchaseDecision.primaryActionHref}
                       label={purchaseDecision.primaryActionLabel}
                       productId={product.id}
-                      trackingSource="decision-notes-exit"
+                      trackingSource="review-notes-exit"
                       trackingMetadata={{
                         ...purchaseDecision.metadata,
-                        ctaVariant: `${purchaseDecision.ctaVariant}-decision-notes`
+                        ctaVariant: `${purchaseDecision.ctaVariant}-review-notes`
                       }}
-                      trustBadge={`${purchaseDecision.evidenceCount} evidence signals reviewed on this page`}
+                      trustBadge={`${purchaseDecision.evidenceCount} review signal${purchaseDecision.evidenceCount === 1 ? '' : 's'} checked on this page`}
                       buttonClassName="w-full"
                       showAffiliateDisclosure={false}
                     />
@@ -428,7 +428,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                     />
                   )}
                   <a href="#buy-decision" className="mt-3 inline-flex min-h-[44px] w-full items-center justify-center text-sm font-semibold text-emerald-950 underline-offset-4 hover:underline">
-                    Back to buy decision
+                    Back to price check
                   </a>
                 </div>
               </div>
@@ -471,17 +471,17 @@ async function CommerceProductPage({ slug }: { slug: string }) {
           </div>
           <details className="rounded-md border border-border bg-white p-6 lg:col-span-2">
             <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">
-              Open machine payload for AI and search verification
+              For verification tools
             </summary>
             <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-              AI crawlers and verification tools can read the same decision readiness, offer, price, and product-fact payload used by this page.
+              Verification tools can read the same store-link check, offer, price, and product-fact payload used by this page.
             </p>
             <div className="mt-5 flex flex-wrap gap-3">
               <Link href={`/api/open/commerce/products/${product.id}`} className="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
-                Open product JSON
+                Product data
               </Link>
               <Link href={`/api/open/commerce/products/${product.id}/offers`} className="inline-flex min-h-[44px] items-center rounded-md border border-border px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary">
-                Open offer JSON
+                Offer data
               </Link>
             </div>
           </details>
@@ -489,7 +489,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
               <div>
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Finished checking the facts?</p>
-                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Return to the buying decision before you leave Bes3.</h2>
+                <h2 className="mt-2 text-2xl font-black tracking-tight text-slate-950">Return to the price check before you leave Bes3.</h2>
                 <p className="mt-2 max-w-3xl text-sm leading-7 text-muted-foreground">
                   Use the merchant link only if the live offer still matches this page on price, variant, stock, shipping, and return terms.
                 </p>
@@ -505,7 +505,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                       ...purchaseDecision.metadata,
                       ctaVariant: `${purchaseDecision.ctaVariant}-final-recovery`
                     }}
-                    trustBadge={`${purchaseDecision.evidenceCount} evidence signals and product facts reviewed`}
+                    trustBadge={`${purchaseDecision.evidenceCount} review signal${purchaseDecision.evidenceCount === 1 ? '' : 's'} and product facts checked`}
                     buttonClassName="w-full"
                     showAffiliateDisclosure={false}
                   />
@@ -517,7 +517,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 )}
                 <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                   <a href="#buy-decision" className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-slate-50 px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
-                    Review buy decision
+                    Review price check
                   </a>
                   <a href="#current-offer" className="inline-flex min-h-[44px] items-center justify-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                     Recheck offer terms
@@ -542,7 +542,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
         title: `Should You Buy ${commerceProduct.productName}?`,
         description: buildIntentMetadataDescription({
           title: commerceProduct.productName,
-          description: commerceProduct.description || `${commerceProduct.productName} buying decision with offer, price, and buyer-fit context.`,
+          description: commerceProduct.description || `${commerceProduct.productName} price check with offer, review notes, and buyer-fit context.`,
           pageType: 'product'
         }),
         path: `/products/${commerceProduct.slug}`,
@@ -555,7 +555,6 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
           commerceProduct.brand || '',
           commerceProduct.category || '',
           'should you buy',
-          'buying decision',
           'price check'
         ].filter(Boolean)
       })
@@ -571,14 +570,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return buildPageMetadata({
-    title: `${product.name} Evidence Report`,
-    description: `${product.name} scored from teardown evidence, scenario tags, affiliate link health, and price-value timing.`,
+    title: `${product.name} Reviewed Product Report`,
+    description: `${product.name} reviewed with source proof, use-case tags, store-link health, and price timing.`,
     path: `/products/${product.slug}`,
     locale: await getRequestLocale(),
     robots: product.consensus.evidenceCount === 0 ? { index: false, follow: true } : undefined,
     image: product.imageUrl,
     category: product.categoryName,
-    keywords: [product.name, product.categoryName, 'teardown evidence', 'consensus score']
+    keywords: [product.name, product.categoryName, 'review proof', 'review score']
   })
 }
 
@@ -615,11 +614,11 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const faqEntries = [
     {
       question: 'Why might the score still be researching?',
-      answer: 'Bes3 needs exact product matching, enough review evidence, use-case coverage, and trustworthy quotes before making a confident claim.'
+      answer: 'Bes3 needs exact product matching, enough review proof, use-case coverage, and trustworthy quotes before making a confident claim.'
     },
     {
       question: 'Does commission change the score?',
-      answer: 'No. A store link only makes a product purchasable from the page. The score comes from review quality, evidence confidence, and rating consistency.'
+      answer: 'No. A store link only makes a product purchasable from the page. The score comes from review quality, quote confidence, and rating consistency.'
     }
   ]
 
@@ -635,7 +634,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           buildProductAggregateSchema({
             path,
             name: product.name,
-            description: product.description || `${product.name} evidence report from Bes3.`,
+            description: product.description || `${product.name} reviewed product report from Bes3.`,
             image: product.imageUrl,
             ratingValue: product.consensus.score5,
             reviewCount: product.consensus.evidenceCount,
@@ -665,9 +664,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
             </div>
             {!hasCommissionableExit ? (
               <div className="mt-6 max-w-3xl rounded-md border border-amber-200 bg-amber-50 p-4">
-                <p className="text-sm font-black text-amber-950">Evidence-ready, not monetization-ready.</p>
+                <p className="text-sm font-black text-amber-950">Review-ready, store link still missing.</p>
                 <p className="mt-2 text-sm leading-7 text-amber-900">
-                  Bes3 found usable review evidence for this exact product, but it is not showing a purchase button because no verified commissionable merchant link is attached yet.
+                  Bes3 found usable review proof for this exact product, but it is not showing a purchase button because no verified store link is attached yet.
                 </p>
               </div>
             ) : null}
@@ -679,10 +678,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.72fr_1.28fr]">
           <div className="rounded-md border border-border bg-slate-50 p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current verdict</p>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-muted-foreground">Current review score</p>
             <p className="mt-4 font-mono text-5xl font-black">{formatScore(product.consensus.score10)}</p>
             <p className="mt-2 text-sm text-muted-foreground">
-              {product.consensus.confidence} confidence from {product.consensus.evidenceCount} evidence reports.
+              {product.consensus.confidence} confidence from {product.consensus.evidenceCount} review report{product.consensus.evidenceCount === 1 ? '' : 's'}.
             </p>
             <div className="mt-5">
               <PriceValueBadge price={product.price} />
@@ -706,7 +705,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               <div className="mt-5 rounded-md border border-border bg-white p-4">
                 <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buying path</p>
                 <p className="mt-2 text-sm leading-7 text-muted-foreground">
-                  No outbound store handoff is available for this item until a real affiliate URL is verified.
+                  No outbound store link is available for this item until a real merchant URL is verified.
                 </p>
                 {monetizedAlternatives.length ? (
                   <div className="mt-4 space-y-3">
@@ -730,7 +729,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                         </Link>
                         <div className="mt-2 flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
                           <span>{formatScore(alternative.consensus.score10)}</span>
-                          <span>{alternative.consensus.evidenceCount} evidence reports</span>
+                          <span>{alternative.consensus.evidenceCount} review report{alternative.consensus.evidenceCount === 1 ? '' : 's'}</span>
                           {alternativeMerchantHref ? (
                             <a href={alternativeMerchantHref} className="font-semibold text-primary hover:underline">
                               {alternativeDecision.primaryActionLabel}
@@ -753,7 +752,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
       <section className="border-t border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Scenario Evidence</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Review Proof</p>
           <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight">
             What creators actually tested.
           </h2>
@@ -766,7 +765,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white">{report.rating}</span>
                       <span className="rounded-md bg-emerald-50 px-2 py-1 text-xs font-semibold text-emerald-900">{report.tagName}</span>
-                      {report.isAdvertorial ? <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">Advertorial penalty</span> : null}
+                      {report.isAdvertorial ? <span className="rounded-md bg-amber-50 px-2 py-1 text-xs font-semibold text-amber-900">Sponsored-source warning</span> : null}
                     </div>
                     <blockquote className="mt-4 border-l-2 border-primary pl-4 text-sm leading-7 text-muted-foreground">{report.evidenceQuote}</blockquote>
                     {report.contextSnippet ? <p className="mt-3 text-xs leading-6 text-muted-foreground">Context: {report.contextSnippet}</p> : null}
@@ -785,9 +784,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               })
             ) : (
               <div className="rounded-md border border-border bg-white p-6">
-                <p className="font-semibold">No source quote has cleared validation yet.</p>
+                <p className="font-semibold">No review quote has cleared validation yet.</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">
-                  A product page can exist before the score is ready. Bes3 keeps it visible but blocks false winner claims until evidence is attached.
+                  A product page can exist before the score is ready. Bes3 keeps it visible but blocks false winner claims until review proof is attached.
                 </p>
               </div>
             )}

@@ -18,15 +18,15 @@ const expectations: FileExpectation[] = [
     label: 'Scenario pSEO page recommendation contract',
     filePath: 'src/app/[category]/[landing]/page.tsx',
     required: [
-      'Current Evidence-Backed Pick',
+      'Current Review-Backed Pick',
       'Current Recommendation',
-      'AI Answer Summary',
+      'Quick Shopping Summary',
       'Recommendation Guardrails',
       'buildAiRecommendationSummary',
-      'current evidence-backed pick',
+      'current review-backed pick',
       'shortlist recommendation',
-      'Confidence boundary',
-      'Index quality gate',
+      'Coverage limit',
+      'Why this page is still limited',
       'getScenarioIndexEligibility',
       'productDisplayName',
       'currentPick'
@@ -45,7 +45,7 @@ const expectations: FileExpectation[] = [
     required: [
       'Why this is the current shortlist pick',
       'Use this table to verify the current recommendation',
-      'confidence warning'
+      'coverage warning'
     ],
     forbidden: [
       'Current source proof and missing confidence signals',
@@ -57,9 +57,9 @@ const expectations: FileExpectation[] = [
     filePath: 'scripts/production-post-deploy-verify.ts',
     required: [
       'Current Recommendation',
-      'AI Answer Summary',
-      'Confidence boundary',
-      'Index quality gate',
+      'Quick Shopping Summary',
+      'Coverage limit',
+      'Why this page is still limited',
       'demoPoolWall001',
       'expectPseoNoindex',
       'noindex',
@@ -73,8 +73,8 @@ const expectations: FileExpectation[] = [
     label: 'Trust methodology page',
     filePath: 'src/app/trust/page.tsx',
     required: [
-      'Index quality gate',
-      'Commission-blind audit',
+      'No fake certainty',
+      'No commission-ranked winners',
       'Schema safety',
       'getCommercialFocusCategories'
     ],

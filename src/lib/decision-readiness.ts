@@ -71,9 +71,9 @@ export function buildCommerceDecisionReadiness(product: CommerceReadinessInput):
 
   if (hasMerchantHandoff) {
     score += 35
-    reasons.push('Verified commissionable merchant handoff is available.')
+    reasons.push('Verified store link is available.')
   } else {
-    blockers.push('No verified commissionable merchant handoff is attached.')
+    blockers.push('No verified store link is attached.')
   }
 
   if (hasOffer) {
@@ -92,7 +92,7 @@ export function buildCommerceDecisionReadiness(product: CommerceReadinessInput):
 
   if (confidence >= 0.55) {
     score += 16
-    reasons.push('Product data confidence is high enough for an AI shopping handoff.')
+    reasons.push('Product details are complete enough for a shopping handoff.')
   } else if (confidence >= 0.35) {
     score += 8
     reasons.push('Product data has partial confidence and should be checked before checkout.')
@@ -119,7 +119,7 @@ export function buildCommerceDecisionReadiness(product: CommerceReadinessInput):
       score: safeScore,
       label: 'Buy-ready',
       primaryAction: 'merchant_handoff',
-      summary: 'The product has a commissionable handoff, visible price context, and enough data confidence to support a checkout decision.',
+    summary: 'The product has a verified store link, visible price context, and enough detail to support a checkout check.',
       reasons,
       blockers
     }
@@ -131,7 +131,7 @@ export function buildCommerceDecisionReadiness(product: CommerceReadinessInput):
       score: safeScore,
       label: 'Watch price',
       primaryAction: 'start_price_watch',
-      summary: 'Use this page for price monitoring or comparison, but do not send the buyer to a merchant until a commissionable link is verified.',
+      summary: 'Use this page for price monitoring or comparison, but do not leave for a store until the link is verified.',
       reasons,
       blockers
     }
@@ -144,7 +144,7 @@ export function buildCommerceDecisionReadiness(product: CommerceReadinessInput):
     primaryAction: hasOffer || confidence >= 0.35 ? 'compare_alternatives' : 'continue_research',
     summary: hasOffer || confidence >= 0.35
       ? 'The product can help shortlist or compare, but it should not be treated as a direct buy recommendation yet.'
-      : 'The product needs more offer, price, and evidence data before it should influence a purchase decision.',
+      : 'The product needs more offer, price, and review proof before it should influence a buy.',
     reasons,
     blockers
   }
@@ -161,16 +161,16 @@ export function buildEvidenceDecisionReadiness(product: EvidenceReadinessInput):
 
   if (hasMerchantHandoff) {
     score += 35
-    reasons.push('Verified commissionable merchant handoff is available.')
+    reasons.push('Verified store link is available.')
   } else {
-    blockers.push('No verified commissionable merchant handoff is attached.')
+    blockers.push('No verified store link is attached.')
   }
 
   if (hasEvidence) {
     score += Math.min(25, 10 + evidenceCount * 8)
-    reasons.push(`${evidenceCount} usable evidence report${evidenceCount === 1 ? '' : 's'} cleared validation.`)
+    reasons.push(`${evidenceCount} usable review report${evidenceCount === 1 ? '' : 's'} cleared validation.`)
   } else {
-    blockers.push('No usable evidence report has cleared validation.')
+    blockers.push('No usable review report has cleared validation.')
   }
 
   if (score10 >= 8) {
@@ -200,7 +200,7 @@ export function buildEvidenceDecisionReadiness(product: EvidenceReadinessInput):
       score: safeScore,
       label: 'Buy-ready',
       primaryAction: 'merchant_handoff',
-      summary: 'Evidence and price context are strong enough to support a purchase handoff through Bes3 attribution.',
+    summary: 'Review proof and price context are strong enough to support a checkout check through Bes3.',
       reasons,
       blockers
     }
@@ -214,7 +214,7 @@ export function buildEvidenceDecisionReadiness(product: EvidenceReadinessInput):
       primaryAction: product.price.entryStatus === 'overpriced' ? 'start_price_watch' : 'compare_alternatives',
       summary: hasMerchantHandoff
         ? 'Evidence is useful, but the buyer should compare fit or wait for price conditions before acting.'
-        : 'Evidence is useful, but Bes3 should not send buyers to a merchant until a real affiliate handoff is verified.',
+        : 'Review proof is useful, but Bes3 should not send buyers to a store until a real link is verified.',
       reasons,
       blockers
     }
@@ -225,7 +225,7 @@ export function buildEvidenceDecisionReadiness(product: EvidenceReadinessInput):
     score: safeScore,
     label: 'Not ready',
     primaryAction: 'continue_research',
-    summary: 'The product should stay in research until evidence and purchase-path checks improve.',
+    summary: 'The product should stay in research until review proof and store-link checks improve.',
     reasons,
     blockers
   }

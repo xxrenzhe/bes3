@@ -312,7 +312,7 @@ export default async function NewsletterPage({
           </section>
         </div>
         <DecisionSummaryPanel
-          eyebrow="Decision Summary"
+          eyebrow="Review Summary"
           title="A price watch should keep your progress alive, not send you into a separate email loop."
           description="A strong wait page should answer four things fast: who should use it, who should step back, why this page matters now, and what Bes3 wants you to do next."
           items={[

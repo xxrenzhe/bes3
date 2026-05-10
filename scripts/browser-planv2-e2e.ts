@@ -631,10 +631,10 @@ async function gotoAndAssert(page: Page, routePath: string, label: string, texts
 }
 
 async function assertDecisionSurface(page: Page, label: string) {
-  await assertAnyText(page, ['Should you buy it?', 'Top 3 decisions', 'Top buying decisions', 'Default winner', 'Top buy windows', 'Top 3 decision cards'], label)
+  await assertAnyText(page, ['Should you buy it?', 'Top 3 checked picks', 'Top checked picks', 'Current lead', 'Top buy windows'], label)
   await assertAnyText(page, ['Buy now', 'Compare first', 'Watch price', 'Researching', 'Link unavailable', 'Skip'], label)
-  await assertAnyText(page, ['Why this decision', 'Evidence', 'Review proof', 'View evidence'], label)
-  await assertAnyText(page, ['Bes3 may earn', 'Affiliate disclosure:', 'Commission availability never changes the evidence score or recommendation order.'], label)
+  await assertAnyText(page, ['Why Alex picked this', 'Review proof', 'View review proof'], label)
+  await assertAnyText(page, ['Bes3 may earn', 'Affiliate disclosure:', "A commission never changes Alex's pick or its order."], label)
 }
 
 async function assertSinglePrimaryCtaSemantics(page: Page, label: string) {
@@ -689,7 +689,7 @@ async function assertSeoGeoPayload(page: Page, label: string) {
   if (payload.ldJsonCount < 1) {
     throw new Error(`${label}: missing application/ld+json SEO/GEO payload`)
   }
-  if (!/(decision-notes|AI Answer Summary|Open product JSON|FAQPage|CollectionPage|Product)/i.test(payload.html)) {
+  if (!/(review-notes|Quick Shopping Summary|Product data|FAQPage|CollectionPage|Product)/i.test(payload.html)) {
     throw new Error(`${label}: missing crawler-readable decision or open JSON payload`)
   }
 }
@@ -801,20 +801,20 @@ async function runBrowserChecks(plan13Routes: Plan13TestRoutes) {
     await assertNoHorizontalOverflow(page, 'desktop products')
     console.log('✓ browser product directory renders')
 
-    await gotoAndAssert(page, plan13Routes.categoryPath, 'Plan13 category Top 3 decisions', ['Top 3 decisions', 'Best Picks'])
-    await assertDecisionSurface(page, 'Plan13 category Top 3 decisions')
-    await assertSinglePrimaryCtaSemantics(page, 'Plan13 category Top 3 decisions')
-    await assertSeoGeoPayload(page, 'Plan13 category Top 3 decisions')
-    console.log(`✓ Plan13 category Top 3 decisions render (${plan13Routes.categoryPath})`)
+    await gotoAndAssert(page, plan13Routes.categoryPath, 'Plan13 category Top 3 checked picks', ['Top 3 checked picks', 'Best Picks'])
+    await assertDecisionSurface(page, 'Plan13 category Top 3 checked picks')
+    await assertSinglePrimaryCtaSemantics(page, 'Plan13 category Top 3 checked picks')
+    await assertSeoGeoPayload(page, 'Plan13 category Top 3 checked picks')
+    console.log(`✓ Plan13 category Top 3 checked picks render (${plan13Routes.categoryPath})`)
 
-    await gotoAndAssert(page, plan13Routes.productPath, 'Plan13 product purchase decision', ['Should you buy it?', 'Why this decision'])
+    await gotoAndAssert(page, plan13Routes.productPath, 'Plan13 product purchase decision', ['Should you buy it?', 'Why Alex picked this'])
     await assertDecisionSurface(page, 'Plan13 product purchase decision')
     await assertSinglePrimaryCtaSemantics(page, 'Plan13 product purchase decision')
     await assertSeoGeoPayload(page, 'Plan13 product purchase decision')
     console.log(`✓ Plan13 product purchase decision renders (${plan13Routes.productPath})`)
 
     if (plan13Routes.reviewPath) {
-      await gotoAndAssert(page, plan13Routes.reviewPath, 'Plan13 review purchase decision', ['Review', 'Decision snapshot'])
+      await gotoAndAssert(page, plan13Routes.reviewPath, 'Plan13 review purchase decision', ['Review', 'Review snapshot'])
       await assertDecisionSurface(page, 'Plan13 review purchase decision')
       await assertSinglePrimaryCtaSemantics(page, 'Plan13 review purchase decision')
       await assertSeoGeoPayload(page, 'Plan13 review purchase decision')
@@ -829,23 +829,23 @@ async function runBrowserChecks(plan13Routes: Plan13TestRoutes) {
     await assertSeoGeoPayload(page, 'Plan13 deals buy window')
     console.log('✓ Plan13 deals buy window renders')
 
-    await gotoAndAssert(page, plan13Routes.dealDetailPath, 'Plan13 deal detail decision cards', ['Top 3 decision cards', 'buy now, compare first, watch price, or skip'])
-    await assertDecisionSurface(page, 'Plan13 deal detail decision cards')
-    await assertSinglePrimaryCtaSemantics(page, 'Plan13 deal detail decision cards')
-    await assertSeoGeoPayload(page, 'Plan13 deal detail decision cards')
-    console.log(`✓ Plan13 deal detail decision cards render (${plan13Routes.dealDetailPath})`)
+    await gotoAndAssert(page, plan13Routes.dealDetailPath, 'Plan13 deal detail checked picks', ['Top checked picks', 'whether the price is worth checking today'])
+    await assertDecisionSurface(page, 'Plan13 deal detail checked picks')
+    await assertSinglePrimaryCtaSemantics(page, 'Plan13 deal detail checked picks')
+    await assertSeoGeoPayload(page, 'Plan13 deal detail checked picks')
+    console.log(`✓ Plan13 deal detail checked picks render (${plan13Routes.dealDetailPath})`)
 
-    await gotoAndAssert(page, plan13Routes.scenarioPath, 'Plan13 scenario Top buying decisions', ['BLUF:', 'Top buying decisions'])
-    await assertDecisionSurface(page, 'Plan13 scenario Top buying decisions')
-    await assertSinglePrimaryCtaSemantics(page, 'Plan13 scenario Top buying decisions')
-    await assertSeoGeoPayload(page, 'Plan13 scenario Top buying decisions')
-    console.log(`✓ Plan13 scenario Top buying decisions render (${plan13Routes.scenarioPath})`)
+    await gotoAndAssert(page, plan13Routes.scenarioPath, 'Plan13 scenario checked picks', ['Quick answer:', 'Top checked picks'])
+    await assertDecisionSurface(page, 'Plan13 scenario checked picks')
+    await assertSinglePrimaryCtaSemantics(page, 'Plan13 scenario checked picks')
+    await assertSeoGeoPayload(page, 'Plan13 scenario checked picks')
+    console.log(`✓ Plan13 scenario checked picks render (${plan13Routes.scenarioPath})`)
 
-    await gotoAndAssert(page, '/compare', 'Plan13 compare default winner', ['Default winner', 'Start with a default winner'])
-    await assertDecisionSurface(page, 'Plan13 compare default winner')
-    await assertSinglePrimaryCtaSemantics(page, 'Plan13 compare default winner')
-    await assertSeoGeoPayload(page, 'Plan13 compare default winner')
-    console.log('✓ Plan13 compare default winner renders')
+    await gotoAndAssert(page, '/compare', 'Plan13 compare current lead', ['Current lead', 'Start with the current lead'])
+    await assertDecisionSurface(page, 'Plan13 compare current lead')
+    await assertSinglePrimaryCtaSemantics(page, 'Plan13 compare current lead')
+    await assertSeoGeoPayload(page, 'Plan13 compare current lead')
+    console.log('✓ Plan13 compare current lead renders')
 
     await assertBuyNowMerchantHandoff(page, plan13Routes.buyNowHandoffPath)
     console.log('✓ Plan13 buy_now /go merchant handoff redirects to commissionable URL')

@@ -72,7 +72,7 @@ export function PurchaseDecisionCard({
         <p className={cn('mt-1 font-mono font-black text-foreground', compact ? 'text-lg' : 'text-xl')}>{decision.priceLine}</p>
       </div>
       <div>
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Confidence</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">Review proof</p>
         <p className="mt-1 font-semibold text-foreground">{decision.confidenceLine}</p>
       </div>
     </div>
@@ -87,7 +87,7 @@ export function PurchaseDecisionCard({
           trackingSource={decision.trackingSource}
           trackingMetadata={decision.metadata}
           note="Bes3 may earn from qualifying purchases at no extra cost to you."
-          trustBadge={`${decision.evidenceCount} evidence signal${decision.evidenceCount === 1 ? '' : 's'} checked before this CTA`}
+          trustBadge={`${decision.evidenceCount} review signal${decision.evidenceCount === 1 ? '' : 's'} checked before this link`}
           buttonClassName={compact ? 'w-full' : undefined}
           showAffiliateDisclosure={!compact}
         />
@@ -131,7 +131,7 @@ export function PurchaseDecisionCard({
           {decision.stateLabel}
         </span>
         <span className="rounded-full border border-white/80 bg-white/80 px-3 py-1 text-xs font-semibold text-muted-foreground">
-          {decision.pageType} decision
+          {decision.pageType} check
         </span>
       </div>
       <h2
@@ -161,14 +161,14 @@ export function PurchaseDecisionCard({
       {compact ? (
         <div className="mt-4 space-y-3">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why Alex picked this</p>
             <ul className="mt-2 space-y-2 text-sm leading-6 text-foreground">
               {decision.proofBullets.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
           <details className="rounded-2xl border border-white/80 bg-white/60 px-4 py-3">
             <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">
-              Risks to check
+              Catch to check
             </summary>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
               {decision.riskBullets.map((item) => <li key={item}>{item}</li>)}
@@ -178,13 +178,13 @@ export function PurchaseDecisionCard({
       ) : (
         <div className="mt-6 grid gap-4 md:grid-cols-2">
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why this decision</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Why Alex picked this</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-foreground">
               {decision.proofBullets.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
           <div>
-            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Risks to check</p>
+            <p className="text-xs font-black uppercase tracking-[0.18em] text-muted-foreground">Catch to check</p>
             <ul className="mt-3 space-y-2 text-sm leading-6 text-muted-foreground">
               {decision.riskBullets.map((item) => <li key={item}>{item}</li>)}
             </ul>
@@ -194,7 +194,7 @@ export function PurchaseDecisionCard({
 
       {!compact ? (
         <p className="mt-5 border-t border-white/80 pt-4 text-xs leading-6 text-muted-foreground">
-          Affiliate disclosure: Bes3 may earn from qualifying purchases. Commission availability never changes the evidence score or recommendation order.
+          Affiliate disclosure: Bes3 may earn from qualifying purchases. A commission never changes Alex's pick or its order.
         </p>
       ) : null}
       {stickyEligible ? (

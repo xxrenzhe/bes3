@@ -19,10 +19,10 @@ export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Best Value Lab',
     description:
-      'Bes3 ranks buying windows by combining teardown consensus scores, current price, historical lows, and 90-day average price baselines.',
+      'Bes3 ranks buying windows by combining review scores, current price, historical lows, and 90-day average price baselines.',
     path: '/deals',
     locale: await getRequestLocale(),
-    keywords: ['best value tech', 'price value score', 'teardown consensus', 'price drop alerts']
+    keywords: ['best value tech', 'price value score', 'review score', 'price drop alerts']
   })
 }
 
@@ -40,7 +40,7 @@ export default async function DealsPage() {
   const faqEntries = [
     {
       question: 'How does Bes3 decide whether something is a deal?',
-      answer: 'Bes3 combines the consensus score from teardown evidence with current price, historical low, and 90-day average price. A cheap weak product should not outrank a proven product automatically.'
+      answer: 'Bes3 combines review score with current price, historical low, and 90-day average price. A cheap weak product should not outrank a proven product automatically.'
     },
     {
       question: 'Why do some products show price baseline pending?',
@@ -55,7 +55,7 @@ export default async function DealsPage() {
           buildCollectionPageSchema({
             path: '/deals',
             title: 'Best Value Lab',
-            description: 'Price-value pages ranked by teardown consensus and live price baselines.',
+            description: 'Price-value pages ranked by review score and live price baselines.',
             items: HARDCORE_CATEGORIES.map((category) => ({
               name: `Best value ${category.name}`,
               path: buildValuePseoPath(category.slug, 500)
@@ -71,7 +71,7 @@ export default async function DealsPage() {
             The best deal is the one worth buying now.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 ranks deals by purchase readiness: evidence strength, current price, stock/link health, and whether a safer alternative is close.
+            Bes3 ranks deals by review proof, current price, stock/link health, and whether a safer alternative is close.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {HARDCORE_CATEGORIES.slice(0, 6).map((category) => (

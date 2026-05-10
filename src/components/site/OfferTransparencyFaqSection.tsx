@@ -17,7 +17,7 @@ export function buildOfferFaqEntries(input?: {
     {
       question: `How does Bes3 rank ${scope}?`,
       answer:
-        'Bes3 ranks public offers by verified savings, tracked low distance, freshness, and evidence strength. Commission decides whether a product is eligible to appear, but it does not boost public ranking.'
+        'Bes3 ranks public offers by verified savings, tracked low distance, freshness, and review strength. Commission decides whether a product is eligible to appear, but it does not boost public ranking.'
     },
     {
       question: `Why does Bes3 limit ${categoryLabel === 'this category' ? 'the final recommendation layer' : `${categoryLabel} recommendations`} to three picks?`,

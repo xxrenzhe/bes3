@@ -40,7 +40,7 @@ export default async function ProductsIndexPage() {
             Products sorted by proof, not product-page copy.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            This table is intentionally blunt: consensus score, evidence count, creator quote, current price, and buy-window state.
+            This table is intentionally blunt: review score, review count, creator quote, current price, and buy-window status.
           </p>
         </div>
       </section>

@@ -18,7 +18,7 @@ function getSummaryToneClass(tone: DecisionSummaryItem['tone']) {
 }
 
 export function DecisionSummaryPanel({
-  eyebrow = 'Decision Summary',
+  eyebrow = 'Review Summary',
   title,
   description,
   items

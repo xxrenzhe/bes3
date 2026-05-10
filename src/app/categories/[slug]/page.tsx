@@ -28,11 +28,11 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
 
   return buildPageMetadata({
     title: `${page.category.name} Best Picks`,
-    description: `Hands-on review evidence, buyer use cases, and price timing for ${page.category.name}.`,
+    description: `Hands-on review proof, buyer use cases, and price timing for ${page.category.name}.`,
     path: `/categories/${page.category.slug}`,
     locale: await getRequestLocale(),
     robots: page.products.filter((product) => product.consensus.evidenceCount > 0).length < 3 ? { index: false, follow: true } : undefined,
-    keywords: [page.category.name, 'teardown evidence', 'Reddit consensus', ...page.category.painpoints]
+    keywords: [page.category.name, 'review proof', 'buyer reviews', ...page.category.painpoints]
   })
 }
 
@@ -42,7 +42,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
   const faqEntries = [
     {
       question: `What counts as evidence for ${page.category.name}?`,
-      answer: 'A product needs hands-on review evidence tied to a real buyer use case, plus a rating and a quote or timestamp. Official specs alone are not enough.'
+      answer: 'A product needs hands-on review proof tied to a real buyer use case, plus a rating and a quote or timestamp. Official specs alone are not enough.'
     },
     {
       question: 'Why are there only a few tags?',
@@ -103,7 +103,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
               The {page.category.name} picks that matter first.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Start with the current Top 3 buying decisions. Full evidence, source quality, and scenario matrices stay below for verification.
+              Start with the current Top 3 checked picks. Review proof, source notes, and use-case coverage stay below for verification.
             </p>
           </div>
           <div className="rounded-md border border-border bg-white p-6">
@@ -120,7 +120,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
       </section>
       <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top 3 decisions</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top 3 checked picks</p>
           <div className="mt-6 grid gap-5 lg:grid-cols-3">
             {topDecisions.map((decision) => (
               <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
@@ -140,14 +140,14 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">{creator.authorityTier}</p>
                 <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{creator.channelName}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted-foreground">
-                  {creator.evidenceCount} review excerpt{creator.evidenceCount === 1 ? '' : 's'} · source quality {creator.maxRank.toFixed(1)}
+                  {creator.evidenceCount} review excerpt{creator.evidenceCount === 1 ? '' : 's'} · source rating {creator.maxRank.toFixed(1)}
                 </p>
               </div>
             ))}
           </div>
         </div>
       </section>
-      <HardcoreEvidenceMatrix products={page.products} emptyTitle={`${page.category.name} is still waiting for enough aligned evidence.`} />
+      <HardcoreEvidenceMatrix products={page.products} emptyTitle={`${page.category.name} is still waiting for enough aligned review proof.`} />
     </PublicShell>
   )
 }

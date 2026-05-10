@@ -145,9 +145,9 @@ const TRUST_PAGE_LINKS: ItemListEntry[] = [
 
 const CORE_ENTRY_LINKS: ItemListEntry[] = [
   { name: 'Categories', path: '/categories' },
-  { name: 'Evidence Matrix', path: '/products' },
+  { name: 'Reviewed Products', path: '/products' },
   { name: 'Best Value Lab', path: '/deals' },
-  { name: 'Open Data', path: '/data' },
+  { name: 'How Bes3 Checks Deals', path: '/data' },
   { name: 'Trust Center', path: '/trust' },
   { name: 'Categories', path: '/categories' },
   { name: 'Products', path: '/products' }

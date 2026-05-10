@@ -83,7 +83,7 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Robots policy', filePath: 'src/app/robots.ts', required: ['/llms.txt', '/api/open/', '/admin'] },
       { label: 'LLM text route', filePath: 'src/app/llms.txt/route.ts', required: ['Bes3', '/api/open/evidence'] },
-      { label: 'Scenario pSEO route', filePath: 'src/app/[category]/[landing]/page.tsx', required: ['BLUF:', 'SeoFaqSection', 'buildProductAggregateSchema', 'getScenarioIndexEligibility', 'Index quality gate'] },
+      { label: 'Scenario pSEO route', filePath: 'src/app/[category]/[landing]/page.tsx', required: ['Quick answer:', 'SeoFaqSection', 'buildProductAggregateSchema', 'getScenarioIndexEligibility', 'Why this page is still limited'] },
       { label: 'Value pSEO route', filePath: 'src/app/deals/[slug]/page.tsx', required: ['buildValuePseoPath', 'Price Drop Alert'] },
       { label: 'Open coverage manifest', filePath: 'src/app/api/open/coverage/route.ts', required: ['coverage-manifest-v1', '/trust'] }
     ]
@@ -108,7 +108,7 @@ const checks: PlanDocCheck[] = [
       { label: 'Evidence feedback API', filePath: 'src/app/api/open/evidence/feedback/route.ts', required: ['recordEvidenceFeedback', 'feedbackType'] },
       { label: 'Evidence feedback persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['creator_feedback_events'] },
       { label: 'Evidence review persistence', filePath: 'src/lib/admin-blueprint.ts', required: ['evidence_review_decisions', 'reviewEvidenceReport'] },
-      { label: 'Review signal UI', filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx', required: ['Review Signals', 'Hardcore Proof', 'Review by'] },
+      { label: 'Review signal UI', filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx', required: ['Review Signals', 'Review proof', 'Review by'] },
       { label: 'Admin evidence operations', filePath: 'src/app/api/admin/evidence/route.ts', required: ['getEvidenceOperationsSnapshot', 'reviewEvidenceReport'] }
     ]
   },
@@ -235,7 +235,7 @@ const checks: PlanDocCheck[] = [
           'mobile-sticky-decision',
           'actionTone={decision.state}',
           'Affiliate disclosure:',
-          'Commission availability never changes the evidence score or recommendation order.'
+          "A commission never changes Alex's pick or its order."
         ]
       },
       {
@@ -304,14 +304,14 @@ const checks: PlanDocCheck[] = [
         ]
       },
       {
-        label: 'Compare page default winner',
+        label: 'Compare page current lead',
         filePath: 'src/app/compare/page.tsx',
         required: [
           'PurchaseDecisionCard',
           'ComparisonSummaryMatrix',
-          'Default winner',
+          'Current lead',
           'compare-decision-card',
-          'Start with a default winner'
+          'Start with the current lead'
         ]
       },
       {
@@ -330,17 +330,17 @@ const checks: PlanDocCheck[] = [
         required: [
           'PurchaseDecisionCard',
           'buildEvidencePurchaseDecision',
-          'Top 3 decision cards',
-          'buy now, compare first, watch price, or skip'
+          'Top checked picks',
+          'whether the price is worth checking today'
         ]
       },
       {
-        label: 'Category top decisions',
+        label: 'Category top checked picks',
         filePath: 'src/app/categories/[slug]/page.tsx',
         required: [
           'PurchaseDecisionCard',
           'buildEvidencePurchaseDecision',
-          'Top 3 decisions',
+          'Top 3 checked picks',
           'Best Picks'
         ]
       },
@@ -355,12 +355,12 @@ const checks: PlanDocCheck[] = [
         ]
       },
       {
-        label: 'Scenario page top buying decisions',
+        label: 'Scenario page top checked picks',
         filePath: 'src/app/[category]/[landing]/page.tsx',
         required: [
           'PurchaseDecisionCard',
           'buildEvidencePurchaseDecision',
-          'Top buying decisions',
+          'Top checked picks',
           'scenario-decision-card'
         ]
       },
@@ -615,13 +615,13 @@ const checks: PlanDocCheck[] = [
           'assertBuyNowMerchantHandoff',
           'assertPurchaseDecisionViewTracked',
           'Plan13 home purchase task routes',
-          'Plan13 category Top 3 decisions',
+          'Plan13 category Top 3 checked picks',
           'Plan13 product purchase decision',
           'Plan13 review purchase decision',
           'Plan13 deals buy window',
-          'Plan13 deal detail decision cards',
-          'Plan13 scenario Top buying decisions',
-          'Plan13 compare default winner',
+          'Plan13 deal detail checked picks',
+          'Plan13 scenario checked picks',
+          'Plan13 compare current lead',
           'purchase_decision_view',
           'No visible /go CTA for non-buy state',
           'application/ld+json'

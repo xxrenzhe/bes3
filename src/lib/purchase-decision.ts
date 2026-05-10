@@ -140,9 +140,9 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
     case 'buy_now':
       return {
         headline: `Buy ${name} if the live merchant terms still match.`,
-        summary: 'Evidence, price context, and the verified merchant handoff are strong enough for a purchase decision.',
+        summary: 'Review proof, price context, and the verified store link are strong enough to check out if the live page still matches.',
         primaryActionLabel: 'Check current price',
-        secondaryActionLabel: 'View evidence',
+        secondaryActionLabel: 'View review proof',
         secondaryActionHref: evidenceHref
       }
     case 'compare_first':
@@ -152,7 +152,7 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
           ? `This is a plausible fit for ${context.userIntent}, but alternatives are close enough to compare first.`
           : 'This product is credible, but nearby alternatives or incomplete fit signals make comparison the safer next step.',
         primaryActionLabel: 'Compare alternatives',
-        secondaryActionLabel: 'View evidence',
+        secondaryActionLabel: 'View review proof',
         secondaryActionHref: evidenceHref
       }
     case 'watch_price':
@@ -160,23 +160,23 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
         headline: `Wait for a better buy window on ${name}.`,
         summary: 'The product can stay on the shortlist, but current price timing does not justify a strong buy CTA.',
         primaryActionLabel: 'Track price drop',
-        secondaryActionLabel: 'View evidence',
+        secondaryActionLabel: 'View review proof',
         secondaryActionHref: evidenceHref
       }
     case 'skip':
       return {
         headline: `Skip ${name} for now.`,
-        summary: input.criticalRisk || 'Current evidence or readiness signals are too weak to support a purchase recommendation.',
+        summary: input.criticalRisk || 'Current review proof or store-link checks are too weak to recommend buying.',
         primaryActionLabel: 'See safer pick',
-        secondaryActionLabel: 'Read evidence',
+        secondaryActionLabel: 'Read review proof',
         secondaryActionHref: evidenceHref
       }
     case 'researching':
       return {
         headline: `${name} needs more proof before buying.`,
-        summary: 'Bes3 has some useful context, but not enough validated evidence and price data for a direct purchase recommendation.',
+        summary: 'Bes3 has some useful context, but not enough review proof and price data for a direct buy recommendation.',
         primaryActionLabel: 'Browse category',
-        secondaryActionLabel: 'Read evidence',
+        secondaryActionLabel: 'Read review proof',
         secondaryActionHref: evidenceHref
       }
     case 'link_unavailable':
@@ -186,9 +186,9 @@ function buildCopy(input: PurchaseDecisionInput, context: PurchaseDecisionContex
           ? 'The item appears out of stock or unavailable through the verified handoff.'
           : input.isBrokenLink
             ? 'The merchant path is not healthy enough to send buyers there.'
-            : 'The evidence may be useful, but no verified commissionable merchant handoff is available.',
+            : 'The review proof may be useful, but no verified store link is available.',
         primaryActionLabel: 'See available alternatives',
-        secondaryActionLabel: 'Read evidence',
+        secondaryActionLabel: 'Read review proof',
         secondaryActionHref: evidenceHref
       }
   }
@@ -208,7 +208,7 @@ export function buildPurchaseDecision(input: PurchaseDecisionInput, context: Pur
   const copy = buildCopy(input, context, state)
   const primaryActionHref = buildPrimaryHref(input, context, state) || buildPrimaryFallbackHref(context, state)
   const riskFallback = hasEvidenceBlocker(input)
-    ? ['Evidence is not strong enough for a direct buy recommendation yet.']
+    ? ['Review proof is not strong enough for a direct buy recommendation yet.']
     : ['Verify live price, stock, return terms, and seller details before checkout.']
   const proofBullets = firstItems(input.proofSignals, 3, input.readiness.reasons)
   const riskBullets = firstItems(input.riskSignals, 2, input.readiness.blockers.length ? input.readiness.blockers : riskFallback)
@@ -231,7 +231,7 @@ export function buildPurchaseDecision(input: PurchaseDecisionInput, context: Pur
     riskBullets,
     priceLine: input.priceLine,
     priceStatus: input.priceStatus,
-    confidenceLine: `${input.confidenceLabel} · ${input.evidenceCount} evidence signal${input.evidenceCount === 1 ? '' : 's'}`,
+    confidenceLine: `${input.confidenceLabel} · ${input.evidenceCount} review signal${input.evidenceCount === 1 ? '' : 's'}`,
     evidenceCount: input.evidenceCount,
     trackingSource: context.trackingSource,
     ctaVariant,
@@ -270,7 +270,7 @@ export function buildCommercePurchaseDecision(
       priceLine: hasPrice ? formatPriceSnapshot(priceAmount, priceCurrency) : 'Price unavailable',
       priceStatus: hasPrice ? 'normal' : 'missing',
       proofSignals: [
-        commerceProduct.bestOffer ? 'Current offer is visible before merchant handoff.' : '',
+        commerceProduct.bestOffer ? 'Current offer is visible before the store click.' : '',
         commerceProduct.reviewCount ? `${commerceProduct.reviewCount} buyer review signal${commerceProduct.reviewCount === 1 ? '' : 's'} available.` : '',
         commerceProduct.evidenceCount ? `${commerceProduct.evidenceCount} product fact${commerceProduct.evidenceCount === 1 ? '' : 's'} tracked by Bes3.` : ''
       ],
@@ -305,13 +305,13 @@ export function buildEvidencePurchaseDecision(product: HardcoreProduct, context:
       isBrokenLink: product.affiliateStatus === 'broken',
       evidenceCount: product.consensus.evidenceCount,
       confidenceLabel: `${product.consensus.confidence} confidence`,
-      scoreLabel: product.consensus.badge || (product.consensus.score10 == null ? 'Researching' : `${product.consensus.score10.toFixed(1)}/10 consensus`),
+      scoreLabel: product.consensus.badge || (product.consensus.score10 == null ? 'Researching' : `${product.consensus.score10.toFixed(1)}/10 review score`),
       priceLine: product.price.currentPrice == null ? 'Price unavailable' : formatHardcorePrice(product.price.currentPrice, product.price.currency),
       priceStatus: product.price.currentPrice == null ? 'missing' : product.price.entryStatus,
       criticalRisk,
       proofSignals: [
-        product.consensus.score10 != null ? `${product.consensus.score10.toFixed(1)}/10 creator consensus.` : '',
-        product.consensus.evidenceCount ? `${product.consensus.evidenceCount} validated evidence report${product.consensus.evidenceCount === 1 ? '' : 's'}.` : '',
+        product.consensus.score10 != null ? `${product.consensus.score10.toFixed(1)}/10 creator review score.` : '',
+        product.consensus.evidenceCount ? `${product.consensus.evidenceCount} validated review report${product.consensus.evidenceCount === 1 ? '' : 's'}.` : '',
         product.price.label
       ],
       riskSignals: [

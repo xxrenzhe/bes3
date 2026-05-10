@@ -74,7 +74,7 @@ function buildScenarioTitle({
     if (!currentPick(products)) {
       return `Best ${buyerName} for ${tagLabel}: Evidence Still Researching`
     }
-    return `Best ${buyerName} for ${tagLabel}: Current Evidence-Backed Pick`
+    return `Best ${buyerName} for ${tagLabel}: Current Review-Backed Pick`
   }
   return `Best ${buyerName} for ${tagLabel}: ${count} Evidence-Checked Picks`
 }
@@ -95,13 +95,13 @@ function buildBluf({
 
   if (!winner || !tested || !isLiveScenario(status, products)) {
     if (!winner || !tested) {
-      return `Short answer: Bes3 has not found a public, model-safe YouTube evidence match for ${tagLabel} yet. This page stays in research mode and should be used to monitor the evidence gap, not to buy a claimed winner.`
+      return `Short answer: Bes3 has not found a public, model-safe YouTube review match for ${tagLabel} yet. This page stays in research mode and should be used to monitor the review gap, not to buy a claimed winner.`
     }
     const proofText = proof?.evidenceQuote ? ` The source proof says: "${proof.evidenceQuote}"` : ''
-    return `Short answer: ${productDisplayName(winner)} is the current evidence-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube evidence report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear confidence warning, not as a fully ranked category winner.${proofText}`
+    return `Short answer: ${productDisplayName(winner)} is the current review-backed pick for ${tagLabel}. Bes3 has ${evidenceCount} timestamped YouTube review report${evidenceCount === 1 ? '' : 's'} across ${tested} matching product${tested === 1 ? '' : 's'}, so use this as a practical shortlist recommendation with a clear coverage warning, not as a fully ranked category winner.${proofText}`
   }
 
-  return `Decision summary: Bes3 analyzed ${evidenceCount} creator evidence reports across ${tested} tested products for ${tagLabel}. ${productDisplayName(winner)} is currently the strongest evidence-backed pick${proof ? ` because reviewers found: "${proof.evidenceQuote}"` : ''}.`
+  return `Short answer: Bes3 checked ${evidenceCount} creator review reports across ${tested} tested products for ${tagLabel}. ${productDisplayName(winner)} is currently the strongest review-backed pick${proof ? ` because reviewers found: "${proof.evidenceQuote}"` : ''}.`
 }
 
 function buildAiRecommendationSummary({
@@ -122,11 +122,11 @@ function buildAiRecommendationSummary({
   if (!pick) {
     return {
       pick: null,
-      summary: `Bes3 is still collecting source-backed evidence before naming a ${categoryName} pick for ${tagLabel}.`,
+      summary: `Bes3 is still collecting source-backed review proof before naming a ${categoryName} pick for ${tagLabel}.`,
       bullets: [
-        'Use this page to monitor products that gain timestamped, model-safe creator evidence.',
+        'Use this page to monitor products that gain timestamped, model-safe creator reviews.',
         'Do not buy from this page until at least one product has a verified source quote for the exact product.',
-        'Check category and product pages for broader alternatives with stronger evidence.'
+        'Check category and product pages for broader alternatives with stronger review proof.'
       ]
     }
   }
@@ -134,16 +134,16 @@ function buildAiRecommendationSummary({
   return {
     pick,
     summary: isResearching
-      ? `For buyers asking what to try first for ${tagLabel}, Bes3 would shortlist ${productDisplayName(pick)} because it has direct source evidence for the exact wall-climbing claim. Confidence is limited because the page has ${tested} independently evidenced product${tested === 1 ? '' : 's'}, below the 3-product threshold for a full ranking.`
-      : `For ${tagLabel}, Bes3 currently recommends ${productDisplayName(pick)} as the leading evidence-checked option based on creator proof, consensus score, and price-value context.`,
+      ? `For buyers asking what to try first for ${tagLabel}, Bes3 would shortlist ${productDisplayName(pick)} because it has direct review proof for the exact wall-climbing claim. Coverage is limited because the page has ${tested} independently reviewed product${tested === 1 ? '' : 's'}, below the 3-product mark for a fuller guide.`
+      : `For ${tagLabel}, Bes3 currently recommends ${productDisplayName(pick)} as the leading review-checked option based on creator proof, review score, and price-value context.`,
     bullets: [
-      proof ? `Why it is recommended: ${proof.evidenceQuote}` : `${pick.name} has the strongest matched evidence on this page.`,
+      proof ? `Why it is recommended: ${proof.evidenceQuote}` : `${pick.name} has the strongest matched review proof on this page.`,
       pick.price.entryStatus === 'best-deal' || pick.price.entryStatus === 'great-value'
         ? `Buy-window signal: ${pick.price.label}.`
         : `Price signal: ${pick.price.label}; verify the current price before buying.`,
       isResearching
-        ? 'Confidence limit: treat this as the best current shortlist item, not a definitive market-wide winner.'
-        : 'Confidence limit: still verify the source quotes against your pool and surface type.'
+        ? 'Coverage limit: treat this as the best current shortlist item, not a definitive market-wide winner.'
+        : 'Coverage limit: still verify the source quotes against your pool and surface type.'
     ]
   }
 }
@@ -205,13 +205,13 @@ function buildDecisionFit(products: HardcoreProduct[], tagLabel: string) {
     isResearching,
     buySignals: [
       tested >= 3
-        ? `${tested} products have usable creator evidence for ${tagLabel}.`
-        : `${strongest ? productDisplayName(strongest) : 'The current pick'} is usable as a shortlist pick because it has matched evidence for ${tagLabel}.`,
+        ? `${tested} products have usable creator proof for ${tagLabel}.`
+        : `${strongest ? productDisplayName(strongest) : 'The current pick'} is usable as a shortlist pick because it has matched review proof for ${tagLabel}.`,
       strongest?.consensus.score10 != null
         ? isResearching
-          ? `${productDisplayName(strongest)} has a ${strongest.consensus.score10.toFixed(1)}/10 source score from the matched creator proof.`
-          : `${productDisplayName(strongest)} leads with a ${strongest.consensus.score10.toFixed(1)}/10 consensus score.`
-        : 'Consensus scoring is still waiting for more aligned evidence.',
+          ? `${productDisplayName(strongest)} has a ${strongest.consensus.score10.toFixed(1)}/10 review score from the matched creator proof.`
+          : `${productDisplayName(strongest)} leads with a ${strongest.consensus.score10.toFixed(1)}/10 review score.`
+        : 'Review scoring is still waiting for more aligned proof.',
       hasDealSignal
         ? `${productDisplayName(strongest!)} has a ${strongest!.price.label.toLowerCase()} signal.`
         : strongest
@@ -220,13 +220,13 @@ function buildDecisionFit(products: HardcoreProduct[], tagLabel: string) {
     ],
     skipSignals: [
       isResearching
-        ? 'Do not treat this as a full category ranking until at least three products have useful evidence.'
+        ? 'Do not treat this as a full category ranking until at least three products have useful review proof.'
         : 'Skip products with no timestamped quote, even if their specs look strong.',
       strongest?.consensus.controversy
-        ? `${productDisplayName(strongest)} has contradictory creator evidence, so read the proof before buying.`
+        ? `${productDisplayName(strongest)} has contradictory creator proof, so read the proof before buying.`
         : isResearching
           ? 'Do not assume one matched source covers every pool surface, waterline, or debris condition.'
-          : 'Skip the winner claim if the evidence stream does not match your exact use case.',
+          : 'Skip the winner claim if the review stream does not match your exact use case.',
       strongest?.affiliateStatus === 'out_of_stock'
         ? `${productDisplayName(strongest)} is out of stock, so use the alternatives path instead of forcing the top pick.`
         : 'Skip buying immediately when the price window is normal or overpriced.'
@@ -242,9 +242,9 @@ function DecisionFitSection({ products, tagLabel }: { products: HardcoreProduct[
     : 'Who should act on this page, and who should wait.'
   const intro = decision.isResearching
     ? decision.strongest
-      ? `For ${tagLabel}, the current data is strong enough to name a practical evidence-backed starting point and too thin to pretend the whole market has been ranked. The useful decision is whether the quoted proof matches your exact use case and model expectations.`
-      : `For ${tagLabel}, Bes3 is still missing a public, model-safe evidence match. The useful decision is to wait for verified source proof instead of trusting a thin or mismatched claim.`
-    : `This summary converts evidence count, consensus score, creator proof, and price-value timing into a direct buying decision for ${tagLabel}.`
+      ? `For ${tagLabel}, the current data is strong enough to name a practical review-backed starting point and too thin to pretend the whole market has been ranked. The useful check is whether the quoted proof matches your exact use case and model expectations.`
+      : `For ${tagLabel}, Bes3 is still missing a public, model-safe review match. The useful check is to wait for verified source proof instead of trusting a thin or mismatched claim.`
+    : `This summary converts review count, review score, creator proof, and price-value timing into a direct buying check for ${tagLabel}.`
 
   return (
     <section className="border-y border-border bg-slate-950 px-4 py-14 text-white sm:px-6 lg:px-8">
@@ -304,7 +304,7 @@ function AiRecommendationBox({
   return (
     <section className="px-4 pb-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl rounded-[2rem] border border-emerald-200 bg-emerald-50 p-6 shadow-sm sm:p-8">
-        <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-700">AI Answer Summary</p>
+        <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-700">Quick Shopping Summary</p>
         <h2 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight text-emerald-950 sm:text-3xl">
           {ai.pick ? `Recommend ${productDisplayName(ai.pick)} first for ${tagLabel}.` : `No recommendation yet for ${tagLabel}.`}
         </h2>
@@ -335,7 +335,7 @@ function RelatedPseoLinks({
   const links = [
     { href: `/categories/${categorySlug}`, label: `Top ${categoryName} list` },
     { href: valuePath, label: `${categoryName} under $500` },
-    { href: '/products', label: 'Full evidence matrix' },
+    { href: '/products', label: 'Reviewed products' },
     { href: '/deals', label: 'Best Value Lab' }
   ]
 
@@ -378,8 +378,8 @@ export async function generateMetadata({
       return buildPageMetadata({
         title: buildScenarioTitle({ categorySlug: multiPage.category.slug, categoryName: multiPage.category.name, tagLabel, products: multiPage.products, status: multiPage.status }),
         description: isResearching
-          ? `Current evidence-backed pick for ${multiPage.category.name} and ${tagLabel}: what to buy first, why it is recommended, and where confidence is still limited.`
-          : `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using teardown evidence and price-value signals.`,
+          ? `Current review-backed pick for ${multiPage.category.name} and ${tagLabel}: what to buy first, why it is recommended, and where coverage is still limited.`
+          : `Bes3 cross-checks ${multiPage.category.name} against both ${tagLabel} using review proof and price-value signals.`,
         path: `/${multiPage.category.slug}/${resolved.landing}`,
         locale: await getRequestLocale(),
         robots: isResearching ? { index: false, follow: true } : undefined,
@@ -399,8 +399,8 @@ export async function generateMetadata({
   return buildPageMetadata({
     title: buildScenarioTitle({ categorySlug: page.category.slug, categoryName: page.category.name, tagLabel: page.tag.name, products: page.products, status: page.status }),
     description: isResearching
-      ? `Current evidence-backed pick for ${page.tag.name}: what to buy first, why it is recommended, and where confidence is still limited.`
-      : `Bes3 analyzes creator teardown evidence to rank the best ${page.category.name} for ${page.tag.name}.`,
+      ? `Current review-backed pick for ${page.tag.name}: what to buy first, why it is recommended, and where coverage is still limited.`
+      : `Bes3 analyzes creator review proof to rank the best ${page.category.name} for ${page.tag.name}.`,
     path: buildScenarioPseoPath(page.category.slug, page.tag.slug),
     locale: await getRequestLocale(),
     robots: isResearching ? { index: false, follow: true } : undefined,
@@ -453,18 +453,18 @@ export default async function ScenarioLandingPage({
         {
           question: page ? `Why does this page focus on ${page.tag.name}?` : 'Why combine these constraints?',
           answer: page
-            ? `${page.tag.name} is a core buyer need. Bes3 names the current evidence-backed shortlist pick now, while clearly marking that the evidence set is still below the full-ranking threshold.`
-            : 'This page checks whether one product can satisfy multiple buyer constraints and names the current evidence-backed shortlist pick while more matching evidence is collected.'
+            ? `${page.tag.name} is a core buyer need. Bes3 names the current review-backed shortlist pick now, while clearly marking that the review set is still below a full ranking.`
+            : 'This page checks whether one product can satisfy multiple buyer constraints and names the current review-backed shortlist pick while more matching proof is collected.'
         },
         {
           question: 'Can I use this as a recommendation?',
-          answer: 'Yes, use it as the current shortlist recommendation. Bes3 requires at least three independently evidenced products before calling it a complete ranked guide.'
+          answer: 'Yes, use it as the current shortlist recommendation. Bes3 requires at least three independently reviewed products before calling it a complete ranked guide.'
         },
         {
           question: page ? `What can I verify for ${page.tag.name}?` : 'What can I verify here?',
           answer: page
-            ? `You can verify the recommended product, ${page.tag.name} quote, source link, source score, price window, and evidence count before deciding whether the claim fits your pool.`
-            : 'You can verify the matched quotes, source links, source scores, price windows, and which constraints still need more evidence.'
+            ? `You can verify the recommended product, ${page.tag.name} quote, source link, review score, price window, and review count before deciding whether the claim fits your pool.`
+            : 'You can verify the matched quotes, source links, review scores, price windows, and which constraints still need more proof.'
         }
       ]
     : [
@@ -472,17 +472,17 @@ export default async function ScenarioLandingPage({
           question: page ? `Why does this page focus on ${page.tag.name}?` : 'Why combine these constraints?',
           answer: page
             ? `${page.tag.name} is treated as a core buyer need. Products only deserve a ranking when Bes3 finds real review coverage for that use case.`
-            : 'Multi-constraint pages only rank products when the same body of review evidence supports more than one real buyer need.'
+            : 'Multi-constraint pages only rank products when the same body of review proof supports more than one real buyer need.'
         },
         {
           question: 'Why can this page show researching instead of a winner?',
-          answer: 'The rule is no fabricated winners. A scenario page needs at least three products with useful evidence before it becomes a live recommendation matrix.'
+          answer: 'The rule is no fabricated winners. A scenario page needs at least three products with useful review proof before it becomes a live recommendation guide.'
         },
         {
           question: page ? `How does Bes3 prove the ${page.tag.name} ranking?` : 'How does Bes3 prove a multi-constraint ranking?',
           answer: page
-            ? `The page keeps crawler-visible creator quotes, timestamp links, consensus scores, and price-value timing together so the ${page.tag.name} recommendation can be checked against source evidence.`
-            : 'The page only promotes products when creator evidence covers the required constraints, then keeps the quotes, timestamps, consensus scores, and price timing visible for verification.'
+            ? `The page keeps creator quotes, timestamp links, review scores, and price-value timing together so the ${page.tag.name} recommendation can be checked against source proof.`
+            : 'The page only promotes products when creator reviews cover the required constraints, then keeps the quotes, timestamps, review scores, and price timing visible for verification.'
         }
       ]
 
@@ -494,12 +494,12 @@ export default async function ScenarioLandingPage({
             path,
             title,
             description: recommended
-              ? `${productDisplayName(recommended)} is the current evidence-backed pick for ${tagLabel}, with timestamped creator proof and price context.`
-              : `Scenario matrix for ${page ? page.category.name : multiPage!.category.name}.`,
+              ? `${productDisplayName(recommended)} is the current review-backed pick for ${tagLabel}, with timestamped creator proof and price context.`
+              : `Use-case guide for ${page ? page.category.name : multiPage!.category.name}.`,
             about: [
               { '@type': 'Thing', name: categoryName },
               { '@type': 'Thing', name: tagLabel },
-              { '@type': 'Thing', name: 'YouTube review evidence' }
+              { '@type': 'Thing', name: 'YouTube review proof' }
             ],
             breadcrumbItems,
             items: products.map((product) => ({
@@ -511,7 +511,7 @@ export default async function ScenarioLandingPage({
             buildProductAggregateSchema({
               path: `/products/${product.slug}`,
               name: product.name,
-              description: `${product.name} ranked with creator teardown evidence, scenario ratings, and price-value timing for ${title}.`,
+              description: `${product.name} ranked with creator review proof, scenario ratings, and price-value timing for ${title}.`,
               image: product.imageUrl,
               ratingValue: product.consensus.score5,
               reviewCount: product.consensus.evidenceCount,
@@ -534,26 +534,26 @@ export default async function ScenarioLandingPage({
             {title}
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            <strong className="font-semibold text-foreground">BLUF:</strong> {bluf}
+            <strong className="font-semibold text-foreground">Quick answer:</strong> {bluf}
           </p>
           {isResearching ? (
             <div className="mt-8 grid gap-4 text-sm leading-7 text-muted-foreground md:grid-cols-3">
               <div className="rounded-md border border-border bg-white p-4">
-                <p className="font-semibold text-foreground">Current evidence</p>
-                <p className="mt-2">{testedProductCount(products)} product{testedProductCount(products) === 1 ? '' : 's'} with usable creator evidence. {recommended ? `${productDisplayName(recommended)} is the current shortlist pick.` : ''}</p>
+                <p className="font-semibold text-foreground">Current review proof</p>
+                <p className="mt-2">{testedProductCount(products)} product{testedProductCount(products) === 1 ? '' : 's'} with usable creator proof. {recommended ? `${productDisplayName(recommended)} is the current shortlist pick.` : ''}</p>
               </div>
               <div className="rounded-md border border-border bg-white p-4">
-                <p className="font-semibold text-foreground">Confidence boundary</p>
-                <p className="mt-2">Needs 3 commercially actionable products, 3 timestamped evidence reports, 3 independent sources, and price context before this becomes an indexable ranked guide.</p>
+                <p className="font-semibold text-foreground">Coverage limit</p>
+                <p className="mt-2">Needs 3 products with usable store paths, 3 timestamped review reports, 3 independent sources, and price context before this becomes a fuller ranked guide.</p>
               </div>
               <div className="rounded-md border border-border bg-white p-4">
                 <p className="font-semibold text-foreground">How to use it</p>
                 <p className="mt-2">Use the current pick as a shortlist, then check the quote, timestamp, and price window before buying.</p>
               </div>
               <div className="rounded-md border border-amber-200 bg-amber-50 p-4 md:col-span-3">
-                <p className="font-semibold text-amber-950">Index quality gate</p>
+                <p className="font-semibold text-amber-950">Why this page is still limited</p>
                 <p className="mt-2 text-amber-900">
-                  Current gate: {qualityGate.metrics.eligibleProducts}/3 eligible products, {qualityGate.metrics.totalEvidenceReports}/3 timestamped reports, {qualityGate.metrics.uniqueSources}/3 independent sources, {qualityGate.metrics.productsWithPriceContext}/3 price-context products. Missing: {qualityGate.reasons.join(', ') || 'none'}.
+                  Current coverage: {qualityGate.metrics.eligibleProducts}/3 usable products, {qualityGate.metrics.totalEvidenceReports}/3 timestamped reports, {qualityGate.metrics.uniqueSources}/3 independent sources, {qualityGate.metrics.productsWithPriceContext}/3 price-context products. Still missing: {qualityGate.reasons.join(', ') || 'none'}.
                 </p>
               </div>
             </div>
@@ -563,7 +563,7 @@ export default async function ScenarioLandingPage({
       {topDecisions.length ? (
         <section className="border-y border-border bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top buying decisions for this scenario</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Top checked picks for this use case</p>
             <div className="mt-6 grid gap-5 lg:grid-cols-3">
               {topDecisions.map((decision) => (
                 <PurchaseDecisionCard key={decision.productId} decision={decision} className="h-full" />
@@ -574,14 +574,14 @@ export default async function ScenarioLandingPage({
       ) : null}
       <AiRecommendationBox categoryName={categoryName} tagLabel={tagLabel} products={products} status={status} />
       <DecisionFitSection products={products} tagLabel={tagLabel} />
-      <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the evidence threshold.`} isResearching={isResearching} />
+      <HardcoreEvidenceMatrix products={products} emptyTitle={`${title} is still below the review coverage mark.`} isResearching={isResearching} />
       <EvidenceStream products={products} isResearching={isResearching} />
       <section className="px-4 pb-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SeoFaqSection
             title={isResearching ? 'Recommendation FAQ' : 'Scenario FAQ'}
             entries={faqEntries}
-            description={isResearching ? 'These answers explain how to use the current shortlist recommendation without over-trusting a small evidence set.' : 'Each answer repeats the same evidence threshold and source-checking rules used by the JSON-LD payload.'}
+            description={isResearching ? 'These answers explain how to use the current shortlist recommendation without over-trusting a small review set.' : 'Each answer repeats the same review coverage and source-checking rules used on this page.'}
           />
         </div>
       </section>

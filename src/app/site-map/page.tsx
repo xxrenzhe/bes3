@@ -84,7 +84,7 @@ export default async function HtmlSitemapPage() {
             Bes3 site map.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            The public site centers on categories, product evidence reports, best-value windows, and buyer-focused landing pages.
+            The public site centers on categories, reviewed product reports, best-value windows, and buyer-focused landing pages.
           </p>
         </div>
       </section>

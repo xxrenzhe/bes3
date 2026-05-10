@@ -17,7 +17,7 @@ export function ValueMap({ products }: { products: HardcoreProduct[] }) {
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Value Map</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Price/performance scatter plot is waiting for baselines.</h2>
           <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            A product needs both current price and consensus score before it can appear on the map.
+            A product needs both current price and review score before it can appear on the map.
           </p>
         </div>
       </section>
@@ -40,7 +40,7 @@ export function ValueMap({ products }: { products: HardcoreProduct[] }) {
         </div>
         <div className="relative h-[420px] rounded-md border border-border bg-white p-6">
           <div className="absolute inset-6 border-l border-b border-slate-300" />
-          <span className="absolute left-6 top-4 text-xs font-semibold text-muted-foreground">Consensus score</span>
+          <span className="absolute left-6 top-4 text-xs font-semibold text-muted-foreground">Review score</span>
           <span className="absolute bottom-2 right-6 text-xs font-semibold text-muted-foreground">Current price</span>
           {plotted.slice(0, 40).map((product) => {
             const x = clamp(((product.price.currentPrice || 0) - minPrice) / range, 0, 1)

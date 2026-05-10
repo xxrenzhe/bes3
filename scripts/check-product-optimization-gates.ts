@@ -130,16 +130,16 @@ const gates: Gate[] = [
       'id="current-offer"',
       'data-product-ux="decision-notes-cta"',
       'data-product-ux="final-decision-recovery"',
-      'trackingSource="decision-notes-exit"',
+      'trackingSource="review-notes-exit"',
       'trackingSource="final-decision-recovery"',
-      'Back to buy decision',
-      'Review buy decision',
+      'Back to price check',
+      'Review price check',
       'Recheck offer terms',
       'pb-36 sm:px-6 sm:pb-14',
-      'href="#decision-notes"',
+      'href="#review-notes"',
       'showAffiliateDisclosure={false}',
       'sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 38vw, 320px"',
-      'Open machine payload for AI and search verification'
+      'For verification tools'
     ]
   },
   {
@@ -155,7 +155,7 @@ const gates: Gate[] = [
       '{summary}',
       'buttonClassName={compact ? \'w-full\' : undefined}',
       '<details className="rounded-2xl',
-      'Risks to check',
+      'Catch to check',
       'StickyMobileCta'
     ]
   },
@@ -250,9 +250,9 @@ const gates: Gate[] = [
       'StructuredData',
       'buildProductAggregateSchema',
       'buildFaqSchema',
-      'Open product JSON',
-      'Open offer JSON',
-      'decision-notes',
+      'Product data',
+      'Offer data',
+      'review-notes',
       'buildPageMetadata',
       'keywords:'
     ]
@@ -280,15 +280,15 @@ const gates: Gate[] = [
       'assertBuyNowMerchantHandoff',
       'assertSeoGeoPayload',
       'Plan13 home purchase task routes',
-      'Plan13 category Top 3 decisions',
+      'Plan13 category Top 3 checked picks',
       'Plan13 product purchase decision',
       'Plan13 review purchase decision',
       'Plan13 deals buy window',
-      'Plan13 deal detail decision cards',
-      'Plan13 scenario Top buying decisions',
-      'Plan13 compare default winner',
+      'Plan13 deal detail checked picks',
+      'Plan13 scenario checked picks',
+      'Plan13 compare current lead',
       'purchase_decision_view',
-      'Commission availability never changes the evidence score or recommendation order.',
+      "A commission never changes Alex's pick or its order.",
       'application/ld+json',
       'No visible /go CTA for non-buy state'
     ]
