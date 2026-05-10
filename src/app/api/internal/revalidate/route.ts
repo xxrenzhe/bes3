@@ -2,7 +2,7 @@ import { revalidatePath } from 'next/cache'
 import { NextResponse } from 'next/server'
 import { buildBrandCategoryPath, buildCategoryPath } from '@/lib/category'
 import { hasValidInternalServiceToken } from '@/lib/internal-service'
-import { getBrandSlug } from '@/lib/site-data'
+import { clearSiteDataCache, getBrandSlug } from '@/lib/site-data'
 
 export async function POST(request: Request) {
   if (!hasValidInternalServiceToken(request.headers)) {
@@ -13,6 +13,7 @@ export async function POST(request: Request) {
   const uniquePaths = Array.from(new Set((Array.isArray(body.paths) ? body.paths : []).filter(Boolean)))
   const brandSlug = getBrandSlug(body.brand)
 
+  clearSiteDataCache()
   revalidatePath('/')
   revalidatePath('/brands')
   revalidatePath('/directory')

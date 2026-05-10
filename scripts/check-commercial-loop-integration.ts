@@ -695,6 +695,10 @@ async function main() {
       'PartnerBoost affiliate inventory exists',
       'Published reviews are not blank, thin, or evidence-free'
     ]),
+    staticCheck('Internal revalidate clears runtime site-data cache', 'src/app/api/internal/revalidate/route.ts', [
+      'clearSiteDataCache',
+      'revalidatePath'
+    ]),
     staticCheck('PlanV3 commercial loop operation is documented', 'docs/planv3/2026-05-10-commercial-loop-continuous-runner.md', [
       'PartnerBoost product sync -> qualified product selection -> YouTube review discovery',
       'Continuous production loop',

@@ -126,6 +126,10 @@ type AsyncCacheEntry<T> = {
 
 const asyncCache = new Map<string, AsyncCacheEntry<unknown>>()
 
+export function clearSiteDataCache() {
+  asyncCache.clear()
+}
+
 function withCachedPromise<T>(key: string, factory: () => Promise<T>, ttlMs: number = SITE_DATA_CACHE_TTL_MS): Promise<T> {
   const now = Date.now()
   const existing = asyncCache.get(key) as AsyncCacheEntry<T> | undefined

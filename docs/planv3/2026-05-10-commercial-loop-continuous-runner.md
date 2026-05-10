@@ -94,3 +94,31 @@ npm run planv2:check-business
 ```
 
 `commercial-loop:check` remains a local fixture regression. It must not be used as proof that production has PartnerBoost inventory, YouTube transcripts, evidence, pSEO pages, or conversion telemetry.
+
+## Production Audit Update 2026-05-10
+
+Production Postgres audit was run against the supplied production database. Initial failures were real:
+
+- `affiliate_products.youtube_match_terms_json` was empty for all synced products.
+- Published review articles used an older template without `Quick answer:`, `Review Verdict`, or `YouTube Review Proof`.
+- One published review had no usable YouTube evidence.
+- One published DeerValley review was evidence-mismatched and returned 404 on the public surface.
+
+Targeted production repair completed:
+
+- Backfilled YouTube match terms for 1,130 affiliate products.
+- Rebuilt the valid DeerValley DV-1S0029-V3 review with the current YouTube proof template.
+- Moved the evidence-free LOMON review and mismatched DeerValley DV-1S0442-V3 review to draft.
+- Re-ran the production DB audit: all database/content checks passed; only the public HTTPS surface remained stale.
+
+Remaining production blocker:
+
+- `https://www.bes3.com/api/health` reports build `d90eb1afe5a49db82bb05af89b421296910cad55`, while `main` is `174fa99`. The GHCR workflow for `174fa99` succeeded, but ClawCloud deployment is manual, so the public site still serves the old image and old cached article HTML.
+- Internal revalidate was called successfully, but old runtime content remained visible. The code now clears the module-level site-data cache inside `/api/internal/revalidate`; this requires deploying the latest image before the public HTTPS audit can pass.
+
+Next production action:
+
+```bash
+GHCR_USERNAME=<github-user> GHCR_TOKEN=<ghcr-token> ./scripts/deploy-ghcr.sh
+npm run commercial-loop:audit-production-db -- --fetch-public
+```

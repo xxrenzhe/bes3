@@ -171,6 +171,7 @@ const checks: PlanDocCheck[] = [
       { label: 'Runtime env validation', filePath: 'scripts/check-runtime-env.js', required: ['JWT_SECRET', 'ENCRYPTION_KEY', 'BROWSER_PROXY_URLS_JSON'] },
       { label: 'Health endpoint', filePath: 'src/app/api/health/route.ts', required: ['status', 'database'] },
       { label: 'Internal health endpoint', filePath: 'src/app/api/internal/health/route.ts', required: ['hasValidInternalServiceToken'] },
+      { label: 'Internal revalidate clears runtime data cache', filePath: 'src/app/api/internal/revalidate/route.ts', required: ['clearSiteDataCache', 'revalidatePath'] },
       { label: 'GHCR deploy script', filePath: 'scripts/deploy-ghcr.sh', required: ['docker', 'GHCR'] },
       { label: 'Pipeline worker', filePath: 'scripts/worker-standalone.ts', required: ['startPipelineWorker'] }
     ]
