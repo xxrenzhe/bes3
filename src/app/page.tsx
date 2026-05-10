@@ -43,6 +43,33 @@ export default async function HomePage() {
   }
 
   const evidenceCount = home.products.reduce((total, product) => total + product.consensus.evidenceCount, commerceEvidenceSignals)
+  const commerceReadinessTiles = [
+    {
+      label: 'Categories tracked',
+      value: String(trackedCategoryKeys.size),
+      note: 'Tech product areas Alex watches for real shopping pain.',
+      href: '/categories',
+      action: 'Compare Picks'
+    },
+    {
+      label: 'Checked store links',
+      value: commerceBuyReadyProducts > 0 ? String(commerceBuyReadyProducts) : 'Gate active',
+      note: commerceBuyReadyProducts > 0
+        ? 'Published products with a current merchant path before the CTA appears.'
+        : 'No strong store-link push is shown until merchant paths pass the buy-ready check.',
+      href: commerceBuyReadyProducts > 0 ? '/products' : '/trust',
+      action: commerceBuyReadyProducts > 0 ? 'Review Proof' : 'See Gate'
+    },
+    {
+      label: 'Review signals',
+      value: evidenceCount > 0 ? String(evidenceCount) : 'Proof pending',
+      note: evidenceCount > 0
+        ? 'Review reports and product facts behind the public recommendations.'
+        : 'Bes3 keeps thin research visible, but blocks fake winners until review proof is attached.',
+      href: evidenceCount > 0 ? '/products' : '/start',
+      action: evidenceCount > 0 ? 'Check Proof' : 'Start Need'
+    }
+  ]
   const faqEntries = [
     {
       question: 'What is Bes3?',
@@ -118,15 +145,14 @@ export default async function HomePage() {
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
-            {[
-              ['Categories tracked', String(trackedCategoryKeys.size), 'Tech product areas Alex watches for real shopping pain.'],
-              ['Checked store links', String(commerceBuyReadyProducts), 'Published products with a current merchant path before the CTA appears.'],
-              ['Review signals', String(evidenceCount), 'Review reports and product facts behind the public recommendations.']
-            ].map(([label, value, note]) => (
-              <div key={label} className="rounded-md border border-border bg-slate-50 p-5">
-                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
-                <p className="mt-3 font-mono text-4xl font-black">{value}</p>
-                <p className="mt-2 text-sm leading-6 text-muted-foreground">{note}</p>
+            {commerceReadinessTiles.map((tile) => (
+              <div key={tile.label} className="rounded-md border border-border bg-slate-50 p-5">
+                <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{tile.label}</p>
+                <p className="mt-3 font-mono text-4xl font-black">{tile.value}</p>
+                <p className="mt-2 text-sm leading-6 text-muted-foreground">{tile.note}</p>
+                <Link href={tile.href} className="mt-4 inline-flex min-h-10 items-center rounded-full border border-border bg-white px-4 text-xs font-bold uppercase tracking-[0.16em] hover:border-primary hover:text-primary">
+                  {tile.action}
+                </Link>
               </div>
             ))}
           </div>

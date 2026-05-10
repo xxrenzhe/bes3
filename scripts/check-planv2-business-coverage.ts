@@ -721,7 +721,31 @@ const checks: PlanDocCheck[] = [
           'Check Current Price',
           'Show the downside',
           'Independent review signals',
-          'How Alex checks a deal'
+          'How Alex checks a deal',
+          'Gate active',
+          'Proof pending'
+        ]
+      },
+      {
+        label: 'Researching states stay actionable',
+        filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx',
+        required: [
+          'Do not force a buy',
+          'Compare nearby categories',
+          'Start a tighter request',
+          'Compare Picks',
+          'Start With Your Need'
+        ]
+      },
+      {
+        label: 'Value map pending guidance',
+        filePath: 'src/components/site/ValueMap.tsx',
+        required: [
+          'Value Map Pending',
+          'No buy window yet',
+          'Compare picks',
+          'Start with need',
+          'Check trust rules'
         ]
       },
       {

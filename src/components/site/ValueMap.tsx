@@ -13,12 +13,28 @@ export function ValueMap({ products }: { products: HardcoreProduct[] }) {
   if (!plotted.length) {
     return (
       <section className="px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl rounded-md border border-border bg-white p-6">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Value Map</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Price/performance scatter plot is waiting for baselines.</h2>
-          <p className="mt-3 text-sm leading-7 text-muted-foreground">
-            A product needs both current price and review score before it can appear on the map.
-          </p>
+        <div className="mx-auto grid max-w-7xl gap-5 rounded-[2rem] border border-dashed border-amber-300 bg-amber-50 p-6 lg:grid-cols-[0.9fr_1.1fr] lg:items-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-amber-900">Value Map Pending</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-amber-950">
+              No buy window yet, so Bes3 will not pretend there is a deal.
+            </h2>
+            <p className="mt-3 text-sm leading-7 text-amber-950/80">
+              A product needs both a current price and a review score before it can appear on the value map. Until then, use a safer path instead of chasing an unverified discount.
+            </p>
+          </div>
+          <div className="grid gap-3 sm:grid-cols-3">
+            {[
+              ['Compare picks', '/categories', 'Use reviewed categories when price data is still thin.'],
+              ['Start with need', '/start', 'Describe the product and deal-breakers so Alex can narrow the search.'],
+              ['Check trust rules', '/trust', 'See why thin price data blocks strong buy claims.']
+            ].map(([title, href, note]) => (
+              <Link key={href} href={href} className="rounded-2xl border border-amber-200 bg-white p-4 text-amber-950 hover:border-amber-500">
+                <p className="text-sm font-black">{title}</p>
+                <p className="mt-2 text-xs leading-6 text-amber-950/75">{note}</p>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
     )

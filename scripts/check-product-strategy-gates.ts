@@ -104,11 +104,35 @@ const gates: Gate[] = [
       'Find the current price and the catch before you buy tech gear.',
       'Check Current Price',
       'buy, compare, wait, or skip',
+      'Gate active',
+      'Proof pending',
       'Show the downside',
       'Independent review signals',
       'not an ad list',
       'How Alex checks a deal',
       'Current price, visible cons, and review proof belong on the same screen.'
+    ]
+  },
+  {
+    area: 'Researching states stay actionable',
+    filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx',
+    required: [
+      'Do not force a buy',
+      'Compare nearby categories',
+      'Start a tighter request',
+      'Compare Picks',
+      'Start With Your Need'
+    ]
+  },
+  {
+    area: 'Value map empty state',
+    filePath: 'src/components/site/ValueMap.tsx',
+    required: [
+      'Value Map Pending',
+      'No buy window yet',
+      'Compare picks',
+      'Start with need',
+      'Check trust rules'
     ]
   },
   {

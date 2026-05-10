@@ -46,12 +46,34 @@ export function HardcoreEvidenceMatrix({
   if (!products.length) {
     return (
       <section id="consensus-matrix" className="scroll-mt-24 border-y border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
-          <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
-          <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
-            Bes3 refuses to fabricate winners. This page waits until product matching, review proof, store availability, and price baselines are all in place.
-          </p>
+        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Researching</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{emptyTitle}</h2>
+            <p className="mt-4 max-w-3xl text-sm leading-7 text-muted-foreground">
+              Bes3 refuses to fabricate winners. This page waits until product matching, review proof, store availability, and price baselines are all in place.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-3">
+            {[
+              ['Do not force a buy', 'No store-link push appears until proof, price, and merchant health can be checked.'],
+              ['Compare nearby categories', 'Use Compare Picks if the exact reviewed product set is not ready yet.'],
+              ['Start a tighter request', 'Tell Alex the use case and bad-buy signs so the next pass can find a safer shortlist.']
+            ].map(([title, note]) => (
+              <div key={title} className="rounded-2xl border border-border bg-slate-50 p-4">
+                <p className="text-sm font-black text-foreground">{title}</p>
+                <p className="mt-2 text-xs leading-6 text-muted-foreground">{note}</p>
+              </div>
+            ))}
+          </div>
+          <div className="flex flex-wrap gap-3 lg:col-span-2">
+            <Link href="/categories" className="inline-flex min-h-11 items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
+              Compare Picks
+            </Link>
+            <Link href="/start" className="inline-flex min-h-11 items-center rounded-full border border-border px-5 text-sm font-semibold hover:border-primary hover:text-primary">
+              Start With Your Need
+            </Link>
+          </div>
         </div>
       </section>
     )
