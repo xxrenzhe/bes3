@@ -3,7 +3,7 @@
 import './load-env'
 import fs from 'node:fs/promises'
 import path from 'node:path'
-import { chromium, type Page } from 'playwright'
+import { chromium, type Browser, type BrowserContext, type Page } from 'playwright'
 import { isCommissionableMerchantUrl } from '@/lib/merchant-links'
 
 type AuditStatus = 'passed' | 'failed'
@@ -331,7 +331,8 @@ async function verifySeoGeoSignals(page: Page, routePath: string) {
   })
   if (response.status() !== 200) throw new Error(`${routePath} expected 200, got ${response.status()}`)
   const html = await response.text()
-  await page.goto(routePath, { waitUntil: 'networkidle', timeout: navigationTimeoutMs })
+  await page.goto(routePath, { waitUntil: 'domcontentloaded', timeout: navigationTimeoutMs })
+  await page.locator('h1').waitFor({ state: 'visible', timeout: 10000 })
   const domSignals = await page.evaluate(`(() => ({
     hasDecisionNotes: Boolean(document.querySelector('#decision-notes')),
     hasOpenProductJson: Array.from(document.querySelectorAll('a[href^="/api/open/commerce/products/"]')).some((anchor) => (anchor.textContent || '').includes('Open product JSON') && !(anchor.getAttribute('href') || '').endsWith('/offers')),
@@ -355,6 +356,67 @@ async function verifySeoGeoSignals(page: Page, routePath: string) {
   }
 }
 
+async function openProductPage(page: Page, routePath: string) {
+  await page.goto(routePath, { waitUntil: 'domcontentloaded', timeout: navigationTimeoutMs })
+  await page.locator('h1').waitFor({ state: 'visible', timeout: 10000 })
+  await page.locator('a[href^="/go/"]:visible').first().waitFor({ state: 'visible', timeout: 10000 })
+}
+
+function attachRuntimeIssueCapture(page: Page, viewportLabel: string, viewportMessages: RuntimeIssue[]) {
+  page.on('console', (message) => {
+    if (message.type() === 'error' || message.type() === 'warning') {
+      const location = message.location()
+      const entry = { viewport: viewportLabel, type: message.type(), text: message.text(), url: location.url }
+      consoleMessages.push(entry)
+      viewportMessages.push(entry)
+    }
+  })
+  page.on('pageerror', (error) => {
+    const entry = { viewport: viewportLabel, type: 'pageerror', text: error.message }
+    consoleMessages.push(entry)
+    viewportMessages.push(entry)
+  })
+  page.on('response', (response) => {
+    const status = response.status()
+    if (status < 400) return
+    const request = response.request()
+    const resourceType = request.resourceType()
+    if (!['image', 'script', 'stylesheet', 'font'].includes(resourceType)) return
+    const entry = {
+      viewport: viewportLabel,
+      type: 'resource',
+      text: `${resourceType} returned HTTP ${status}`,
+      url: response.url(),
+      status,
+      resourceType
+    }
+    consoleMessages.push(entry)
+    viewportMessages.push(entry)
+  })
+}
+
+async function newViewportContext(browser: Browser, viewport: ViewportSpec) {
+  return browser.newContext({
+    baseURL: baseUrl,
+    viewport: { width: viewport.width, height: viewport.height },
+    isMobile: viewport.width <= 480
+  })
+}
+
+async function openProductPageWithRetry(browser: Browser, context: BrowserContext, page: Page, viewport: ViewportSpec, routePath: string, viewportMessages: RuntimeIssue[]) {
+  try {
+    await openProductPage(page, routePath)
+    return { context, page, retried: false }
+  } catch (error) {
+    await context.close().catch(() => undefined)
+    const retryContext = await newViewportContext(browser, viewport)
+    const retryPage = await retryContext.newPage()
+    attachRuntimeIssueCapture(retryPage, viewport.label, viewportMessages)
+    await openProductPage(retryPage, routePath)
+    return { context: retryContext, page: retryPage, retried: true }
+  }
+}
+
 async function main() {
   const productPath = withCacheBust(`/products/${productSlug}`)
   const browser = await chromium.launch({ headless })
@@ -363,46 +425,15 @@ async function main() {
   try {
     for (const viewport of viewports) {
       await check('Viewport UX', `${viewport.label} first-screen conversion path`, async () => {
-        const context = await browser.newContext({
-          baseURL: baseUrl,
-          viewport: { width: viewport.width, height: viewport.height },
-          isMobile: viewport.width <= 480
-        })
-        const page = await context.newPage()
+        let context = await newViewportContext(browser, viewport)
+        let page = await context.newPage()
         const viewportMessages: RuntimeIssue[] = []
-        page.on('console', (message) => {
-          if (message.type() === 'error' || message.type() === 'warning') {
-            const location = message.location()
-            const entry = { viewport: viewport.label, type: message.type(), text: message.text(), url: location.url }
-            consoleMessages.push(entry)
-            viewportMessages.push(entry)
-          }
-        })
-        page.on('pageerror', (error) => {
-          const entry = { viewport: viewport.label, type: 'pageerror', text: error.message }
-          consoleMessages.push(entry)
-          viewportMessages.push(entry)
-        })
-        page.on('response', (response) => {
-          const status = response.status()
-          if (status < 400) return
-          const request = response.request()
-          const resourceType = request.resourceType()
-          if (!['image', 'script', 'stylesheet', 'font'].includes(resourceType)) return
-          const entry = {
-            viewport: viewport.label,
-            type: 'resource',
-            text: `${resourceType} returned HTTP ${status}`,
-            url: response.url(),
-            status,
-            resourceType
-          }
-          consoleMessages.push(entry)
-          viewportMessages.push(entry)
-        })
+        attachRuntimeIssueCapture(page, viewport.label, viewportMessages)
 
         try {
-          await page.goto(productPath, { waitUntil: 'networkidle', timeout: navigationTimeoutMs })
+          const opened = await openProductPageWithRetry(browser, context, page, viewport, productPath, viewportMessages)
+          context = opened.context
+          page = opened.page
           const evidence = await collectViewportEvidence(page)
           const viewportResult = assertViewportEvidence(viewport, evidence)
           if (!firstCtaHref) firstCtaHref = viewportResult.ctaHref
@@ -415,6 +446,7 @@ async function main() {
           return {
             path: productPath,
             title: evidence.title,
+            retriedNavigation: opened.retried,
             ...viewportResult
           }
         } finally {
