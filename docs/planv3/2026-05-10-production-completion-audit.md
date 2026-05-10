@@ -75,7 +75,31 @@ public review youtubeProof=false
 
 ## Remaining Blocker
 
-`https://www.bes3.com/api/health` still reports the old runtime build:
+Update after manual image deployment: `https://www.bes3.com/api/health` now reports the expected build, but the public review page still renders old article content.
+
+Root cause: the production container is still using the old ClawCloud Postgres database, not the supplied TencentCDB production database URL. Evidence:
+
+```text
+www.bes3.com /api/health build: 830bf05170ad3c678a038a14096c6f53989fa450
+www.bes3.com /api/open/coverage: products=43, articles=3, latestRefresh=2026-05-08T13:26:35.925Z
+old ClawCloud Postgres: products=44, articles=5, latest_article_update=2026-05-08, DeerValley article contains BLUF
+supplied TencentCDB Postgres: products=44, articles=5, latest_article_update=2026-05-10, DeerValley article contains Quick answer and YouTube Review Proof
+```
+
+Required production env fix on the ClawCloud host:
+
+```bash
+# In the production Bes3 app directory, update .env.production to the supplied TencentCDB Postgres URL.
+# Keep the value in the host secret file only; do not commit it to the repo.
+DATABASE_URL='<supplied-tencentcdb-postgres-url-with-password-hash-encoded-as-%23>'
+
+# Then restart the running app container.
+BES3_IMAGE=ghcr.io/xxrenzhe/bes3:prod-latest ./scripts/deploy-ghcr.sh
+```
+
+The `#` in the database password must be URL-encoded as `%23`; otherwise the URL parser treats it as a fragment and the password is truncated.
+
+Previous deployment blocker, now resolved: `https://www.bes3.com/api/health` used to report the old runtime build:
 
 ```text
 d90eb1afe5a49db82bb05af89b421296910cad55
