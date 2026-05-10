@@ -25,6 +25,7 @@
     "encryption:rotate": "tsx scripts/rotate-encryption-key.ts",
     "encryption:check-crypto": "tsx scripts/check-crypto-rotation.ts",
     "encryption:check-rotation": "tsx scripts/check-encryption-rotation.ts",
+    "db:check-url": "tsx scripts/check-database-url.ts",
     "ops:smoke-e2e": "tsx scripts/smoke-planv2-e2e.ts",
     "ops:browser-e2e": "tsx scripts/browser-planv2-e2e.ts",
     "ops:production-e2e": "tsx scripts/production-e2e.ts",

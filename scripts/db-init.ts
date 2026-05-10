@@ -1,6 +1,7 @@
 import './load-env'
 import postgres from 'postgres'
 import { bootstrapApplication } from '../src/lib/bootstrap'
+import { normalizeDatabaseUrl } from '../src/lib/db/database-url'
 
 function parsePositiveInt(value: string | undefined, fallback: number) {
   if (!value) return fallback
@@ -9,7 +10,7 @@ function parsePositiveInt(value: string | undefined, fallback: number) {
 }
 
 function parseDatabaseUrl(rawUrl: string) {
-  const url = new URL(rawUrl)
+  const url = new URL(normalizeDatabaseUrl(rawUrl))
   const dbName = decodeURIComponent(url.pathname.replace(/^\/+/, '').split('/')[0] || 'postgres')
   url.pathname = '/postgres'
   return {
@@ -37,7 +38,7 @@ async function waitForPostgresServer(sql: postgres.Sql, retries: number) {
 }
 
 async function ensurePostgresDatabaseExists() {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL)
   if (!databaseUrl) return
 
   const { dbName, adminUrl } = parseDatabaseUrl(databaseUrl)

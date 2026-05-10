@@ -3,6 +3,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import postgres from 'postgres'
+import { normalizeDatabaseUrl } from '../src/lib/db/database-url'
 
 type AuditStatus = 'passed' | 'failed' | 'warning'
 
@@ -120,12 +121,13 @@ function readInteger(values: Record<string, string>, key: string, fallback: numb
 }
 
 function assertPostgresUrl(databaseUrl: string) {
-  if (!databaseUrl) {
+  const normalized = normalizeDatabaseUrl(databaseUrl)
+  if (!normalized) {
     throw new Error('DATABASE_URL is not available in the current process or env files. Production DB audit refuses to fall back to SQLite.')
   }
   let parsed: URL
   try {
-    parsed = new URL(databaseUrl)
+    parsed = new URL(normalized)
   } catch {
     throw new Error('DATABASE_URL is present but is not a valid URL.')
   }
@@ -658,7 +660,7 @@ function buildSummary(
 
 async function main() {
   const envValues = await buildEnvValues()
-  const databaseUrl = envValues.DATABASE_URL || envValues.PLANV3_DATABASE_URL || ''
+  const databaseUrl = normalizeDatabaseUrl(envValues.DATABASE_URL || envValues.PLANV3_DATABASE_URL || '')
   const appUrl = normalizeProductionAppUrl(envValues.PLANV3_PRODUCTION_APP_URL || envValues.NEXT_PUBLIC_APP_URL)
   const outputDir = envValues.PLANV3_PRODUCTION_DB_AUDIT_OUTPUT_DIR || 'qa-results'
   const thresholds = {

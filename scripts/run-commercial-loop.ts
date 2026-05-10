@@ -1,6 +1,7 @@
 import './load-env'
 import { bootstrapApplication } from '@/lib/bootstrap'
 import { buildCommercialLoopRuntimeGuide, runCommercialLoop, type CommercialLoopOptions } from '@/lib/commercial-loop'
+import { normalizeDatabaseUrl } from '@/lib/db/database-url'
 
 function readFlag(name: string) {
   const prefix = `--${name}=`
@@ -35,7 +36,7 @@ function assertWritableDatabaseIsExplicit(execute: boolean) {
   if (!execute) return
   if (hasFlag('allow-sqlite') || readBooleanFlag('allow-sqlite')) return
 
-  const databaseUrl = String(process.env.DATABASE_URL || '').trim()
+  const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL)
   if (!databaseUrl) {
     throw new Error('Refusing to execute the commercial loop without DATABASE_URL. Production execution must target Postgres; pass --allow-sqlite only for an intentional local rehearsal.')
   }

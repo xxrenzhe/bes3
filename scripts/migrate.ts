@@ -19,10 +19,12 @@
 import './load-env'
 import fs from 'fs'
 import path from 'path'
+import { normalizeDatabaseUrl } from '../src/lib/db/database-url'
 import { splitSqlStatements } from '../src/lib/sql-splitter'
 
+const DATABASE_URL = normalizeDatabaseUrl(process.env.DATABASE_URL)
 const DB_TYPE = process.env.DB_TYPE ||
-  (process.env.DATABASE_URL ? 'postgres' : 'sqlite')
+  (DATABASE_URL ? 'postgres' : 'sqlite')
 
 const DB_PATH = process.env.DATABASE_PATH || path.join(process.cwd(), 'data', 'bes3.db')
 const MIGRATIONS_DIR = DB_TYPE === 'postgres'
@@ -141,7 +143,7 @@ async function migrateSQLite() {
 
 async function migratePostgres() {
   const postgres = (await import('postgres')).default
-  const sql = postgres(process.env.DATABASE_URL!)
+  const sql = postgres(DATABASE_URL)
   console.log('✅ 数据库连接成功\n')
 
   try {

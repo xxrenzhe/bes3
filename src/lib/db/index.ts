@@ -1,6 +1,7 @@
 import path from 'node:path'
 import fs from 'node:fs'
 import type { DatabaseAdapter } from '@/lib/types'
+import { normalizeDatabaseUrl } from '@/lib/db/database-url'
 import { PostgresAdapter } from '@/lib/db/postgres'
 import { ensureSchema } from '@/lib/db/schema'
 import { SQLiteAdapter } from '@/lib/db/sqlite'
@@ -18,7 +19,7 @@ function getSQLiteDatabasePath(): string {
 }
 
 function createDatabase(): DatabaseAdapter {
-  const databaseUrl = process.env.DATABASE_URL
+  const databaseUrl = normalizeDatabaseUrl(process.env.DATABASE_URL)
   if (databaseUrl) {
     return new PostgresAdapter(databaseUrl)
   }

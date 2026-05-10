@@ -133,6 +133,28 @@ function isPositiveInteger(value) {
   return /^\d+$/.test(String(value)) && Number.parseInt(String(value), 10) > 0
 }
 
+function normalizeDatabaseUrl(value) {
+  const raw = String(value || '').trim()
+  if (!raw) return ''
+  const match = raw.match(/^(postgres(?:ql)?):\/\//i)
+  const protocol = match ? match[1].toLowerCase() : /^[^/\s:]+:.+@[^/\s]+\/.+/.test(raw) ? 'postgres' : ''
+  if (!protocol) return raw
+
+  const remainder = match ? raw.slice(match[0].length) : raw
+  const atIndex = remainder.lastIndexOf('@')
+  if (atIndex < 0) return new URL(`${protocol}://${remainder}`).toString()
+
+  const userInfo = remainder.slice(0, atIndex)
+  const hostAndPath = remainder.slice(atIndex + 1)
+  const separatorIndex = userInfo.indexOf(':')
+  const username = separatorIndex >= 0 ? userInfo.slice(0, separatorIndex) : userInfo
+  const password = separatorIndex >= 0 ? userInfo.slice(separatorIndex + 1) : ''
+  const url = new URL(`${protocol}://${hostAndPath}`)
+  url.username = username
+  if (password) url.password = password
+  return url.toString()
+}
+
 function parseCsv(value) {
   return String(value || '')
     .split(',')
@@ -244,9 +266,10 @@ function validate() {
     warnings.push(`PORT is ${config.port}; the current deployment baseline expects port 80`)
   }
 
-  if (!config.databaseUrl && !config.databasePath) {
+  const normalizedDatabaseUrl = normalizeDatabaseUrl(config.databaseUrl)
+  if (!normalizedDatabaseUrl && !config.databasePath) {
     errors.push('Set either DATABASE_URL or DATABASE_PATH')
-  } else if (config.databaseUrl) {
+  } else if (normalizedDatabaseUrl) {
     addResult(results, 'info', 'Database mode: PostgreSQL')
   } else {
     addResult(results, 'info', `Database mode: SQLite (${config.databasePath})`)
