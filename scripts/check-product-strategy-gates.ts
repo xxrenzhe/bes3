@@ -125,6 +125,20 @@ const gates: Gate[] = [
     ]
   },
   {
+    area: 'Category pages turn researching into buyer next steps',
+    filePath: 'src/app/categories/[slug]/page.tsx',
+    required: [
+      'Category Decision Board',
+      'What is usable now',
+      'Wait, skip, or verify when',
+      'See Buy / Compare / Wait',
+      'Use as a shortlist',
+      'Proof pending',
+      'Do not force a category winner',
+      'Current checked shortlist'
+    ]
+  },
+  {
     area: 'Value map empty state',
     filePath: 'src/components/site/ValueMap.tsx',
     required: [

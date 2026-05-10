@@ -343,7 +343,14 @@ const checks: PlanDocCheck[] = [
           'PurchaseDecisionCard',
           'buildEvidencePurchaseDecision',
           'Top 3 checked picks',
-          'Best Picks'
+          'Best Picks',
+          'Category Decision Board',
+          'What is usable now',
+          'Wait, skip, or verify when',
+          'See Buy / Compare / Wait',
+          'Use as a shortlist',
+          'Proof pending',
+          'Current checked shortlist'
         ]
       },
       {
