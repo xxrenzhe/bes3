@@ -81,11 +81,13 @@ public review youtubeProof=false
 d90eb1afe5a49db82bb05af89b421296910cad55
 ```
 
-The latest GHCR image has been built and pushed from:
+At that audit checkpoint, the latest business-code GHCR image had been built and pushed from:
 
 ```text
 3d83e544e97be6749b4306f8798057ad81fd40e9
 ```
+
+If additional documentation-only commits are added later, use the current `main` SHA for the final deployment audit.
 
 Internal revalidate succeeds, but the old runtime does not clear the module-level site-data cache and the public review page still renders the old article module names (`BLUF`, `Evidence Verdict`) instead of the latest buyer-facing modules (`Quick answer:`, `YouTube Review Proof`).
 
@@ -114,7 +116,7 @@ curl -X POST 'https://www.bes3.com/api/internal/revalidate' \
 Final acceptance command:
 
 ```bash
-BES3_EXPECTED_BUILD_SHA=3d83e544e97be6749b4306f8798057ad81fd40e9 \
+BES3_EXPECTED_BUILD_SHA=$(git rev-parse HEAD) \
 DATABASE_URL='<production-postgres-url>' \
 NEXT_PUBLIC_APP_URL='https://www.bes3.com' \
 npm run commercial-loop:audit-production-db -- --fetch-public
