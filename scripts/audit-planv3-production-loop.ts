@@ -26,6 +26,7 @@ type AuditSummary = {
   checks: AuditCheck[]
   metrics: Record<string, unknown>
   publicSurface?: Record<string, unknown>
+  deployment?: Record<string, unknown>
 }
 
 type QueryClient = {
@@ -595,6 +596,34 @@ async function fetchPublicSurface(appUrl: string, latestReviews: Array<Record<st
   }
 }
 
+async function fetchDeploymentHealth(appUrl: string) {
+  if (!hasFlag('fetch-public')) return { skipped: true, reason: 'pass --fetch-public to verify deployed build metadata' }
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 15_000)
+  try {
+    const response = await fetch(`${appUrl}/api/health`, {
+      method: 'GET',
+      signal: controller.signal,
+      headers: { Accept: 'application/json' }
+    })
+    const body = await response.json().catch(() => ({}))
+    const deployedSha = typeof body?.build?.sha === 'string' ? body.build.sha : null
+    const expectedSha = process.env.BES3_EXPECTED_BUILD_SHA || process.env.GITHUB_SHA || ''
+    return {
+      status: response.status,
+      ok: response.ok,
+      deployedSha,
+      expectedSha: expectedSha || null,
+      matchesExpectedSha: expectedSha ? deployedSha === expectedSha : null,
+      databaseType: body?.database?.type || null,
+      databaseConnected: body?.database?.connected === true,
+      checkedAt: body?.checkedAt || null
+    }
+  } finally {
+    clearTimeout(timeout)
+  }
+}
+
 async function writeReport(outputDir: string, summary: AuditSummary) {
   await fs.mkdir(outputDir, { recursive: true })
   const reportPath = path.join(outputDir, `planv3-production-db-audit-${new Date().toISOString().replace(/[:.]/g, '-')}.json`)
@@ -602,7 +631,14 @@ async function writeReport(outputDir: string, summary: AuditSummary) {
   console.log(`REPORT ${reportPath}`)
 }
 
-function buildSummary(appUrl: string, thresholds: Record<string, number>, checks: AuditCheck[], metrics: Record<string, unknown>, publicSurface?: Record<string, unknown>): AuditSummary {
+function buildSummary(
+  appUrl: string,
+  thresholds: Record<string, number>,
+  checks: AuditCheck[],
+  metrics: Record<string, unknown>,
+  publicSurface?: Record<string, unknown>,
+  deployment?: Record<string, unknown>
+): AuditSummary {
   return {
     generatedAt: new Date().toISOString(),
     mode: 'production-postgres-readonly',
@@ -615,7 +651,8 @@ function buildSummary(appUrl: string, thresholds: Record<string, number>, checks
     },
     checks,
     metrics,
-    publicSurface
+    publicSurface,
+    deployment
   }
 }
 
@@ -668,8 +705,29 @@ async function main() {
     const result = await sql.begin('read only', async (tx) => {
       return await auditDatabase(tx as unknown as QueryClient, thresholds)
     })
-    const publicSurface = await fetchPublicSurface(appUrl, result.latestReviews)
+    const [publicSurface, deployment] = await Promise.all([
+      fetchPublicSurface(appUrl, result.latestReviews),
+      fetchDeploymentHealth(appUrl)
+    ])
     const checks = [...result.checks]
+    if (deployment && deployment.skipped !== true) {
+      addCheck(
+        checks,
+        'Production deployment health is reachable',
+        Boolean(deployment.ok && deployment.databaseConnected && deployment.databaseType === 'postgres'),
+        `status ${deployment.status}, database=${deployment.databaseType}, connected=${deployment.databaseConnected}`,
+        deployment
+      )
+      if (deployment.expectedSha) {
+        addCheck(
+          checks,
+          'Production deployment is running the expected build',
+          Boolean(deployment.matchesExpectedSha),
+          `deployed=${deployment.deployedSha || 'unknown'}, expected=${deployment.expectedSha}`,
+          deployment
+        )
+      }
+    }
     if (publicSurface && publicSurface.skipped !== true) {
       addCheck(
         checks,
@@ -679,7 +737,7 @@ async function main() {
         publicSurface
       )
     }
-    const summary = buildSummary(appUrl, thresholds, checks, result.metrics, publicSurface)
+    const summary = buildSummary(appUrl, thresholds, checks, result.metrics, publicSurface, deployment)
     await writeReport(outputDir, summary)
     for (const check of checks) {
       const prefix = check.status.toUpperCase()
