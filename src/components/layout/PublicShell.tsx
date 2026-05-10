@@ -10,10 +10,10 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const locale = await getRequestLocale()
   const displayPath = await getRequestDisplayPath()
   const navItems = [
-    { href: '/start', label: 'Start' },
-    { href: '/categories', label: 'Best Picks' },
     { href: '/deals', label: 'Deals' },
+    { href: '/categories', label: 'Best Picks' },
     { href: '/reviews', label: 'Reviews' },
+    { href: '/start', label: 'Ask Alex' },
     { href: '/trust', label: 'Trust' }
   ]
 
@@ -26,14 +26,14 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
         Skip to main content
       </a>
       <div className="border-b border-amber-300 bg-amber-50 px-4 py-2 text-center text-xs font-semibold text-amber-950">
-        We extract real data to help you choose. If you buy through our links, we may earn a commission at no extra cost to you.
+        Alex checks tech prices and review signals. If you buy through our links, we may earn a commission at no extra cost to you.
       </div>
       <header className="sticky top-0 z-40 border-b border-border bg-white/90 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-6 px-4 py-4 sm:px-6 lg:px-8">
           <Link href={addLocaleToPath('/', locale)} className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-md bg-slate-950 font-black text-white">B3</div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Independent Product Ratings</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-primary">Tech Deals & Independent Reviews</p>
               <p className="font-[var(--font-display)] text-xl font-black tracking-tight">{DEFAULT_SITE_NAME}</p>
             </div>
           </Link>
@@ -81,22 +81,22 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
       <footer className="border-t border-border bg-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr] lg:px-8">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Buyer-First Reviews</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Tech Deals & Reviews</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-white drop-shadow-sm">{DEFAULT_SITE_NAME}</h2>
             <p className="mt-3 max-w-xl text-sm leading-7 text-slate-300">{DEFAULT_SITE_TAGLINE}</p>
           </div>
           <nav aria-label="Explore" className="flex flex-col gap-3 text-sm text-slate-300">
-            <Link href={addLocaleToPath('/categories', locale)}>Best Picks</Link>
             <Link href={addLocaleToPath('/deals', locale)}>Deals</Link>
+            <Link href={addLocaleToPath('/categories', locale)}>Best Picks</Link>
             <Link href={addLocaleToPath('/reviews', locale)}>Reviews</Link>
+            <Link href={addLocaleToPath('/start', locale)}>Ask Alex</Link>
             <Link href={addLocaleToPath('/site-map', locale)}>Sitemap</Link>
             <Link href={addLocaleToPath('/contact', locale)}>Contact</Link>
           </nav>
           <nav aria-label="Company" className="flex flex-col gap-3 text-sm text-slate-300">
             <Link href={addLocaleToPath('/trust', locale)}>Trust</Link>
-            <Link href={addLocaleToPath('/products', locale)}>Evidence Matrix</Link>
-            <Link href={addLocaleToPath('/data', locale)}>Open Data</Link>
-            <Link href={addLocaleToPath('/tools', locale)}>Tools</Link>
+            <Link href={addLocaleToPath('/products', locale)}>Reviewed Products</Link>
+            <Link href={addLocaleToPath('/data', locale)}>How Bes3 Checks Deals</Link>
             <Link href={addLocaleToPath('/about', locale)}>About</Link>
             <Link href={addLocaleToPath('/privacy', locale)}>Privacy</Link>
             <Link href={addLocaleToPath('/terms', locale)}>Terms</Link>

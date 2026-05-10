@@ -91,7 +91,8 @@ const gates: Gate[] = [
       'landedChange',
       'nextCycleInput',
       'getProductStrategySnapshot',
-      'buy / compare / wait / skip',
+      'consumer tech deal and independent review guide',
+      'Check Current Price',
       'commission-blind'
     ]
   },
@@ -99,15 +100,14 @@ const gates: Gate[] = [
     area: 'Homepage positioning',
     filePath: 'src/app/page.tsx',
     required: [
-      'Buyer decision engine',
-      'For anxious buyers',
-      'For comparison buyers',
-      'For deal-timing buyers',
-      'Not an ad list',
-      'Decision loop',
-      'buy / compare / wait / skip',
-      'High-intent question',
-      'Admin repair queue'
+      'Tech deals checked by Alex',
+      'Find the current price and the catch before you buy tech gear.',
+      'Check Current Price',
+      'Show the downside',
+      'Independent review signals',
+      'not an ad list',
+      'How Alex checks a deal',
+      'Current price, visible cons, and review proof belong on the same screen.'
     ]
   },
   {
@@ -115,9 +115,9 @@ const gates: Gate[] = [
     filePath: 'src/app/about/page.tsx',
     required: [
       'Who Bes3 is for',
-      'Anxious buyer',
-      'Comparison buyer',
-      'Deal-timing buyer',
+      'Close-to-buy shopper',
+      'Comparison shopper',
+      'Deal-timing shopper',
       'Who Bes3 is not for',
       'Product promise',
       'No evidence, no strong recommendation',
@@ -128,27 +128,25 @@ const gates: Gate[] = [
     area: 'Trust commercial model',
     filePath: 'src/app/trust/page.tsx',
     required: [
-      'Buyer-first affiliate model',
-      'Revenue model',
-      'Commission-blind ranking',
-      'pSEO quality gate',
-      'buy / compare / wait / skip',
+      'Affiliate links',
+      'Commission cannot pick the winner',
+      'Payout stays out of the ranking',
+      'No fake certainty',
+      'visible downsides',
       'affiliate commission',
       'no extra cost'
     ]
   },
   {
-    area: 'Open data architecture',
+    area: 'Deal-check data surface',
     filePath: 'src/app/data/page.tsx',
     required: [
-      'Architecture loop',
-      'Intent signals',
-      'Taxonomy tags',
-      'Purchase decision',
-      'Merchant handoff',
-      'pSEO automation loop',
-      'Search/log/import signals',
-      'indexing/syndication'
+      'How Bes3 Checks Deals',
+      'What Alex checks before calling something a deal.',
+      'Current price and the catch stay together.',
+      'visible downside',
+      'labeled store link',
+      'Thin pages stay honest.'
     ]
   },
   {

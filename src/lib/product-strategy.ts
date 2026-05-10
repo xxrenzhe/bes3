@@ -10,30 +10,30 @@ export type ProductOptimizationCycle = {
 }
 
 export const PRODUCT_POSITIONING = {
-  summary: 'Bes3 is a buyer decision engine for hard-to-judge products.',
-  decisionPromise: 'Turn evidence, price timing, risk, and merchant-path health into buy / compare / wait / skip decisions.',
+  summary: 'Bes3 is a consumer tech deal and independent review guide for 3C digital products.',
+  decisionPromise: 'Help shoppers check current price, visible downsides, independent review signals, and clean merchant paths before leaving for a store.',
   not: ['generic review feed', 'coupon wall', 'commission-ranked ad list']
 } as const
 
 export const BUYER_PERSONAS = [
   {
-    name: 'Anxious buyer',
-    need: 'Needs confidence that a costly, hard-to-return product will work in real life.'
+    name: 'Close-to-buy tech shopper',
+    need: 'Needs the current price, visible catch, and clean store link before checkout.'
   },
   {
-    name: 'Comparison buyer',
-    need: 'Needs a default winner, best alternative, and clear reversal conditions.'
+    name: 'Comparison shopper',
+    need: 'Needs the strongest pick, the closest alternative, and the downside that could change the choice.'
   },
   {
-    name: 'Deal-timing buyer',
-    need: 'Needs to know whether the current price is a buy window or a wait state.'
+    name: 'Deal-timing shopper',
+    need: 'Needs to know if the current tech price is a real deal or normal pricing.'
   }
 ] as const
 
 export const BUSINESS_MODEL = {
   primaryRevenue: 'affiliate commission after compliant merchant handoff',
   rankingPolicy: 'commission-blind ranking; payout data cannot decide public recommendation order',
-  conversionRequirement: 'strong buy CTAs require evidence, price context, risk checks, and a commissionable /go path'
+  conversionRequirement: 'Check Current Price CTAs require review proof, current price context, visible downsides, and a commissionable /go path'
 } as const
 
 export const ARCHITECTURE_LOOP = [
@@ -66,7 +66,7 @@ export const PRODUCT_OPTIMIZATION_CYCLES: ProductOptimizationCycle[] = [
     focus: 'Positioning clarity',
     inputEvidence: ['src/app/page.tsx', 'src/app/about/page.tsx', 'docs/planv2/15.Bes3 十轮产品与商业优化审计 (10-Round Product & Business Optimization Audit).md'],
     finding: 'The site had improved copy, but the positioning was still spread across pages instead of being a reusable product contract.',
-    landedChange: 'Created a shared positioning contract that names Bes3 as a buyer decision engine for hard-to-judge products.',
+    landedChange: 'Created a shared positioning contract that names Bes3 as a consumer tech deal and independent review guide.',
     verification: ['npm run product:strategy-gates', 'npm run planv2:check-business'],
     outcome: 'The product promise is now explicit and reusable by both public pages and machine-readable surfaces.',
     nextCycleInput: 'Use the positioning contract to sharpen who the product is for.'
@@ -126,7 +126,7 @@ export const PRODUCT_OPTIMIZATION_CYCLES: ProductOptimizationCycle[] = [
     focus: 'User experience clarity',
     inputEvidence: ['src/app/page.tsx', 'src/components/commerce/PurchaseDecisionCard.tsx', 'docs/planv2/14.Bes3 主动产品优化与转化门禁机制 (Proactive Product Optimization & Conversion Gates).md'],
     finding: 'The product should not make users decode a methodology before seeing the next action.',
-    landedChange: 'Reaffirmed the UX rule that every high-intent page should answer buy, compare, wait, or skip before deeper explanation.',
+    landedChange: 'Reaffirmed the UX rule that every high-intent page should show current price context, visible downsides, and the clean next store or review path before deeper explanation.',
     verification: ['npm run product:optimization-gates', 'local browser checks for /'],
     outcome: 'UX quality is measured by first-screen decision clarity and safe CTA semantics, not by content volume.',
     nextCycleInput: 'Extend the same quality rule to automated pSEO.'

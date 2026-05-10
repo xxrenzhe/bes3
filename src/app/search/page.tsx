@@ -27,11 +27,11 @@ function firstParam(value: string | string[] | undefined) {
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Buying Decision Search',
-    description: 'Bes3 turns a shopping need, budget, must-haves, and deal-breakers into a short buying decision.',
+    title: 'Bes3 Tech Deal Finder',
+    description: 'Ask Alex for a short tech shortlist with current price context, visible cons, and trusted alternatives.',
     path: '/search',
     locale: await getRequestLocale(),
-    keywords: ['buying decision search', 'product shortlist', 'product recommendation']
+    keywords: ['tech deal finder', 'current price checker', 'tech product shortlist', '3C digital deals']
   })
 }
 
@@ -66,8 +66,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/search',
-          title: 'Buying Decision Search',
-          description: 'Intent-first Bes3 product recommendation surface.',
+          title: 'Bes3 Tech Deal Finder',
+          description: 'Short tech shopping results with current price context, visible cons, and trusted alternatives.',
           items: result?.recommendations.map((item) => ({
             name: item.product.productName,
             path: item.product.slug ? `/products/${item.product.slug}` : '/products'
@@ -80,15 +80,15 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <section className="border-b border-border bg-slate-950 px-4 py-12 text-white sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Buying Decision Search</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Tech Deal Finder</p>
             <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              {hasIntent ? 'Here is the shortest useful next step.' : 'Start with the job, not the keyword.'}
+              {hasIntent ? 'Alex found the closest useful tech picks.' : 'Tell Alex the tech you need and the catch you fear.'}
             </h1>
           </div>
           <p className="text-sm leading-7 text-slate-300">
             {hasIntent
-              ? 'Bes3 keeps the shortlist intentionally small, explains why the lead fits, and points you to the next action instead of dumping broad search results.'
-              : 'Describe what cannot go wrong, what you must have, and whether you want to buy now, compare soon, or wait for a better price.'}
+              ? 'Bes3 keeps the list small, shows why the lead fits, and keeps price, proof, and downside visible instead of dumping broad search results.'
+              : 'Describe the product type, budget, must-haves, and what would make it a bad buy. Alex will look for current price context and trusted alternatives.'}
           </p>
         </div>
       </section>
@@ -123,13 +123,13 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
                 <div className="grid gap-8 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
                   <div>
                     <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">No strong match yet</p>
-                    <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">Do not trust a weak recommendation.</h2>
+                    <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">We have not reviewed that exact model yet.</h2>
                     <p className="mt-4 text-sm leading-7 text-muted-foreground">
-                      Bes3 could not find a useful shortlist from this exact request. That is a product feature, not a dead end: the next step is to add the missing constraint or move into the closest evidence-backed category.
+                      Do not worry. Add one more constraint, or move into the closest reviewed category so Alex can show trusted alternatives instead of pretending a weak match is good enough.
                     </p>
                     <div className="mt-6 flex flex-wrap gap-3">
                       <Link href="/start" className="inline-flex min-h-[48px] items-center rounded-full bg-primary px-5 text-sm font-semibold text-primary-foreground">
-                        Rewrite my request
+                        Ask Alex again
                       </Link>
                       <Link href={fallbackCategoryHref} className="inline-flex min-h-[48px] items-center rounded-full border border-border px-5 text-sm font-semibold hover:border-primary hover:text-primary">
                         Browse {fallbackCategoryLabel}

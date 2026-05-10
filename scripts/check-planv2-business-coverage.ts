@@ -41,7 +41,7 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Hardcore category roster', filePath: 'src/lib/hardcore-catalog.ts', required: ['HARDCORE_CATEGORIES', 'yard-pool-automation'] },
       { label: 'Commercial focus quality rules', filePath: 'src/lib/recommendation-quality.ts', required: ['COMMERCIAL_FOCUS_CATEGORY_SLUGS', 'PSEO_INDEX_QUALITY_GATE', 'auditCommissionBlindCandidateOrder'] },
-      { label: 'Buyer decision homepage', filePath: 'src/app/page.tsx', required: ['Find Best Picks', 'See Deals', 'Commission neutral'] },
+      { label: 'Tech deal homepage', filePath: 'src/app/page.tsx', required: ['Check Current Price', 'Find Best Picks', 'Independent review signals'] },
       { label: 'Commercial loop monetization', filePath: 'src/lib/commercial-loop.ts', required: ['listAffiliateReviewCandidates', 'rel="nofollow sponsored"', '/go/${product.id}?source=evidence-review'] },
       { label: 'FTC and cookie shell', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
     ]
@@ -108,7 +108,7 @@ const checks: PlanDocCheck[] = [
       { label: 'Evidence feedback API', filePath: 'src/app/api/open/evidence/feedback/route.ts', required: ['recordEvidenceFeedback', 'feedbackType'] },
       { label: 'Evidence feedback persistence', filePath: 'src/lib/hardcore-ops.ts', required: ['creator_feedback_events'] },
       { label: 'Evidence review persistence', filePath: 'src/lib/admin-blueprint.ts', required: ['evidence_review_decisions', 'reviewEvidenceReport'] },
-      { label: 'Evidence matrix UI', filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx', required: ['Consensus Matrix', 'Hardcore Proof', 'Review by'] },
+      { label: 'Review signal UI', filePath: 'src/components/site/HardcoreEvidenceMatrix.tsx', required: ['Review Signals', 'Hardcore Proof', 'Review by'] },
       { label: 'Admin evidence operations', filePath: 'src/app/api/admin/evidence/route.ts', required: ['getEvidenceOperationsSnapshot', 'reviewEvidenceReport'] }
     ]
   },
@@ -166,7 +166,7 @@ const checks: PlanDocCheck[] = [
     requirement: 'Release preflight, runtime env validation, health checks, deployment, backup/restore, and alerting surfaces are available.',
     artifacts: [
       { label: 'Release preflight', filePath: 'scripts/preflight-release.sh', required: ['check-runtime-env.js', 'planv2:check-business', 'hardcore:check-planv2-seo', 'commercial-loop:check', 'ops:check-planv2-security', 'db:check-drift', 'type-check', 'ops:smoke-e2e', 'ops:browser-e2e'] },
-      { label: 'Browser E2E', filePath: 'scripts/browser-planv2-e2e.ts', required: ['playwright', 'Buying Decisions', 'Find Best Picks', 'DEFAULT_ADMIN_USERNAME', 'DEFAULT_ADMIN_PASSWORD'] },
+      { label: 'Browser E2E', filePath: 'scripts/browser-planv2-e2e.ts', required: ['playwright', 'Tech deals checked by Alex', 'Find Best Picks', 'DEFAULT_ADMIN_USERNAME', 'DEFAULT_ADMIN_PASSWORD'] },
       { label: 'Runtime E2E smoke', filePath: 'scripts/smoke-planv2-e2e.ts', required: ['coverage-manifest-v1', '/go/999999999', '/reviews/non-existent-commercial-loop-smoke', 'x-bes3-blocked-reason'] },
       { label: 'Runtime env validation', filePath: 'scripts/check-runtime-env.js', required: ['JWT_SECRET', 'ENCRYPTION_KEY', 'BROWSER_PROXY_URLS_JSON'] },
       { label: 'Health endpoint', filePath: 'src/app/api/health/route.ts', required: ['status', 'database'] },
@@ -287,10 +287,10 @@ const checks: PlanDocCheck[] = [
         label: 'Homepage routes to purchase tasks',
         filePath: 'src/app/page.tsx',
         required: [
-          'Know what to buy, compare, wait on, or skip.',
+          'Find the current price and the catch before you buy tech gear.',
+          'Check Current Price',
           'Find Best Picks',
-          'See Deals',
-          'Commission neutral'
+          'Independent review signals'
         ]
       },
       {
@@ -693,7 +693,7 @@ const checks: PlanDocCheck[] = [
           'Product strategy gates passed',
           '10 independent cycles',
           'checkIndependentCycles',
-          'Buyer decision engine',
+          'consumer tech deal and independent review guide',
           'businessModel',
           'pseoAutomationLoop'
         ]
@@ -715,22 +715,21 @@ const checks: PlanDocCheck[] = [
         label: 'Homepage strategy surface',
         filePath: 'src/app/page.tsx',
         required: [
-          'Buyer decision engine',
-          'For anxious buyers',
-          'For comparison buyers',
-          'For deal-timing buyers',
-          'Decision loop',
-          'Admin repair queue'
+          'Tech deals checked by Alex',
+          'Check Current Price',
+          'Show the downside',
+          'Independent review signals',
+          'How Alex checks a deal'
         ]
       },
       {
         label: 'Trust business model surface',
         filePath: 'src/app/trust/page.tsx',
         required: [
-          'Buyer-first affiliate model',
-          'Revenue model',
-          'Commission-blind ranking',
-          'pSEO quality gate'
+          'Affiliate links',
+          'Commission cannot pick the winner',
+          'Payout stays out of the ranking',
+          'No fake certainty'
         ]
       },
       {

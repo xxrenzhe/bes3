@@ -14,12 +14,12 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Bes3 Buyer Decision Engine',
+    title: 'Bes3 Tech Deals & Independent Reviews',
     description:
-      'Bes3 turns evidence, price timing, risk, and affiliate link health into direct buy, compare, wait, or skip decisions.',
+      'Bes3 helps shoppers check current tech prices, visible downsides, and independent review signals before leaving for a store.',
     path: '/',
     locale: await getRequestLocale(),
-    keywords: ['best picks', 'buying decisions', 'product reviews', 'best value deals']
+    keywords: ['tech deals', '3C digital product reviews', 'current price checks', 'independent tech reviews']
   })
 }
 
@@ -45,12 +45,12 @@ export default async function HomePage() {
   const evidenceCount = home.products.reduce((total, product) => total + product.consensus.evidenceCount, commerceEvidenceSignals)
   const faqEntries = [
     {
-      question: 'What changed in Bes3?',
-      answer: 'Bes3 now focuses on hands-on review evidence, real buyer questions, and price-aware comparisons for products that are hard to judge from specs alone.'
+      question: 'What is Bes3?',
+      answer: 'Bes3 is a consumer tech deal and independent review guide. Alex checks current prices, visible downsides, review signals, and store links before a page asks you to leave for checkout.'
     },
     {
-      question: 'Why do some pages show limited coverage?',
-      answer: 'Bes3 does not invent winners. If exact product matching, trusted review evidence, store availability, or price history are still incomplete, the page says so clearly.'
+      question: 'Do affiliate links change the picks?',
+      answer: 'No. Bes3 may earn a commission from some store links, but commission availability does not decide which product is recommended or which downside is shown.'
     }
   ]
 
@@ -60,8 +60,8 @@ export default async function HomePage() {
         data={[
           buildCollectionPageSchema({
             path: '/',
-            title: 'Bes3 Best Picks',
-            description: 'Buying decision pages built from evidence, price timing, and verified merchant paths.',
+            title: 'Bes3 Tech Deals',
+            description: 'Current tech price checks, visible cons, independent review signals, and cleaner store links.',
             items: home.categories.map((item) => ({
               name: item.category.name,
               path: `/categories/${item.category.slug}`
@@ -73,26 +73,26 @@ export default async function HomePage() {
       <section className="border-b border-border bg-white px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-12 lg:grid-cols-[1.05fr_0.95fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Buyer decision engine</p>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Tech deals checked by Alex</p>
             <h1 className="mt-5 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              Know what to buy, compare, wait on, or skip.
+              Find the current price and the catch before you buy tech gear.
             </h1>
             <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-              Bes3 turns review evidence, current price context, risk checks, and verified merchant paths into a buy / compare / wait / skip decision before you leave for a store.
+              Bes3 tracks 3C digital products with current price checks, visible cons, independent review signals, and cleaner store links so you can move faster without trusting a fake best-of list.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/start" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                Start My Decision
+              <Link href="/deals" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                Check Current Price
               </Link>
               <Link href="/categories" className="inline-flex min-h-[48px] items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
-                Browse Best Picks
+                Find Best Picks
               </Link>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {[
-                ['Evidence first', 'Creator evidence and buyer signals explain every recommendation.'],
-                ['Price aware', 'Deal pages distinguish buy windows from wait states.'],
-                ['Commission neutral', 'Affiliate availability never changes recommendation order.']
+                ['Check current price', 'Primary CTAs stay low-pressure and point to live offer checks, not blind buy-now buttons.'],
+                ['Show the downside', 'Visible cons sit near the recommendation so the catch is not buried after the store link.'],
+                ['Independent review signals', 'Creator tests, buyer proof, and price history explain why a product earns attention.']
               ].map(([title, note]) => (
                 <div key={title} className="rounded-2xl border border-border bg-slate-50 p-4">
                   <p className="text-sm font-black text-foreground">{title}</p>
@@ -103,9 +103,9 @@ export default async function HomePage() {
           </div>
           <div className="grid gap-4 sm:grid-cols-3 lg:grid-cols-1">
             {[
-              ['Categories tracked', String(trackedCategoryKeys.size), 'Public category surfaces with buying or evidence coverage.'],
-              ['Buy-ready products', String(commerceBuyReadyProducts), 'Published products with verified commissionable merchant paths.'],
-              ['Evidence signals', String(evidenceCount), 'Review reports and product facts behind the buying calls.']
+              ['Categories tracked', String(trackedCategoryKeys.size), 'Tech product areas Alex watches for real shopping pain.'],
+              ['Checked store links', String(commerceBuyReadyProducts), 'Published products with a current merchant path before the CTA appears.'],
+              ['Review signals', String(evidenceCount), 'Review reports and product facts behind the public recommendations.']
             ].map(([label, value, note]) => (
               <div key={label} className="rounded-md border border-border bg-slate-50 p-5">
                 <p className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
@@ -120,17 +120,17 @@ export default async function HomePage() {
       <section className="border-b border-border bg-slate-50 px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <div className="max-w-4xl">
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Start From The Task</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Shop by need</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
-              Pick the page that matches your buying question.
+              Start where your shopping problem actually is.
             </h2>
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ['Start', '/start', 'Describe the buying mistake you want to avoid.'],
-              ['Find Best Picks', '/categories', 'Start with the current Top 3 in a category.'],
-              ['See Deals', '/deals', 'Find buy windows and price-watch states.'],
-              ['Reviews', '/reviews', 'Check whether a specific product is safe to buy.']
+              ['Check Current Price', '/deals', 'Start with products that look worth checking today.'],
+              ['Find Best Picks', '/categories', 'Open the strongest picks by product area.'],
+              ['Read Reviews', '/reviews', 'Check pros, cons, and who should skip a model.'],
+              ['Ask Alex', '/start', 'Describe what you need and get a tighter tech shortlist.']
             ].map(([title, href, note]) => (
               <Link key={href} href={href} className="rounded-md border border-border bg-white p-5 hover:border-primary">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Shopping path</p>
@@ -145,22 +145,22 @@ export default async function HomePage() {
       <section className="border-b border-border bg-white px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[0.72fr_1.28fr] lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Who this is for</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Who this helps</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
-              Start with the anxiety behind the purchase.
+              Built for shoppers who do not want another fake ranking.
             </h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Bes3 is built for high-intent shoppers who already care enough to search, compare, and verify. Not an ad list, not a coupon wall, and not a generic review feed.
+              Bes3 is for high-intent tech shoppers who already care enough to search, compare, and verify. It is not an ad list, not a coupon wall, and not a generic review feed.
             </p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {[
-              ['For anxious buyers', 'I am close to buying, but I need to know if this product is safe, durable, and worth the money today.'],
-              ['For comparison buyers', 'I have a shortlist and need a default winner, the strongest alternative, and the condition that would reverse the decision.'],
-              ['For deal-timing buyers', 'I like the product, but I need to know whether the current price is a buy window or a wait state.']
+              ['Close-to-buy shoppers', 'I am nearly ready, but I need the current price, the obvious downside, and a cleaner store link.'],
+              ['Comparison shoppers', 'I have two or three models and need the strongest pick plus the reason I might choose the runner-up.'],
+              ['Deal-timing shoppers', 'I like the product, but I need to know if today is a real deal or just normal pricing.']
             ].map(([title, note]) => (
               <div key={title} className="rounded-md border border-border bg-slate-50 p-5">
-                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Persona path</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.22em] text-muted-foreground">Shopping moment</p>
                 <h3 className="mt-3 font-[var(--font-display)] text-2xl font-black tracking-tight">{title}</h3>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{note}</p>
               </div>
@@ -172,20 +172,20 @@ export default async function HomePage() {
       <section className="border-b border-border bg-slate-950 px-4 py-14 text-white sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.85fr_1.15fr]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Decision loop</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">How Alex checks a deal</p>
             <h2 className="mt-3 font-[var(--font-display)] text-4xl font-black tracking-tight">
-              Every page should shorten the path from doubt to a defensible next step.
+              Current price, visible cons, and review proof belong on the same screen.
             </h2>
             <p className="mt-4 text-sm leading-7 text-slate-300">
-              Revenue comes from compliant merchant exits, but the loop only works if the recommendation is trusted enough to earn the click.
+              Store links only deserve a click after the page makes the tradeoff clear. That is why Bes3 keeps price, catch, proof, and disclosure visible together.
             </p>
           </div>
           <div className="grid gap-3 md:grid-cols-2">
             {[
-              ['High-intent question', 'The user arrives with a product, category, scenario, or price-timing problem.'],
-              ['Evidence and price check', 'Bes3 checks creator evidence, risk flags, current price, historical context, and offer health.'],
-              ['buy / compare / wait / skip', 'The page gives one primary decision state instead of another wall of review prose.'],
-              ['Admin repair queue', 'Broken links, thin evidence, overpriced CTAs, and blocked pSEO pages flow back to operators.']
+              ['1. Check the current price', 'The page looks for live offer context, tracked lows, shipping, and whether the store path is still usable.'],
+              ['2. Put the catch up front', 'The first downside stays visible so a good discount does not hide the reason someone should pass.'],
+              ['3. Verify review signals', 'Independent review excerpts, source depth, ratings, and buyer proof explain why a pick is trusted.'],
+              ['4. Link out cleanly', 'Bes3 labels affiliate handoffs and keeps the CTA low-pressure: Check Current Price.']
             ].map(([title, note]) => (
               <div key={title} className="rounded-md border border-white/10 bg-white/5 p-5">
                 <h3 className="font-[var(--font-display)] text-2xl font-black">{title}</h3>
@@ -200,7 +200,7 @@ export default async function HomePage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Categories</p>
           <h2 className="mt-3 max-w-4xl font-[var(--font-display)] text-4xl font-black tracking-tight">
-            Focused product areas where real-world testing beats spec sheets.
+            Focused tech areas where real review signals beat spec sheets.
           </h2>
           <div className="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             {home.categories.map((item) => (

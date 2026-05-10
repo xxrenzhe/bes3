@@ -2,8 +2,8 @@ import Link from 'next/link'
 import type { IntentUrgency } from '@/lib/commerce-intent'
 
 const INTENT_URGENCY_OPTIONS: Array<{ value: IntentUrgency; label: string }> = [
-  { value: 'buy-now', label: 'I could buy now' },
-  { value: 'compare-soon', label: 'I need one last compare' },
+  { value: 'buy-now', label: 'I might buy today' },
+  { value: 'compare-soon', label: 'I need one last comparison' },
   { value: 'wait-for-price', label: 'I only want a better price' }
 ]
 
@@ -25,8 +25,8 @@ const INTENT_PRESET_LINKS = [
     urgency: 'wait-for-price' as IntentUrgency
   },
   {
-    label: 'Only show 2 to 3 strong picks',
-    intent: 'I want a short list of the strongest options, not a giant list.',
+    label: 'Show 2 to 3 picks',
+    intent: 'I want a short list of the strongest reviewed options, not a giant list.',
     budget: '',
     must: '',
     avoid: 'too many choices',
@@ -42,18 +42,18 @@ const INTENT_GUIDE_STEPS = [
   },
   {
     title: '2. What cannot go wrong?',
-    description: 'List the two or three things that would create regret later.',
+    description: 'List the two or three issues that would make this feel like a bad buy.',
     example: 'Example: weak battery, noisy fan, dim panel, fragile build'
   },
   {
     title: '3. What would make you skip it?',
-    description: 'Use deal-breakers so Bes3 can remove bad-fit options faster.',
+    description: 'Use deal-breakers so Alex can remove bad-fit options faster.',
     example: 'Example: no USB-C, glossy screen, poor ports, bulky size'
   }
 ] as const
 
 const INTENT_URGENCY_HELP: Record<IntentUrgency, string> = {
-  'buy-now': 'Use this when you are close to buying and want Bes3 to narrow to the safest current picks.',
+  'buy-now': 'Use this when you are close to buying and want Alex to check the safest current picks.',
   'compare-soon': 'Use this when you already know the category and only need the last compare-worthy shortlist.',
   'wait-for-price': 'Use this when the fit is mostly clear but timing or price is the only blocker.'
 }
@@ -100,12 +100,12 @@ export function IntentSearchPanel({
   return (
     <form action={action} className={`rounded-[2rem] bg-white p-8 shadow-panel ${className}`.trim()}>
       <input type="hidden" name="mode" value="intent" />
-      <p className="editorial-kicker">Describe What You Need</p>
+      <p className="editorial-kicker">Ask Alex</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-        Tell Bes3 what you actually need.
+        Tell Alex what tech you actually need.
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-        Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a tighter set of options instead of a loose keyword search.
+        Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a tighter list with current price context and visible cons.
       </p>
 
       <div className="mt-6 grid gap-3 lg:grid-cols-3">
@@ -119,7 +119,7 @@ export function IntentSearchPanel({
       </div>
 
       <div className="mt-5">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Need a head start? Use a starter intent.</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Need a head start? Try one of these shopping prompts.</p>
         <div className="mt-3 flex flex-wrap gap-3">
           {INTENT_PRESET_LINKS.map((preset) => (
             <Link
@@ -219,14 +219,14 @@ export function IntentSearchPanel({
               className="min-h-[84px] w-full rounded-[1.25rem] border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-foreground outline-none"
               placeholder="glossy screen, weak battery, noisy cooling"
             />
-            <span className="block text-xs leading-6 text-muted-foreground">This is where you tell Bes3 what would make you reject an otherwise good option.</span>
+            <span className="block text-xs leading-6 text-muted-foreground">This is where you tell Alex what would make you reject an otherwise good option.</span>
           </label>
 
           <button
             type="submit"
             className="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-[box-shadow,transform] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            Build my shortlist
+            Find tech deals
           </button>
         </div>
       </div>

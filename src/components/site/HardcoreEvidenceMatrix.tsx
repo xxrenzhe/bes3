@@ -62,7 +62,7 @@ export function HardcoreEvidenceMatrix({
       <div className="mx-auto max-w-7xl">
         <div className="mb-8 max-w-3xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">
-            {isResearching ? 'Evidence Matrix' : 'Consensus Matrix'}
+            {isResearching ? 'Review Proof' : 'Review Signals'}
           </p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
             {isResearching

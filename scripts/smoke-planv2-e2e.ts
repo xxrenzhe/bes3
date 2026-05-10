@@ -25,7 +25,7 @@ const checks: SmokeCheck[] = [
     label: 'public home routes buyers to purchase tasks',
     path: '/',
     expectStatus: 200,
-    requiredText: ['Buying Decisions', 'Find Best Picks', 'See Deals']
+    requiredText: ['Tech deals checked by Alex', 'Find Best Picks', 'Check Current Price']
   },
   {
     label: 'public product directory is accessible',

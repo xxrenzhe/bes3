@@ -9,11 +9,11 @@ import { buildCollectionPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Evidence Matrix',
-    description: 'Browse products through Bes3 consensus scores, source evidence, and price-value windows.',
+    title: 'Reviewed Products',
+    description: 'Browse Bes3 reviewed tech products by review proof, visible downsides, and current price context.',
     path: '/products',
     locale: await getRequestLocale(),
-    keywords: ['product evidence matrix', 'consensus score', 'teardown reviews']
+    keywords: ['reviewed tech products', 'independent tech reviews', 'current price checks', 'product downsides']
   })
 }
 
@@ -25,8 +25,8 @@ export default async function ProductsIndexPage() {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/products',
-          title: 'Evidence Matrix',
-          description: 'Products ranked by teardown consensus and price-value timing.',
+          title: 'Reviewed Products',
+          description: 'Products ranked by review proof, current price context, and visible downsides.',
           items: products.map((product) => ({
             name: product.name,
             path: `/products/${product.slug}`
@@ -35,7 +35,7 @@ export default async function ProductsIndexPage() {
       />
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Evidence Matrix</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Reviewed Products</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
             Products sorted by proof, not product-page copy.
           </h1>

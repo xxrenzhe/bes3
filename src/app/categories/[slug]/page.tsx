@@ -27,7 +27,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   }
 
   return buildPageMetadata({
-    title: `${page.category.name} Evidence Matrix`,
+    title: `${page.category.name} Best Picks`,
     description: `Hands-on review evidence, buyer use cases, and price timing for ${page.category.name}.`,
     path: `/categories/${page.category.slug}`,
     locale: await getRequestLocale(),
@@ -85,8 +85,8 @@ export default async function CategoryPage({ params }: { params: Promise<{ slug:
         data={[
           buildCollectionPageSchema({
             path: `/categories/${page.category.slug}`,
-            title: `${page.category.name} Evidence Matrix`,
-            description: `Scenario-driven evidence matrix for ${page.category.name}.`,
+            title: `${page.category.name} Best Picks`,
+            description: `Reviewed picks, current price context, and visible downsides for ${page.category.name}.`,
             items: page.products.map((product) => ({
               name: product.name,
               path: `/products/${product.slug}`

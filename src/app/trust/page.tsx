@@ -10,10 +10,10 @@ import { buildCollectionPageSchema, buildFaqSchema } from '@/lib/structured-data
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'Trust Center',
-    description: 'Bes3 trust policy for affiliate disclosure, creator evidence, fair use, AI extraction, and price-value scoring.',
+    description: 'How Bes3 handles affiliate links, visible cons, review sources, and current price checks.',
     path: '/trust',
     locale: await getRequestLocale(),
-    keywords: ['Bes3 trust', 'affiliate disclosure', 'creator evidence', 'fair use', 'AI extraction']
+    keywords: ['Bes3 trust', 'affiliate disclosure', 'independent tech reviews', 'current price checks']
   })
 }
 
@@ -22,15 +22,15 @@ export default async function TrustPage() {
   const faqEntries = [
     {
       question: 'How does Bes3 handle affiliate links?',
-      answer: 'Products need an executable affiliate path for public commercial handoff, but commission rate is not used as a ranking factor.'
+      answer: 'Bes3 may earn a commission from some store links, but payout is not used as a ranking factor and the disclosure stays visible.'
     },
     {
       question: 'How does Bes3 avoid copying creators?',
-      answer: 'Bes3 extracts facts, ratings, and short evidence quotes, then links back to the original YouTube video and timestamp whenever available.'
+      answer: 'Bes3 summarizes facts, ratings, and short review signals, then links back to the original source whenever possible.'
     },
     {
-      question: 'When can a recommendation page be indexed?',
-      answer: `A scenario page needs ${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} commercially actionable products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} timestamped evidence reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, and price context before Bes3 treats it as indexable.`
+      question: 'When does Bes3 avoid making a strong recommendation?',
+      answer: `A page needs enough reviewed products, independent sources, and price context before Bes3 treats it as a strong shopping guide. Thin pages stay visibly limited instead of pretending to know more than they do.`
     }
   ]
 
@@ -45,7 +45,7 @@ export default async function TrustPage() {
             items: [
               { name: 'Privacy', path: '/privacy' },
               { name: 'Terms', path: '/terms' },
-              { name: 'Open Data', path: '/data' },
+              { name: 'How Bes3 checks deals', path: '/data' },
               { name: 'llms.txt', path: '/llms.txt' },
               { name: 'security.txt', path: '/.well-known/security.txt' }
             ]
@@ -57,47 +57,47 @@ export default async function TrustPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Trust Center</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Trust is enforced by evidence constraints.
+            We show the catch before the store link.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 ranks products using review quality, source consistency, use-case fit, and price history. It earns affiliate commission at no extra cost when a reader uses a merchant handoff, but it does not hide commercial disclosure behind neutral-looking buttons.
+            Bes3 ranks products using review quality, source consistency, use-case fit, and price history. It may earn affiliate commission at no extra cost when a reader uses a store link, but the page must keep disclosure, price context, and visible downsides close to the recommendation.
           </p>
         </div>
       </section>
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
         <div className="mx-auto mb-8 grid max-w-7xl gap-5 lg:grid-cols-3">
           <div className="rounded-md border border-border bg-white p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Buyer-first affiliate model</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Revenue model follows the decision.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Affiliate links</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Commission cannot pick the winner.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Bes3 can earn affiliate commission after a valid `/go` merchant exit, but the page still has to justify buy / compare / wait / skip with evidence, price, and risk context.
+              Bes3 can earn affiliate commission after a valid store handoff, but a product still has to earn attention with review proof, current price context, and visible risk notes.
             </p>
           </div>
           <div className="rounded-md border border-border bg-white p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Commission-blind ranking</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Payout cannot become the winner.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Ranking rule</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Payout stays out of the ranking.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Commercial candidates are audited with commission excluded from the ranking score. A product can be monetizable and still lose if evidence, fit, price, or risk is weaker.
+              A product can be monetizable and still lose if the proof, fit, price, or downside story is weaker than another option.
             </p>
           </div>
           <div className="rounded-md border border-border bg-white p-6">
-            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">pSEO quality gate</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">No indexable fake certainty.</h2>
+            <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Thin coverage</p>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">No fake certainty.</h2>
             <p className="mt-4 text-sm leading-7 text-muted-foreground">
-              Programmatic pages need eligible products, independent evidence, price context, and merchant-path health. Otherwise they remain researching, noindex, or visibly bounded.
+              Pages need reviewed products, independent sources, price context, and a healthy store path. Otherwise they stay visibly limited.
             </p>
           </div>
         </div>
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[
             ['FTC disclosure', 'Affiliate disclosure appears globally and near outbound purchase actions.'],
-            ['Creator attribution', 'Evidence quotes link back to the creator source when a YouTube ID is available.'],
+            ['Creator attribution', 'Review signals link back to the source when a URL is available.'],
             ['Advertorial penalty', 'Videos flagged as soft ads are heavily downweighted in consensus scoring.'],
             ['No fake discounts', 'Price labels require current price plus historical low or 90-day average context.'],
-            ['Crawler openness', 'robots.txt explicitly allows major AI crawlers to read the public evidence surface.'],
+            ['Readable proof', 'Bes3 keeps public review and price context readable instead of hiding it behind vague claims.'],
             ['Data minimization', 'Public data focuses on products and evidence, not sensitive user identity.'],
-            ['Index quality gate', `${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} eligible products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} timestamped reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, affiliate paths, and price context are required before a scenario page can be indexable.`],
-            ['Commission-blind audit', 'Commercial candidates are audited against a score that excludes commission rate and estimated commission value, so high payout cannot silently become public ranking logic.'],
+            ['Strong-guide threshold', `${PSEO_INDEX_QUALITY_GATE.minEligibleProducts} eligible products, ${PSEO_INDEX_QUALITY_GATE.minTotalEvidenceReports} review reports, ${PSEO_INDEX_QUALITY_GATE.minUniqueSources} independent sources, affiliate paths, and price context are required before a scenario page can become a strong shopping guide.`],
+            ['Commission-blind audit', 'Commercial candidates are checked with commission rate excluded, so high payout cannot silently become public ranking logic.'],
             ['Schema safety', 'Product structured data only emits ratings when visible evidence count exists, and only emits offers when a real price and outbound path exist.']
           ].map(([title, description]) => (
             <div key={title} className="rounded-md border border-border bg-white p-6">
@@ -109,10 +109,10 @@ export default async function TrustPage() {
         <div className="mx-auto mt-8 max-w-7xl rounded-md border border-border bg-slate-950 p-6 text-white">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Current Focus</p>
           <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">
-            Bes3 scales trust by narrowing the first commercial wedge.
+            Bes3 starts with tech categories where a bad buy hurts.
           </h2>
           <p className="mt-4 max-w-3xl text-sm leading-7 text-slate-300">
-            The long-term catalog can cover many hard goods, but production growth starts with the categories most likely to combine high purchase anxiety, strong YouTube evidence density, and meaningful order value.
+            The catalog can grow over time, but the public site starts where shoppers most need current price checks, visible cons, and real review proof.
           </p>
           <div className="mt-5 flex flex-wrap gap-2">
             {focusCategories.map((category) => (
@@ -126,7 +126,7 @@ export default async function TrustPage() {
           {[
             ['/privacy', 'Privacy'],
             ['/terms', 'Terms'],
-            ['/data', 'Open data'],
+            ['/data', 'How Bes3 checks deals'],
             ['/llms.txt', 'llms.txt'],
             ['/.well-known/security.txt', 'security.txt']
           ].map(([href, label]) => (

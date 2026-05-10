@@ -23,9 +23,9 @@ export default async function HtmlSitemapPage() {
   const mainPages = [
     { href: '/', label: 'Home' },
     { href: '/categories', label: 'Categories' },
-    { href: '/products', label: 'Evidence Matrix' },
+    { href: '/products', label: 'Reviewed Products' },
     { href: '/deals', label: 'Best Value Lab' },
-    { href: '/data', label: 'Open Data' },
+    { href: '/data', label: 'How Bes3 Checks Deals' },
     { href: '/trust', label: 'Trust Center' },
     { href: '/about', label: 'About' }
   ]

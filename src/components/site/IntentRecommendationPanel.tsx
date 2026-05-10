@@ -56,32 +56,32 @@ export function IntentRecommendationPanel({
   return (
     <div className="space-y-8">
       <DecisionSummaryPanel
-        eyebrow="Decision Summary"
-        title="Bes3 is narrowing this shortlist for a practical reason."
-        description="A strong assistant result should answer four things fast: who the shortlist fits, who should pause, why these picks matter now, and what the clean next move is."
+        eyebrow="Alex's Shortlist"
+        title="These picks are here because they match the shopping need, not because the list is long."
+        description="A useful tech result should answer four things fast: who it fits, who should pause, why the price matters now, and where to check next."
         items={[
           {
-            eyebrow: 'Who should use this',
+            eyebrow: 'Best fit',
             title: note.title,
             description: lead?.reasons.join(' ') || 'These picks match the current use case, constraints, and available evidence best.'
           },
           {
-            eyebrow: 'Who should skip',
-            title: lead?.concerns.length ? 'Keep one concern in mind' : 'Only skip this path if the problem changed',
+            eyebrow: 'Visible catch',
+            title: lead?.concerns.length ? 'Check this before leaving Bes3' : 'No obvious blocker is visible yet',
             description: lead?.concerns[0] || (comparisonReady
-              ? 'If you still do not have true finalists, go back and tighten the request instead of forcing a compare.'
+              ? 'If the finalists still feel too broad, tighten the request instead of forcing a comparison.'
               : 'If the use case, budget, or deal-breakers changed, rerun the request instead of forcing the current shortlist.'),
             tone: 'muted'
           },
           {
-            eyebrow: 'Why now',
-            title: 'This is the narrowing checkpoint',
+            eyebrow: 'Price context',
+            title: 'Check whether the offer is still worth it',
             description: comparisonReady
-              ? 'You now have enough proof to stop broad browsing and decide whether the shortlist is ready for compare.'
-              : 'You now have enough signal to validate the lead product instead of searching the whole market again.'
+              ? 'You now have enough proof to stop broad browsing and compare the finalists against current price.'
+              : 'You now have enough signal to validate the lead product before searching the whole market again.'
           },
           {
-            eyebrow: 'Next step',
+            eyebrow: 'Clean next step',
             title: result.nextAction.title,
             description: result.nextAction.description,
             tone: 'strong'
@@ -94,11 +94,11 @@ export function IntentRecommendationPanel({
           <div>
             <p className="editorial-kicker">Best Matches</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-              Here are the strongest options for what you need.
+              Here are the strongest reviewed options for what you need.
             </h2>
           </div>
           <p className="max-w-2xl text-sm leading-7 text-muted-foreground">
-            We start with product fit, then look at price timing, then point you to the fastest next step.
+            We start with product fit, then look at price timing, visible downsides, and the cleanest next step.
           </p>
         </div>
 
@@ -143,7 +143,7 @@ export function IntentRecommendationPanel({
                   label: 'Save this shortlist'
                 }}
               >
-                Save this shortlist
+                Save shortlist
               </TrackedDecisionLink>
               {note.brandHref ? (
                 <TrackedDecisionLink
@@ -192,16 +192,16 @@ export function IntentRecommendationPanel({
         <div className="flex items-baseline justify-between border-b border-border/30 pb-4">
           <div>
             <p className="editorial-kicker">3 Picks Max</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">The current shortlist stays inside one category, with one lead and at most two alternatives.</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Alex keeps the list inside one category, with one lead and at most two alternatives.</h2>
           </div>
           <span className="text-sm text-muted-foreground">{result.recommendations.length} recommended pick{result.recommendations.length === 1 ? '' : 's'}</span>
         </div>
         <article className="overflow-hidden rounded-[2rem] bg-white shadow-panel">
           <div className="border-b border-border/50 bg-[linear-gradient(135deg,#0f172a_0%,#134e4a_100%)] px-6 py-6 text-white">
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Winner now</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-200">Closest fit now</p>
               <span className="rounded-full border border-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-white/85">
-                {result.recommendations.length >= 3 ? '3-way shortlist' : result.recommendations.length === 2 ? 'Head-to-head' : 'Best available now'}
+                {result.recommendations.length >= 3 ? '3-pick shortlist' : result.recommendations.length === 2 ? 'Head-to-head' : 'Best checked now'}
               </span>
             </div>
             <h3 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{lead?.product.productName}</h3>
@@ -211,11 +211,11 @@ export function IntentRecommendationPanel({
           <div className="space-y-4 p-6">
             <div className="grid gap-4 lg:grid-cols-[1.1fr_0.9fr]">
               <div className="rounded-[1.5rem] bg-muted p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it wins</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">Why it leads</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{lead?.reasons.join(' ')}</p>
               </div>
               <div className="rounded-[1.5rem] bg-muted p-5">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">If not buying today</p>
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary">If not checking price today</p>
                 <p className="mt-3 text-sm leading-7 text-muted-foreground">{result.nextAction.description}</p>
                 <div className="mt-4 flex flex-wrap gap-3">
                   <TrackedDecisionLink

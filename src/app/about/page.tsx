@@ -9,10 +9,10 @@ import { buildAboutPageSchema, buildFaqSchema } from '@/lib/structured-data'
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'About Bes3',
-    description: 'Bes3 is a buyer decision engine for hard-to-judge products, built around evidence, price timing, risk, and verified merchant paths.',
+    description: 'Bes3 is a consumer tech deal and independent review guide built around current prices, visible downsides, and cleaner store links.',
     path: '/about',
     locale: await getRequestLocale(),
-    keywords: ['about Bes3', 'hardware teardown evidence', 'consensus scoring', 'price value analysis']
+    keywords: ['about Bes3', 'tech deals', 'independent tech reviews', 'current price checks']
   })
 }
 
@@ -20,11 +20,11 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 now?',
-      answer: 'Bes3 is a buyer decision engine for categories where hands-on testing matters. It turns review evidence, price context, and merchant-path health into buy, compare, wait, or skip decisions.'
+      answer: 'Bes3 is a consumer tech deal and independent review guide. Alex checks current prices, visible downsides, review signals, and store links before sending readers to a merchant.'
     },
     {
       question: 'What does Bes3 refuse to do?',
-      answer: 'Bes3 refuses to fabricate winners, rank by commission, or present official specs as proof when no physical test exists.'
+      answer: 'Bes3 refuses to fabricate winners, rank by commission, or hide the catch just because a store link is available.'
     }
   ]
 
@@ -32,7 +32,7 @@ export default async function AboutPage() {
     <PublicShell>
       <StructuredData
         data={[
-          buildAboutPageSchema('/about', 'About Bes3', 'Product decision site for hands-on, evidence-backed buying decisions.'),
+          buildAboutPageSchema('/about', 'About Bes3', 'Consumer tech deal and independent review guide.'),
           buildFaqSchema('/about', faqEntries)
         ]}
       />
@@ -40,10 +40,10 @@ export default async function AboutPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">About</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Hands-on product analysis built for real buying decisions.
+            A tech deal site that shows the price and the catch.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 focuses on products where the difference between marketing specs and physical reality can cost serious money: robot vacuums, power stations, security devices, creator gear, air and water systems, maker tools, and other hard-to-judge equipment.
+            Bes3 focuses on 3C digital products where marketing specs are not enough: monitors, tablets, creator gear, security devices, power stations, robot vacuums, maker tools, and other tech that can be expensive to return.
           </p>
         </div>
       </section>
@@ -51,25 +51,25 @@ export default async function AboutPage() {
         <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-3">
           <div className="rounded-md border border-border bg-white p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Who Bes3 is for</p>
-            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">High-anxiety purchase tasks.</h2>
+            <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Tech shoppers close to checkout.</h2>
             <div className="mt-5 space-y-4 text-sm leading-7 text-muted-foreground">
-              <p><span className="font-semibold text-foreground">Anxious buyer:</span> needs confidence that a hard-to-return product will work in real life.</p>
-              <p><span className="font-semibold text-foreground">Comparison buyer:</span> needs a default winner and a reason to choose the runner-up.</p>
-              <p><span className="font-semibold text-foreground">Deal-timing buyer:</span> needs to know whether today is a buy window or a wait state.</p>
+              <p><span className="font-semibold text-foreground">Close-to-buy shopper:</span> needs the current price, the obvious downside, and a cleaner store link.</p>
+              <p><span className="font-semibold text-foreground">Comparison shopper:</span> needs the strongest pick and the reason the runner-up might still fit.</p>
+              <p><span className="font-semibold text-foreground">Deal-timing shopper:</span> needs to know if today's price is a real discount or normal pricing.</p>
             </div>
           </div>
           <div className="rounded-md border border-border bg-slate-50 p-6">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Who Bes3 is not for</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">Not a generic ad list.</h2>
             <p className="mt-5 text-sm leading-7 text-muted-foreground">
-              Bes3 is not for users looking for random coupons, paid placements, vendor brochures, or fake certainty on thin evidence. If evidence, price, or link health is weak, the page should say so.
+              Bes3 is not for random coupons, paid placements, vendor brochures, or fake certainty. If review proof, price context, or the store path is weak, the page should say so.
             </p>
           </div>
           <div className="rounded-md border border-border bg-slate-950 p-6 text-white">
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-emerald-300">Product promise</p>
             <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">No evidence, no strong recommendation.</h2>
             <p className="mt-5 text-sm leading-7 text-slate-300">
-              No commission-ranked winners. No buy CTA without an executable merchant path. No pSEO page that pretends weak evidence is a confident decision.
+              No commission-ranked winners. No low-pressure price-check button without a working store path. No page that pretends weak review proof is enough.
             </p>
           </div>
         </div>
@@ -77,10 +77,10 @@ export default async function AboutPage() {
       <section className="px-4 pb-16 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-2 xl:grid-cols-3">
           {[
-            ['Evidence first', 'Every score must trace back to a creator test, rating enum, and quote or timestamp.'],
+            ['Real review signals', 'Every strong pick needs real review proof, not just a manufacturer spec sheet.'],
             ['Use-case driven', 'We organize reviews around the buyer questions people actually have, not generic spec lists.'],
             ['No commission ranking', 'Products need a working store link, but commission does not decide the ranking.'],
-            ['Price-aware', 'Consensus score is combined with current price, historical low, and 90-day average to identify buy windows.'],
+            ['Current price context', 'Alex checks current price, tracked lows, and recent averages before calling something a deal.'],
             ['No fake certainty', 'Limited-coverage pages are acceptable. A thin page is better than a fabricated recommendation.'],
             ['Source-linked', 'When possible, the page links back to the original review source so you can verify the claim yourself.']
           ].map(([title, description]) => (
