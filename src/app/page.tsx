@@ -81,11 +81,11 @@ export default async function HomePage() {
               Bes3 turns review evidence, current price context, risk checks, and verified merchant paths into a buy / compare / wait / skip decision before you leave for a store.
             </p>
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link href="/categories" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
-                Find Best Picks
+              <Link href="/start" className="inline-flex min-h-[48px] items-center rounded-md bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground">
+                Start My Decision
               </Link>
-              <Link href="/deals" className="inline-flex min-h-[48px] items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
-                See Deals
+              <Link href="/categories" className="inline-flex min-h-[48px] items-center rounded-md border border-border bg-white px-5 py-3 text-sm font-semibold hover:border-primary hover:text-primary">
+                Browse Best Picks
               </Link>
             </div>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
@@ -127,10 +127,10 @@ export default async function HomePage() {
           </div>
           <div className="mt-8 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
             {[
-              ['Best Picks', '/categories', 'Start with the current Top 3 in a category.'],
-              ['Deals', '/deals', 'Find buy windows and price-watch states.'],
-              ['Reviews', '/reviews', 'Check whether a specific product is safe to buy.'],
-              ['Trust', '/trust', 'See how evidence, links, and commission neutrality work.']
+              ['Start', '/start', 'Describe the buying mistake you want to avoid.'],
+              ['Find Best Picks', '/categories', 'Start with the current Top 3 in a category.'],
+              ['See Deals', '/deals', 'Find buy windows and price-watch states.'],
+              ['Reviews', '/reviews', 'Check whether a specific product is safe to buy.']
             ].map(([title, href, note]) => (
               <Link key={href} href={href} className="rounded-md border border-border bg-white p-5 hover:border-primary">
                 <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-muted-foreground">Shopping path</p>

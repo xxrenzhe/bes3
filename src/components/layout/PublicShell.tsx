@@ -10,6 +10,7 @@ export async function PublicShell({ children }: { children: React.ReactNode }) {
   const locale = await getRequestLocale()
   const displayPath = await getRequestDisplayPath()
   const navItems = [
+    { href: '/start', label: 'Start' },
     { href: '/categories', label: 'Best Picks' },
     { href: '/deals', label: 'Deals' },
     { href: '/reviews', label: 'Reviews' },
