@@ -12,8 +12,8 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Categories',
-    description: 'Browse the product categories where hands-on testing matters more than official specs.',
+    title: 'Compare Tech Picks by Category',
+    description: 'Browse product categories where Bes3 compares reviewed picks, visible downsides, and price context before a buy decision.',
     path: '/categories',
     locale: await getRequestLocale(),
     keywords: ['product categories', 'hands-on tests', 'product evidence']
@@ -28,8 +28,8 @@ export default async function CategoriesIndexPage() {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/categories',
-          title: 'Categories',
-          description: 'Bes3 categories for evidence-backed product comparisons.',
+          title: 'Compare Tech Picks by Category',
+          description: 'Bes3 categories for evidence-backed product comparisons that lead to buy, compare, wait, or skip.',
           items: home.categories.map((item) => ({
             name: item.category.name,
             path: `/categories/${item.category.slug}`
@@ -38,12 +38,12 @@ export default async function CategoriesIndexPage() {
       />
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Categories</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Compare Picks</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            A focused set of categories keeps the site useful.
+            Compare products where the wrong pick is expensive.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            These are the categories where physical testing, reviewer disagreement, exact model matching, and price timing materially change the buying decision.
+            These are the categories where physical testing, reviewer disagreement, exact model matching, and price timing materially change whether you should buy, compare, wait, or skip.
           </p>
         </div>
       </section>
@@ -55,7 +55,7 @@ export default async function CategoriesIndexPage() {
               <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight">{item.category.name}</h2>
               <p className="mt-3 text-sm leading-7 text-muted-foreground">{item.category.coreProducts.join(', ')}</p>
               <div className="mt-5 border-t border-border pt-5">
-                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">Hard tests</p>
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">What changes the decision</p>
                 <ul className="mt-3 space-y-2 text-sm text-foreground">
                   {item.category.metrics.slice(0, 4).map((metric) => (
                     <li key={metric}>{metric}</li>

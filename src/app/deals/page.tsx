@@ -17,9 +17,9 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Best Value Lab',
+    title: 'Wait or Buy Tech Deals',
     description:
-      'Bes3 ranks buying windows by combining review scores, current price, historical lows, and 90-day average price baselines.',
+      'Bes3 decides whether reviewed tech products are worth checking now or better saved for a price wait.',
     path: '/deals',
     locale: await getRequestLocale(),
     keywords: ['best value tech', 'price value score', 'review score', 'price drop alerts']
@@ -54,8 +54,8 @@ export default async function DealsPage() {
         data={[
           buildCollectionPageSchema({
             path: '/deals',
-            title: 'Best Value Lab',
-            description: 'Price-value pages ranked by review score and live price baselines.',
+            title: 'Wait or Buy Tech Deals',
+            description: 'Price-value pages that connect review score, current price, and buy-window timing.',
             items: HARDCORE_CATEGORIES.map((category) => ({
               name: `Best value ${category.name}`,
               path: buildValuePseoPath(category.slug, 500)
@@ -68,10 +68,10 @@ export default async function DealsPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Buy Window</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            The best deal is the one worth buying now.
+            Decide whether the price says buy or wait.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            Bes3 ranks deals by review proof, current price, stock/link health, and whether a safer alternative is close.
+            Bes3 ranks deals by review proof, current price, stock/link health, and whether a safer alternative is close. Cheap is not enough; a deal still has to survive the catch.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             {HARDCORE_CATEGORIES.slice(0, 6).map((category) => (

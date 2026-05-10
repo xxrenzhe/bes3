@@ -30,4 +30,4 @@ export const SETTINGS_CATEGORIES = [
 ] as const
 
 export const DEFAULT_SITE_NAME = 'Bes3'
-export const DEFAULT_SITE_TAGLINE = 'Real tech price checks, visible downsides, and cleaner buying links.'
+export const DEFAULT_SITE_TAGLINE = 'Buy, compare, wait, or skip tech products with real price checks and visible downsides.'

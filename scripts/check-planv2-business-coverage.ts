@@ -41,7 +41,7 @@ const checks: PlanDocCheck[] = [
     artifacts: [
       { label: 'Hardcore category roster', filePath: 'src/lib/hardcore-catalog.ts', required: ['HARDCORE_CATEGORIES', 'yard-pool-automation'] },
       { label: 'Commercial focus quality rules', filePath: 'src/lib/recommendation-quality.ts', required: ['COMMERCIAL_FOCUS_CATEGORY_SLUGS', 'PSEO_INDEX_QUALITY_GATE', 'auditCommissionBlindCandidateOrder'] },
-      { label: 'Tech deal homepage', filePath: 'src/app/page.tsx', required: ['Check Current Price', 'Find Best Picks', 'Independent review signals'] },
+      { label: 'Tech deal homepage', filePath: 'src/app/page.tsx', required: ['Check Current Price', 'Find Best Picks', 'Independent review signals', 'buy, compare, wait, or skip'] },
       { label: 'Commercial loop monetization', filePath: 'src/lib/commercial-loop.ts', required: ['listAffiliateReviewCandidates', 'rel="nofollow sponsored"', '/go/${product.id}?source=evidence-review'] },
       { label: 'FTC and cookie shell', filePath: 'src/components/layout/PublicShell.tsx', required: ['CookieConsentBanner', 'we may earn a commission'] }
     ]
@@ -265,9 +265,10 @@ const checks: PlanDocCheck[] = [
         label: 'Primary nav convergence',
         filePath: 'src/components/layout/PublicShell.tsx',
         required: [
-          "{ href: '/categories', label: 'Best Picks' }",
-          "{ href: '/deals', label: 'Deals' }",
-          "{ href: '/reviews', label: 'Reviews' }",
+          "{ href: '/start', label: 'Start Decision' }",
+          "{ href: '/categories', label: 'Compare Picks' }",
+          "{ href: '/deals', label: 'Wait or Buy' }",
+          "{ href: '/products', label: 'Review Proof' }",
           "{ href: '/trust', label: 'Trust' }",
           "aria-label=\"Primary navigation\""
         ]
@@ -290,7 +291,8 @@ const checks: PlanDocCheck[] = [
           'Find the current price and the catch before you buy tech gear.',
           'Check Current Price',
           'Find Best Picks',
-          'Independent review signals'
+          'Independent review signals',
+          'buy, compare, wait, or skip'
         ]
       },
       {
@@ -693,7 +695,7 @@ const checks: PlanDocCheck[] = [
           'Product strategy gates passed',
           '10 independent cycles',
           'checkIndependentCycles',
-          'consumer tech deal and independent review guide',
+          'buyer decision engine for hard-to-judge 3C tech products',
           'businessModel',
           'pseoAutomationLoop'
         ]

@@ -9,7 +9,7 @@ import { buildAboutPageSchema, buildFaqSchema } from '@/lib/structured-data'
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
     title: 'About Bes3',
-    description: 'Bes3 is a consumer tech deal and independent review guide built around current prices, visible downsides, and cleaner store links.',
+    description: 'Bes3 is a buyer decision engine that helps shoppers buy, compare, wait, or skip 3C tech products using current prices, visible downsides, and cleaner store links.',
     path: '/about',
     locale: await getRequestLocale(),
     keywords: ['about Bes3', 'tech deals', 'independent tech reviews', 'current price checks']
@@ -20,7 +20,7 @@ export default async function AboutPage() {
   const faqEntries = [
     {
       question: 'What is Bes3 now?',
-      answer: 'Bes3 is a consumer tech deal and independent review guide. Alex checks current prices, visible downsides, review signals, and store links before sending readers to a merchant.'
+      answer: 'Bes3 is a buyer decision engine for hard-to-judge 3C tech products. Alex checks current prices, visible downsides, review signals, and store links before sending readers to a merchant.'
     },
     {
       question: 'What does Bes3 refuse to do?',
@@ -32,7 +32,7 @@ export default async function AboutPage() {
     <PublicShell>
       <StructuredData
         data={[
-          buildAboutPageSchema('/about', 'About Bes3', 'Consumer tech deal and independent review guide.'),
+          buildAboutPageSchema('/about', 'About Bes3', 'Buyer decision engine for hard-to-judge 3C tech products.'),
           buildFaqSchema('/about', faqEntries)
         ]}
       />
@@ -40,7 +40,7 @@ export default async function AboutPage() {
         <div className="mx-auto max-w-7xl">
           <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">About</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            A tech deal site that shows the price and the catch.
+            A tech buying engine that shows the price and the catch.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
             Bes3 focuses on 3C digital products where marketing specs are not enough: monitors, tablets, creator gear, security devices, power stations, robot vacuums, maker tools, and other tech that can be expensive to return.

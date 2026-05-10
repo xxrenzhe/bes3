@@ -27,8 +27,8 @@ function firstParam(value: string | string[] | undefined) {
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Bes3 Tech Deal Finder',
-    description: 'Ask Alex for a short tech shortlist with current price context, visible cons, and trusted alternatives.',
+    title: 'Bes3 Tech Decision Finder',
+    description: 'Ask Alex for a short tech shortlist with current price context, visible cons, trusted alternatives, and the next buy/compare/wait/skip step.',
     path: '/search',
     locale: await getRequestLocale(),
     keywords: ['tech deal finder', 'current price checker', 'tech product shortlist', '3C digital deals']
@@ -66,8 +66,8 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/search',
-          title: 'Bes3 Tech Deal Finder',
-          description: 'Short tech shopping results with current price context, visible cons, and trusted alternatives.',
+          title: 'Bes3 Tech Decision Finder',
+          description: 'Short tech shopping results with current price context, visible cons, trusted alternatives, and next-step guidance.',
           items: result?.recommendations.map((item) => ({
             name: item.product.productName,
             path: item.product.slug ? `/products/${item.product.slug}` : '/products'
@@ -80,14 +80,14 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
       <section className="border-b border-border bg-slate-950 px-4 py-12 text-white sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[0.8fr_1.2fr] lg:items-end">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Tech Deal Finder</p>
+            <p className="text-xs font-bold uppercase tracking-[0.28em] text-emerald-300">Tech Decision Finder</p>
             <h1 className="mt-4 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              {hasIntent ? 'Alex found the closest useful tech picks.' : 'Tell Alex the tech you need and the catch you fear.'}
+              {hasIntent ? 'Alex found the closest useful next step.' : 'Tell Alex the tech you need and the catch you fear.'}
             </h1>
           </div>
           <p className="text-sm leading-7 text-slate-300">
             {hasIntent
-              ? 'Bes3 keeps the list small, shows why the lead fits, and keeps price, proof, and downside visible instead of dumping broad search results.'
+              ? 'Bes3 keeps the list small, shows why the lead fits, and keeps price, proof, and downside visible before asking you to buy, compare, wait, or skip.'
               : 'Describe the product type, budget, must-haves, and what would make it a bad buy. Alex will look for current price context and trusted alternatives.'}
           </p>
         </div>

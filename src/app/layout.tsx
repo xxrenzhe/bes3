@@ -20,7 +20,7 @@ export async function generateMetadata(): Promise<Metadata> {
       default: DEFAULT_SITE_NAME,
       template: `%s | ${DEFAULT_SITE_NAME}`
     },
-    description: 'Bes3 helps shoppers check current tech prices, visible downsides, and independent review signals before leaving for a store.',
+    description: 'Bes3 helps shoppers decide whether to buy, compare, wait, or skip 3C tech products using current prices, visible downsides, and independent review signals.',
     applicationName: DEFAULT_SITE_NAME,
     publisher: DEFAULT_SITE_NAME,
     metadataBase: new URL(getSiteUrl()),
@@ -49,12 +49,12 @@ export async function generateMetadata(): Promise<Metadata> {
       siteName: DEFAULT_SITE_NAME,
       locale: getOgLocale(locale),
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 helps shoppers check current tech prices, visible downsides, and independent review signals before leaving for a store.'
+      description: 'Bes3 helps shoppers decide whether to buy, compare, wait, or skip 3C tech products using current prices, visible downsides, and independent review signals.'
     },
     twitter: {
       card: 'summary',
       title: DEFAULT_SITE_NAME,
-      description: 'Bes3 helps shoppers check current tech prices, visible downsides, and independent review signals before leaving for a store.'
+      description: 'Bes3 helps shoppers decide whether to buy, compare, wait, or skip 3C tech products using current prices, visible downsides, and independent review signals.'
     }
   }
 }

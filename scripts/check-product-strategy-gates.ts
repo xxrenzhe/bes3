@@ -91,7 +91,7 @@ const gates: Gate[] = [
       'landedChange',
       'nextCycleInput',
       'getProductStrategySnapshot',
-      'consumer tech deal and independent review guide',
+      'buyer decision engine for hard-to-judge 3C tech products',
       'Check Current Price',
       'commission-blind'
     ]
@@ -103,6 +103,7 @@ const gates: Gate[] = [
       'Tech deals checked by Alex',
       'Find the current price and the catch before you buy tech gear.',
       'Check Current Price',
+      'buy, compare, wait, or skip',
       'Show the downside',
       'Independent review signals',
       'not an ad list',

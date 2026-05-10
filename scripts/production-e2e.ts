@@ -50,7 +50,7 @@ const mutationTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_MUTATION_TI
 const results: StepResult[] = []
 
 const publicPages: PageCheck[] = [
-  { area: 'Public positioning', name: 'Home tech deal positioning', path: '/', requiredText: ['Tech deals checked by Alex', 'Check Current Price'], safeInteractions: true },
+  { area: 'Public positioning', name: 'Home tech decision positioning', path: '/', requiredText: ['Tech deals checked by Alex', 'Check Current Price', 'buy, compare, wait, or skip'], safeInteractions: true },
   { area: 'Public catalog', name: 'Products directory', path: '/products', requiredText: ['Products'], safeInteractions: true },
   { area: 'Public catalog', name: 'Deals directory', path: '/deals', safeInteractions: true },
   { area: 'Public catalog', name: 'Categories directory', path: '/categories', safeInteractions: true },

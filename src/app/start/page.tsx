@@ -13,8 +13,8 @@ export const revalidate = 0
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Ask Alex for a Tech Deal',
-    description: 'Tell Alex what tech you need, your budget, and what would make it a bad buy.',
+    title: 'Start a Tech Buying Decision',
+    description: 'Tell Alex what tech you need, your budget, and what would make it a bad buy so Bes3 can route you to buy, compare, wait, or skip.',
     path: '/start',
     locale: await getRequestLocale(),
     keywords: ['ask Alex tech deals', 'tech product recommendation', '3C digital deals', 'compare tech products']
@@ -40,7 +40,7 @@ export default async function StartPage() {
         data={[
           buildCollectionPageSchema({
             path: '/start',
-            title: 'Ask Alex for a Tech Deal',
+            title: 'Start a Tech Buying Decision',
             description: 'Tell Alex what tech you are shopping for and what would make it a bad buy.',
             items: [
               { name: 'Best Picks', path: '/categories' },
@@ -55,18 +55,18 @@ export default async function StartPage() {
       <section className="overflow-hidden border-b border-border bg-[radial-gradient(circle_at_top_left,#dcfce7_0,#f8fafc_34%,#fff7ed_100%)] px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.82fr_1.18fr] lg:items-start">
           <div>
-            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Ask Alex</p>
+            <p className="text-xs font-bold uppercase tracking-[0.32em] text-primary">Start Decision</p>
             <h1 className="mt-5 font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-              Tell Alex what tech you are shopping for.
+              Start with the buying decision, not a search result.
             </h1>
             <p className="mt-6 text-lg leading-8 text-muted-foreground">
-              Share the use case, budget, and deal-breakers. Bes3 will return a short list with current price context, visible cons, and the closest reviewed alternatives.
+              Share the use case, budget, and deal-breakers. Bes3 will route the task toward buy, compare, wait, or skip with current price context, visible cons, and the closest reviewed alternatives.
             </p>
             <div className="mt-8 grid gap-3 sm:grid-cols-3">
               {[
                 ['1', 'Describe the use case', 'What are you buying for?'],
                 ['2', 'Name the bad-buy signs', 'What would make you regret it?'],
-                ['3', 'Check the price path', 'See reviews, alternatives, or a current offer.']
+                ['3', 'Get the next action', 'Buy, compare, wait, or skip with the reason visible.']
               ].map(([step, title, note]) => (
                 <div key={step} className="rounded-[1.5rem] border border-white/70 bg-white/75 p-4 shadow-sm backdrop-blur">
                   <p className="font-mono text-2xl font-black text-primary">{step}</p>
@@ -83,9 +83,9 @@ export default async function StartPage() {
       <section className="px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-5 md:grid-cols-3">
           {[
-            ['Already know the category?', '/categories', 'Open Best Picks when you want the strongest reviewed models by product area.'],
-            ['Only care about price?', '/deals', 'Open Deals when the product fit is clear but the current price is the blocker.'],
-            ['Need proof before trusting it?', '/products', 'Open Reviewed Products when you want the blunt score, review count, and visible catch first.']
+            ['Already know the category?', '/categories', 'Compare Picks when you want the strongest reviewed models by product area.'],
+            ['Only care about timing?', '/deals', 'Open Wait or Buy when the product fit is clear but the current price is the blocker.'],
+            ['Need proof before trusting it?', '/products', 'Open Review Proof when you want the blunt score, review count, and visible catch first.']
           ].map(([title, href, note]) => (
             <Link key={href} href={href} className="rounded-md border border-border bg-white p-6 hover:border-primary">
               <h2 className="font-[var(--font-display)] text-2xl font-black tracking-tight">{title}</h2>

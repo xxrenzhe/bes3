@@ -787,6 +787,7 @@ async function runBrowserChecks(plan13Routes: Plan13TestRoutes) {
     await assertText(page, 'Tech deals checked by Alex', 'desktop home')
     await assertText(page, 'Find Best Picks', 'desktop home')
     await assertText(page, 'Check Current Price', 'desktop home')
+    await assertText(page, 'buy, compare, wait, or skip', 'desktop home')
     await assertNoHorizontalOverflow(page, 'desktop home')
     console.log('✓ browser home page renders without overflow')
 
@@ -905,6 +906,7 @@ async function runBrowserChecks(plan13Routes: Plan13TestRoutes) {
     await gotoAppPage(mobilePage, '/')
     await assertText(mobilePage, 'Tech deals checked by Alex', 'mobile home')
     await assertText(mobilePage, 'Find Best Picks', 'mobile home')
+    await assertText(mobilePage, 'buy, compare, wait, or skip', 'mobile home')
     await assertNoHorizontalOverflow(mobilePage, 'mobile home')
     await assertSinglePrimaryCtaSemantics(mobilePage, 'mobile home')
     await gotoAppPage(mobilePage, '/products')

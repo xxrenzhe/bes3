@@ -9,8 +9,8 @@ import { buildCollectionPageSchema } from '@/lib/structured-data'
 
 export async function generateMetadata(): Promise<Metadata> {
   return buildPageMetadata({
-    title: 'Reviewed Products',
-    description: 'Browse Bes3 reviewed tech products by review proof, visible downsides, and current price context.',
+    title: 'Review Proof for Tech Products',
+    description: 'Browse Bes3 reviewed tech products by proof, visible downsides, current price context, and next-step readiness.',
     path: '/products',
     locale: await getRequestLocale(),
     keywords: ['reviewed tech products', 'independent tech reviews', 'current price checks', 'product downsides']
@@ -25,8 +25,8 @@ export default async function ProductsIndexPage() {
       <StructuredData
         data={buildCollectionPageSchema({
           path: '/products',
-          title: 'Reviewed Products',
-          description: 'Products ranked by review proof, current price context, and visible downsides.',
+          title: 'Review Proof for Tech Products',
+          description: 'Products ranked by review proof, current price context, visible downsides, and buy/compare/wait/skip readiness.',
           items: products.map((product) => ({
             name: product.name,
             path: `/products/${product.slug}`
@@ -35,12 +35,12 @@ export default async function ProductsIndexPage() {
       />
       <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Reviewed Products</p>
+          <p className="text-xs font-bold uppercase tracking-[0.28em] text-primary">Review Proof</p>
           <h1 className="mt-4 max-w-5xl font-[var(--font-display)] text-5xl font-black tracking-tight sm:text-7xl">
-            Products sorted by proof, not product-page copy.
+            Check the proof before the store link.
           </h1>
           <p className="mt-6 max-w-3xl text-lg leading-8 text-muted-foreground">
-            This table is intentionally blunt: review score, review count, creator quote, current price, and buy-window status.
+            This table is intentionally blunt: review score, review count, creator quote, current price, buy-window status, and whether the next step should be buy, compare, wait, or skip.
           </p>
         </div>
       </section>

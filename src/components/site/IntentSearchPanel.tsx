@@ -53,9 +53,9 @@ const INTENT_GUIDE_STEPS = [
 ] as const
 
 const INTENT_URGENCY_HELP: Record<IntentUrgency, string> = {
-  'buy-now': 'Use this when you are close to buying and want Alex to check the safest current picks.',
-  'compare-soon': 'Use this when you already know the category and only need the last compare-worthy shortlist.',
-  'wait-for-price': 'Use this when the fit is mostly clear but timing or price is the only blocker.'
+  'buy-now': 'Use this when you are close to buying and want Alex to confirm whether the safest answer is buy or skip.',
+  'compare-soon': 'Use this when you already know the category and need Alex to decide which finalist deserves comparison.',
+  'wait-for-price': 'Use this when fit is mostly clear but Alex should decide whether the smarter move is wait.'
 }
 
 function buildPresetHref(action: string, preset: (typeof INTENT_PRESET_LINKS)[number]) {
@@ -100,12 +100,12 @@ export function IntentSearchPanel({
   return (
     <form action={action} className={`rounded-[2rem] bg-white p-8 shadow-panel ${className}`.trim()}>
       <input type="hidden" name="mode" value="intent" />
-      <p className="editorial-kicker">Ask Alex</p>
+      <p className="editorial-kicker">Start Decision</p>
       <h2 className="mt-3 font-[var(--font-display)] text-3xl font-black tracking-tight text-foreground">
-        Tell Alex what tech you actually need.
+        Tell Alex the tech choice you need to settle.
       </h2>
       <p className="mt-3 max-w-3xl text-sm leading-7 text-muted-foreground">
-        Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a tighter list with current price context and visible cons.
+        Use this when you know the situation, budget, or deal-breakers but not the exact model yet. Bes3 will turn that into a smaller decision: buy, compare, wait, or skip with current price context and visible cons.
       </p>
 
       <div className="mt-6 grid gap-3 lg:grid-cols-3">
@@ -226,7 +226,7 @@ export function IntentSearchPanel({
             type="submit"
             className="inline-flex min-h-[52px] touch-manipulation items-center justify-center rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-emerald-950/10 transition-[box-shadow,transform] hover:-translate-y-0.5 active:translate-y-0 active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
           >
-            Find tech deals
+            Get my next step
           </button>
         </div>
       </div>
