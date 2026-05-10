@@ -22,6 +22,8 @@ const DEFAULT_ENCRYPTION_KEYS = new Set([
   'your-32-byte-hex-encryption-key-here-64-chars',
   'replace-with-a-random-32-byte-hex-encryption-key'
 ])
+const ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH = 12
+const ENCRYPTION_KEY_PASSPHRASE_RECOMMENDED_MIN_LENGTH = 32
 
 function parseEnvFile(filePath) {
   const values = {}
@@ -58,6 +60,7 @@ function buildConfig() {
     appUrl: read('NEXT_PUBLIC_APP_URL'),
     jwtSecret: read('JWT_SECRET'),
     encryptionKey: read('ENCRYPTION_KEY'),
+    encryptionPreviousKeys: read('ENCRYPTION_PREVIOUS_KEYS'),
     adminPassword: read('DEFAULT_ADMIN_PASSWORD'),
     databaseUrl: read('DATABASE_URL'),
     databasePath: read('DATABASE_PATH', './data/bes3.db'),
@@ -130,6 +133,49 @@ function isPositiveInteger(value) {
   return /^\d+$/.test(String(value)) && Number.parseInt(String(value), 10) > 0
 }
 
+function parseCsv(value) {
+  return String(value || '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
+function describeEncryptionKey(value) {
+  if (!value) return { valid: false, issue: 'missing', kind: 'missing', length: 0 }
+  if (DEFAULT_ENCRYPTION_KEYS.has(value)) {
+    return { valid: false, issue: 'placeholder', kind: 'placeholder', length: value.length }
+  }
+  if (/^[0-9a-fA-F]{64}$/.test(value)) {
+    return { valid: true, kind: 'hex', length: value.length }
+  }
+  if (value.length >= ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH) {
+    return { valid: true, kind: 'passphrase', length: value.length }
+  }
+  return { valid: false, issue: 'too_short', kind: 'passphrase', length: value.length }
+}
+
+function validateEncryptionKeyValue(label, value, config, errors, warnings) {
+  const state = describeEncryptionKey(value)
+  if (!state.valid) {
+    const message = `${label} must be a 64-character hex key or a passphrase of at least ${ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH} characters`
+    if (config.nodeEnv === 'production' && !config.allowInsecureDefaults) {
+      errors.push(message)
+    } else {
+      warnings.push(message)
+    }
+    return state
+  }
+
+  if (
+    state.kind === 'passphrase' &&
+    state.length < ENCRYPTION_KEY_PASSPHRASE_RECOMMENDED_MIN_LENGTH
+  ) {
+    warnings.push(`${label} passphrase is accepted but shorter than the recommended ${ENCRYPTION_KEY_PASSPHRASE_RECOMMENDED_MIN_LENGTH} characters`)
+  }
+
+  return state
+}
+
 function validate() {
   const config = buildConfig()
   const results = []
@@ -167,14 +213,16 @@ function validate() {
   if (!config.encryptionKey) {
     errors.push('ENCRYPTION_KEY is required')
   } else if (
-    DEFAULT_ENCRYPTION_KEYS.has(config.encryptionKey) ||
-    !/^[0-9a-fA-F]{64}$/.test(config.encryptionKey)
+    !validateEncryptionKeyValue('ENCRYPTION_KEY', config.encryptionKey, config, errors, warnings).valid
   ) {
-    const message = 'ENCRYPTION_KEY must be a 64-character hex string generated from 32 random bytes'
-    if (config.nodeEnv === 'production' && !config.allowInsecureDefaults) {
-      errors.push(message)
-    } else {
-      warnings.push(message)
+    // validateEncryptionKeyValue records the actionable error or warning.
+  } else {
+    const previousKeys = parseCsv(config.encryptionPreviousKeys)
+    for (const [index, previousKey] of previousKeys.entries()) {
+      validateEncryptionKeyValue(`ENCRYPTION_PREVIOUS_KEYS[${index + 1}]`, previousKey, config, errors, warnings)
+      if (previousKey === config.encryptionKey) {
+        warnings.push(`ENCRYPTION_PREVIOUS_KEYS[${index + 1}] duplicates ENCRYPTION_KEY and can be removed`)
+      }
     }
   }
 

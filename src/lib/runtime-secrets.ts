@@ -1,5 +1,6 @@
 export type RuntimeSecretSource = 'env' | 'missing'
 export type RuntimeSecretIssue = 'missing' | 'placeholder' | 'too_short' | 'invalid_format'
+export type RuntimeEncryptionKeyKind = 'hex' | 'passphrase'
 
 export interface RuntimeSecretState {
   value: string
@@ -7,6 +8,8 @@ export interface RuntimeSecretState {
   issue?: RuntimeSecretIssue
   length: number
   minLength?: number
+  kind?: RuntimeEncryptionKeyKind
+  envKey?: string
 }
 
 export const ADMIN_PASSWORD_PLACEHOLDERS = new Set([
@@ -26,12 +29,23 @@ export const ENCRYPTION_KEY_PLACEHOLDERS = new Set([
   'replace-with-a-random-32-byte-hex-encryption-key'
 ])
 
+export const ENCRYPTION_KEY_HEX_LENGTH = 64
+export const ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH = 12
+export const ENCRYPTION_KEY_PASSPHRASE_RECOMMENDED_MIN_LENGTH = 32
+
 if (typeof window !== 'undefined') {
   throw new Error('Runtime secrets are server-only and cannot be imported in the browser.')
 }
 
 function normalizeSecretValue(value: string | undefined): string {
   return typeof value === 'string' ? value.trim() : ''
+}
+
+function normalizeSecretList(value: string | undefined): string[] {
+  return normalizeSecretValue(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
 }
 
 function isUsableSecret(value: string, placeholders: Set<string>, minLength: number): boolean {
@@ -83,20 +97,64 @@ export function getRuntimeJwtSecretState(): RuntimeSecretState {
   })
 }
 
-export function getRuntimeEncryptionKeyState(): RuntimeSecretState {
-  const envValue = normalizeSecretValue(process.env.ENCRYPTION_KEY)
-  if (
-    envValue &&
-    !ENCRYPTION_KEY_PLACEHOLDERS.has(envValue) &&
-    /^[0-9a-fA-F]{64}$/.test(envValue)
-  ) {
-    return { value: envValue, source: 'env', length: envValue.length }
+function resolveRuntimeEncryptionKey(
+  envKey: string,
+  value: string,
+  required: boolean
+): RuntimeSecretState {
+  if (!value) {
+    return {
+      value: '',
+      source: 'missing',
+      issue: required ? 'missing' : undefined,
+      length: 0,
+      minLength: ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH,
+      envKey
+    }
   }
+
+  if (ENCRYPTION_KEY_PLACEHOLDERS.has(value)) {
+    return {
+      value: '',
+      source: 'missing',
+      issue: 'placeholder',
+      length: value.length,
+      minLength: ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH,
+      envKey
+    }
+  }
+
+  if (/^[0-9a-fA-F]{64}$/.test(value)) {
+    return { value, source: 'env', length: value.length, kind: 'hex', envKey }
+  }
+
+  if (value.length >= ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH) {
+    return {
+      value,
+      source: 'env',
+      length: value.length,
+      minLength: ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH,
+      kind: 'passphrase',
+      envKey
+    }
+  }
+
   return {
     value: '',
     source: 'missing',
-    issue: unusableSecretIssue(envValue, ENCRYPTION_KEY_PLACEHOLDERS, 64),
-    length: envValue.length,
-    minLength: 64
+    issue: 'too_short',
+    length: value.length,
+    minLength: ENCRYPTION_KEY_PASSPHRASE_MIN_LENGTH,
+    envKey
   }
+}
+
+export function getRuntimeEncryptionKeyState(): RuntimeSecretState {
+  return resolveRuntimeEncryptionKey('ENCRYPTION_KEY', normalizeSecretValue(process.env.ENCRYPTION_KEY), true)
+}
+
+export function getRuntimePreviousEncryptionKeyStates(): RuntimeSecretState[] {
+  return normalizeSecretList(process.env.ENCRYPTION_PREVIOUS_KEYS).map((value, index) =>
+    resolveRuntimeEncryptionKey(`ENCRYPTION_PREVIOUS_KEYS[${index + 1}]`, value, false)
+  )
 }
