@@ -123,7 +123,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
     alternativeHref: product.categorySlug ? `/categories/${product.categorySlug}` : '/categories',
     offerId: bestOffer?.id || null,
     displayName: compactProductName,
-    evidenceHref: '#review-notes'
+    evidenceHref: '#decision-notes'
   })
   const isMerchantCta = purchaseDecision.primaryActionHref?.startsWith('/go/')
   const decisionModules = buildProductDecisionContent(product, 'product', {
@@ -132,7 +132,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
   })
   const decisionShortcuts = [
     { href: '#buy-decision', label: 'Price check', detail: purchaseDecision.stateLabel },
-    { href: '#review-notes', label: 'Review notes', detail: `${purchaseDecision.evidenceCount} signals` },
+    { href: '#decision-notes', label: 'Review notes', detail: `${purchaseDecision.evidenceCount} signals` },
     { href: '#current-offer', label: 'Price & terms', detail: currentPriceLine },
     { href: '#product-facts', label: 'Product facts', detail: attributeFacts.length ? `${attributeFacts.length} facts` : 'Tracking' }
   ]
@@ -141,7 +141,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
       step: '1',
       title: 'Confirm the fit',
       description: 'Use Review Notes to check sizing, use case, and risk flags before opening the store.',
-      href: '#review-notes'
+      href: '#decision-notes'
     },
     {
       step: '2',
@@ -243,7 +243,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 </div>
                 <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-xs text-muted-foreground">
                   <span>Affiliate disclosure: Bes3 may earn from qualifying purchases.</span>
-                  <a href="#review-notes" className="font-semibold text-foreground underline-offset-4 hover:underline">Review proof</a>
+                  <a href="#decision-notes" className="font-semibold text-foreground underline-offset-4 hover:underline">Review proof</a>
                 </div>
               </div>
 
@@ -253,7 +253,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
                 </p>
               ) : null}
               <div className="mt-4 hidden flex-wrap gap-3 lg:flex">
-                <a href="#review-notes" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+                <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                   Review proof
                 </a>
                 <a href="#current-offer" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white/90 px-4 py-2 text-sm font-semibold text-foreground hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
@@ -374,7 +374,7 @@ async function CommerceProductPage({ slug }: { slug: string }) {
               <a href="#buy-decision" className="inline-flex min-h-[44px] items-center rounded-full bg-slate-950 px-4 py-2 text-sm font-semibold text-white hover:-translate-y-0.5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 Back to price check
               </a>
-              <a href="#review-notes" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
+              <a href="#decision-notes" className="inline-flex min-h-[44px] items-center rounded-full border border-border bg-white px-4 py-2 text-sm font-semibold hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2">
                 Review proof first
               </a>
             </div>
@@ -384,7 +384,8 @@ async function CommerceProductPage({ slug }: { slug: string }) {
             fallbackPrice={bestOffer?.priceAmount || product.priceAmount}
             fallbackCurrency={bestOffer?.priceCurrency || product.priceCurrency}
           />
-          <div id="review-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6 lg:col-span-2">
+          <div id="decision-notes" className="scroll-mt-24 rounded-md border border-border bg-white p-6 lg:col-span-2">
+            <span id="review-notes" aria-hidden="true" className="block scroll-mt-24" />
             <p className="text-xs font-bold uppercase tracking-[0.22em] text-primary">Review Notes</p>
             <div className="mt-5 grid gap-4 md:grid-cols-2">
               {decisionModules.map((module) => (
