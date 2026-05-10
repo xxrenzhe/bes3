@@ -1,0 +1,113 @@
+name: Deploy Bes3 Production
+
+on:
+  workflow_dispatch:
+    inputs:
+      image:
+        description: GHCR image to deploy.
+        required: true
+        default: ghcr.io/xxrenzhe/bes3:prod-latest
+        type: string
+      expected_sha:
+        description: Expected /api/health build SHA. Defaults to the selected ref SHA.
+        required: false
+        type: string
+      app_dir:
+        description: Absolute Bes3 app directory on the ClawCloud host.
+        required: true
+        default: /srv/bes3
+        type: string
+      public_app_url:
+        description: Public production app URL.
+        required: true
+        default: https://www.bes3.com
+        type: string
+      run_production_audit:
+        description: Run the production Postgres PlanV3 audit after deploy.
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: bes3-production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: read
+    env:
+      BES3_IMAGE: ${{ inputs.image }}
+      BES3_EXPECTED_BUILD_SHA: ${{ inputs.expected_sha || github.sha }}
+      NEXT_PUBLIC_APP_URL: ${{ inputs.public_app_url }}
+      CLAWCLOUD_APP_DIR: ${{ inputs.app_dir }}
+      CLAWCLOUD_SSH_HOST: ${{ secrets.CLAWCLOUD_SSH_HOST }}
+      CLAWCLOUD_SSH_PORT: ${{ secrets.CLAWCLOUD_SSH_PORT }}
+      CLAWCLOUD_SSH_USER: ${{ secrets.CLAWCLOUD_SSH_USER }}
+      CLAWCLOUD_SSH_PRIVATE_KEY: ${{ secrets.CLAWCLOUD_SSH_PRIVATE_KEY }}
+      CLAWCLOUD_SSH_KNOWN_HOSTS: ${{ secrets.CLAWCLOUD_SSH_KNOWN_HOSTS }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME || github.actor }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || github.token }}
+      BES3_INTERNAL_REVALIDATE_TOKEN: ${{ secrets.BES3_INTERNAL_REVALIDATE_TOKEN }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      PLANV3_DATABASE_URL: ${{ secrets.PLANV3_DATABASE_URL }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          clean: true
+
+      - name: Validate deployment inputs
+        run: |
+          set -euo pipefail
+          missing=()
+          for key in CLAWCLOUD_SSH_HOST CLAWCLOUD_SSH_USER CLAWCLOUD_SSH_PRIVATE_KEY GHCR_USERNAME GHCR_TOKEN; do
+            if [[ -z "${!key:-}" ]]; then
+              missing+=("$key")
+            fi
+          done
+          if (( ${#missing[@]} > 0 )); then
+            printf 'Missing required deployment secrets: %s\n' "${missing[*]}" >&2
+            exit 64
+          fi
+
+      - name: Validate deploy wrapper syntax
+        run: bash -n scripts/deploy-clawcloud-ghcr.sh
+
+      - name: Deploy GHCR image on ClawCloud
+        run: bash scripts/deploy-clawcloud-ghcr.sh
+
+      - name: Install audit dependencies
+        if: ${{ inputs.run_production_audit }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+
+      - name: Install npm packages for audit
+        if: ${{ inputs.run_production_audit }}
+        run: npm ci
+
+      - name: Run production Postgres PlanV3 audit
+        if: ${{ inputs.run_production_audit }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${DATABASE_URL:-}" && -z "${PLANV3_DATABASE_URL:-}" ]]; then
+            echo "DATABASE_URL or PLANV3_DATABASE_URL repository secret is required for production audit; this workflow will not fall back to SQLite." >&2
+            exit 64
+          fi
+          export DATABASE_URL="${DATABASE_URL:-$PLANV3_DATABASE_URL}"
+          npm run commercial-loop:audit-production-db -- --fetch-public
+
+      - name: Upload production audit report
+        if: ${{ always() && inputs.run_production_audit }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: planv3-production-db-audit
+          path: qa-results/planv3-production-db-audit-*.json
+          if-no-files-found: ignore

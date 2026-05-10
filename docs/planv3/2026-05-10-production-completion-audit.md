@@ -95,7 +95,21 @@ The repository has no GitHub deployment records, no deployment webhook, and no l
 
 ## Required Production Deploy Action
 
-Run on the ClawCloud production host in the Bes3 app directory:
+Preferred path: run the manual GitHub Actions workflow `Deploy Bes3 Production` after configuring the required repository secrets:
+
+```text
+CLAWCLOUD_SSH_HOST
+CLAWCLOUD_SSH_USER
+CLAWCLOUD_SSH_PRIVATE_KEY
+GHCR_USERNAME
+GHCR_TOKEN
+DATABASE_URL or PLANV3_DATABASE_URL
+BES3_INTERNAL_REVALIDATE_TOKEN
+```
+
+The workflow deploys `ghcr.io/xxrenzhe/bes3:prod-latest`, verifies `/api/health` reports the expected SHA, requests production revalidation, and runs the PlanV3 production audit against Postgres only. If the production database secret is missing, the workflow fails instead of falling back to SQLite.
+
+Fallback path: run on the ClawCloud production host in the Bes3 app directory:
 
 ```bash
 GHCR_USERNAME=<github-user> \
