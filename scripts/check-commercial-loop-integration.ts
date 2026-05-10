@@ -536,8 +536,9 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
       label: 'commercial loop publishes unique evidence review article',
       ok: Boolean(
         article?.status === 'published' &&
-          article.content_html.includes('Evidence Verdict') &&
-          article.content_html.includes('YouTube Evidence Matrix') &&
+          article.content_html.includes('Quick answer:') &&
+          article.content_html.includes('Review Verdict') &&
+          article.content_html.includes('YouTube Review Proof') &&
           article.content_html.includes('It climbed tile walls reliably') &&
           article.content_html.includes('Review by Pool Gear Lab')
       ),
@@ -559,7 +560,7 @@ async function runDatabaseIntegrationCheck(): Promise<CheckResult[]> {
         publicArticle?.type === 'review' &&
           publicArticle.slug === article?.slug &&
           publicArticle.keyword?.includes('review after YouTube tests') &&
-          publicArticle.contentHtml.includes('YouTube Evidence Matrix')
+          publicArticle.contentHtml.includes('YouTube Review Proof')
       ),
       detail: publicArticle ? `/reviews/${publicArticle.slug}` : 'missing public article'
     },
@@ -674,9 +675,33 @@ async function main() {
       "readFlag('sync')",
       'fetchTranscripts:',
       "hasFlag('push-index')",
-      'runCommercialLoop'
+      'runCommercialLoop',
+      "hasFlag('continuous')",
+      'runContinuousLoop',
+      'continue-on-error',
+      'interval-ms',
+      'max-runs',
+      'assertWritableDatabaseIsExplicit',
+      'Refusing to execute the commercial loop without DATABASE_URL',
+      'allow-sqlite'
     ]),
-    staticCheck('Commercial loop package script exists', 'package.json', ['commercial-loop:run']),
+    staticCheck('Commercial loop package script exists', 'package.json', ['commercial-loop:run', 'commercial-loop:continuous']),
+    staticCheck('Production Postgres audit script exists', 'package.json', ['commercial-loop:audit-production-db']),
+    staticCheck('Production Postgres audit is read-only and never SQLite', 'scripts/audit-planv3-production-loop.ts', [
+      'production-postgres-readonly',
+      'read only',
+      'Production DB audit refuses to fall back to SQLite',
+      'sqliteFallbackAllowed: false',
+      'PartnerBoost affiliate inventory exists',
+      'Published reviews are not blank, thin, or evidence-free'
+    ]),
+    staticCheck('PlanV3 commercial loop operation is documented', 'docs/planv3/2026-05-10-commercial-loop-continuous-runner.md', [
+      'PartnerBoost product sync -> qualified product selection -> YouTube review discovery',
+      'Continuous production loop',
+      'Production Postgres audit',
+      'Do not publish review pages without usable YouTube evidence',
+      'Keep secrets out of docs'
+    ]),
     staticCheck('Commercial loop enforces conversion eligibility', 'src/lib/commercial-loop.ts', [
       'hasAffiliatePromotionLink',
       'getCommissionableMerchantUrl',

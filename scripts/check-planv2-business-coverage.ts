@@ -180,9 +180,11 @@ const checks: PlanDocCheck[] = [
     requirement: 'Affiliate-to-review-to-pSEO-to-merchant-click commercial loop is implemented and has an executable integration check.',
     artifacts: [
       { label: 'Commercial loop core', filePath: 'src/lib/commercial-loop.ts', required: ['runCommercialLoop', 'syncPartnerboostAmazonProducts', 'discoverYoutubeVideos', 'upsertEvidenceArticle'] },
-      { label: 'Commercial loop CLI', filePath: 'scripts/run-commercial-loop.ts', required: ['runCommercialLoop', 'execute', 'push-index'] },
+      { label: 'Commercial loop CLI', filePath: 'scripts/run-commercial-loop.ts', required: ['runCommercialLoop', 'execute', 'push-index', 'runContinuousLoop', 'continue-on-error', 'assertWritableDatabaseIsExplicit', 'allow-sqlite'] },
       { label: 'Commercial loop integration', filePath: 'scripts/check-commercial-loop-integration.ts', required: ['publicly readable by long-tail slug', 'merchant CTA redirects and records attribution', 'yt-dlp proxy uses normalized authenticated URL', 'commission-blind ranking audit'] },
       { label: 'Commercial loop live readiness', filePath: 'scripts/check-commercial-loop-live-readiness.ts', required: ['recommendedSampleSize', 'nextCommand', 'runCommercialLoop'] },
+      { label: 'PlanV3 production DB audit', filePath: 'scripts/audit-planv3-production-loop.ts', required: ['production-postgres-readonly', 'read only', 'Production DB audit refuses to fall back to SQLite', 'Published reviews are not blank, thin, or evidence-free'] },
+      { label: 'PlanV3 commercial loop operation log', filePath: 'docs/planv3/2026-05-10-commercial-loop-continuous-runner.md', required: ['Continuous production loop', 'PartnerBoost product sync', 'Production Postgres audit', 'Keep secrets out of docs'] },
       { label: 'Affiliate redirect route', filePath: 'src/app/go/[productId]/route.ts', required: ['recordMerchantClick', 'NextResponse.redirect'] },
       { label: 'Review route', filePath: 'src/app/reviews/[slug]/page.tsx', required: ['getArticleBySlug', 'article.type !=='] }
     ]
