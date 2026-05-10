@@ -27,9 +27,11 @@ This operation deliberately avoids storing production secrets in the repository.
 - Live `--execute` runs now refuse to start without a Postgres `DATABASE_URL`; local SQLite rehearsals must opt in with `--allow-sqlite`.
 - Continuous mode requires `--execute`, preventing a misleading no-op daemon.
 - The loop emits structured JSON for every run with selected candidates, discovered videos, fetched transcripts, extracted evidence, published articles, indexing mode, and skipped reasons.
+- Every live commercial loop execution now writes a `content_pipeline_runs` row with `run_type='commercialLoop'`, so production sync/selection/publish activity is auditable from the database instead of only from terminal logs.
 - `--max-runs=N` allows bounded smoke runs; omitting it keeps the loop alive.
 - `--interval-ms=N` controls cadence with a minimum of 60 seconds.
 - `--continue-on-error` keeps the loop alive after transient PartnerBoost, YouTube, proxy, or AI failures.
+- Reddit intent collection now has a `curl -4` fallback for production networks where Node fetch times out against Reddit, plus `--seed-limit` and `--query-limit` controls for bounded runs.
 
 ## Production Runbook
 
@@ -65,6 +67,12 @@ npm run commercial-loop:audit-production-db -- --fetch-public
 
 This audit must run with a real production `DATABASE_URL` in the current process or an ignored env file such as `.env.local`. It only accepts `postgres://` or `postgresql://`, opens a read-only transaction, executes `SELECT` statements, writes a sanitized JSON report to `qa-results`, and refuses to fall back to SQLite.
 
+Reddit intent collection smoke:
+
+```bash
+npm run hardcore:collect-intents -- --source=reddit --category=bathroom-fixtures --limit=5 --seed-limit=3 --query-limit=1 --promote-pending
+```
+
 Required runtime configuration:
 
 - `DATABASE_URL` pointing at production Postgres for any `--execute` run
@@ -95,6 +103,33 @@ npm run planv2:check-business
 
 `commercial-loop:check` remains a local fixture regression. It must not be used as proof that production has PartnerBoost inventory, YouTube transcripts, evidence, pSEO pages, or conversion telemetry.
 
+## Production Hardening Update 2026-05-10
+
+The completion audit found two weak proof points that were not acceptable as final evidence:
+
+- `content_pipeline_runs` had pipeline history, but no explicit `commercialLoop` runs.
+- Long-tail intent existed, but there was no hard production evidence that Reddit research contributed to those intents.
+
+Hardening completed:
+
+- `runCommercialLoop()` now creates and completes a `content_pipeline_runs` record for every live `--execute` run.
+- `commercial-loop:audit-production-db` now fails if production has no `commercialLoop` history.
+- `commercial-loop:audit-production-db` now fails if Reddit-sourced long-tail buyer intent is absent.
+- `scripts/collect-hardcore-intents.ts` now falls back to `curl -4` for Reddit JSON collection and filters out unrelated relationship/news/SEO-listicle titles.
+
+Production evidence after the hardening:
+
+- Ran a bounded production commercial loop pass with `--execute --sync=none --limit=1 --min-score=100 --skip-discover-videos --skip-fetch-transcripts --skip-extract-evidence --skip-publish`.
+- The bounded pass intentionally selected no publishable products, so it did not publish unqualified pages, but it did create auditable `commercialLoop` history.
+- Ran Reddit intent collection against the production database for `bathroom-fixtures`; it created one Reddit source and promoted one pending long-tail intent: `Car wax to protect quartz bathroom vanity top?`.
+- Re-ran the production Postgres audit. Production DB/business checks now pass 25 checks, including Reddit intent and commercial loop history.
+
+Remaining production blocker after hardening:
+
+- `https://www.bes3.com/api/health` still reports old build `d90eb1afe5a49db82bb05af89b421296910cad55`.
+- Public review HTML still lacks the newly generated `Quick answer:` and `YouTube Review Proof` modules because ClawCloud has not restarted the latest GHCR image.
+- Final acceptance still requires deploying the latest image and rerunning `commercial-loop:audit-production-db -- --fetch-public` until the public HTTPS checks pass.
+
 ## Production Audit Update 2026-05-10
 
 Production Postgres audit was run against the supplied production database. Initial failures were real:
@@ -111,9 +146,9 @@ Targeted production repair completed:
 - Moved the evidence-free LOMON review and mismatched DeerValley DV-1S0442-V3 review to draft.
 - Re-ran the production DB audit: all database/content checks passed; only the public HTTPS surface remained stale.
 
-Remaining production blocker:
+Earlier production blocker from the first audit checkpoint:
 
-- `https://www.bes3.com/api/health` reports build `d90eb1afe5a49db82bb05af89b421296910cad55`, while `main` is `174fa99`. The GHCR workflow for `174fa99` succeeded, but ClawCloud deployment is manual, so the public site still serves the old image and old cached article HTML.
+- `https://www.bes3.com/api/health` reported build `d90eb1afe5a49db82bb05af89b421296910cad55`, while the then-current `main` build was newer. The GHCR workflow succeeded, but ClawCloud deployment is manual, so the public site still served the old image and old cached article HTML.
 - Internal revalidate was called successfully, but old runtime content remained visible. The code now clears the module-level site-data cache inside `/api/internal/revalidate`; this requires deploying the latest image before the public HTTPS audit can pass.
 
 Next production action:

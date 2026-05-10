@@ -1,4 +1,5 @@
 import './load-env'
+import { spawnSync } from 'node:child_process'
 import { bootstrapApplication } from '@/lib/bootstrap'
 import { HARDCORE_CATEGORIES } from '@/lib/hardcore-catalog'
 import { promoteIntentSourceToPendingTag, recordTaxonomyIntentSource } from '@/lib/hardcore-ops'
@@ -34,6 +35,69 @@ function sleep(ms: number) {
 
 function unique(values: string[]) {
   return Array.from(new Set(values.map((value) => value.replace(/\s+/g, ' ').trim()).filter(Boolean)))
+}
+
+function keywordSet(value: string) {
+  const stopWords = new Set(['the', 'and', 'for', 'with', 'that', 'this', 'from', 'are', 'you', 'your', 'best', 'review'])
+  return new Set(
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, ' ')
+      .split(/\s+/)
+      .filter((word) => word.length > 2 && !stopWords.has(word))
+  )
+}
+
+function isSeedRelevantTitle(seed: string, title: string) {
+  if (/\b(boyfriend|girlfriend|husband|wife|sexual|sitter|employee|small claims|top picks|buying guide|2025 guide)\b/i.test(title)) {
+    return false
+  }
+  const seedWords = keywordSet(seed)
+  if (!seedWords.size) return false
+  const titleWords = keywordSet(title)
+  let matches = 0
+  for (const word of seedWords) {
+    if (titleWords.has(word)) matches += 1
+  }
+  return matches >= Math.min(3, seedWords.size)
+}
+
+async function fetchJsonWithCurlFallback(url: URL) {
+  const headers = {
+    accept: 'application/json',
+    'user-agent': 'Bes3IntentCollector/1.0 by bes3'
+  }
+
+  try {
+    const response = await fetch(url, { headers })
+    if (response.ok) return await response.json().catch(() => null)
+  } catch {
+    // Production runners can prefer IPv6 routes that Reddit drops; curl -4 is a pragmatic fallback.
+  }
+
+  const result = spawnSync(
+    'curl',
+    [
+      '-4',
+      '-L',
+      '--connect-timeout',
+      '5',
+      '--max-time',
+      '10',
+      '-A',
+      headers['user-agent'],
+      '-H',
+      'accept: application/json',
+      url.toString()
+    ],
+    { encoding: 'utf8', maxBuffer: 1024 * 1024 }
+  )
+  if (result.status !== 0 || !result.stdout.trim()) return null
+  try {
+    return JSON.parse(result.stdout)
+  } catch {
+    return null
+  }
 }
 
 async function fetchAmazonAutosuggest(categorySlug: string, seed: string, limit: number): Promise<CollectedIntent[]> {
@@ -73,7 +137,8 @@ async function fetchAmazonAutosuggest(categorySlug: string, seed: string, limit:
 }
 
 async function fetchRedditIntents(categorySlug: string, seed: string, limit: number): Promise<CollectedIntent[]> {
-  const queries = [`"${seed}" "help me choose"`, `"${seed}" vs`, `"${seed}" review`]
+  const queryLimit = readNumberFlag('query-limit', 3)
+  const queries = [seed, `${seed} review`, `${seed} reddit`].slice(0, queryLimit)
   const titles: string[] = []
 
   for (const query of queries) {
@@ -82,17 +147,9 @@ async function fetchRedditIntents(categorySlug: string, seed: string, limit: num
     url.searchParams.set('sort', 'relevance')
     url.searchParams.set('limit', String(limit))
 
-    const response = await fetch(url, {
-      headers: {
-        accept: 'application/json',
-        'user-agent': 'Bes3IntentCollector/1.0 by bes3'
-      }
-    })
-    if (response.ok) {
-      const payload = await response.json().catch(() => null)
-      const posts = Array.isArray(payload?.data?.children) ? payload.data.children : []
-      titles.push(...posts.map((post: { data?: { title?: string } }) => post.data?.title || ''))
-    }
+    const payload = await fetchJsonWithCurlFallback(url)
+    const posts = Array.isArray(payload?.data?.children) ? payload.data.children : []
+    titles.push(...posts.map((post: { data?: { title?: string } }) => post.data?.title || '').filter((title: string) => isSeedRelevantTitle(seed, title)))
     await sleep(800 + Math.round(Math.random() * 1200))
   }
 
@@ -120,6 +177,7 @@ async function main() {
   const categoryFilter = slugify(readFlag('category'))
   const source = (readFlag('source') || 'all') as IntentSource | 'all'
   const limit = readNumberFlag('limit', 10)
+  const seedLimit = readNumberFlag('seed-limit', 3)
   const promote = hasFlag('promote-pending')
   const dryRun = hasFlag('dry-run')
 
@@ -132,7 +190,7 @@ async function main() {
   const collected: CollectedIntent[] = []
 
   for (const category of categories) {
-    for (const seed of category.redditSeeds.slice(0, 3)) {
+    for (const seed of category.redditSeeds.slice(0, seedLimit)) {
       if (source === 'all' || source === 'amazon_autosuggest') {
         collected.push(...await fetchAmazonAutosuggest(category.slug, seed, limit))
       }

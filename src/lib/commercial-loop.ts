@@ -1597,103 +1597,202 @@ async function runSync(platform: Required<CommercialLoopOptions>['syncPlatform']
   return sync
 }
 
+async function createCommercialLoopRun(options: Required<CommercialLoopOptions>) {
+  const db = await getDatabase()
+  const result = await db.exec(
+    `
+      INSERT INTO content_pipeline_runs (
+        source_link, run_type, requested_action, status, current_stage,
+        worker_id, locked_at, started_at, attempt_count, priority, scheduled_at,
+        locked_by, lock_expires_at, last_heartbeat_at, cancel_requested_at, payload_json
+      )
+      VALUES (
+        'commercial-loop://production', 'commercialLoop', ?, 'running', 'commercialLoop',
+        'commercial-loop', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 0, 50, NULL,
+        'commercial-loop', NULL, CURRENT_TIMESTAMP, NULL, ?
+      )
+    `,
+    [
+      [
+        `sync=${options.syncPlatform}`,
+        options.discoverVideos ? 'discover-videos' : '',
+        options.fetchTranscripts ? 'fetch-transcripts' : '',
+        options.extractEvidence ? 'extract-evidence' : '',
+        options.publishArticles ? 'publish-articles' : '',
+        options.pushIndex ? 'push-index' : ''
+      ].filter(Boolean).join(';'),
+      JSON.stringify({
+        commercialLoop: true,
+        options,
+        startedBy: 'scripts/run-commercial-loop.ts'
+      })
+    ]
+  )
+  return Number(result.lastInsertRowid || 0) || null
+}
+
+async function finishCommercialLoopRun(runId: number | null, result: CommercialLoopResult) {
+  if (!runId) return
+  const db = await getDatabase()
+  await db.exec(
+    `
+      UPDATE content_pipeline_runs
+      SET status = ?,
+          current_stage = 'commercialLoopComplete',
+          finished_at = CURRENT_TIMESTAMP,
+          last_heartbeat_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP,
+          error_message = ?,
+          payload_json = ?
+      WHERE id = ?
+    `,
+    [
+      result.ok ? 'completed' : 'partialFailed',
+      result.ok ? null : result.skipped.map((item) => `${item.scope}:${item.reason}`).slice(0, 8).join('; '),
+      JSON.stringify({
+        commercialLoop: true,
+        options: result.options,
+        sync: result.sync,
+        candidates: result.candidates.length,
+        selectedAffiliateProductIds: result.selected.map((candidate) => candidate.affiliateProductId),
+        videosDiscovered: result.videosDiscovered,
+        transcriptsFetched: result.transcriptsFetched,
+        evidenceReportsWritten: result.evidenceReportsWritten,
+        articlesPublished: result.articlesPublished,
+        indexing: result.indexing,
+        skipped: result.skipped,
+        commissionBlindAudit: result.commissionBlindAudit
+      }),
+      runId
+    ]
+  )
+}
+
+async function failCommercialLoopRun(runId: number | null, error: unknown) {
+  if (!runId) return
+  const db = await getDatabase()
+  await db.exec(
+    `
+      UPDATE content_pipeline_runs
+      SET status = 'failed',
+          current_stage = 'commercialLoopFailed',
+          error_message = ?,
+          finished_at = CURRENT_TIMESTAMP,
+          last_heartbeat_at = CURRENT_TIMESTAMP,
+          updated_at = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `,
+    [error instanceof Error ? error.message : String(error), runId]
+  )
+}
+
 export async function runCommercialLoop(input: CommercialLoopOptions = {}): Promise<CommercialLoopResult> {
   const options = normalizeOptions(input)
-  const sync = options.execute ? await runSync(options.syncPlatform) : {}
-  const candidates = await listAffiliateReviewCandidates(Math.max(options.limit, 25))
-  const commissionBlindAudit = auditCommissionBlindCandidateOrder(candidates)
-  const qualified = candidates.filter((candidate) => candidate.reviewValueScore >= options.minScore)
-  const conversionBlocked = qualified.filter((candidate) => !hasAffiliatePromotionLink(candidate))
-  const skipped: CommercialLoopResult['skipped'] = conversionBlocked.map((candidate) => ({
-    scope: `candidate:${candidate.affiliateProductId}`,
-    reason: 'missing_affiliate_promotion_link',
-    detail: {
-      productName: candidate.productName,
-      reviewValueScore: candidate.reviewValueScore
-    }
-  }))
-  const selected = qualified.filter(hasAffiliatePromotionLink).slice(0, options.limit)
-  let videosDiscovered = 0
-  let transcriptsFetched = 0
-  let evidenceReportsWritten = 0
-  const articlesPublished: CommercialLoopResult['articlesPublished'] = []
+  const loopRunId = options.execute ? await createCommercialLoopRun(options) : null
 
-  if (options.execute) {
-    for (const candidate of selected) {
-      let productId: number
-      try {
-        productId = await ensureProductForCandidate(candidate)
-        candidate.productId = productId
-      } catch (error) {
-        skipped.push({ scope: `candidate:${candidate.affiliateProductId}`, reason: 'product_upsert_failed', detail: error instanceof Error ? error.message : String(error) })
-        continue
+  try {
+    const sync = options.execute ? await runSync(options.syncPlatform) : {}
+    const candidates = await listAffiliateReviewCandidates(Math.max(options.limit, 25))
+    const commissionBlindAudit = auditCommissionBlindCandidateOrder(candidates)
+    const qualified = candidates.filter((candidate) => candidate.reviewValueScore >= options.minScore)
+    const conversionBlocked = qualified.filter((candidate) => !hasAffiliatePromotionLink(candidate))
+    const skipped: CommercialLoopResult['skipped'] = conversionBlocked.map((candidate) => ({
+      scope: `candidate:${candidate.affiliateProductId}`,
+      reason: 'missing_affiliate_promotion_link',
+      detail: {
+        productName: candidate.productName,
+        reviewValueScore: candidate.reviewValueScore
       }
+    }))
+    const selected = qualified.filter(hasAffiliatePromotionLink).slice(0, options.limit)
+    let videosDiscovered = 0
+    let transcriptsFetched = 0
+    let evidenceReportsWritten = 0
+    const articlesPublished: CommercialLoopResult['articlesPublished'] = []
 
-      if (options.enrichProducts) {
+    if (options.execute) {
+      for (const candidate of selected) {
+        let productId: number
         try {
-          await enrichProductFromAffiliateSource(candidate, productId)
+          productId = await ensureProductForCandidate(candidate)
+          candidate.productId = productId
         } catch (error) {
-          skipped.push({
-            scope: `product:${productId}`,
-            reason: isProxyConnectionError(error) ? 'product_enrichment_proxy_failed' : 'product_enrichment_failed',
-            detail: error instanceof Error ? error.message : String(error)
-          })
+          skipped.push({ scope: `candidate:${candidate.affiliateProductId}`, reason: 'product_upsert_failed', detail: error instanceof Error ? error.message : String(error) })
+          continue
         }
-      }
 
-      if (options.discoverVideos) {
-        try {
-          const videos = await discoverYoutubeVideos(candidate, options.maxVideosPerProduct)
-          for (const video of videos) {
-            const videoId = await upsertReviewVideo(video, candidate, productId)
-            videosDiscovered += 1
-            if (options.fetchTranscripts) {
-              const fetched = await maybeFetchTranscript(videoId, video.youtubeId, true)
-              if (fetched) transcriptsFetched += 1
-            }
+        if (options.enrichProducts) {
+          try {
+            await enrichProductFromAffiliateSource(candidate, productId)
+          } catch (error) {
+            skipped.push({
+              scope: `product:${productId}`,
+              reason: isProxyConnectionError(error) ? 'product_enrichment_proxy_failed' : 'product_enrichment_failed',
+              detail: error instanceof Error ? error.message : String(error)
+            })
           }
-        } catch (error) {
-          skipped.push({ scope: `candidate:${candidate.affiliateProductId}`, reason: 'youtube_discovery_failed', detail: error instanceof Error ? error.message : String(error) })
         }
-      }
 
-      if (options.extractEvidence) {
-        try {
-          evidenceReportsWritten += await extractEvidenceForProduct(productId, candidate)
-        } catch (error) {
-          skipped.push({ scope: `product:${productId}`, reason: 'evidence_extraction_failed', detail: error instanceof Error ? error.message : String(error) })
+        if (options.discoverVideos) {
+          try {
+            const videos = await discoverYoutubeVideos(candidate, options.maxVideosPerProduct)
+            for (const video of videos) {
+              const videoId = await upsertReviewVideo(video, candidate, productId)
+              videosDiscovered += 1
+              if (options.fetchTranscripts) {
+                const fetched = await maybeFetchTranscript(videoId, video.youtubeId, true)
+                if (fetched) transcriptsFetched += 1
+              }
+            }
+          } catch (error) {
+            skipped.push({ scope: `candidate:${candidate.affiliateProductId}`, reason: 'youtube_discovery_failed', detail: error instanceof Error ? error.message : String(error) })
+          }
         }
-      }
 
-      if (options.publishArticles) {
-        try {
-          articlesPublished.push(await upsertEvidenceArticle(productId, candidate))
-        } catch (error) {
-          skipped.push({ scope: `product:${productId}`, reason: 'article_publish_skipped', detail: error instanceof Error ? error.message : String(error) })
+        if (options.extractEvidence) {
+          try {
+            evidenceReportsWritten += await extractEvidenceForProduct(productId, candidate)
+          } catch (error) {
+            skipped.push({ scope: `product:${productId}`, reason: 'evidence_extraction_failed', detail: error instanceof Error ? error.message : String(error) })
+          }
+        }
+
+        if (options.publishArticles) {
+          try {
+            articlesPublished.push(await upsertEvidenceArticle(productId, candidate))
+          } catch (error) {
+            skipped.push({ scope: `product:${productId}`, reason: 'article_publish_skipped', detail: error instanceof Error ? error.message : String(error) })
+          }
         }
       }
     }
-  }
 
-  const paths = articlesPublished.map((article) => article.path)
-  const indexing = options.execute && options.pushIndex && paths.length
-    ? await dispatchSeoNotifications(paths, articlesPublished[0]?.seoPageId || null).then(() => 'queued')
-    : 'dry-run'
+    const paths = articlesPublished.map((article) => article.path)
+    const indexing = options.execute && options.pushIndex && paths.length
+      ? await dispatchSeoNotifications(paths, articlesPublished[0]?.seoPageId || null).then(() => 'queued')
+      : 'dry-run'
 
-  return {
-    ok: skipped.length === 0 || articlesPublished.length > 0 || !options.execute,
-    execute: options.execute,
-    options,
-    sync,
-    candidates,
-    selected,
-    videosDiscovered,
-    transcriptsFetched,
-    evidenceReportsWritten,
-    articlesPublished,
-    commissionBlindAudit,
-    indexing,
-    skipped
+    const result = {
+      ok: skipped.length === 0 || articlesPublished.length > 0 || !options.execute,
+      execute: options.execute,
+      options,
+      sync,
+      candidates,
+      selected,
+      videosDiscovered,
+      transcriptsFetched,
+      evidenceReportsWritten,
+      articlesPublished,
+      commissionBlindAudit,
+      indexing,
+      skipped
+    }
+
+    await finishCommercialLoopRun(loopRunId, result)
+    return result
+  } catch (error) {
+    await failCommercialLoopRun(loopRunId, error)
+    throw error
   }
 }
 

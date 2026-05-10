@@ -375,12 +375,12 @@ async function auditDatabase(sql: QueryClient, thresholds: Record<string, number
     sql,
     `
       WITH intent_sources AS (
-        SELECT normalized_query AS text_value FROM taxonomy_intent_sources
+        SELECT normalized_query AS text_value, source_type FROM taxonomy_intent_sources
         UNION ALL
-        SELECT trigger_query AS text_value FROM pending_tags
+        SELECT trigger_query AS text_value, source AS source_type FROM pending_tags
       ),
       long_tail_intents AS (
-        SELECT text_value
+        SELECT text_value, source_type
         FROM intent_sources
         WHERE array_length(
           regexp_split_to_array(trim(regexp_replace(lower(COALESCE(text_value, '')), '[^a-z0-9]+', ' ', 'g')), '\\s+'),
@@ -401,11 +401,15 @@ async function auditDatabase(sql: QueryClient, thresholds: Record<string, number
         (SELECT COUNT(*) FROM taxonomy_tags)::int AS taxonomy_tags,
         (SELECT COUNT(*) FROM long_tail_intents)::int AS long_tail_intents,
         (SELECT COUNT(*) FROM long_tail_tags)::int AS long_tail_tags,
+        (SELECT COUNT(*) FROM taxonomy_intent_sources WHERE source_type = 'reddit')::int AS reddit_intent_sources,
+        (SELECT COUNT(*) FROM pending_tags WHERE source = 'reddit')::int AS reddit_pending_tags,
+        (SELECT COUNT(*) FROM long_tail_intents WHERE source_type = 'reddit')::int AS reddit_long_tail_intents,
         (SELECT COUNT(*) FROM site_search_logs)::int AS site_search_logs
     `
   )
   metrics.intentMining = intent
   requireMinimum(checks, 'Long-tail keyword and intent mining is populated', toNumber(intent.long_tail_intents) + toNumber(intent.long_tail_tags), thresholds.minLongTailIntents, intent)
+  requireMinimum(checks, 'Reddit research contributes long-tail buyer intent', toNumber(intent.reddit_long_tail_intents) + toNumber(intent.reddit_pending_tags), thresholds.minRedditIntents, intent)
 
   const articles = await selectOne(
     sql,
@@ -527,11 +531,7 @@ async function auditDatabase(sql: QueryClient, thresholds: Record<string, number
     `
   )
   metrics.pipeline = pipeline
-  if (toNumber(pipeline.commercial_runs) === 0) {
-    addWarning(checks, 'Commercial loop pipeline history is empty', 'No commercial content_pipeline_runs rows found; continuous CLI may run outside the pipeline table.', pipeline)
-  } else {
-    addCheck(checks, 'Commercial loop pipeline history is visible', true, `${pipeline.commercial_runs} commercial runs`, pipeline)
-  }
+  requireMinimum(checks, 'Commercial loop pipeline history is visible', toNumber(pipeline.commercial_runs), thresholds.minCommercialRuns, pipeline)
 
   const latestReviews = await selectRows(
     sql,
@@ -671,9 +671,11 @@ async function main() {
     minUsableEvidenceReports: readInteger(envValues, 'PLANV3_AUDIT_MIN_USABLE_EVIDENCE_REPORTS', 1),
     minProductsWithEvidence: readInteger(envValues, 'PLANV3_AUDIT_MIN_PRODUCTS_WITH_EVIDENCE', 1),
     minLongTailIntents: readInteger(envValues, 'PLANV3_AUDIT_MIN_LONG_TAIL_INTENTS', 1),
+    minRedditIntents: readInteger(envValues, 'PLANV3_AUDIT_MIN_REDDIT_INTENTS', 1),
     minPublishedReviews: readInteger(envValues, 'PLANV3_AUDIT_MIN_PUBLISHED_REVIEWS', 1),
     minSeoReviewPages: readInteger(envValues, 'PLANV3_AUDIT_MIN_SEO_REVIEW_PAGES', 1),
-    minMerchantClickEvents: readInteger(envValues, 'PLANV3_AUDIT_MIN_MERCHANT_CLICK_EVENTS', 0)
+    minMerchantClickEvents: readInteger(envValues, 'PLANV3_AUDIT_MIN_MERCHANT_CLICK_EVENTS', 0),
+    minCommercialRuns: readInteger(envValues, 'PLANV3_AUDIT_MIN_COMMERCIAL_RUNS', 1)
   }
 
   try {
