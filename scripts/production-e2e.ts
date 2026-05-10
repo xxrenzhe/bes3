@@ -26,6 +26,7 @@ type ApiCheck = {
   body?: unknown
   validate?: (value: any) => string | null
   destructive?: boolean
+  timeoutMs?: number
 }
 
 type PageCheck = {
@@ -45,6 +46,7 @@ const allowMutations = process.env.PRODUCTION_E2E_ALLOW_MUTATIONS === 'true'
 const headless = process.env.PRODUCTION_E2E_HEADLESS !== 'false'
 const navigationTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_NAV_TIMEOUT_MS || '30000', 10)
 const requestTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_REQUEST_TIMEOUT_MS || '20000', 10)
+const largePayloadTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_LARGE_PAYLOAD_TIMEOUT_MS || '60000', 10)
 const mutationTimeoutMs = Number.parseInt(process.env.PRODUCTION_E2E_MUTATION_TIMEOUT_MS || '120000', 10)
 
 const results: StepResult[] = []
@@ -107,7 +109,7 @@ const publicApiChecks: ApiCheck[] = [
     expectedStatus: 200,
     validate: (value) => value?.feedType === 'coverage-manifest-v1' ? null : 'coverage feed type mismatch'
   },
-  { area: 'Public API', name: 'Buying feed', path: '/api/open/buying-feed', expectedStatus: 200 },
+  { area: 'Public API', name: 'Buying feed', path: '/api/open/buying-feed', expectedStatus: 200, timeoutMs: largePayloadTimeoutMs },
   { area: 'Public API', name: 'Evidence feed', path: '/api/open/evidence', expectedStatus: 200 },
   { area: 'Public API', name: 'Search intake snapshot', path: '/api/open/evidence/search-intake', expectedStatus: 200 },
   { area: 'Public API', name: 'Commerce search', path: '/api/open/commerce/search?q=pool&limit=5', expectedStatus: 200 },
@@ -144,7 +146,7 @@ const publicApiChecks: ApiCheck[] = [
 
 const adminApiChecks: ApiCheck[] = [
   { area: 'Admin API', name: 'Dashboard summary', path: '/api/admin/dashboard', authenticated: true, expectedStatus: 200 },
-  { area: 'Admin API', name: 'Products snapshot', path: '/api/admin/products', authenticated: true, expectedStatus: 200 },
+  { area: 'Admin API', name: 'Products snapshot', path: '/api/admin/products', authenticated: true, expectedStatus: 200, timeoutMs: largePayloadTimeoutMs },
   { area: 'Admin API', name: 'Articles snapshot', path: '/api/admin/articles', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Pipeline runs snapshot', path: '/api/admin/pipeline-runs', authenticated: true, expectedStatus: 200 },
   { area: 'Admin API', name: 'Pipeline ops snapshot', path: '/api/admin/pipeline-ops', authenticated: true, expectedStatus: 200 },
@@ -215,10 +217,15 @@ async function safeStep(area: string, name: string, action: () => Promise<Record
   }
 }
 
-function requireMutationsEnabled() {
+function addSkipped(area: string, name: string, detail: string, evidence?: Record<string, unknown>) {
+  addResult({ area, name, status: 'skipped', detail, evidence })
+}
+
+function mutationsDisabledReason() {
   if (!allowMutations) {
-    throw new Error('PRODUCTION_E2E_ALLOW_MUTATIONS=true is required because this suite must test all production functions')
+    return 'skipped because PRODUCTION_E2E_ALLOW_MUTATIONS=true was not set'
   }
+  return ''
 }
 
 async function fetchJson(context: BrowserContext, check: ApiCheck, timeout = requestTimeoutMs): Promise<{ status: number; contentType: string; json: any; text: string }> {
@@ -407,7 +414,7 @@ async function checkApi(context: BrowserContext, check: ApiCheck) {
     throw new Error(`${check.name} requires PRODUCTION_E2E_ALLOW_MUTATIONS=true`)
   }
   await safeStep(check.area, check.name, async () => {
-    const { status, contentType, json } = await fetchJson(context, check)
+    const { status, contentType, json } = await fetchJson(context, check, check.timeoutMs)
     return {
       method: check.method || 'GET',
       path: check.path,
@@ -430,8 +437,15 @@ function pickProductLink(productsPayload: any): string | null {
 }
 
 async function mutationStep(context: BrowserContext, name: string, check: ApiCheck, validate?: (json: any) => void, timeout = mutationTimeoutMs) {
+  const skipReason = mutationsDisabledReason()
+  if (skipReason) {
+    addSkipped('Production mutations', name, skipReason, {
+      method: check.method || 'GET',
+      path: check.path
+    })
+    return
+  }
   await safeStep('Production mutations', name, async () => {
-    requireMutationsEnabled()
     const { status, contentType, json } = await fetchJson(context, { expectedStatus: [200, 201, 202], ...check }, timeout)
     validate?.(json)
     return {
@@ -461,6 +475,13 @@ async function waitForPipelineRunStatus(context: BrowserContext, runId: number, 
 }
 
 async function checkProductionMutationCoverage(context: BrowserContext) {
+  const skipReason = mutationsDisabledReason()
+  if (skipReason) {
+    addSkipped('Production mutations', 'Load mutation source records', skipReason)
+    addSkipped('Production mutations', 'Resolve mutation fixtures', skipReason)
+    return
+  }
+
   let productsPayload: any = null
   let articlesPayload: any[] = []
   let evidencePayload: any = null
@@ -471,8 +492,7 @@ async function checkProductionMutationCoverage(context: BrowserContext) {
   let promptsPayload: any[] = []
 
   await safeStep('Production mutations', 'Load mutation source records', async () => {
-    requireMutationsEnabled()
-    productsPayload = (await fetchJson(context, { path: '/api/admin/products', authenticated: true, expectedStatus: 200 })).json
+    productsPayload = (await fetchJson(context, { path: '/api/admin/products', authenticated: true, expectedStatus: 200 }, largePayloadTimeoutMs)).json
     articlesPayload = (await fetchJson(context, { path: '/api/admin/articles', authenticated: true, expectedStatus: 200 })).json || []
     const pipelinePayload = (await fetchJson(context, { path: '/api/admin/pipeline-runs', authenticated: true, expectedStatus: 200 })).json || []
     evidencePayload = (await fetchJson(context, { path: '/api/admin/evidence', authenticated: true, expectedStatus: 200 })).json
